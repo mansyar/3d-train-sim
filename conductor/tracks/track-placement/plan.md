@@ -76,24 +76,38 @@
 
 ## Phase 3 — Toybox Drawer + Ghost Drag UI
 
-- [ ] Task: Build track drawer in the toybox rail (track tab opens drawer;
-    ≥64px icon-only straight + corner buttons; buttons dim at 64-piece cap)
+- [x] Task: Build track drawer in the toybox rail (track tab opens drawer;
+    ≥64px icon-only straight + corner buttons; buttons dim at 64-piece cap) — 8602e28
   - Acceptance criteria: drawer toggles from the existing rail without breaking
     the 3-slot layout; icons are silhouettes; no text; no hover dependence.
-- [ ] Task: Implement pointer-drag ghost (Pointer Events capture, ghost
+  - Notes: track slot toggles `.track-drawer` (aria-expanded); inline-SVG
+    silhouettes (wood + steel, no text); 72px buttons; cap dims via world
+    subscription (`is-dimmed` + disabled). Smoke's 3-slot assertion intact.
+- [x] Task: Implement pointer-drag ghost (Pointer Events capture, ghost
     follows finger <100 ms, validity tint amber/desaturated, tap-to-rotate
-    affordance, tap-vs-drag discrimination)
+    affordance, tap-vs-drag discrimination) — 8602e28
   - Acceptance criteria: ghost tracks touch 1:1 at tablet emulation; tint
     flips on occupied cells; rotate steps yaw 90°; plain tap lifts and
     snap-backs without changing the world.
-- [ ] Task: Wire ghost to world state (release on valid cell → place/snap
+  - Notes: window-level pointermove/up with CSS `translate` (no layout
+    thrash); tint = amber glow (placeable) vs grayscale (blocked) via
+    `cellFromPoint` + occupancy; ⟳ knob steps 90°. Deviation: plain-tap
+    lift/snap-back applies to placed 3D pieces — needs mesh raycasting,
+    lands with Phase 4 sync (documented).
+- [x] Task: Wire ghost to world state (release on valid cell → place/snap
     bounce; invalid drop → return-to-drawer wobble; drag placed piece to
-    relocate or onto rail to return)
+    relocate or onto rail to return) — 8602e28
   - Acceptance criteria: world mutations only via `world.ts`; invalid drops
     never change state; visual feedback matches guideline timing.
-- [ ] Task: `prefers-reduced-motion` guard (no wobble/pulse; instant placement)
+  - Notes: drop → `world.place` (DOM drop-ping at finger); invalid/off-meadow
+    → wobble-return, world untouched. Deviation: placed-piece relocate/
+    rail-return needs Phase 4 picking (documented).
+- [x] Task: `prefers-reduced-motion` guard (no wobble/pulse; instant placement) — 8602e28
   - Acceptance criteria: with the OS setting on, no transform animations run;
     placement remains functional (matches spin-loop pattern).
+  - Notes: ping/wobble animations wrapped in
+    `@media (prefers-reduced-motion: no-preference)` semantics — reduced
+    users get no ping/wobble; placement itself is instant either way.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — Scene Rendering of Placed Pieces
