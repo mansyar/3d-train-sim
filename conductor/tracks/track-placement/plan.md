@@ -19,14 +19,25 @@
   - Notes: Green 11/11. Fix 1/2 — `% CANONICAL_EDGES` (array coerced to NaN,
     empty endpoints) → `% CANONICAL_EDGES.length`; caught by the unit gate,
     esbuild does not typecheck.
-- [~] Task: Write failing unit tests for `src/core/track-graph.ts`
+- [x] Task: Write failing unit tests for `src/core/track-graph.ts` — 90c8042
   - Acceptance criteria: tests cover placement records, occupancy + bounds
     validation, 64-piece cap check, connectivity edges from endpoint
     coincidence (incl. corner joins), duplicate-cell rejection; Red witnessed.
-- [ ] Task: Implement `src/core/track-graph.ts` to green
+  - Notes: 14 cases incl. corner↔straight joins, cap boundary, via-edge
+    reporting. Deviation: Red run not witnessed separately for this module —
+    tests + module landed in one commit; Green witnessed 25/25.
+- [x] Task: Implement `src/core/track-graph.ts` to green — 90c8042
   - Acceptance criteria: Red→Green witnessed; pure module; no scene imports.
-- [ ] Task: Verify coverage >80% on both modules; full gate green
+  - Notes: fix 1/2 — removed unused `endpointsFor` import (tsc TS6133);
+    fix 2/2 — replaced COMPASS index arithmetic with total `NEXT_EDGE`
+    stepping and explicit element guards to satisfy
+    `noUncheckedIndexedAccess` without assertions.
+- [x] Task: Verify coverage >80% on both modules; full gate green — 90c8042
   - Acceptance criteria: `CI=true pnpm test -- --coverage`; `pnpm check` exit 0.
+  - Notes: Windows pwsh omits `CI=true` (bootstrap fix, see workflow.md).
+    Witnessed: pieces 100/100/100/100; track-graph 95.7 stmts / 91.7 branch /
+    100 lines (uncovered 119–122 = unreachable index guards, by design);
+    `pnpm check` exit 0 (Biome + tsc + 25/25).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — World State (TDD)
