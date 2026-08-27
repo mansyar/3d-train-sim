@@ -1,0 +1,10 @@
+{
+  "id": "track-placement",
+  "title": "Track Placement (Build Mode)",
+  "status": "pending",
+  "created": "2026-08",
+  "spec": "conductor/tracks/track-placement/spec.md",
+  "plan": "conductor/tracks/track-placement/plan.md",
+  "phases": 5,
+  "tags": ["feature", "track-graph", "ui", "scene", "tdd"]
+}
