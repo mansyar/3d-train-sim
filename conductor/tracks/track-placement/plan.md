@@ -74,6 +74,21 @@
     (`--write`). Full gate: `pnpm check` exit 0, 35/35.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
+## Phase 3 — Toybox Drawer + Ghost Drag UI [checkpoint: 1250acb]
+
+> **Verification Report** (2026-08-27)
+>
+> - **Automated:** `pnpm test` 35/35 passed (exit 0); `pnpm check`
+>   (Biome + `tsc --noEmit` + tests) exit 0; Playwright smoke 1/1
+>   (3-slot layout + clean console + zero external requests).
+> - **Manual:** drawer toggle, drag ghost 1:1 tracking, amber/gray validity
+>   tint, ⟳ 90° rotation, drop-ping / wobble-return — proposed and exercised
+>   by the user. **Fix 1/1 (2539e8b):** corner icon didn't read as a curve —
+>   redrew both icons as chunky top-down silhouettes (plank + rails + ties /
+>   layered-stroke bend), verified via browser screenshots.
+> - **User confirmation:** yes (2026-08-27).
+> - **Checkpoint SHA:** 1250acb
+
 ## Phase 3 — Toybox Drawer + Ghost Drag UI
 
 - [x] Task: Build track drawer in the toybox rail (track tab opens drawer;
