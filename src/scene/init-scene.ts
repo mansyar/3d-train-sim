@@ -2,12 +2,14 @@ import type { Object3D } from 'three';
 import { PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
 import type { Cell } from '../core/track-graph';
 import { MEADOW_CELLS } from '../core/track-graph';
+import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
 import { createGround, GROUND_SIZE } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { startSpinLoop } from './spin-loop';
+import { startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -21,7 +23,7 @@ export interface SceneHandle {
   cellFromPoint(clientX: number, clientY: number): Cell | null;
 }
 
-export function initScene(canvas: HTMLCanvasElement): SceneHandle {
+export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHandle {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
 
@@ -34,6 +36,7 @@ export function initScene(canvas: HTMLCanvasElement): SceneHandle {
   const disposables: Array<() => void> = [];
   disposables.push(createLights(scene));
   disposables.push(createGround(scene));
+  const tracks = startTrackRenderer(scene, world);
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
@@ -94,6 +97,7 @@ export function initScene(canvas: HTMLCanvasElement): SceneHandle {
       disposed = true;
       stopSpin();
       window.removeEventListener('resize', resize);
+      tracks.dispose();
       crate.dispose();
       for (const dispose of disposables) dispose();
       renderer.dispose();

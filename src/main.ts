@@ -17,5 +17,5 @@ if (root) {
     // The scene does not exist until the canvas mounts — bind late.
     cellFromPoint: (clientX, clientY) => scene?.cellFromPoint(clientX, clientY) ?? null,
   });
-  scene = initScene(canvas);
+  scene = initScene(canvas, world);
 }

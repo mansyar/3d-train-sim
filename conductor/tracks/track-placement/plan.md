@@ -131,7 +131,7 @@
 
 ## Phase 4 — Scene Rendering of Placed Pieces
 
-- [ ] Task: Load straight + corner GLB templates; render placements via
+- [~] Task: Load straight + corner GLB templates; render placements via
     clone-per-piece; map grid cells to world positions; apply yaw per rotation
   - Acceptance criteria: placed piece visually equals its drawer icon piece;
     corner orientation matches its graph endpoints; template loads once per
