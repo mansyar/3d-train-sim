@@ -21,8 +21,12 @@
 - [x] Create folder skeleton per `tech-stack.md` (src/core, src/scene, src/ui, src/audio, src/state, e2e/, public/assets/train-kit/) — 36dd3ed
   - Acceptance criteria: all directories exist and are tracked by git (`.gitkeep` placeholders until populated).
   - Notes: 7 directories created with `.gitkeep` placeholders; `src/core/` and `src/state/` are the logic-bearing zones per workflow definitions.
-- [~] Configure Biome (`biome.json`) and add `check`/`check:fix` scripts
+- [x] Configure Biome (`biome.json`) and add `check`/`check:fix` scripts — 6e47583
   - Acceptance criteria: `@biomejs/biome` installed at ~2.5.x; `biome.json` covers TS+JSON lint + format for `src/` and `e2e/`; `pnpm exec biome check .` exits 0; `check:fix` script present.
+  - Notes:
+    - Installed `@biomejs/biome 2.5.10` (registry-latest); `biome.json` with recommended lint rules, 2-space/100-col formatting, single quotes, organize-imports assist.
+    - `check:fix` script added (`biome check . --write`); combined `check` gate already wired in package.json.
+    - Initial run fixed formatting in existing files; gate exits 0. (Informational `biome migrate` hint left as-is — schema is valid.)
 - [ ] Verify: `pnpm dev` serves a minimal `index.html` shell
 
 ## Phase 2 — Quality Gates
