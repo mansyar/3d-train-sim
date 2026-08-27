@@ -95,7 +95,16 @@
   - Acceptance criteria: kit files extracted into `public/assets/train-kit/`; CC0 license file included; committed to the repo (offline PWA requires bundled assets).
   - Acceptance notes: placeholder crate stays until the locomotive loads in the next task.
   - Notes: 103 GLB models (6.65 MB) + License.txt imported from the `GLB format` folder; FBX/OBJ duplicates and preview images excluded. Locomotive candidates: `train-locomotive-a/b/c.glb` (~151 KB each).
-- [ ] Load locomotive `.glb` via GLTFLoader; place in scene; verify on tablet viewport
+- [x] Load locomotive `.glb` via GLTFLoader; place in scene; verify on tablet viewport — 4a1cedd
+  - Acceptance criteria: `train-locomotive-a.glb` renders in the scene (model loading glue, not logic-bearing — no unit tests); verified visually in the browser at tablet viewport.
+  - Acceptance notes: loader lives in `src/scene/` (rendering glue).
+  - Notes:
+    - `src/scene/load-locomotive.ts` fetches `/assets/train-kit/train-locomotive-a.glb` (scale 1.5); `init-scene.ts` swaps the placeholder crate for the model once loaded (crate kept as fallback on load failure); `spin-loop.ts` now spins a dynamic target via a `getTarget()` callback.
+    - Fixed mid-task regression: restored the `prefers-reduced-motion` static-frame guard lost in the refactor.
+    - Found + fixed during browser verification: the GLBs reference a shared `Textures/colormap.png` externally — shipped `public/assets/train-kit/Textures/colormap.png` from the kit source (12.7 KB, CC0). The missing file had been silently answered by Vite's SPA fallback (HTTP 200 text/html), so GLTFLoader logged "Couldn't load texture".
+    - Added `<link rel="icon" href="/pwa-192x192.png">` to index.html to clear the `/favicon.ico` 404 console error.
+    - Visual verification (iPad Mini emulation, port 5175 — 5173/5174 are occupied by the unrelated `3d-marble-run` dev server): locomotive fully textured (green boiler, gray cabin, red trim), green play-mat, toybox rail with three slots; console 0 errors / 0 warnings. Screenshot: `.playwright-cli/locomotive-fixed.png`.
+    - `.playwright-cli/` added to .gitignore (test artifacts).
 - [ ] Add Playwright smoke spec (`e2e/`): touch tablet viewport, app boots, no console errors, no external requests
 
 ## Phase 5 — Verification & Checkpoint
