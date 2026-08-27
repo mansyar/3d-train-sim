@@ -43,7 +43,12 @@
 - [x] Install Vitest 4; add `test` script — verified 2026-08-28
   - Acceptance criteria: `vitest` in devDependencies at ^4.1; `pnpm test` invocable (exits 1 with "no tests found" until task 2.2 supplies the suite).
   - Notes: Installed `vitest 4.1.11` (registry-latest); `pnpm test` runs and exits 1 on the empty suite — exactly the Red state task 2.2 requires.
-- [ ] TDD-proof: write failing test for `src/core/grid.ts` (`snapToGrid` clamps to grid coordinates), then implement to green
+- [x] TDD-proof: write failing test for `src/core/grid.ts` (`snapToGrid` clamps to grid coordinates), then implement to green — verified 2026-08-28
+  - Acceptance criteria: test written first and observed failing (module missing); implementation makes it green; coverage on `src/core/grid.ts` >80%.
+  - Notes:
+    - Red confirmed: `Cannot find module './grid'`. Green after implementing `snapToGrid(value, size)`.
+    - Fix 1/2 during Green: IEEE-754 `-0` canonicalized to `+0` (contract asserts canonical zero; matters for future IndexedDB persistence).
+    - Coverage run required adding `@vitest/coverage-v8 ^4.1.11` (dev dep). Suite: 5 passed. Biome + tsc clean.
 - [ ] Add combined gate script (`check` = biome + typecheck + vitest)
 - [ ] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR
 
