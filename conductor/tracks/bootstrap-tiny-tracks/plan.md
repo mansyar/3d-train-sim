@@ -69,8 +69,9 @@
 
 ## Phase 3 — PWA Shell + 3D Scene
 
-- [~] Add vite-plugin-pwa; manifest (name Tiny Tracks, theme color, icons) + service worker
+- [x] Add vite-plugin-pwa; manifest (name Tiny Tracks, theme color, icons) + service worker — ad8aa87
   - Acceptance criteria: `pnpm build` emits `manifest.webmanifest` + service worker; manifest carries Tiny Tracks identity (name, toy theme colors, standalone, any orientation); icons present (placeholder art OK, replacement tracked).
+  - Notes: vite.config.ts wires `VitePWA({ registerType: 'autoUpdate' })`; manifest = standalone display, `any` orientation (tablets rotate), theme #F59E0B (toy amber) on cream background; 192/512 icons generated as placeholder art via `scripts/gen-icons.mjs` (replacement with real art tracked as a release TODO). Build verified: registerSW.js, sw.js, workbox emitted.
 - [ ] Build DOM overlay frame (`src/ui/`): full-screen canvas + toybox rail placeholder
 - [ ] Wire three.js scene (`src/scene/`): renderer, tablet viewport sizing, capped pixel ratio, spinning placeholder mesh
 - [ ] Hand-written CSS styling per `code_styleguides/html-css.md`
