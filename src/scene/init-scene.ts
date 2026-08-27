@@ -1,6 +1,8 @@
+import type { Object3D } from 'three';
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import { createGround } from './ground';
 import { createLights } from './lights';
+import { loadLocomotive } from './load-locomotive';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { startSpinLoop } from './spin-loop';
 
@@ -26,6 +28,20 @@ export function initScene(canvas: HTMLCanvasElement): SceneHandle {
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
+  let spinTarget: Object3D = crate.mesh;
+  let disposed = false;
+  loadLocomotive()
+    .then((model) => {
+      if (disposed) return;
+      scene.remove(crate.mesh);
+      crate.dispose();
+      scene.add(model);
+      spinTarget = model;
+    })
+    .catch(() => {
+      // Kit asset unavailable — the crate remains as the fallback placeholder.
+    });
+
   const resize = () => {
     const width = canvas.clientWidth || window.innerWidth;
     const height = canvas.clientHeight || window.innerHeight;
@@ -36,10 +52,11 @@ export function initScene(canvas: HTMLCanvasElement): SceneHandle {
   resize();
   window.addEventListener('resize', resize);
 
-  const stopSpin = startSpinLoop(renderer, scene, camera, crate.mesh);
+  const stopSpin = startSpinLoop(renderer, scene, camera, () => spinTarget);
 
   return {
     dispose(): void {
+      disposed = true;
       stopSpin();
       window.removeEventListener('resize', resize);
       crate.dispose();
