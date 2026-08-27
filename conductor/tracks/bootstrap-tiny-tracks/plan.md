@@ -11,7 +11,13 @@
     - Created `package.json` (name `tiny-tracks`, ESM, Node >=24 engines, `pnpm@11.24.0` packageManager) and `.gitignore` (node_modules, dist, coverage, playwright artifacts).
     - Combined gate script `check` = biome + typecheck + vitest, per workflow "Before Committing".
     - Lockfile arrives with the first dependency install (next task); verified then.
-- [ ] Install and configure Vite 8 + TypeScript ~7.0 (`strict: true`, `tsc --noEmit` script)
+- [x] Install and configure Vite 8 + TypeScript ~7.0 (`strict: true`, `tsc --noEmit` script) — bdd93d5
+  - Acceptance criteria: `vite` + `typescript` in devDependencies at pinned-latest versions; `tsc --noEmit` exits 0 on an empty TS entry; `strict: true` and `noUncheckedIndexedAccess` enabled.
+  - Notes:
+    - `tsconfig.json`: strict + `noUncheckedIndexedAccess`, `noEmit`, bundler resolution, includes `src/` and `e2e/`.
+    - `index.html`: minimal mount point (`<div id="app">`), loads `src/main.ts`.
+    - `src/main.ts`: placeholder shell content; replaced by DOM overlay in Phase 3.
+    - Lockfile updated and committed (closes task 1.1's deferred criterion).
 - [ ] Create folder skeleton per `tech-stack.md` (src/core, src/scene, src/ui, src/audio, src/state, e2e/, public/assets/train-kit/)
 - [ ] Configure Biome (`biome.json`) and add `check`/`check:fix` scripts
 - [ ] Verify: `pnpm dev` serves a minimal `index.html` shell
