@@ -121,7 +121,11 @@
 
 ## Phase 5 — Verification & Checkpoint
 
-- [ ] Run full local gate suite; fix any failures
+- [x] Run full local gate suite; fix any failures
+  - Notes:
+    - `pnpm check` exit 0 (Biome 18 files ✓, tsc clean ✓, Vitest 5/5 ✓); `pnpm exec playwright test` exit 0 (tablet smoke 1 passed — clean console, zero external requests).
+    - Pushed `f1ecc5e..ebdb4a7` to origin/main; CI run 33056547756 green (spec criterion: CI green on GitHub).
+    - Non-blocking CI annotation: GitHub-hosted runners force `actions/checkout@v4` / `setup-node@v4` / `pnpm/action-setup@v4` onto Node 24. Upgrade action majors in a future chore (out of scope here).
 - [ ] Manual verification walkthrough on tablet/browser per workflow protocol
 - [ ] Record verification report in this plan; mark phase checkpoint SHA
 
