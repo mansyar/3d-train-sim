@@ -83,6 +83,10 @@
   - Notes: track slot toggles `.track-drawer` (aria-expanded); inline-SVG
     silhouettes (wood + steel, no text); 72px buttons; cap dims via world
     subscription (`is-dimmed` + disabled). Smoke's 3-slot assertion intact.
+    Manual-verification fix 1/1 (2539e8b): corner glyph didn't read as a
+    curve (broken arc, then quadrant-confined annulus) — both icons redrawn
+    as layered-stroke top-down silhouettes (plank + ties + twin rails for
+    straight; fat bend + steel rail for corner), verified via screenshots.
 - [x] Task: Implement pointer-drag ghost (Pointer Events capture, ghost
     follows finger <100 ms, validity tint amber/desaturated, tap-to-rotate
     affordance, tap-vs-drag discrimination) — 8602e28
