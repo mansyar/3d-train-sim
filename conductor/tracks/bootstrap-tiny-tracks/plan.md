@@ -40,7 +40,9 @@
 
 ## Phase 2 — Quality Gates
 
-- [ ] Install Vitest 4; add `test` script
+- [x] Install Vitest 4; add `test` script — verified 2026-08-28
+  - Acceptance criteria: `vitest` in devDependencies at ^4.1; `pnpm test` invocable (exits 1 with "no tests found" until task 2.2 supplies the suite).
+  - Notes: Installed `vitest 4.1.11` (registry-latest); `pnpm test` runs and exits 1 on the empty suite — exactly the Red state task 2.2 requires.
 - [ ] TDD-proof: write failing test for `src/core/grid.ts` (`snapToGrid` clamps to grid coordinates), then implement to green
 - [ ] Add combined gate script (`check` = biome + typecheck + vitest)
 - [ ] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR
