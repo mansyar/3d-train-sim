@@ -75,8 +75,12 @@
 - [x] Build DOM overlay frame (`src/ui/`): full-screen canvas + toybox rail placeholder — verified live 2026-08-28
   - Acceptance criteria: app mounts a full-viewport canvas + bottom toybox rail with ≥64px chunky slots; SW registered via `virtual:pwa-register`; no console errors.
   - Notes: `src/ui/app.ts` mounts `#scene-canvas` + toybox rail with three chunky slots (72px min, 4px borders, 20px radius); `src/style.css` covers custom props, full-viewport canvas, rail backdrop; `src/main.ts` registers SW via `virtual:pwa-register`. Gate green (Biome ✓ + typecheck ✓ + 5/5 Vitest). Console-error assertion deferred to the Playwright smoke spec (Phase 4).
-- [ ] Wire three.js scene (`src/scene/`): renderer, tablet viewport sizing, capped pixel ratio, spinning placeholder mesh
-- [ ] Hand-written CSS styling per `code_styleguides/html-css.md`
+- [x] Wire three.js scene (`src/scene/`): renderer, tablet viewport sizing, capped pixel ratio, spinning placeholder mesh — ad3473d
+  - Acceptance criteria: renderer wired to the overlay canvas; scene resizes with viewport (portrait/landscape); pixel ratio capped at 2; a placeholder mesh spins via a rAF loop; gate green.
+  - Notes: `three ^0.185` + `@types/three` installed. Split into `init-scene.ts` (renderer/camera/resize/dispose), `lights.ts` (warm ambient + key light), `ground.ts` (play-mat plane), `placeholder-crate.ts` (spinning stand-in for Kenney models), `spin-loop.ts` (rAF with separate rafId/tickCount — fix 1/2: id collision). Full dispose chain. `prefers-reduced-motion` renders a single static frame (product guideline: gentle motion). Visual confirmation scheduled for the phase checkpoint.
+- [x] Hand-written CSS styling per `code_styleguides/html-css.md` — 2f9e63b
+  - Acceptance criteria: CSS follows the Google styleguide (class selectors, alphabetized declarations, single-quoted values); toybox rail respects tablet safe areas; no unit tests (non-logic).
+  - Notes: Converted `#app`/`#scene-canvas` ID styling to `.app-root`/`.scene-canvas` classes; alphabetized declarations; single-quoted font stacks; added `env(safe-area-inset-bottom)` on the rail for home-indicator tablets. Biome auto-format applied once; gate green.
 
 ## Phase 4 — First Asset
 
