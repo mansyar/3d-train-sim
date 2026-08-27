@@ -5,7 +5,12 @@
 
 ## Phase 1 — Project Scaffold
 
-- [ ] Initialize pnpm project (`package.json`, `pnpm-lock.yaml`, Node 24 LTS engines)
+- [x] Initialize pnpm project (`package.json`, `pnpm-lock.yaml`, Node 24 LTS engines) — acbf63e
+  - Acceptance criteria: `pnpm install` succeeds with no warnings; `package.json` declares Node 24 engines + pnpm 11 packageManager; lockfile committed.
+  - Notes:
+    - Created `package.json` (name `tiny-tracks`, ESM, Node >=24 engines, `pnpm@11.24.0` packageManager) and `.gitignore` (node_modules, dist, coverage, playwright artifacts).
+    - Combined gate script `check` = biome + typecheck + vitest, per workflow "Before Committing".
+    - Lockfile arrives with the first dependency install (next task); verified then.
 - [ ] Install and configure Vite 8 + TypeScript ~7.0 (`strict: true`, `tsc --noEmit` script)
 - [ ] Create folder skeleton per `tech-stack.md` (src/core, src/scene, src/ui, src/audio, src/state, e2e/, public/assets/train-kit/)
 - [ ] Configure Biome (`biome.json`) and add `check`/`check:fix` scripts
