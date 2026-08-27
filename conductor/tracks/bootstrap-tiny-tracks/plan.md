@@ -27,7 +27,16 @@
     - Installed `@biomejs/biome 2.5.10` (registry-latest); `biome.json` with recommended lint rules, 2-space/100-col formatting, single quotes, organize-imports assist.
     - `check:fix` script added (`biome check . --write`); combined `check` gate already wired in package.json.
     - Initial run fixed formatting in existing files; gate exits 0. (Informational `biome migrate` hint left as-is — schema is valid.)
-- [ ] Verify: `pnpm dev` serves a minimal `index.html` shell
+- [x] Verify: `pnpm dev` serves a minimal `index.html` shell — verified live 2026-08-28
+  - Acceptance criteria: dev server boots without errors; HTTP GET on the served URL returns the index.html shell.
+  - Notes: `pnpm dev` (Vite 8) booted clean; `Invoke-WebRequest http://localhost:5173/` returned the shell (200, mount markup present). No code changes — verification task.
+
+## Phase 1 — Project Scaffold [checkpoint: 6e47583]
+
+> **Verification Report** (2026-08-28)
+> - Automated: `pnpm exec biome check .` clean; `pnpm exec tsc --noEmit` exit 0; unit tests n/a (no logic-bearing files this phase).
+> - Manual: `pnpm dev` boots clean; http://localhost:5173 served the shell (200, mount markup present).
+> - User confirmation: **yes** (2026-08-28). Checkpoint SHA: 6e47583.
 
 ## Phase 2 — Quality Gates
 
