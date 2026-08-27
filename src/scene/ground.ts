@@ -1,7 +1,8 @@
 import type { Scene } from 'three';
 import { Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
 
-const GROUND_SIZE = 60;
+/** The "table surface" the toy world sits on — soft play-mat green. */
+export const GROUND_SIZE = 60;
 
 /** The "table surface" the toy world sits on — soft play-mat green. */
 export function createGround(scene: Scene): () => void {
