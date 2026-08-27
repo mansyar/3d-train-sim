@@ -69,7 +69,8 @@
 
 ## Phase 3 — PWA Shell + 3D Scene
 
-- [ ] Add vite-plugin-pwa; manifest (name Tiny Tracks, theme color, icons) + service worker
+- [~] Add vite-plugin-pwa; manifest (name Tiny Tracks, theme color, icons) + service worker
+  - Acceptance criteria: `pnpm build` emits `manifest.webmanifest` + service worker; manifest carries Tiny Tracks identity (name, toy theme colors, standalone, any orientation); icons present (placeholder art OK, replacement tracked).
 - [ ] Build DOM overlay frame (`src/ui/`): full-screen canvas + toybox rail placeholder
 - [ ] Wire three.js scene (`src/scene/`): renderer, tablet viewport sizing, capped pixel ratio, spinning placeholder mesh
 - [ ] Hand-written CSS styling per `code_styleguides/html-css.md`
