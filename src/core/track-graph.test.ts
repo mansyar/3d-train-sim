@@ -1,23 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-  MAX_PIECES,
-  MEADOW_CELLS,
-  type PlacedPiece,
-  type Rotation,
-  type PieceType,
   connectionsFor,
   endpointEdgesFor,
   inBounds,
+  MAX_PIECES,
+  MEADOW_CELLS,
+  type PieceType,
+  type PlacedPiece,
+  type Rotation,
   validatePlacement,
 } from './track-graph';
 
-function piece(
-  id: string,
-  type: PieceType,
-  x: number,
-  y: number,
-  rotation: Rotation,
-): PlacedPiece {
+function piece(id: string, type: PieceType, x: number, y: number, rotation: Rotation): PlacedPiece {
   return { id, type, cell: { x, y }, rotation };
 }
 
@@ -62,76 +56,42 @@ describe('validatePlacement', () => {
 describe('endpointEdgesFor', () => {
   it('maps straight endpoints to the cell-edges it bridges (north = -y)', () => {
     // North edge of (2,3) is the boundary shared with (2,2); south with (2,4).
-    expect(endpointEdgesFor(piece('a', 'straight', 2, 3, 0))).toEqual([
-      '2,2|2,3',
-      '2,3|2,4',
-    ]);
+    expect(endpointEdgesFor(piece('a', 'straight', 2, 3, 0))).toEqual(['2,2|2,3', '2,3|2,4']);
   });
 
   it('rotates straight endpoints 90° to run east–west', () => {
-    expect(endpointEdgesFor(piece('a', 'straight', 2, 3, 90))).toEqual([
-      '1,3|2,3',
-      '2,3|3,3',
-    ]);
+    expect(endpointEdgesFor(piece('a', 'straight', 2, 3, 90))).toEqual(['2,3|3,3', '1,3|2,3']);
   });
 
   it('maps corner endpoints to north and east edges at 0°', () => {
-    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 0))).toEqual([
-      '2,2|2,3',
-      '2,3|3,3',
-    ]);
+    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 0))).toEqual(['2,2|2,3', '2,3|3,3']);
   });
 
   it('walks the corner clockwise through all rotations', () => {
-    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 90))).toEqual([
-      '2,3|3,3',
-      '2,3|2,4',
-    ]);
-    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 180))).toEqual([
-      '2,3|2,4',
-      '1,3|2,3',
-    ]);
-    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 270))).toEqual([
-      '1,3|2,3',
-      '2,2|2,3',
-    ]);
+    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 90))).toEqual(['2,3|3,3', '2,3|2,4']);
+    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 180))).toEqual(['2,3|2,4', '1,3|2,3']);
+    expect(endpointEdgesFor(piece('a', 'corner', 2, 3, 270))).toEqual(['1,3|2,3', '2,2|2,3']);
   });
 });
 
 describe('connectionsFor', () => {
   it('connects two straights joined end-to-end', () => {
-    const pieces = [
-      piece('a', 'straight', 2, 3, 0),
-      piece('b', 'straight', 2, 4, 0),
-    ];
-    expect(connectionsFor(pieces)).toEqual([
-      { a: 'a', b: 'b', via: '2,3|2,4' },
-    ]);
+    const pieces = [piece('a', 'straight', 2, 3, 0), piece('b', 'straight', 2, 4, 0)];
+    expect(connectionsFor(pieces)).toEqual([{ a: 'a', b: 'b', via: '2,3|2,4' }]);
   });
 
   it("connects a corner's east end to a straight's west end", () => {
-    const pieces = [
-      piece('a', 'corner', 2, 3, 0),
-      piece('b', 'straight', 3, 3, 90),
-    ];
-    expect(connectionsFor(pieces)).toEqual([
-      { a: 'a', b: 'b', via: '2,3|3,3' },
-    ]);
+    const pieces = [piece('a', 'corner', 2, 3, 0), piece('b', 'straight', 3, 3, 90)];
+    expect(connectionsFor(pieces)).toEqual([{ a: 'a', b: 'b', via: '2,3|3,3' }]);
   });
 
   it('never connects pieces that merely sit side by side lengthwise', () => {
-    const pieces = [
-      piece('a', 'straight', 2, 3, 90),
-      piece('b', 'straight', 2, 4, 90),
-    ];
+    const pieces = [piece('a', 'straight', 2, 3, 90), piece('b', 'straight', 2, 4, 90)];
     expect(connectionsFor(pieces)).toEqual([]);
   });
 
   it('returns no connections for isolated pieces', () => {
-    const pieces = [
-      piece('a', 'straight', 0, 0, 0),
-      piece('b', 'corner', 8, 8, 180),
-    ];
+    const pieces = [piece('a', 'straight', 0, 0, 0), piece('b', 'corner', 8, 8, 180)];
     expect(connectionsFor(pieces)).toEqual([]);
   });
 });

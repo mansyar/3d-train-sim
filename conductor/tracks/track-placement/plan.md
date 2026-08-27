@@ -5,14 +5,21 @@
 
 ## Phase 1 — Track Graph Core (TDD)
 
-- [ ] Task: Write failing unit tests for `src/core/pieces.ts`
+- [x] Task: Write failing unit tests for `src/core/pieces.ts` — b583b5c
   - Acceptance criteria: tests cover piece catalog (straight, corner), endpoint
     cell computation for all 4 rotations, cell footprint; suite runs Red
     (module missing).
-- [ ] Task: Implement `src/core/pieces.ts` to green
+  - Notes: Red witnessed — `Cannot find module './pieces'` (grid suite 5/5
+    unaffected). Contract: clockwise yaw (0/90/180/270°), edges
+    `north|east|south|west`, straight joins north↔south, corner joins
+    north↔east, results in canonical edge order, 1-cell footprint.
+- [x] Task: Implement `src/core/pieces.ts` to green — 5ab70cb
   - Acceptance criteria: Red→Green witnessed; exports pure catalog functions;
     no three.js imports.
-- [ ] Task: Write failing unit tests for `src/core/track-graph.ts`
+  - Notes: Green 11/11. Fix 1/2 — `% CANONICAL_EDGES` (array coerced to NaN,
+    empty endpoints) → `% CANONICAL_EDGES.length`; caught by the unit gate,
+    esbuild does not typecheck.
+- [~] Task: Write failing unit tests for `src/core/track-graph.ts`
   - Acceptance criteria: tests cover placement records, occupancy + bounds
     validation, 64-piece cap check, connectivity edges from endpoint
     coincidence (incl. corner joins), duplicate-cell rejection; Red witnessed.

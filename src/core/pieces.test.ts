@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  FOOTPRINT_CELLS,
-  PIECE_TYPES,
-  endpointsFor,
-  type Edge,
-  type PieceType,
-  type Rotation,
-} from './pieces';
+import { type Edge, endpointsFor, FOOTPRINT_CELLS, PIECE_TYPES, type Rotation } from './pieces';
 
 const ALL_ROTATIONS: Rotation[] = [0, 90, 180, 270];
 
