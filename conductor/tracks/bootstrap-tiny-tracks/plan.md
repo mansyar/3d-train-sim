@@ -49,7 +49,12 @@
     - Red confirmed: `Cannot find module './grid'`. Green after implementing `snapToGrid(value, size)`.
     - Fix 1/2 during Green: IEEE-754 `-0` canonicalized to `+0` (contract asserts canonical zero; matters for future IndexedDB persistence).
     - Coverage run required adding `@vitest/coverage-v8 ^4.1.11` (dev dep). Suite: 5 passed. Biome + tsc clean.
-- [ ] Add combined gate script (`check` = biome + typecheck + vitest)
+- [x] Add combined gate script (`check` = biome + typecheck + vitest) — 1f5dadb
+  - Acceptance criteria: `pnpm check` runs all three gates and exits 0 on Windows and Linux; cross-platform shell syntax documented.
+  - Notes:
+    - Root cause of gate failure: bash-only `CI=true` env prefix breaks under pnpm's Windows shell; prefix is redundant since the suite is `vitest run` (single-run by design).
+    - Dated note added to workflow.md Development Commands with the Windows pwsh equivalent; script simplified.
+    - Deviation protocol applied: documented in workflow.md before resuming.
 - [ ] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR
 
 ## Phase 3 — PWA Shell + 3D Scene
