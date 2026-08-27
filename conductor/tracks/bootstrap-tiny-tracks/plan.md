@@ -91,7 +91,10 @@
 
 ## Phase 4 — First Asset
 
-- [ ] Download Kenney Train Kit, extract into `public/assets/train-kit/`, commit (CC0)
+- [x] Download Kenney Train Kit, extract into `public/assets/train-kit/`, commit (CC0) — a32625e
+  - Acceptance criteria: kit files extracted into `public/assets/train-kit/`; CC0 license file included; committed to the repo (offline PWA requires bundled assets).
+  - Acceptance notes: placeholder crate stays until the locomotive loads in the next task.
+  - Notes: 103 GLB models (6.65 MB) + License.txt imported from the `GLB format` folder; FBX/OBJ duplicates and preview images excluded. Locomotive candidates: `train-locomotive-a/b/c.glb` (~151 KB each).
 - [ ] Load locomotive `.glb` via GLTFLoader; place in scene; verify on tablet viewport
 - [ ] Add Playwright smoke spec (`e2e/`): touch tablet viewport, app boots, no console errors, no external requests
 
