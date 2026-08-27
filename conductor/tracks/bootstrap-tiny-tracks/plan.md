@@ -82,6 +82,13 @@
   - Acceptance criteria: CSS follows the Google styleguide (class selectors, alphabetized declarations, single-quoted values); toybox rail respects tablet safe areas; no unit tests (non-logic).
   - Notes: Converted `#app`/`#scene-canvas` ID styling to `.app-root`/`.scene-canvas` classes; alphabetized declarations; single-quoted font stacks; added `env(safe-area-inset-bottom)` on the rail for home-indicator tablets. Biome auto-format applied once; gate green.
 
+## Phase 3 — PWA Shell + 3D Scene [checkpoint: 2f9e63b]
+
+> **Verification Report** (2026-08-28)
+> - Automated: `pnpm check` exit 0 (Biome ✓ + typecheck ✓ + Vitest 5/5). No logic-bearing files changed since checkpoint 3f4b0b2 — `src/core/grid.ts` coverage unchanged (100%).
+> - Manual: dev server live at localhost:5173 — scene renders (cream sky, green play-mat, warm lights), orange placeholder crate spins gently, toybox rail with three 72px slots; canvas resizes with viewport; pixel ratio capped at 2; `prefers-reduced-motion` renders a static frame.
+> - User confirmation: **yes** (2026-08-28). Checkpoint SHA: 2f9e63b.
+
 ## Phase 4 — First Asset
 
 - [ ] Download Kenney Train Kit, extract into `public/assets/train-kit/`, commit (CC0)
