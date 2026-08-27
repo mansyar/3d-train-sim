@@ -5,4 +5,4 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
-| `bootstrap-tiny-tracks` | Bootstrap Tiny Tracks | pending | [conductor/tracks/bootstrap-tiny-tracks/index.md](conductor/tracks/bootstrap-tiny-tracks/plan.md) |
+| `bootstrap-tiny-tracks` | Bootstrap Tiny Tracks | in progress | [conductor/tracks/bootstrap-tiny-tracks/index.md](conductor/tracks/bootstrap-tiny-tracks/plan.md) |
