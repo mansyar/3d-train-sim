@@ -119,15 +119,24 @@
 > - Manual: Kenney locomotive fully textured (green boiler, gray cabin, red trim, dark funnel) on the green play-mat at tablet viewport; placeholder crate correctly swapped out; toybox rail renders three chunky slots; touch behavior confirmed (no hover-dependent UI); `prefers-reduced-motion` renders a static single frame; console 0 errors / 0 warnings.
 > - User confirmation: **yes** (2026-08-27). Checkpoint SHA: 607ff6d.
 
-## Phase 5 — Verification & Checkpoint
+## Phase 5 — Verification & Checkpoint [checkpoint: 607ff6d]
 
 - [x] Run full local gate suite; fix any failures
   - Notes:
     - `pnpm check` exit 0 (Biome 18 files ✓, tsc clean ✓, Vitest 5/5 ✓); `pnpm exec playwright test` exit 0 (tablet smoke 1 passed — clean console, zero external requests).
     - Pushed `f1ecc5e..ebdb4a7` to origin/main; CI run 33056547756 green (spec criterion: CI green on GitHub).
     - Non-blocking CI annotation: GitHub-hosted runners force `actions/checkout@v4` / `setup-node@v4` / `pnpm/action-setup@v4` onto Node 24. Upgrade action majors in a future chore (out of scope here).
-- [ ] Manual verification walkthrough on tablet/browser per workflow protocol
-- [ ] Record verification report in this plan; mark phase checkpoint SHA
+- [x] Manual verification walkthrough on tablet/browser per workflow protocol
+  - Notes:
+    - Track-level walkthrough run against the production preview build (`pnpm build` → `pnpm preview`, served at localhost:4174): service worker `sw.js` active with ~114 precached entries; app installable as a standalone PWA ("Tiny Tracks", amber toy icon); with Network set to Offline the app still boots and the textured locomotive still renders (GLB + colormap precached); console 0 errors / 0 warnings.
+    - Production build emits one non-blocking warning (three.js chunk > 500 kB minified). Bundle-size budget (<2 MB gzipped code, assets excluded) is a deploy-track concern; noted for the deployment track.
+- [x] Record verification report in this plan; mark phase checkpoint SHA
+
+> **Verification Report (Phase 5)**
+> - Automated: full gate suite re-run exit 0 (`pnpm check`: Biome 18 files ✓ + typecheck ✓ + Vitest 5/5; `pnpm exec playwright test`: tablet smoke 1 passed). Pushed `f1ecc5e..ebdb4a7` to origin/main; CI run 33056547756 green.
+> - Manual (production preview, localhost:4174): service worker active (~114 precached entries), app installable as standalone PWA, offline reload still boots with textured locomotive, console 0 errors / 0 warnings.
+> - Spec acceptance criteria: locomotive visible at tablet viewport ✓ · installable PWA ✓ · local gates pass ✓ · Playwright smoke clean ✓ · CI green on GitHub ✓ · `src/core/grid.ts` test-first at 100% coverage ✓ · zero runtime network calls (smoke asserts localhost-only) ✓.
+> - User confirmation: **yes** (2026-08-27). Checkpoint SHA: 607ff6d (no functional changes after Phase 4 checkpoint — Phase 5 was verification-only).
 
 ## Notes
 
