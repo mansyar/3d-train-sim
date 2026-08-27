@@ -57,7 +57,15 @@
     - Deviation protocol applied: documented in workflow.md before resuming.
 - [x] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR — 3f4b0b2
   - Acceptance criteria: workflow triggers on push/PR; runs install + full gate; pnpm version derived from `packageManager` field. (Actual GitHub-green verified once the repo is pushed — remote not yet configured.)
-  - Notes: ubuntu-latest, pnpm/action-setup@v4 (reads `packageManager`), Node 24 + pnpm cache, `pnpm install --frozen-lockfile`, `pnpm check`. Deferred: first real CI run requires the GitHub remote.
+  - Notes: ubuntu-latest, pnpm/action-setup@v4 (reads `packageManager`), Node 24 + pnpm cache, `pnpm install --frozen-lockfile`, `pnpm check`.
+  - Update (2026-08-27): public repo created via `gh` → https://github.com/mansyar/3d-train-sim ; first CI run on main **success in 26s** (33047605279) — deferred criterion closed. Workflow confirmed to trigger on both `push` (main/master) and all `pull_request` events.
+
+## Phase 2 — Quality Gates [checkpoint: 3f4b0b2]
+
+> **Verification Report** (2026-08-27)
+> - Automated: `pnpm check` exit 0 (Biome ✓ + typecheck ✓ + Vitest ✓); `src/core/grid.ts` 100% statements (only logic-bearing file this phase).
+> - Manual: coverage run verified (5 passing assertions, Red→Green witnessed live); CI green on GitHub after pushing (run 33047605279).
+> - User confirmation: verified via directive "make a public repo using gh cli" — fulfilled: https://github.com/mansyar/3d-train-sim ; CI success. Checkpoint SHA: 3f4b0b2.
 
 ## Phase 3 — PWA Shell + 3D Scene
 
