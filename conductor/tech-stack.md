@@ -7,7 +7,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | Concern | Choice | Version | Notes |
 |---|---|---|---|
 | Language | TypeScript | ~7.0 | Native compiler. `strict: true`; typecheck gate: `tsc --noEmit` |
-| 3D rendering | three | ^0.185 | `GLTFLoader` from `three/examples/jsm/loaders/GLTFLoader.js` |
+| 3D rendering | three | ^0.185 | `GLTFLoader` from `three/addons/loaders/GLTFLoader.js` (as used by `src/scene/load-locomotive.ts`) |
 | Build tool | Vite | ^8 | Single entry, static `dist/` output |
 | PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8 |
 | Audio | howler | ^2.2 | Chugga loop, whistle, UI bleeps; handles iOS unlock |
@@ -48,7 +48,7 @@ src/
   main.ts          # bootstrap
   core/            # PURE logic — no three.js imports allowed here
     track-graph.ts #   nodes/edges, piece connectivity
-    snapping.ts    #   grid snap resolution
+    snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
     pathing.ts     #   train path along track, speed, looping
     save.ts        #   serialize/deserialize world
   scene/           # three.js wiring: renderer, cameras, environment, model loading
