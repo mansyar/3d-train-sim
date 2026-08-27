@@ -40,6 +40,12 @@ const PIECE_ICONS: Record<PieceType, string> = {
 export interface AppOptions {
   world: WorldStore;
   cellFromPoint: CellFromPoint;
+  /** Begin the in-scene ghost preview for a dragged piece type. */
+  beginGhost(type: PieceType): void;
+  /** Snap the preview to a cell (null = off-meadow); tint by validity. */
+  moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
+  /** End the preview. */
+  endGhost(): void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -77,8 +83,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     trackSlot.setAttribute('aria-expanded', String(open));
   });
 
-  // ---- Drag-from-drawer ghost -------------------------------------------
-  let drag: { type: PieceType; ghost: HTMLDivElement; rotation: Rotation } | null = null;
+  // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
+  let drag: { type: PieceType; rotation: Rotation } | null = null;
+  let lastPointer = { x: -1000, y: -1000 };
 
   const canPlaceAt = (cell: Cell): boolean => {
     for (const piece of options.world.pieces()) {
@@ -87,22 +94,20 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     return true;
   };
 
-  const moveDrag = (clientX: number, clientY: number) => {
+  const stepRotation = () => {
     if (!drag) return;
-    drag.ghost.style.translate = `${clientX - 48}px ${clientY - 48}px`;
-    const cell = options.cellFromPoint(clientX, clientY);
-    const placeable = cell !== null && canPlaceAt(cell);
-    drag.ghost.classList.toggle('is-placeable', placeable);
-    drag.ghost.classList.toggle('is-blocked', !placeable);
+    drag.rotation = ((drag.rotation + 90) % 360) as Rotation;
   };
 
-  const beginDrag = (type: PieceType, clientX: number, clientY: number) => {
-    const ghost = document.createElement('div');
-    ghost.className = 'drag-ghost';
-    ghost.innerHTML = PIECE_ICONS[type];
-    root.append(ghost);
-    drag = { type, ghost, rotation: 0 };
-    moveDrag(clientX, clientY);
+  const moveDrag = (clientX: number, clientY: number) => {
+    if (!drag) return;
+    const cell = options.cellFromPoint(clientX, clientY);
+    const placeable = cell !== null && canPlaceAt(cell);
+    options.moveGhost(cell, drag.rotation, placeable);
+  };
+  const beginDrag = (type: PieceType) => {
+    drag = { type, rotation: 0 };
+    options.beginGhost(type);
     rotateKnob.removeAttribute('hidden');
   };
 
@@ -124,24 +129,35 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const endDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
-    const { type, ghost, rotation } = drag;
+    const { type, rotation } = drag;
     const cell = options.cellFromPoint(clientX, clientY);
     const placed = cell !== null && options.world.place(type, cell, rotation) === 'placed';
     if (placed) ping(clientX, clientY);
     else wobbleReturn(clientX, clientY);
-    ghost.remove();
+    options.endGhost();
     drag = null;
     rotateKnob.setAttribute('hidden', '');
   };
 
+  // Releases over the rotate knob are a rotation tap, never a drop.
+  const isKnob = (event: Event): boolean =>
+    event.target instanceof Element && event.target.closest('.rotate-knob') !== null;
+
   window.addEventListener('pointermove', (event) => {
+    lastPointer = { x: event.clientX, y: event.clientY };
     if (drag) moveDrag(event.clientX, event.clientY);
   });
   window.addEventListener('pointerup', (event) => {
-    if (drag) endDrag(event.clientX, event.clientY);
+    if (drag && !isKnob(event)) endDrag(event.clientX, event.clientY);
   });
   window.addEventListener('pointercancel', () => {
     if (drag) endDrag(-1000, -1000);
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key !== 'r' && event.key !== 'R') return;
+    if (!drag) return;
+    stepRotation();
+    moveDrag(lastPointer.x, lastPointer.y);
   });
 
   for (const button of root.querySelectorAll<HTMLButtonElement>('.piece-slot')) {
@@ -149,7 +165,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (button.classList.contains('is-dimmed')) return;
       event.preventDefault();
       const type = (button.dataset.piece ?? 'straight') as PieceType;
-      beginDrag(type, event.clientX, event.clientY);
+      beginDrag(type);
     });
   }
 
@@ -157,8 +173,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     event.stopPropagation();
     event.preventDefault();
     if (!drag) return;
-    drag.rotation = ((drag.rotation + 90) % 360) as Rotation;
-    drag.ghost.style.rotate = `${drag.rotation}deg`;
+    stepRotation();
+    moveDrag(lastPointer.x, lastPointer.y);
   });
 
   // ---- Cap dimming -------------------------------------------------------

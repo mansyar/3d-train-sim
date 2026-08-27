@@ -84,6 +84,11 @@ body {
   z-index: 10;
 }
 
+/* Author `display: flex` beats the UA `[hidden]` rule — restore the toggle. */
+.track-drawer[hidden] {
+  display: none;
+}
+
 .piece-slot {
   background: #d9a066;
   border: 4px solid var(--toy-brown);
@@ -109,31 +114,6 @@ body {
 }
 
 /* ---- Drag ghost --------------------------------------------------------- */
-
-.drag-ghost {
-  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.25));
-  height: 96px;
-  left: 0;
-  pointer-events: none;
-  position: fixed;
-  top: 0;
-  width: 96px;
-  z-index: 30;
-}
-
-.drag-ghost svg {
-  height: 100%;
-  width: 100%;
-}
-
-.drag-ghost.is-placeable {
-  filter: drop-shadow(0 0 14px var(--toy-orange));
-}
-
-.drag-ghost.is-blocked {
-  filter: grayscale(1);
-  opacity: 0.45;
-}
 
 .rotate-knob {
   background: var(--toy-green);

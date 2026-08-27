@@ -1,6 +1,6 @@
 import type { Object3D } from 'three';
 import { PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
-import type { Cell } from '../core/track-graph';
+import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { MEADOW_CELLS } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
@@ -21,6 +21,10 @@ export interface SceneHandle {
   dispose(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
+  /** In-scene ghost preview of the piece being dragged from the drawer. */
+  beginGhost(type: PieceType): void;
+  moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
+  endGhost(): void;
 }
 
 export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHandle {
@@ -93,6 +97,9 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
 
   return {
     cellFromPoint,
+    beginGhost: (type) => tracks.beginGhost(type),
+    moveGhost: (cell, rotation, valid) => tracks.moveGhost(cell, rotation, valid),
+    endGhost: () => tracks.endGhost(),
     dispose(): void {
       disposed = true;
       stopSpin();
