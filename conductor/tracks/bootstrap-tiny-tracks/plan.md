@@ -72,7 +72,9 @@
 - [x] Add vite-plugin-pwa; manifest (name Tiny Tracks, theme color, icons) + service worker — ad8aa87
   - Acceptance criteria: `pnpm build` emits `manifest.webmanifest` + service worker; manifest carries Tiny Tracks identity (name, toy theme colors, standalone, any orientation); icons present (placeholder art OK, replacement tracked).
   - Notes: vite.config.ts wires `VitePWA({ registerType: 'autoUpdate' })`; manifest = standalone display, `any` orientation (tablets rotate), theme #F59E0B (toy amber) on cream background; 192/512 icons generated as placeholder art via `scripts/gen-icons.mjs` (replacement with real art tracked as a release TODO). Build verified: registerSW.js, sw.js, workbox emitted.
-- [ ] Build DOM overlay frame (`src/ui/`): full-screen canvas + toybox rail placeholder
+- [x] Build DOM overlay frame (`src/ui/`): full-screen canvas + toybox rail placeholder — verified live 2026-08-28
+  - Acceptance criteria: app mounts a full-viewport canvas + bottom toybox rail with ≥64px chunky slots; SW registered via `virtual:pwa-register`; no console errors.
+  - Notes: `src/ui/app.ts` mounts `#scene-canvas` + toybox rail with three chunky slots (72px min, 4px borders, 20px radius); `src/style.css` covers custom props, full-viewport canvas, rail backdrop; `src/main.ts` registers SW via `virtual:pwa-register`. Gate green (Biome ✓ + typecheck ✓ + 5/5 Vitest). Console-error assertion deferred to the Playwright smoke spec (Phase 4).
 - [ ] Wire three.js scene (`src/scene/`): renderer, tablet viewport sizing, capped pixel ratio, spinning placeholder mesh
 - [ ] Hand-written CSS styling per `code_styleguides/html-css.md`
 
