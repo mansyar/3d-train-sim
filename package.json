@@ -13,6 +13,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "check": "pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test"
+    "check": "pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test",
+    "check:fix": "pnpm exec biome check . --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
   }
 }
