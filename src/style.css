@@ -1,0 +1,65 @@
+:root {
+  --toy-cream: #fff8e7;
+  --toy-orange: #ff9f1c;
+  --toy-brown: #6b4226;
+  --toy-green: #2ec4b6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  background: var(--toy-cream);
+  font-family: "Baloo 2", "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+#scene-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.toybox-rail {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--toy-cream) 88%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.toy-slot {
+  min-width: 72px;
+  min-height: 72px;
+  font-size: 34px;
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  background: var(--toy-orange);
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+}
+
+.toy-slot:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--toy-brown);
+}

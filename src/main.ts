@@ -1,10 +1,12 @@
-// Tiny Tracks — application entry point.
-// Phase 3 replaces this stub with the app frame (canvas + toybox rail).
+import { registerSW } from 'virtual:pwa-register';
 
-const app = document.querySelector<HTMLDivElement>('#app');
+import { mountApp } from './ui/app';
 
-if (app) {
-  const greeting = document.createElement('h1');
-  greeting.textContent = '🚂 Tiny Tracks';
-  app.appendChild(greeting);
+import './style.css';
+
+registerSW({ immediate: true });
+
+const root = document.getElementById('app');
+if (root) {
+  mountApp(root);
 }
