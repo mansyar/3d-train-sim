@@ -51,13 +51,19 @@
 
 ## Phase 2 — World State (TDD)
 
-- [ ] Task: Write failing unit tests for `src/state/world.ts`
+- [x] Task: Write failing unit tests for `src/state/world.ts` — 0e1f7d2
   - Acceptance criteria: tests cover place at cell, relocate, return-to-drawer,
     duplicate/occupied rejection, cap enforcement, change-listener emission;
     Red witnessed.
-- [ ] Task: Implement `src/state/world.ts` to green; coverage >80%
+  - Notes: 10 cases — place/relocate/remove happy paths, occupied + out-of-
+    bounds + cap rejections, self-relocate no-op, unknown-id handling,
+    unsubscribe. Red witnessed: `Cannot find module './world'`.
+- [x] Task: Implement `src/state/world.ts` to green; coverage >80% — 0e1f7d2
   - Acceptance criteria: Red→Green witnessed; framework-free store with
     subscribe/notify; gate green.
+  - Notes: Green 10/10; coverage 97.6 stmts / 94.4 branch / 100 lines (line 62
+    self-relocate guard branch). fix 1/1 — Biome import sort + union format
+    (`--write`). Full gate: `pnpm check` exit 0, 35/35.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Toybox Drawer + Ghost Drag UI
