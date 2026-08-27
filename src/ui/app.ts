@@ -13,15 +13,27 @@ const PIECE_LABELS: Record<PieceType, string> = {
 const PIECE_ICONS: Record<PieceType, string> = {
   straight: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="17" y="2" width="14" height="44" rx="5" fill="var(--toy-brown)"/>
-      <rect x="21" y="5" width="6" height="38" rx="3" fill="var(--toy-steel)"/>
+      <rect x="14" y="3" width="20" height="42" rx="5"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <rect x="15.5" y="9" width="17" height="4" rx="2"
+            fill="var(--toy-brown)" opacity=".55"/>
+      <rect x="15.5" y="22" width="17" height="4" rx="2"
+            fill="var(--toy-brown)" opacity=".55"/>
+      <rect x="15.5" y="35" width="17" height="4" rx="2"
+            fill="var(--toy-brown)" opacity=".55"/>
+      <line x1="19" y1="4" x2="19" y2="44"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="29" y1="4" x2="29" y2="44"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`,
   corner: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M17 2 H31 V10 A24 24 0 0 1 46 31 H38 A16 16 0 0 0 24 10 Z"
-            fill="var(--toy-brown)"/>
-      <path d="M21 6 H27 V9 A21 21 0 0 1 42 27 H34 A15 15 0 0 0 21 9 Z"
-            fill="var(--toy-steel)"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-brown)" stroke-width="22" stroke-linecap="round"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-cream)" stroke-width="16" stroke-linecap="round"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-steel)" stroke-width="5" stroke-linecap="round"/>
     </svg>`,
 };
 
