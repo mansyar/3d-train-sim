@@ -131,11 +131,21 @@
 
 ## Phase 4 — Scene Rendering of Placed Pieces
 
-- [~] Task: Load straight + corner GLB templates; render placements via
-    clone-per-piece; map grid cells to world positions; apply yaw per rotation
+- [x] Task: Load straight + corner GLB templates; render placements via
+    clone-per-piece; map grid cells to world positions; apply yaw per rotation — 8a535a8
   - Acceptance criteria: placed piece visually equals its drawer icon piece;
     corner orientation matches its graph endpoints; template loads once per
     type; graceful fallback if a GLB fails (piece still tracked in world).
+  - Notes: invisible-piece root cause — Kenney kit geometry is authored below
+    its origin (box min y = −1); templates now lifted by −box.min.y at load.
+    Straight renders north-south; corner renders as a bend (screenshots).
+    Fallback witnessed: corner GLB hidden mid-run → straight still rendered,
+    world tracked, console clean. User-feedback round folded in: real-3D
+    drag ghost (grid-snapped, amber/gray tint), drawer toggle fix
+    (author display:flex beat the UA [hidden] rule), R/Shift+R rotate,
+    rotate-knob release no longer drops the piece. User confirmed placement
+    and rotation; re-witnessed on 8a535a8: corner drop at 180° (R ×2)
+    fans right, gate 35/35, console-errors 0.
 - [ ] Task: Sync renderer to world changes (add, relocate, remove-to-drawer
     incremental scene updates; dispose clones on removal)
   - Acceptance criteria: no per-frame allocations in sync path; scene matches
