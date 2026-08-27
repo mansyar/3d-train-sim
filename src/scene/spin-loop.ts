@@ -1,5 +1,10 @@
 import type { Camera, Object3D, Scene, WebGLRenderer } from 'three';
 
+/** Gentle drift (yaw) and nod (pitch) rates in radians per second. */
+const SPIN_SPEED = 0.6;
+const NOD_SPEED = 0.3;
+const NOD_AMPLITUDE = 0.15;
+
 export function startSpinLoop(
   renderer: WebGLRenderer,
   scene: Scene,
@@ -14,14 +19,17 @@ export function startSpinLoop(
   }
 
   let rafId = 0;
-  let tickCount = 0;
+  let lastMs = performance.now();
   let running = true;
   const tick = () => {
     if (!running) return;
-    tickCount += 1;
+    const now = performance.now();
+    // Clamp dt so a background-tab pause doesn't produce a huge jump.
+    const dt = Math.min((now - lastMs) / 1000, 0.1);
+    lastMs = now;
     const target = getTarget();
-    target.rotation.y = tickCount * 0.01;
-    target.rotation.x = Math.sin(tickCount * 0.005) * 0.15;
+    target.rotation.y += SPIN_SPEED * dt;
+    target.rotation.x = Math.sin((now / 1000) * NOD_SPEED) * NOD_AMPLITUDE;
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(tick);
   };

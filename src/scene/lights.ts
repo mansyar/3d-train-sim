@@ -1,7 +1,7 @@
 import type { Scene } from 'three';
 import { AmbientLight, DirectionalLight } from 'three';
 
-/** Soft toy-table lighting: warm ambient + one key light with soft shadows. */
+/** Soft toy-table lighting: warm ambient + one key light. */
 export function createLights(scene: Scene): () => void {
   const ambient = new AmbientLight(0xfff4e0, 0.7);
   const key = new DirectionalLight(0xffffff, 1.1);

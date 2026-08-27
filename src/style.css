@@ -21,7 +21,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
   background: var(--toy-cream);
-  font-family: "Baloo 2", "Comic Sans MS", "Segoe UI", system-ui, sans-serif;
+  font-family: 'Baloo 2', 'Comic Sans MS', 'Segoe UI', system-ui, sans-serif;
   touch-action: manipulation;
   user-select: none;
 }
@@ -37,6 +37,8 @@ body {
 
 .toybox-rail {
   backdrop-filter: blur(4px);
+  background: rgba(255, 248, 231, 0.88);
+  /* biome-ignore lint/suspicious/noDuplicateProperties: fallback for Safari < 16.2 (no color-mix) */
   background: color-mix(in srgb, var(--toy-cream) 88%, transparent);
   bottom: 0;
   display: flex;

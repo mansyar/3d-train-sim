@@ -1,5 +1,6 @@
 import type { Object3D } from 'three';
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { disposeObject } from './dispose-object';
 import { createGround } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
@@ -32,7 +33,11 @@ export function initScene(canvas: HTMLCanvasElement): SceneHandle {
   let disposed = false;
   loadLocomotive()
     .then((model) => {
-      if (disposed) return;
+      if (disposed) {
+        // Tore down before the model arrived — release its GPU resources.
+        disposeObject(model);
+        return;
+      }
       scene.remove(crate.mesh);
       crate.dispose();
       scene.add(model);

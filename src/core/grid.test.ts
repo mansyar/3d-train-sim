@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { snapToGrid } from './grid';
 
 describe('snapToGrid', () => {
-  it('snaps a coordinate to the nearest multiple (ties round up)', () => {
+  it('snaps a coordinate to the nearest multiple, with exact ties rounding up', () => {
+    // 16/32 === 0.5 is an exact tie; Math.round(0.5) === 1 rounds up.
+    expect(snapToGrid(16, 32)).toBe(32);
     expect(snapToGrid(20, 32)).toBe(32);
+    // Math.round(-0.5) === -0 — the tie still rounds up toward zero.
+    expect(snapToGrid(-16, 32)).toBe(0);
   });
 
   it('snaps a coordinate to the nearest upper multiple when closer', () => {
