@@ -1,0 +1,10 @@
+{
+  "id": "bootstrap-tiny-tracks",
+  "title": "Bootstrap Tiny Tracks",
+  "status": "pending",
+  "created": "2026-08",
+  "spec": "conductor/tracks/bootstrap-tiny-tracks/spec.md",
+  "plan": "conductor/tracks/bootstrap-tiny-tracks/plan.md",
+  "phases": 5,
+  "tags": ["scaffold", "tooling", "pwa", "scene", "assets"]
+}
