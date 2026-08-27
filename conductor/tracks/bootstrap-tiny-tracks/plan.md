@@ -105,7 +105,14 @@
     - Added `<link rel="icon" href="/pwa-192x192.png">` to index.html to clear the `/favicon.ico` 404 console error.
     - Visual verification (iPad Mini emulation, port 5175 — 5173/5174 are occupied by the unrelated `3d-marble-run` dev server): locomotive fully textured (green boiler, gray cabin, red trim), green play-mat, toybox rail with three slots; console 0 errors / 0 warnings. Screenshot: `.playwright-cli/locomotive-fixed.png`.
     - `.playwright-cli/` added to .gitignore (test artifacts).
-- [ ] Add Playwright smoke spec (`e2e/`): touch tablet viewport, app boots, no console errors, no external requests
+- [x] Add Playwright smoke spec (`e2e/`): touch tablet viewport, app boots, no console errors, no external requests — 607ff6d
+  - Acceptance criteria: `@playwright/test` installed; spec boots the app in a touch-emulated tablet viewport and asserts zero console errors and zero non-localhost requests; `pnpm exec playwright test` exits 0.
+  - Notes:
+    - Added `@playwright/test` (1.62.1) and `playwright.config.ts` with a single `tablet` project using the `iPad Mini` device profile (touch emulation, tablet-first product).
+    - `e2e/smoke.spec.ts`: boots the app, asserts title "Tiny Tracks", `.scene-canvas` visible and three `.toy-slot` buttons present; collects console errors + pageerrors during a 1 s render/asset settle; asserts every request origin is the page origin (zero external requests — privacy gate).
+    - webServer pinned to a dedicated port via `pnpm exec vite --port 5199 --strictPort` (pnpm swallows Playwright's auto-appended `--port`, which caused a 30 s webServer timeout on the first run); `use.baseURL` set for `page.goto('/')` (missing baseURL → "invalid URL" on the second run).
+    - `vite.config.ts`: vitest `include` limited to `src/**/*.test.ts` so the e2e spec is not collected by the unit runner.
+    - Result: `pnpm exec playwright test` → 1 passed (2.2 s), console clean, all requests localhost-only; full `pnpm check` gate green (18 files, tsc clean, 5/5 unit tests).
 
 ## Phase 5 — Verification & Checkpoint
 
