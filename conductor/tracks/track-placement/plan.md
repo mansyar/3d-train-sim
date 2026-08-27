@@ -49,7 +49,15 @@
     `pnpm check` exit 0 (Biome + tsc + 25/25).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 — World State (TDD)
+## Phase 2 — World State (TDD) [checkpoint: 7ee6bfd]
+
+> **Verification Report** (2026-08-27)
+> - Automated: `pnpm test` 35/35 passed (exit 0); `pnpm check` (Biome +
+>   `tsc --noEmit` + tests) exit 0; coverage — world.ts 97.6 stmts /
+>   94.4 branch / 100 lines (line 62 self-relocate guard branch).
+> - Manual: none required — pure logic, no user-visible surface.
+> - User confirmation: **yes** (Phase 2 gate).
+> - Checkpoint SHA: `7ee6bfd`
 
 - [x] Task: Write failing unit tests for `src/state/world.ts` — 0e1f7d2
   - Acceptance criteria: tests cover place at cell, relocate, return-to-drawer,
