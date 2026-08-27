@@ -3,7 +3,16 @@
 **Track ID:** `track-placement`
 **Spec:** `conductor/tracks/track-placement/spec.md`
 
-## Phase 1 — Track Graph Core (TDD)
+## Phase 1 — Track Graph Core (TDD) [checkpoint: e640fe7]
+
+> **Verification Report** (2026-08-27)
+> - Automated: `pnpm test` 25/25 passed (exit 0); `pnpm check` (Biome +
+>   `tsc --noEmit` + tests) exit 0; coverage — pieces.ts 100/100/100/100,
+>   track-graph.ts 95.7 stmts / 91.7 branch / 100 lines (uncovered 119–122
+>   are `noUncheckedIndexedAccess` guards, unreachable by valid input).
+> - Manual: none required — pure logic, no user-visible surface.
+> - User confirmation: **yes** (Phase 1 gate).
+> - Checkpoint SHA: `e640fe7`
 
 - [x] Task: Write failing unit tests for `src/core/pieces.ts` — b583b5c
   - Acceptance criteria: tests cover piece catalog (straight, corner), endpoint
