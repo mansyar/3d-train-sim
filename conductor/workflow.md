@@ -203,13 +203,19 @@ pnpm install
 
 ```bash
 pnpm dev                          # Vite dev server
-CI=true pnpm test                 # Vitest, single run
+CI=true pnpm test                 # Vitest, single run (POSIX shells)
+$env:CI='true'; pnpm test         # Vitest, single run (Windows pwsh)
+pnpm test                         # identical — scripts use `vitest run` (single-run by design)
 CI=true pnpm test -- --coverage   # with coverage
 pnpm exec tsc --noEmit            # typecheck gate
 pnpm exec biome check .           # lint + format check
 pnpm exec biome check . --write   # lint + format fix
 pnpm exec playwright test         # E2E smoke
 ```
+
+> **Windows note:** bash-style `VAR=value cmd` prefixes fail under pnpm's Windows
+> shell. The `check` script therefore omits `CI=true` — the suite is `vitest run`,
+> which is single-run regardless of environment.
 
 ### Before Committing
 
