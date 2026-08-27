@@ -55,7 +55,9 @@
     - Root cause of gate failure: bash-only `CI=true` env prefix breaks under pnpm's Windows shell; prefix is redundant since the suite is `vitest run` (single-run by design).
     - Dated note added to workflow.md Development Commands with the Windows pwsh equivalent; script simplified.
     - Deviation protocol applied: documented in workflow.md before resuming.
-- [ ] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR
+- [x] Add GitHub Actions workflow (`.github/workflows/ci.yml`) running the gate on push/PR — 3f4b0b2
+  - Acceptance criteria: workflow triggers on push/PR; runs install + full gate; pnpm version derived from `packageManager` field. (Actual GitHub-green verified once the repo is pushed — remote not yet configured.)
+  - Notes: ubuntu-latest, pnpm/action-setup@v4 (reads `packageManager`), Node 24 + pnpm cache, `pnpm install --frozen-lockfile`, `pnpm check`. Deferred: first real CI run requires the GitHub remote.
 
 ## Phase 3 — PWA Shell + 3D Scene
 
