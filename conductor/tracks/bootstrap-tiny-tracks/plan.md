@@ -89,7 +89,7 @@
 > - Manual: dev server live at localhost:5173 — scene renders (cream sky, green play-mat, warm lights), orange placeholder crate spins gently, toybox rail with three 72px slots; canvas resizes with viewport; pixel ratio capped at 2; `prefers-reduced-motion` renders a static frame.
 > - User confirmation: **yes** (2026-08-28). Checkpoint SHA: 2f9e63b.
 
-## Phase 4 — First Asset
+## Phase 4 — First Asset [checkpoint: 607ff6d]
 
 - [x] Download Kenney Train Kit, extract into `public/assets/train-kit/`, commit (CC0) — a32625e
   - Acceptance criteria: kit files extracted into `public/assets/train-kit/`; CC0 license file included; committed to the repo (offline PWA requires bundled assets).
@@ -113,6 +113,11 @@
     - webServer pinned to a dedicated port via `pnpm exec vite --port 5199 --strictPort` (pnpm swallows Playwright's auto-appended `--port`, which caused a 30 s webServer timeout on the first run); `use.baseURL` set for `page.goto('/')` (missing baseURL → "invalid URL" on the second run).
     - `vite.config.ts`: vitest `include` limited to `src/**/*.test.ts` so the e2e spec is not collected by the unit runner.
     - Result: `pnpm exec playwright test` → 1 passed (2.2 s), console clean, all requests localhost-only; full `pnpm check` gate green (18 files, tsc clean, 5/5 unit tests).
+
+> **Verification Report (Phase 4)**
+> - Automated: `pnpm check` exit 0 (Biome 18 files ✓ + typecheck ✓ + Vitest 5/5); `pnpm exec playwright test` exit 0 (tablet smoke: app boots, clean console, zero external requests). No logic-bearing files changed since checkpoint 2f9e63b — coverage obligations unchanged (`src/core/grid.ts` at 100%).
+> - Manual: Kenney locomotive fully textured (green boiler, gray cabin, red trim, dark funnel) on the green play-mat at tablet viewport; placeholder crate correctly swapped out; toybox rail renders three chunky slots; touch behavior confirmed (no hover-dependent UI); `prefers-reduced-motion` renders a static single frame; console 0 errors / 0 warnings.
+> - User confirmation: **yes** (2026-08-27). Checkpoint SHA: 607ff6d.
 
 ## Phase 5 — Verification & Checkpoint
 
