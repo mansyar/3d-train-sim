@@ -18,7 +18,9 @@
     - `index.html`: minimal mount point (`<div id="app">`), loads `src/main.ts`.
     - `src/main.ts`: placeholder shell content; replaced by DOM overlay in Phase 3.
     - Lockfile updated and committed (closes task 1.1's deferred criterion).
-- [ ] Create folder skeleton per `tech-stack.md` (src/core, src/scene, src/ui, src/audio, src/state, e2e/, public/assets/train-kit/)
+- [x] Create folder skeleton per `tech-stack.md` (src/core, src/scene, src/ui, src/audio, src/state, e2e/, public/assets/train-kit/) — 36dd3ed
+  - Acceptance criteria: all directories exist and are tracked by git (`.gitkeep` placeholders until populated).
+  - Notes: 7 directories created with `.gitkeep` placeholders; `src/core/` and `src/state/` are the logic-bearing zones per workflow definitions.
 - [ ] Configure Biome (`biome.json`) and add `check`/`check:fix` scripts
 - [ ] Verify: `pnpm dev` serves a minimal `index.html` shell
 
