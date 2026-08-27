@@ -138,6 +138,10 @@
 > - Spec acceptance criteria: locomotive visible at tablet viewport ✓ · installable PWA ✓ · local gates pass ✓ · Playwright smoke clean ✓ · CI green on GitHub ✓ · `src/core/grid.ts` test-first at 100% coverage ✓ · zero runtime network calls (smoke asserts localhost-only) ✓.
 > - User confirmation: **yes** (2026-08-27). Checkpoint SHA: 607ff6d (no functional changes after Phase 4 checkpoint — Phase 5 was verification-only).
 
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions — 2a96b9e
+
 ## Notes
 
 (appended per task as implementation proceeds)
