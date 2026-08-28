@@ -1,7 +1,7 @@
 {
   "id": "train-ride",
   "title": "Train Ride (Autonomous Locomotive)",
-  "status": "pending",
+  "status": "complete",
   "created": "2026-08",
   "spec": "conductor/tracks/train-ride/spec.md",
   "plan": "conductor/tracks/train-ride/plan.md",

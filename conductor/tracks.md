@@ -6,4 +6,4 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
 | `bootstrap-tiny-tracks` | Bootstrap Tiny Tracks | complete | [conductor/tracks/bootstrap-tiny-tracks/index.md](conductor/tracks/bootstrap-tiny-tracks/plan.md) |
-| `train-ride` | Train Ride (Autonomous Locomotive) | in progress | [conductor/tracks/train-ride/index.md](conductor/tracks/train-ride/plan.md) |
+| `train-ride` | Train Ride (Autonomous Locomotive) | complete | [conductor/tracks/train-ride/index.md](conductor/tracks/train-ride/plan.md) |

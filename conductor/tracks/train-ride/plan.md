@@ -73,7 +73,7 @@
 
   Verification Report: Confirmed 2026-08-28 by the user on the dev server (tablet): corners + straights join flush after 38f8a02, ▶/⏹ rides the layout, the locomotive follows the solved path through corners and straights, follow camera behaves ("all working well including the train motion"). Gates green: 55/55 vitest, biome, tsc clean.
 
-## Phase 4 — E2E + Full Verification
+## Phase 4 — E2E + Full Verification [checkpoint: 8922c59]
 
 - [x] Task: Extend Playwright smoke: place pieces → press ▶ → train moves; console clean, zero external requests — 8922c59
 
@@ -81,8 +81,12 @@
 - [x] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures — 8922c59
 
   Notes: biome 31 files clean (one formatting fix applied to the new spec), tsc clean, vitest 55/55, Playwright 3/3 (tablet).
-- [ ] Task: Manual tablet walkthrough (build loop, press ▶, watch ride, ⏹ camera ease-back)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Manual tablet walkthrough (build loop, press ▶, watch ride, ⏹ camera ease-back) — (user walkthrough 2026-08-28)
+
+  Notes: User confirmed on tablet: loop building with knob rotations works, ▶ rides the loop, ⏹ eases the camera back without snapping.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report: Confirmed 2026-08-28. Manual: user tablet walkthrough passed (loop build, ride, camera ease-back). Automated: biome + tsc clean, vitest 55/55, Playwright 3/3 (tablet) including the new ride smoke (place → ▶ → motion; zero external requests; clean console).
 
 ## Notes
 
