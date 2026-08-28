@@ -68,6 +68,24 @@ body {
   transform: translateY(3px);
 }
 
+/* Auto margin pushes the trash bin to the rail's right end. */
+.trash-slot {
+  background: var(--toy-cream);
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 34px;
+  margin-left: auto;
+  min-height: 72px;
+  min-width: 72px;
+}
+
+.trash-slot:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
 /* ---- Track drawer ------------------------------------------------------ */
 
 .track-drawer {

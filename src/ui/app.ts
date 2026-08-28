@@ -46,7 +46,7 @@ export interface AppOptions {
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** End the preview. */
   endGhost(): void;
-  /** The placed piece under a screen point, for relocate/return drags. */
+  /** The placed piece under a screen point, for relocate/trash drags. */
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
@@ -67,6 +67,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-expanded="false" data-drawer="track">🛤️</button>
       <button class="toy-slot" type="button" aria-label="Scenery (coming soon)">🌳</button>
       <button class="toy-slot" type="button" aria-label="Trains (coming soon)">🚂</button>
+      <button class="trash-slot" type="button"
+              aria-label="Trash bin — drop a track piece here to remove it">🗑️</button>
     </div>
   `;
   const canvas = root.querySelector<HTMLCanvasElement>('.scene-canvas');
@@ -89,11 +91,11 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
   // pickedId set ⇒ the drag moves an existing placed piece (relocate or
-  // return-to-rail); null ⇒ a fresh piece from the drawer.
+  // trash); null ⇒ a fresh piece from the drawer.
   let drag: { type: PieceType; rotation: Rotation; pickedId: string | null } | null = null;
   let lastPointer = { x: -1000, y: -1000 };
 
-  // Pressing a placed piece lifts it as a ghost (relocate / return-to-rail).
+  // Pressing a placed piece lifts it as a ghost (relocate / trash drags).
   // A plain tap releases on the same cell — relocate is a no-op snap-back.
   canvas.addEventListener('pointerdown', (event) => {
     if (drag) return;
@@ -158,12 +160,16 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     if (pickedId === null) {
       settled = cell !== null && options.world.place(type, cell, rotation) === 'placed';
     } else {
-      const overRail =
+      const overTrash =
+        document.elementFromPoint(clientX, clientY)?.closest('.trash-slot') !== null;
+      const overToolbar =
         document.elementFromPoint(clientX, clientY)?.closest('.toybox-rail') !== null;
-      if (overRail) {
-        options.world.remove(pickedId); // Returned to the toy box.
+      if (overTrash) {
+        options.world.remove(pickedId); // Binned.
         settled = true;
-      } else if (cell) {
+      } else if (cell && !overToolbar) {
+        // Toolbar drops never relocate — the bottom grid row hides behind the
+        // rail, so the piece wobble-returns to its cell instead.
         settled = options.world.relocate(pickedId, cell, rotation) === 'placed';
       }
       options.setPieceVisible(pickedId, true); // Reconcile already moved or removed it.
