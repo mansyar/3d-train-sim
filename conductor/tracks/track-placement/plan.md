@@ -246,6 +246,21 @@
     drag feel, snap bounce, snap-back, trashbin, and fluidity all pass.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — 1d19290
 
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions (ghost material sharing, world copy,
+  dispose guard, endpoint dedupe, minor cleanups) — 3401b92
+  - Notes: (1) ghost materials are now cloned per drag — tint/opacity/
+    depthWrite mutations and endGhost dispose no longer touch the shared
+    template materials, so placed pieces keep their true color and the tint
+    no longer accumulates across drags; (2) `world.pieces()` returns a
+    defensive copy; (3) late-arriving GLBs after `dispose()` release their
+    GPU resources instead of resurrecting scene objects; (4) endpoint base
+    geometry lives only in `pieces.ts` (`baseEndpointsFor`), consumed by
+    `track-graph.ts`; (5) stale `BASE_YAW` doc comment removed and
+    `endDrag` reads `elementFromPoint` once. Gates: Biome clean, tsc clean,
+    vitest 35/35, Playwright 2/2.
+
 ## Notes
 
 (appended per task as implementation proceeds)
