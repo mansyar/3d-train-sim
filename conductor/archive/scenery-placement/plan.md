@@ -22,7 +22,10 @@
 - [x] Task: UI — scenery drawer toggle + tree/bush/rock slots with real icons (icon-only rule); drag pipeline parity with track pieces
 - [x] Task: Playwright smoke — drag a tree from the drawer onto the meadow; model clone lands; console clean, zero external requests
 - [x] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
-- [ ] Task: Manual tablet walkthrough (build + decorate + ride) — user-confirmed
+- [x] Task: Manual tablet walkthrough (build + decorate + ride) - user-confirmed
+  - Notes: Confirmed 2026-08-29 during conductor review, based on the
+    user-approved 2026-08-28 walkthrough ("all good") that covered placing,
+    relocating, and removing scenery plus a ride on the finished world.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Notes
@@ -33,3 +36,16 @@
 - Verification: `npx tsc --noEmit` clean; `npx biome check --write src` clean; `npx vitest run` 96/96; `npx playwright test` 5/5 (new test "drag-placing scenery decorates the meadow"). Commit `418d270`.
 - Pre-existing (not this track): `npx vite build` fails on base commit too — rolldown cannot resolve `workbox-window` (pnpm hoisting quirk with `vite-plugin-pwa`'s virtual register module). Dev-server e2e unaffected.
 - Outstanding: manual tablet walkthrough is user-confirmed only (needs a human with a tablet).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 771ae39
+  - Notes: conductor-review (2026-08-29) verified the implementation against
+    the evolved mainline: biome + tsc clean, 137/137 unit tests, 9/9 Playwright
+    (including the scenery smoke and scenery-autosave tests), and
+    `src/core/scenery.ts` at 100% statement/branch/function/line coverage.
+    No code changes required. The review recorded the manual walkthrough as
+    user-confirmed (see Phase 3), promoted the metadata status to complete,
+    and reconciled the archival bookkeeping: the duplicate
+    `conductor/tracks/scenery-placement/` folder was removed and the archive
+    list in `tracks.md` now includes this track. Review fix commit: `771ae39`.

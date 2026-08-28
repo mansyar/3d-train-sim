@@ -381,11 +381,72 @@ body {
   }
 }
 
+/* ---- Parent gate (corner, hold-then-confirm) ----------------------------- */
+
+.parent-gate {
+  background: var(--toy-cream);
+  border: 3px solid var(--toy-brown);
+  border-radius: 18px;
+  box-shadow: 0 3px 0 var(--toy-brown);
+  color: var(--toy-brown);
+  cursor: pointer;
+  font-size: 30px;
+  line-height: 1;
+  min-height: 64px;
+  min-width: 64px;
+  opacity: 0.5;
+  overflow: hidden;
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  touch-action: none;
+  z-index: 30;
+}
+
+/* Hold progress: a calm left-to-right fill driven by --hold (0..1). */
+.parent-gate::before {
+  background: color-mix(in srgb, var(--toy-green) 55%, transparent);
+  content: '';
+  inset: 0;
+  position: absolute;
+  transform: scaleX(var(--hold, 0));
+  transform-origin: left;
+}
+
+.gate-icon {
+  position: relative;
+  z-index: 1;
+}
+
+.parent-gate.is-holding {
+  opacity: 0.85;
+}
+
+.parent-gate.is-confirm {
+  animation: gate-confirm 0.9s ease-in-out infinite;
+  background: var(--toy-orange);
+  opacity: 1;
+}
+
+@keyframes gate-confirm {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
 /* Gentle motion only — reduced-motion users get instant, still feedback. */
 @media (prefers-reduced-motion: reduce) {
   .drop-ping,
   .wobble-return {
     animation: none;
     display: none;
+  }
+
+  .parent-gate.is-confirm {
+    animation: none;
   }
 }

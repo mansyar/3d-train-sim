@@ -16,7 +16,7 @@ The quality bar. Every implementation track is reviewed against these rules. The
 
 1. **Sound rewards action.** Whistles, chugga-chugga, happy dings — audio confirms the kid's agency.
 2. **No sudden, loud, or scary sounds.** No sharp attacks, no screams, no low rumble menace. Max volume is capped well below device maximum.
-3. **Mute is instant.** One tap silences everything, right now. (Persistence across reloads arrives with the saving track.)
+3. **Mute is instant and persists across reloads.** One tap silences everything, right now. The parent's sound preference survives every restart.
 
 ## Visual principles
 

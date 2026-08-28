@@ -11,11 +11,16 @@ import { TRAIN_KINDS, type TrainKind } from './trains';
 
 const SNAPSHOT_VERSION = 1;
 
+export interface DevicePreferences {
+  muted: boolean;
+}
+
 export interface WorldSnapshot {
   version: typeof SNAPSHOT_VERSION;
   pieces: PlacedPiece[];
   scenery: PlacedScenery[];
   train?: TrainKind;
+  preferences?: DevicePreferences;
 }
 
 export interface WorldData {
@@ -28,8 +33,9 @@ export function serializeWorld(
   pieces: readonly PlacedPiece[],
   scenery: readonly PlacedScenery[],
   train: TrainKind = 'steam',
+  muted = false,
 ): WorldSnapshot {
-  return {
+  const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
     pieces: pieces.map((piece) => ({
       id: piece.id,
@@ -45,6 +51,9 @@ export function serializeWorld(
     })),
     train,
   };
+  // Sound-on is the default, so it is omitted to keep snapshots minimal.
+  if (muted) snapshot.preferences = { muted: true };
+  return snapshot;
 }
 
 export function deserializeWorld(value: unknown): WorldData {
@@ -68,6 +77,17 @@ export function deserializeWorld(value: unknown): WorldData {
     scenery: validScenery,
     train: isTrainKind(value.train) ? value.train : 'steam',
   };
+}
+
+/**
+ * Resolves the device preferences of a snapshot. Anything missing or invalid
+ * falls back to the sound-on default; this never throws into the app.
+ */
+export function deserializePreferences(value: unknown): DevicePreferences {
+  if (!isRecord(value)) return { muted: false };
+  const preferences = value.preferences;
+  if (!isRecord(preferences)) return { muted: false };
+  return typeof preferences.muted === 'boolean' ? { muted: preferences.muted } : { muted: false };
 }
 
 function parsePiece(value: unknown): PlacedPiece | null {

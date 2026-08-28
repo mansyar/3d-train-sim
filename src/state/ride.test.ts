@@ -131,3 +131,36 @@ describe('createRideController', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 });
+
+describe('reset and rides', () => {
+  it('gently stops an active ride as the first consequence of a reset', () => {
+    const world = loopPieces();
+    const ride = createRideController(world);
+    expect(ride.start()).toBe(true);
+
+    // Fakes log the reset's observable consequences in the order they land.
+    const events: string[] = [];
+    world.subscribe(() => events.push('world-cleared'));
+    ride.subscribe((mode) => {
+      if (mode === 'idle') events.push('ride-stopped');
+    });
+
+    world.reset();
+
+    expect(events).toEqual(['ride-stopped', 'world-cleared']);
+    expect(ride.mode()).toBe('idle');
+    expect(ride.ride()?.path).toBeTruthy();
+  });
+
+  it('emits no ride event when a reset hits an idle train', () => {
+    const world = loopPieces();
+    const ride = createRideController(world);
+    const listener = vi.fn();
+    ride.subscribe(listener);
+
+    world.reset();
+
+    expect(ride.mode()).toBe('idle');
+    expect(listener).not.toHaveBeenCalled();
+  });
+});

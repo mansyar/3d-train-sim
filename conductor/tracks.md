@@ -10,5 +10,6 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | `train-audio-personalities` | Train Audio Personalities | complete | [tracks/train-audio-personalities/](tracks/train-audio-personalities/index.md) |
 
 Completed tracks are archived under [conductor/archive/](archive/):
-`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`.
+`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
+`scenery-placement`, `parent-reset-and-mute-memory`.
 

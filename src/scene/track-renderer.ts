@@ -122,6 +122,36 @@ export function startTrackRenderer(
   const groundHit = new Vector3();
   let disposed = false;
 
+  // Removed toys pop away softly instead of vanishing — celebration, never
+  // punishment. Reduced-motion users keep the instant removal they had.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const POP_MS = 320;
+  const pops: Array<{ model: Object3D; start: number }> = [];
+  let popRaf: number | null = null;
+
+  const runPops = (now: number): void => {
+    for (let i = pops.length - 1; i >= 0; i--) {
+      const pop = pops[i] as { model: Object3D; start: number };
+      const t = (now - pop.start) / POP_MS;
+      if (t >= 1) {
+        scene.remove(pop.model);
+        pops.splice(i, 1);
+      } else {
+        pop.model.scale.setScalar(Math.max(1 - t, 0.001));
+      }
+    }
+    popRaf = pops.length > 0 ? requestAnimationFrame(runPops) : null;
+  };
+
+  const popOut = (model: Object3D): void => {
+    if (reducedMotion || disposed) {
+      scene.remove(model);
+      return;
+    }
+    pops.push({ model, start: performance.now() });
+    if (popRaf === null) popRaf = requestAnimationFrame(runPops);
+  };
+
   function apply(item: MeadowItem): void {
     const kind = isPiece(item) ? item.type : item.kind;
     const template = templates.get(kind);
@@ -144,7 +174,7 @@ export function startTrackRenderer(
     for (const item of world.scenery()) wanted.set(item.id, item);
     for (const [id, model] of rendered) {
       if (!wanted.has(id)) {
-        scene.remove(model); // Clones share template geometry — the template owns GPU resources.
+        popOut(model); // A soft scale-down pop, then the mesh leaves the scene.
         rendered.delete(id);
       }
     }
@@ -390,6 +420,10 @@ export function startTrackRenderer(
       disposed = true;
       unsubscribe();
       endGhost();
+      if (popRaf !== null) cancelAnimationFrame(popRaf);
+      popRaf = null;
+      for (const pop of pops) scene.remove(pop.model);
+      pops.length = 0;
       for (const model of rendered.values()) scene.remove(model);
       rendered.clear();
       tracked.clear();
