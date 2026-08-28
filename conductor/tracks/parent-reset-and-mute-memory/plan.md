@@ -6,14 +6,20 @@ verification checkpoint per the Phase Completion protocol.
 
 ## Phase 1 — Save Format & Mute Persistence (logic-bearing, TDD)
 
-- [ ] Task: Write failing unit tests for preferences-aware snapshots (Red)
-  - [ ] Snapshot round-trip preserves the mute preference
-  - [ ] Snapshot without a preferences field deserializes to sound-on default
-  - [ ] Invalid/unknown preference values fall back to sound-on without throwing
-  - [ ] Confirm new tests fail before implementation
-- [ ] Task: Extend snapshot schema in src/core/save.ts (Green)
-  - [ ] Optional device-preferences object on the versioned snapshot
-  - [ ] All existing save/load tests remain green
+- [x] Task: Write failing unit tests for preferences-aware snapshots (Red) [0b5fa03]
+  - [x] Snapshot round-trip preserves the mute preference
+  - [x] Snapshot without a preferences field deserializes to sound-on default
+  - [x] Invalid/unknown preference values fall back to sound-on without throwing
+  - [x] Confirm new tests fail before implementation
+  - Notes: Red confirmed (4 failing: missing `deserializePreferences` export,
+    ignored 4th serialize arg). Green added an optional
+    `preferences: { muted }` to `WorldSnapshot`; `serializeWorld` gains a
+    `muted` param and omits the field when sound is on so every existing
+    snapshot test stayed green unchanged. New pure `deserializePreferences`
+    falls back to sound-on for missing/invalid values, never throwing.
+- [x] Task: Extend snapshot schema in src/core/save.ts (Green) [0b5fa03]
+  - [x] Optional device-preferences object on the versioned snapshot
+  - [x] All existing save/load tests remain green
 - [ ] Task: Write failing unit tests for mute persistence triggers (Red)
   - [ ] Boot restore applies the persisted mute state exactly once
   - [ ] Each mute change persists exactly once; storage failure is non-fatal
