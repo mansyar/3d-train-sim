@@ -52,8 +52,13 @@
 
 ## Phase 3 — Go/Stop Trigger + Follow Camera (src/ui, src/scene)
 
-- [ ] Task: UI: chunky icon-only ▶/⏹ toggle, dims when meadow is empty, ≥64px touch target
-- [ ] Task: Scene: follow-camera trails the locomotive, eases back to overview on stop; honors `prefers-reduced-motion`
+- [x] Task: UI: chunky icon-only ▶/⏹ toggle, dims when meadow is empty, ≥64px touch target — e625b9b
+
+  Notes: `.ride-toggle` joins the toybox rail (margin-left:auto groups it with the trash bin, which loses its own auto margin). 72px round green button with SVG ▶/⏹ icons; `is-riding` flips it amber. Tracks its own `riding` flag: set true only on a successful `startRide()` (empty meadow refused via return false), reset on ⏹ tap AND on any world subscription fire (mid-ride edits gently stop the ride, so the button follows). Dimming (`is-dimmed` + disabled) only when empty AND not riding — a train easing to a stop keeps its ⏹ face. aria-label swaps 'Ride the train' / 'Stop the train'. `main.ts` passes late-bound `startRide`/`stopRide` like the other scene callbacks.
+
+- [x] Task: Scene: follow-camera trails the locomotive, eases back to overview on stop; honors `prefers-reduced-motion` — b78bc2e
+
+  Notes: `updateCamera(dt)` runs in the spin-loop's `onFrame` after `rideUpdate`. Riding: desired position = locomotive position + FOLLOW_OFFSET (0, 9, 11) world-relative chase; look target = locomotive. Idle: desired = OVERVIEW_POSITION/LOOK (0, 52, 44 → origin). Both eased via exponential lerp (`1 − e^(−2.5·dt)`), so stop → smooth glide home with no snap. `prefers-reduced-motion`: camera never moves (fixed overview), and the spin loop already renders a single static frame. Chunk split needed since desired/camLook vectors live in the init-scene closure (scene glue — no unit tests per workflow; visual verification at the Phase 3 checkpoint).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E + Full Verification
