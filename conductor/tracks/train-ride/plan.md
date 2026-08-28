@@ -38,7 +38,14 @@
     - Gentle stop: the controller subscribes to the world; any piece mutation while riding flips to idle and notifies. The scene layer eases the motion out.
     - Red witnessed live (`Cannot find module './ride'`); 9 tests covering idle start, loop solve, empty-meadow refusal, place/remove mid-ride auto-stop, re-solve after edit, listener notifications + unsubscribe.
     - Full gates green: Biome ✓, tsc ✓, Vitest 53/53.
-- [ ] Task: Scene: locomotive follows solved path (position + yaw interpolation, constant gentle speed, no per-frame allocations)
+- [x] Task: Scene: locomotive follows solved path (position + yaw interpolation, constant gentle speed, no per-frame allocations) — 8457bdf
+  - Notes:
+    - `src/scene/ride-motion.ts`: builds line/arc segments once per ride start (straight = edge-midpoint lerp; corner = quarter-arc pivoting on the cell centre, matching the corner model anchoring), then advances a scalar distance each frame. No per-frame allocations — pose is written straight into `model.position`/`rotation.y`.
+    - Closed loops wrap forever; open layouts pause 0.9s at the dead end, then shuttle back (travel direction flips the facing, not the position).
+    - Mid-ride edits ease the train to a standstill over 0.6s exactly where it stopped ("a toy left on the track"); a new ride re-solves and restarts.
+    - `spin-loop.ts` now accepts a nullable spin target (showcase spin pauses once the ride owns the locomotive) and an `onFrame(dt)` hook; reduced-motion still renders a single static frame.
+    - `init-scene.ts` creates the ride controller and exposes `startRide()`/`stopRide()` on `SceneHandle` (UI trigger lands in Phase 3 — visual ride verification therefore happens at the Phase 3 checkpoint walkthrough).
+    - `MODEL_YAW_OFFSET = π` is a first guess at the Kenney locomotive's authored facing; to be confirmed during the Phase 3/4 tablet walkthrough.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Go/Stop Trigger + Follow Camera (src/ui, src/scene)
