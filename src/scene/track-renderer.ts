@@ -31,12 +31,12 @@ const KIT_MODULE_UNITS = 4;
  * y is the model's underside (kit meshes are authored below the mat).
  */
 const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
-  // Straight: midpoint of the 4-unit rail. Corner: the quarter-arc's center —
-  // the pivot both ends rotate around (ends sit at (0,0) and (-2,2) in model
-  // space, i.e. south and west of the center; the 180° base yaw below flips
-  // them onto the graph's north/east base edges).
+  // Straight: midpoint of the 4-unit rail. Corner: the quarter-arc's centre,
+  // measured at the kit origin (0, 0) — its ends sit south (0, 2) and west
+  // (−2, 0) of that centre, so the 180° base yaw below flips them onto the
+  // graph's north/east base edges with the arc bulging north-east.
   straight: [0, -1, 2],
-  corner: [0, -1, 2],
+  corner: [0, -1, 0],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
