@@ -8,18 +8,18 @@ Discipline per `conductor/workflow.md`: TDD (red → green per task), small comm
 
 ## Phase 0 — Dependencies & Assets
 
-- [ ] **Task: Install Howler** — `pnpm add howler` (+ type package only if needed); confirm import works in a scratch check.
-- [ ] **Task: Source CC0 audio** — pick chug loop, whistle, ding from CC0 packs; add ogg/mp3 to `public/audio/` + `CREDITS.md`.
+- [x] **Task: Install Howler** — `pnpm add howler` (+ type package only if needed); confirm import works in a scratch check.
+- [x] **Task: Source CC0 audio** — pick chug loop, whistle, ding from CC0 packs; add ogg/mp3 to `public/audio/` + `CREDITS.md`.
 
 ## Phase 1 — Audio Controller (core, test-first)
 
-- [ ] **Task: Red — controller unit tests** — `src/audio/audio-controller.test.ts` with a Howler seam mock: mute toggling (global, instant, default on), chug start/stop/re-entry idempotence, no-op when muted, one-shot whistle/ding API.
-- [ ] **Task: Green — implement `createAudioController()`** — framework-free service, subscribable, lazy sound loading, placeholder-safe on failed loads.
+- [x] **Task: Red — controller unit tests** — `src/audio/audio-controller.test.ts` with a Howler seam mock: mute toggling (global, instant, default on), chug start/stop/re-entry idempotence, no-op when muted, one-shot whistle/ding API.
+- [x] **Task: Green — implement `createAudioController()`** — framework-free service, subscribable, lazy sound loading, placeholder-safe on failed loads.
 
 ## Phase 2 — Ride-synced chug (test-first)
 
-- [ ] **Task: Red — ride coupling tests** — chug follows ride controller state; mid-ride world edit stops chug with the ride; dead-end pause softens chug, resume restores it.
-- [ ] **Task: Green — wire in `init-scene.ts`** — ride controller subscribe → chug start/ease-out; motion-loop signal → pause softening (Howler `rate`/level only, no rAF-coupled DSP).
+- [x] **Task: Red — ride coupling tests** — chug follows ride controller state; mid-ride world edit stops chug with the ride; dead-end pause softens chug, resume restores it.
+- [x] **Task: Green — wire in `init-scene.ts`** — ride controller subscribe → chug start/ease-out; motion-loop signal → pause softening (Howler `rate`/level only, no rAF-coupled DSP).
 
 ## Phase 3 — Whistle, dings & mute UI (test-first)
 
