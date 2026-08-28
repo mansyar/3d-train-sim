@@ -37,6 +37,19 @@ const PIECE_ICONS: Record<PieceType, string> = {
     </svg>`,
 };
 
+const RIDE_ICONS = {
+  play: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M17 9 L39 24 L17 39 Z" fill="currentColor"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+    </svg>`,
+  stop: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="11" y="11" width="26" height="26" rx="6" fill="currentColor"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+    </svg>`,
+};
+
 export interface AppOptions {
   world: WorldStore;
   cellFromPoint: CellFromPoint;
@@ -50,6 +63,10 @@ export interface AppOptions {
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
+  /** Begin riding the current layout. Refuses an empty meadow. */
+  startRide(): boolean;
+  /** Gently stop the ride. */
+  stopRide(): void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -67,6 +84,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-expanded="false" data-drawer="track">🛤️</button>
       <button class="toy-slot" type="button" aria-label="Scenery (coming soon)">🌳</button>
       <button class="toy-slot" type="button" aria-label="Trains (coming soon)">🚂</button>
+      <button class="ride-toggle" type="button"
+              aria-label="Ride the train">${RIDE_ICONS.play}</button>
       <button class="trash-slot" type="button"
               aria-label="Trash bin — drop a track piece here to remove it">🗑️</button>
     </div>
@@ -228,6 +247,42 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   };
   options.world.subscribe(refreshCap);
   refreshCap();
+
+  // ---- Ride trigger: one chunky button, ▶ or ⏹ ---------------------------
+  const rideToggle = root.querySelector<HTMLButtonElement>('.ride-toggle');
+  if (!rideToggle) {
+    throw new Error('ride toggle missing from app frame');
+  }
+
+  let riding = false;
+  const refreshRide = () => {
+    const empty = options.world.pieces().length === 0;
+    // An empty meadow dims the button — but a train easing to a stop (a
+    // mid-ride edit just emptied the world) keeps its ⏹ face until parked.
+    const parked = empty && !riding;
+    rideToggle.classList.toggle('is-dimmed', parked);
+    rideToggle.toggleAttribute('disabled', parked);
+    rideToggle.classList.toggle('is-riding', riding);
+    rideToggle.innerHTML = riding ? RIDE_ICONS.stop : RIDE_ICONS.play;
+    rideToggle.setAttribute('aria-label', riding ? 'Stop the train' : 'Ride the train');
+  };
+
+  rideToggle.addEventListener('click', () => {
+    if (riding) {
+      options.stopRide();
+      riding = false;
+    } else {
+      riding = options.startRide();
+    }
+    refreshRide();
+  });
+
+  // Any world edit gently stops the ride — the button follows.
+  options.world.subscribe(() => {
+    riding = false;
+    refreshRide();
+  });
+  refreshRide();
 
   return canvas;
 }
