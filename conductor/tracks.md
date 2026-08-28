@@ -5,7 +5,8 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
+| `scenery-placement` | Scenery Placement (Decorate the Meadow) | in-progress | [tracks/scenery-placement/](tracks/scenery-placement/index.md) |
 
 Completed tracks are archived under [conductor/archive/](archive/):
-`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`.
+`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`.
 
