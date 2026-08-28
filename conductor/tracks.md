@@ -5,6 +5,7 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
+| `choo-choo-sound-box` | Choo-Choo Sound Box (Audio & Whistle) | in-progress | [spec](choo-choo-sound-box/spec.md) · [plan](choo-choo-sound-box/plan.md) |
 
-No active tracks. Completed tracks are archived under [conductor/archive/](archive/):
+Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `train-ride`.
