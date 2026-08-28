@@ -21,6 +21,7 @@ if (root) {
     endGhost: () => scene?.endGhost(),
     pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
     setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
+    setGridVisible: (visible) => scene?.setGridVisible(visible),
     startRide: () => scene?.startRide() ?? false,
     stopRide: () => scene?.stopRide(),
   });

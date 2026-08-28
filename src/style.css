@@ -175,6 +175,37 @@ body {
   z-index: 40;
 }
 
+/* ---- Grid toggle (debug) ------------------------------------------------- */
+
+.grid-toggle {
+  background: var(--toy-cream);
+  border: 3px solid var(--toy-brown);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--toy-brown);
+  color: var(--toy-brown);
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  min-height: 44px;
+  min-width: 44px;
+  opacity: 0.55;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 30;
+}
+
+.grid-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(2px);
+}
+
+.grid-toggle.is-active {
+  background: var(--toy-green);
+  color: var(--toy-cream);
+  opacity: 0.85;
+}
+
 /* ---- Drop feedback ------------------------------------------------------ */
 
 .drop-ping {

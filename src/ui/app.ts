@@ -63,6 +63,8 @@ export interface AppOptions {
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
+  /** Debug aid: show the meadow's snap-cell boundaries. */
+  setGridVisible(visible: boolean): void;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -79,6 +81,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="${PIECE_LABELS.corner}">${PIECE_ICONS.corner}</button>
     </div>
     <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
+    <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
+            aria-pressed="false">#</button>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Track pieces"
               aria-expanded="false" data-drawer="track">🛤️</button>
@@ -235,6 +239,18 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     if (!drag) return;
     stepRotation();
     moveDrag(lastPointer.x, lastPointer.y);
+  });
+
+  // ---- Grid toggle (debug): reveal the snap cells pieces land on ----------
+  const gridToggle = root.querySelector<HTMLButtonElement>('.grid-toggle');
+  if (!gridToggle) {
+    throw new Error('grid toggle missing from app frame');
+  }
+  gridToggle.addEventListener('click', () => {
+    const show = gridToggle.getAttribute('aria-pressed') !== 'true';
+    gridToggle.setAttribute('aria-pressed', String(show));
+    gridToggle.classList.toggle('is-active', show);
+    options.setGridVisible(show);
   });
 
   // ---- Cap dimming -------------------------------------------------------

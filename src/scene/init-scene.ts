@@ -35,6 +35,8 @@ export interface SceneHandle {
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
+  /** Debug aid: show the meadow's snap-cell boundaries. */
+  setGridVisible(visible: boolean): void;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -133,6 +135,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
     endGhost: () => tracks.endGhost(),
     pickPiece: (clientX, clientY) => tracks.pickPiece(clientX, clientY),
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
+    setGridVisible: (visible) => tracks.setGridVisible(visible),
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     dispose(): void {
