@@ -1,6 +1,7 @@
 import type { AudioController } from '../audio/audio-controller';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
+import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 
@@ -106,7 +107,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-expanded="false" data-drawer="track">🛤️</button>
       <button class="toy-slot" type="button" aria-label="Scenery toys"
               aria-expanded="false" data-drawer="scenery">🌳</button>
-      <button class="toy-slot" type="button" aria-label="Trains (coming soon)">🚂</button>
+      <button class="toy-slot" type="button" aria-label="Train collection"
+              aria-expanded="false" data-drawer="trains">🚂</button>
       <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
       <button class="ride-toggle" type="button"
               aria-label="Ride the train">${RIDE_ICONS.play}</button>
@@ -125,19 +127,39 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   const trackSlot = root.querySelector<HTMLButtonElement>('[data-drawer="track"]');
   const sceneryDrawer = root.querySelector<HTMLDivElement>('.scenery-drawer');
   const scenerySlot = root.querySelector<HTMLButtonElement>('[data-drawer="scenery"]');
+  const trainSlot = root.querySelector<HTMLButtonElement>('[data-drawer="trains"]');
+  const trainDrawer = document.createElement('div');
+  trainDrawer.className = 'train-drawer';
+  trainDrawer.setAttribute('role', 'group');
+  trainDrawer.setAttribute('aria-label', 'Train collection');
+  trainDrawer.hidden = true;
+  for (const kind of TRAIN_KINDS) {
+    const button = document.createElement('button');
+    button.className = 'train-slot';
+    button.type = 'button';
+    button.dataset.train = kind;
+    button.setAttribute('aria-label', trainAria(kind));
+    button.setAttribute('aria-pressed', String(options.world.train() === kind));
+    button.textContent = trainIcon(kind);
+    trainDrawer.append(button);
+  }
+  root.append(trainDrawer);
   const rotateKnob = root.querySelector<HTMLButtonElement>('.rotate-knob');
-  if (!drawer || !trackSlot || !sceneryDrawer || !scenerySlot || !rotateKnob) {
+  if (!drawer || !trackSlot || !sceneryDrawer || !scenerySlot || !trainSlot || !rotateKnob) {
     throw new Error('toybox chrome missing from app frame');
   }
 
   // One drawer open at a time - the toybox flips between rails and scenery.
-  const setDrawer = (which: 'track' | 'scenery' | null) => {
+  const setDrawer = (which: 'track' | 'scenery' | 'trains' | null) => {
     const openTrack = which === 'track';
     const openScenery = which === 'scenery';
+    const openTrains = which === 'trains';
     drawer.toggleAttribute('hidden', !openTrack);
     trackSlot.setAttribute('aria-expanded', String(openTrack));
     sceneryDrawer.toggleAttribute('hidden', !openScenery);
     scenerySlot.setAttribute('aria-expanded', String(openScenery));
+    trainDrawer.toggleAttribute('hidden', !openTrains);
+    trainSlot.setAttribute('aria-expanded', String(openTrains));
   };
   trackSlot.addEventListener('click', () => {
     setDrawer(drawer.hasAttribute('hidden') ? 'track' : null);
@@ -145,6 +167,21 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   scenerySlot.addEventListener('click', () => {
     setDrawer(sceneryDrawer.hasAttribute('hidden') ? 'scenery' : null);
   });
+  trainSlot.addEventListener('click', () => {
+    setDrawer(trainDrawer.hidden ? 'trains' : null);
+  });
+  const refreshTrainChoices = () => {
+    for (const choice of trainDrawer.querySelectorAll<HTMLButtonElement>('[data-train]')) {
+      choice.setAttribute('aria-pressed', String(choice.dataset.train === options.world.train()));
+    }
+  };
+  trainDrawer.addEventListener('click', (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>('[data-train]');
+    if (!button || (options.isReady && !options.isReady())) return;
+    options.world.selectTrain(button.dataset.train as TrainKind);
+    refreshTrainChoices();
+  });
+  options.world.subscribe(refreshTrainChoices);
 
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or

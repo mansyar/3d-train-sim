@@ -16,6 +16,14 @@ test('app boots on a tablet with a clean console and zero external requests', as
   await expect(page.locator('.scene-canvas')).toBeVisible();
   await expect(page.locator('.toy-slot')).toHaveCount(3);
 
+  await page.click('[data-drawer="trains"]');
+  await expect(page.locator('.train-slot')).toHaveCount(3);
+  await page.locator('.train-slot[data-train="diesel"]').click();
+  await expect(page.locator('.train-slot[data-train="diesel"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
   // Let the render loop and asset loads (locomotive GLB, texture) settle.
   await page.waitForTimeout(1000);
 
@@ -23,6 +31,26 @@ test('app boots on a tablet with a clean console and zero external requests', as
   const external = requestUrls.filter((url) => new URL(url).origin !== origin);
   expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('selected train survives a reload through local autosave', async ({ page, context }) => {
+  await context.clearCookies();
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+  await page.click('[data-drawer="trains"]');
+  await page.locator('.train-slot[data-train="steam"]').click();
+  await page.waitForTimeout(100);
+  await page.locator('.train-slot[data-train="tram"]').click();
+  await page.waitForTimeout(300);
+  await page.reload();
+  await page.waitForTimeout(1200);
+  await page.click('[data-drawer="trains"]');
+  await expect(page.locator('.train-slot[data-train="tram"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
 });
 
 test('drag-placing a track piece renders it in the world', async ({ page }) => {

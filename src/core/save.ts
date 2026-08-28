@@ -7,6 +7,7 @@ import {
   type PlacedPiece,
   type Rotation,
 } from './track-graph';
+import { TRAIN_KINDS, type TrainKind } from './trains';
 
 const SNAPSHOT_VERSION = 1;
 
@@ -14,16 +15,19 @@ export interface WorldSnapshot {
   version: typeof SNAPSHOT_VERSION;
   pieces: PlacedPiece[];
   scenery: PlacedScenery[];
+  train?: TrainKind;
 }
 
 export interface WorldData {
   pieces: PlacedPiece[];
   scenery: PlacedScenery[];
+  train: TrainKind;
 }
 
 export function serializeWorld(
   pieces: readonly PlacedPiece[],
   scenery: readonly PlacedScenery[],
+  train: TrainKind = 'steam',
 ): WorldSnapshot {
   return {
     version: SNAPSHOT_VERSION,
@@ -39,6 +43,7 @@ export function serializeWorld(
       cell: { x: item.cell.x, y: item.cell.y },
       rotation: item.rotation,
     })),
+    train,
   };
 }
 
@@ -58,7 +63,11 @@ export function deserializeWorld(value: unknown): WorldData {
   const cells = [...validPieces, ...validScenery].map((item) => `${item.cell.x},${item.cell.y}`);
   if (new Set(cells).size !== cells.length) return emptyWorld();
 
-  return { pieces: validPieces, scenery: validScenery };
+  return {
+    pieces: validPieces,
+    scenery: validScenery,
+    train: isTrainKind(value.train) ? value.train : 'steam',
+  };
 }
 
 function parsePiece(value: unknown): PlacedPiece | null {
@@ -100,10 +109,14 @@ function isSceneryKind(value: unknown): value is SceneryKind {
   return typeof value === 'string' && (SCENERY_KINDS as readonly string[]).includes(value);
 }
 
+function isTrainKind(value: unknown): value is TrainKind {
+  return typeof value === 'string' && (TRAIN_KINDS as readonly string[]).includes(value);
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
 function emptyWorld(): WorldData {
-  return { pieces: [], scenery: [] };
+  return { pieces: [], scenery: [], train: 'steam' };
 }

@@ -4,6 +4,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
+import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
@@ -71,27 +72,47 @@ export function initScene(
   const rideAudio = bindRideAudio(rides, audio);
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
+  let loadedTrain: TrainKind | null = null;
+  const locomotiveTemplates = new Map<TrainKind, Object3D>();
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
-  loadLocomotive()
-    .then((model) => {
-      if (disposed) {
-        // Tore down before the model arrived — release its GPU resources.
-        disposeObject(model);
-        return;
-      }
-      scene.remove(crate.mesh);
-      crate.dispose();
-      scene.add(model);
-      // The ride owns the locomotive from here; the showcase spin pauses.
-      spinTarget = null;
-      locomotive = model;
-      rideUpdate = createRideMotion(model, world, rides, rideAudio.setPaused).update;
-    })
-    .catch(() => {
-      // Kit asset unavailable — the crate remains as the fallback placeholder.
-    });
+  const showTrain = (kind: TrainKind): void => {
+    const template = locomotiveTemplates.get(kind);
+    if (!template) return;
+    if (locomotive) {
+      // Clones share geometry and materials with their cached template. The
+      // template owns those GPU resources and disposes them during teardown.
+      scene.remove(locomotive);
+    }
+    const model = template.clone(true);
+    scene.add(model);
+    locomotive = model;
+    loadedTrain = kind;
+    scene.remove(crate.mesh);
+    spinTarget = null;
+    rideUpdate = createRideMotion(model, world, rides, rideAudio.setPaused).update;
+  };
+
+  for (const kind of TRAIN_KINDS) {
+    loadLocomotive(kind)
+      .then((model) => {
+        if (disposed) {
+          disposeObject(model);
+          return;
+        }
+        locomotiveTemplates.set(kind, model);
+        if (kind === world.train() && loadedTrain !== kind) showTrain(kind);
+      })
+      .catch(() => {
+        // Kit asset unavailable — the crate remains as the fallback placeholder.
+      });
+  }
+
+  const unsubscribeTrain = world.subscribe(() => {
+    const kind = world.train();
+    if (kind !== loadedTrain) showTrain(kind);
+  });
 
   const resize = () => {
     const width = canvas.clientWidth || window.innerWidth;
@@ -152,8 +173,11 @@ export function initScene(
       stopSpin();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
+      unsubscribeTrain();
       tracks.dispose();
       crate.dispose();
+      for (const model of locomotiveTemplates.values()) disposeObject(model);
+      locomotiveTemplates.clear();
       for (const dispose of disposables) dispose();
       renderer.dispose();
     },

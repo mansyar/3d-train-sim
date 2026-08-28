@@ -4,7 +4,7 @@
 A world where every toddler can build their own railway and watch it come alive — no rules, no reading, no failure. Just the pure joy of cause and effect: lay the track, press the button, and watch your train go.
 
 ## Product Description
-Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, then press ▶ to watch an autonomous train chug around their own creation — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads and Android tablets.
+Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of three locomotives, then press ▶ to watch an autonomous train chug around their own creation — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads and Android tablets.
 
 ## Target Users
 - **Primary:** Toddlers aged 2–4. Non-readers. Developing fine motor skills. Short attention spans reward instant, forgiving feedback.
@@ -31,13 +31,13 @@ Supporting guardrails:
 ## Core Gameplay Loop
 1. **Build:** drag track pieces (straights, 90° curves, crossings) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
-3. **Play:** press ▶ — the train chugs the full track with sound and steam; camera follows. Whistle button. ⏹ stops it.
+3. **Play:** choose one of three friendly locomotives, then press ▶ — the train chugs the full track with sound and steam; camera follows. Whistle button. ⏹ stops it.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
 
 ## V1 Scope (Lean Core)
 - Grid-snap track building on a single grassy meadow
 - Scenery placement (trees, houses, animals, stations)
-- Autonomous train running any layout — closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
+- Three selectable autonomous locomotives running any layout — closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
 - Go / stop / whistle control panel
 - Follow-camera
 - Sound: chug loop, whistle, happy dings
@@ -47,7 +47,7 @@ Supporting guardrails:
 
 ## Future Scope (Roadmap Candidates)
 - Reactive characters (waving animals, crossing guards)
-- Train collection (colors, cargo wagons)
+- Expanded train collection (colors, cargo wagons)
 - Track switches and branches
 - Bridges, tunnels, elevation
 - Time of day and weather

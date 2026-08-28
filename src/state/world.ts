@@ -8,6 +8,7 @@ import {
   type PlacedPiece,
   type Rotation,
 } from '../core/track-graph';
+import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 
 /** Outcome of a world mutation the kid UI can show gently (dim, wobble, snap). */
 export type PlacementResult = 'placed' | 'not-found' | 'out-of-bounds' | 'occupied' | 'capacity';
@@ -22,6 +23,10 @@ export type WorldListener = (pieces: readonly PlacedPiece[]) => void;
  * the world lives exactly as long as the page does.
  */
 export interface WorldStore {
+  /** The currently selected locomotive. */
+  train(): TrainKind;
+  /** Selects a locomotive; invalid values fall back to steam. */
+  selectTrain(kind: unknown): boolean;
   /** The pieces currently on the meadow, in placement order. */
   pieces(): readonly PlacedPiece[];
   place(type: PieceType, cell: Cell, rotation: Rotation): PlacementResult;
@@ -41,6 +46,7 @@ export interface WorldStore {
 export function createWorldStore(): WorldStore {
   const placed: PlacedPiece[] = [];
   const scenery: PlacedScenery[] = [];
+  let selectedTrain: TrainKind = 'steam';
   const listeners = new Set<WorldListener>();
   let nextId = 1;
 
@@ -60,6 +66,20 @@ export function createWorldStore(): WorldStore {
   const meadowCount = () => placed.length + scenery.length;
 
   return {
+    train: () => selectedTrain,
+
+    selectTrain(kind) {
+      if (!(TRAIN_KINDS as readonly unknown[]).includes(kind)) {
+        selectedTrain = 'steam';
+        return false;
+      }
+      const next = kind as TrainKind;
+      if (next === selectedTrain) return true;
+      selectedTrain = next;
+      notify();
+      return true;
+    },
+
     /** A defensive copy — callers can never mutate the store's records. */
     pieces: () => placed.map((piece) => ({ ...piece, cell: { ...piece.cell } })),
 
@@ -123,6 +143,7 @@ export function createWorldStore(): WorldStore {
     },
 
     hydrate(data) {
+      selectedTrain = data.train;
       placed.splice(
         0,
         placed.length,
