@@ -75,7 +75,7 @@
 
 ## Phase 4 — E2E + Full Verification
 
-- [ ] Task: Extend Playwright smoke: place pieces → press ▶ → train moves; console clean, zero external requests
+- [~] Task: Extend Playwright smoke: place pieces → press ▶ → train moves; console clean, zero external requests
 - [ ] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
 - [ ] Task: Manual tablet walkthrough (build loop, press ▶, watch ride, ⏹ camera ease-back)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
