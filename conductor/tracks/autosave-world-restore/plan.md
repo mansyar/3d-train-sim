@@ -39,10 +39,11 @@
   - [x] Existing ride, scenery rendering, and interaction behavior remain intact
 - [x] Task: Playwright smoke test — place track and scenery, reload, and verify both persist with zero console errors and zero external requests
 - [x] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
-- [ ] Task: Manual tablet walkthrough (place, relocate, remove, reload, then ride) — user-confirmed
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Manual tablet walkthrough (place, relocate, remove, reload, then ride) — user-confirmed
+  - User confirmation: "all good" (2026-08-28).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
   - Automated: `pnpm check` passed (106/106 unit tests); `pnpm exec playwright test` passed (6/6).
-  - Manual: pending tablet walkthrough confirmation.
+  - Manual: user confirmed the tablet walkthrough as all good (2026-08-28).
   - Checkpoint: `29a087a`
 
 ## Notes
