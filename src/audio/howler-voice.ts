@@ -40,6 +40,9 @@ export function createHowlerVoice(): AudioControllerOptions {
         howl.once('fade', (id) => howl.stop(id)); // Stop only the faded voice.
       },
       rate: (value) => howl.rate(value),
+      onEnd: (listener) => {
+        howl.once('end', listener);
+      },
     };
   }
   return {

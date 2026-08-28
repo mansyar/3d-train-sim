@@ -6,10 +6,12 @@ import { createAudioController } from './audio-controller';
  * Fakes a Howler sound handle. Records the calls the controller makes so tests
  * can assert on play/stop/fade/rate behaviour without a real audio backend.
  */
-function fakeHandle(): SoundHandle & { calls: string[] } {
+function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
   const calls: string[] = [];
+  let endListener: (() => void) | undefined;
   return {
     calls,
+    finish: () => endListener?.(),
     play: vi.fn(() => {
       calls.push('play');
       return 1;
@@ -20,8 +22,12 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
     fade: vi.fn(() => {
       calls.push('fade');
     }),
-    rate: vi.fn(() => {
-      calls.push('rate');
+    rate: vi.fn((value: number) => {
+      calls.push(`rate:${value}`);
+    }),
+    onEnd: vi.fn((listener: () => void) => {
+      calls.push('onEnd');
+      endListener = listener;
     }),
   };
 }
@@ -112,7 +118,7 @@ describe('createAudioController', () => {
     controller.setChugSoftened(false);
 
     const handle = handles.get('chug');
-    expect(handle?.calls.filter((c) => c === 'rate')).toHaveLength(2);
+    expect(handle?.calls.filter((c) => c.startsWith('rate:'))).toHaveLength(2);
   });
 
   it('one-shots play whistle and ding sounds', () => {
@@ -120,11 +126,30 @@ describe('createAudioController', () => {
     controller.whistle();
     controller.ding();
 
-    expect(handles.get('whistle')?.calls).toEqual(['play']);
+    handles.get('whistle')?.finish();
+    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'onEnd', 'play', 'rate:1']);
     expect(handles.get('ding')?.calls).toEqual(['play']);
   });
 
-  it('mutes keep every sound silent', () => {
+  it('plays each train whistle at its profile rate and resets to baseline', () => {
+    const { controller, handles } = makeWired();
+    controller.whistle('diesel');
+    handles.get('whistle')?.finish();
+    controller.whistle('tram');
+    handles.get('whistle')?.finish();
+    expect(handles.get('whistle')?.calls).toEqual([
+      'rate:0.92',
+      'onEnd',
+      'play',
+      'rate:1',
+      'rate:1.08',
+      'onEnd',
+      'play',
+      'rate:1',
+    ]);
+  });
+
+  it('mutes keep every train whistle silent', () => {
     const { controller, handles } = makeWired();
     controller.setMuted(true);
     controller.startChug();

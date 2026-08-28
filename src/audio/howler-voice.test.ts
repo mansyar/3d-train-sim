@@ -101,6 +101,13 @@ describe('createHowlerVoice', () => {
     expect(chug.stop).toHaveBeenCalled();
   });
 
+  it('resets a one-shot rate only after the sound ends', () => {
+    const handle = createHowlerVoice().createSound('whistle');
+    handle.onEnd?.(() => undefined);
+
+    expect(onlyInstance().once).toHaveBeenCalledWith('end', expect.any(Function));
+  });
+
   it('rate nudges playback tempo without restarting', () => {
     const handle = createHowlerVoice().createSound('chug');
     handle.rate(0.85);
