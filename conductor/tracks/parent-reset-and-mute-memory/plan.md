@@ -20,12 +20,22 @@ verification checkpoint per the Phase Completion protocol.
 - [x] Task: Extend snapshot schema in src/core/save.ts (Green) [0b5fa03]
   - [x] Optional device-preferences object on the versioned snapshot
   - [x] All existing save/load tests remain green
-- [ ] Task: Write failing unit tests for mute persistence triggers (Red)
-  - [ ] Boot restore applies the persisted mute state exactly once
-  - [ ] Each mute change persists exactly once; storage failure is non-fatal
-- [ ] Task: Implement mute persistence wiring (Green)
-  - [ ] src/state/persistence.ts subscribes to mute changes via the audio seam
-  - [ ] Boot path restores mute alongside world hydration
+- [x] Task: Write failing unit tests for mute persistence triggers (Red) [6702721]
+  - [x] Boot restore applies the persisted mute state exactly once
+  - [x] Each mute change persists exactly once; storage failure is non-fatal
+  - Notes: Red confirmed (4 failing: missing persistence exports). Tests also
+    pin that world-mutation saves carry the CURRENT mute preference so the
+    two subscriptions can never clobber each other's data. One test-authoring
+    fix (wrong expected polarity on the second emit) — no impl change.
+- [x] Task: Implement mute persistence wiring (Green) [6702721]
+  - [x] src/state/persistence.ts subscribes to mute changes via the audio seam
+  - [x] Boot path restores mute alongside world hydration
+  - Notes: `watchMutePersistence` saves the full snapshot per mute change;
+    `watchWorldPersistence` gains `readMuted` so world saves carry the
+    preference; `snapshotOf` now delegates to `serializeWorld` (one schema
+    owner). `restoreMutePreference` applies sound-on default exactly once on
+    boot, no audio unlock required. main.ts applies restore BEFORE watchers
+    attach so boot hydration never rewrites storage. Suite 128/128 green.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — World Reset Core (logic-bearing, TDD)
