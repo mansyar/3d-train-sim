@@ -50,7 +50,7 @@
     - `MODEL_YAW_OFFSET = π` is a first guess at the Kenney locomotive's authored facing; to be confirmed during the Phase 3/4 tablet walkthrough.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3 — Go/Stop Trigger + Follow Camera (src/ui, src/scene)
+## Phase 3 — Go/Stop Trigger + Follow Camera (src/ui, src/scene) [checkpoint: 6163261]
 
 - [x] Task: UI: chunky icon-only ▶/⏹ toggle, dims when meadow is empty, ≥64px touch target — e625b9b
 
@@ -63,7 +63,15 @@
 - [x] Task: Fix — track pieces rendered with gaps between cells (found during checkpoint walkthrough) — 90a0812
 
   Notes: fa7620f had moved the corner anchor to `[0,-1,0]` on the belief the kit arc centre sits at the GLB origin — it doesn't. Measured the actual GLB geometry by parsing POSITION accessors: `railroad-corner-small.glb` is a quarter-arc with centre at model `(-2, 0)`, radius 2, ends at `(0, 0)` (tangent +z) and `(-2, 2)` (tangent x), confirmed by end-cap centroids `[0,0,0]`/`[-2,2]` and cap-plane normals. Correct anchoring: `KIT_ANCHORS.corner = [-2,-1,0]` (arc centre → cell centre, bed bottom `y=-1` → ground, matching the straight's authored `y∈[-1,-0.9]`), and `BASE_YAW.corner = π/2` (unrotated ends sit east/south of the centre; +90° swings them onto the graph's north/east base edges — both the old `π` yaw and the fa7620f anchor were wrong; the pre-fa7620f render only looked joined because its anchor pushed the arc centre outside the cell, bulging the wrong way). Radius `2·scale = CELL/2` exactly matches ride-motion's cell-centred arc segments. Verified in-browser: placed pieces via a dev-only `window.__tinyTracksWorld` handle (`src/main.ts`, `import.meta.env.DEV`), screenshotted via Playwright (iPad Mini viewport), and pixel-checked the render — projected each junction/mid-arc through the overview camera and asserted rail presence: corner-east-end meets straight-west-end flush (continuous rail band across the boundary, no gap), N–S straight chain continuous across cells, every arc bulges on the predicted side. Temp harness spec + screenshot deleted; dev hook kept for Phase 4 E2E.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Fix — corner arcs must pivot on the shared cell corner, not the cell centre — 38f8a02
+
+  Notes: 90a0812's cell-centre reading was wrong: cell-centred arc ends leave the edges tangentially (parallel to the edge), so straights sat half a cell off the rail line and corner-to-corner met in S-bends (the user's "W"). Correct model: the arc pivots on the corner shared by the piece's two open edges; endpoint tangents are then perpendicular to their edges and collinear with the neighbouring straight rails. Anchor moved to `[0,-1,2]` (model arc centre), BASE_YAW.corner to −π/2. Ride-motion derives the same pivot per path step, so the locomotive sweeps the drawn arc.
+- [x] Task: UI debug: meadow grid toggle (top-right # button) — 6163261
+
+  Notes: Added while diagnosing placement. Small corner button toggles the snap-cell boundary overlay; lives outside the toybox rail. SetGridVisible plumbing through SceneHandle.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report: Confirmed 2026-08-28 by the user on the dev server (tablet): corners + straights join flush after 38f8a02, ▶/⏹ rides the layout, the locomotive follows the solved path through corners and straights, follow camera behaves ("all working well including the train motion"). Gates green: 55/55 vitest, biome, tsc clean.
 
 ## Phase 4 — E2E + Full Verification
 
