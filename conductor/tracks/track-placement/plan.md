@@ -208,10 +208,14 @@
 
 ## Phase 5 — E2E + Full Verification
 
-- [ ] Task: Extend Playwright smoke spec (open drawer, drag-place a piece,
-    assert rendered world + clean console + localhost-only requests)
+- [x] Task: Extend Playwright smoke spec (open drawer, drag-place a piece,
+    assert rendered world + clean console + localhost-only requests) — dd21256
   - Acceptance criteria: `pnpm exec playwright test` passes including the new
     interaction on the tablet project.
+  - Notes: second spec opens the drawer via the rail toggle, mouse-drags a
+    piece slot to the meadow (pointer events, works under touch emulation),
+    asserts the viewport screenshot changed (piece rendered), zero external
+    requests, zero console errors. Both tests green on the iPad Mini project.
 - [ ] Task: Run full local gate suite; fix any failures
   - Acceptance criteria: `pnpm check` + Playwright both exit 0.
 - [ ] Task: Manual tablet walkthrough per workflow (drag feel, snap bounce,
