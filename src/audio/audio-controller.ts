@@ -139,8 +139,8 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       if (muted) return;
       const whistle = sound('whistle');
       whistle.rate(whistleRate(train));
-      whistle.play();
       whistle.onEnd?.(() => whistle.rate(ROLLING_RATE));
+      whistle.play();
     },
 
     ding: () => {

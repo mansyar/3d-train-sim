@@ -6,10 +6,12 @@ import { createAudioController } from './audio-controller';
  * Fakes a Howler sound handle. Records the calls the controller makes so tests
  * can assert on play/stop/fade/rate behaviour without a real audio backend.
  */
-function fakeHandle(): SoundHandle & { calls: string[] } {
+function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
   const calls: string[] = [];
+  let endListener: (() => void) | undefined;
   return {
     calls,
+    finish: () => endListener?.(),
     play: vi.fn(() => {
       calls.push('play');
       return 1;
@@ -25,7 +27,7 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
     }),
     onEnd: vi.fn((listener: () => void) => {
       calls.push('onEnd');
-      listener();
+      endListener = listener;
     }),
   };
 }
@@ -124,23 +126,25 @@ describe('createAudioController', () => {
     controller.whistle();
     controller.ding();
 
-    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'play', 'onEnd', 'rate:1']);
+    handles.get('whistle')?.finish();
+    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'onEnd', 'play', 'rate:1']);
     expect(handles.get('ding')?.calls).toEqual(['play']);
   });
 
   it('plays each train whistle at its profile rate and resets to baseline', () => {
     const { controller, handles } = makeWired();
     controller.whistle('diesel');
+    handles.get('whistle')?.finish();
     controller.whistle('tram');
-
+    handles.get('whistle')?.finish();
     expect(handles.get('whistle')?.calls).toEqual([
       'rate:0.92',
-      'play',
       'onEnd',
+      'play',
       'rate:1',
       'rate:1.08',
-      'play',
       'onEnd',
+      'play',
       'rate:1',
     ]);
   });
