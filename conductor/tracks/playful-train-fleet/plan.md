@@ -5,16 +5,18 @@
 
 ## Phase 1 — Train Catalog and World State (TDD)
 
-- [ ] Task: TDD — Red: add unit tests for the three-train catalog
-  - [ ] Assert exactly three stable train kinds are exposed
-  - [ ] Assert every train has a local model URL, accessible label, icon, and personality metadata
-  - [ ] Assert catalog helpers are total and pure
+- [x] Task: TDD — Red: add unit tests for the three-train catalog
+  - [x] Assert exactly three stable train kinds are exposed
+  - [x] Assert every train has a local model URL, accessible label, icon, and personality metadata
+  - [x] Assert catalog helpers are total and pure
+  - Notes: Added `src/core/trains.test.ts`; the Red run failed because the catalog module was absent, confirming the test exercised new behavior.
 - [ ] Task: TDD — Red: add world-store tests for train selection
   - [ ] Assert new worlds default to the steam locomotive
   - [ ] Assert selecting each catalog train updates the selected train
   - [ ] Assert invalid train identifiers fall back safely
   - [ ] Assert selection changes notify subscribers and do not alter pieces or scenery
-- [ ] Task: Implement the pure train catalog and world-store selection API
+- [~] Task: Implement the pure train catalog and world-store selection API
+  - Notes: Catalog Green completed in `src/core/trains.ts`; world-store selection remains in progress.
 - [ ] Task: Refactor catalog/state code for clarity without changing behavior
 - [ ] Task: Verify >80% coverage for new logic-bearing catalog and state code
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
