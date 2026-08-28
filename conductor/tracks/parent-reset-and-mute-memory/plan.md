@@ -36,6 +36,10 @@ verification checkpoint per the Phase Completion protocol.
     owner). `restoreMutePreference` applies sound-on default exactly once on
     boot, no audio unlock required. main.ts applies restore BEFORE watchers
     attach so boot hydration never rewrites storage. Suite 128/128 green.
+    Coverage follow-up [f0e37a5]: mocked `idb` in persistence tests so the
+    real `loadWorldSnapshot`/`saveWorldSnapshot` bodies (including the
+    non-fatal catch) are unit-covered — persistence.ts now 87.5% stmts,
+    save.ts 88.9%; suite 131/131 green.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — World Reset Core (logic-bearing, TDD)
