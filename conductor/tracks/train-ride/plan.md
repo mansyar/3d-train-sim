@@ -16,8 +16,15 @@
     - Biome's `noNonNullAssertion` rule forbids `!` — solver + tests use `if (!x) throw` guards per the project convention from 7793414.
     - Two fixture bugs found during Green: NW corner needs rot 90 (not 180) for an east+south join; east–west straights need rot 90 (base is north+south). Solver logic was correct in both cases.
     - Full gate green: Biome 28 files ✓, tsc ✓, Vitest 38/38.
-- [ ] Task: TDD — Red→Green: dead-end reversal (pause + reverse), single-piece shuttle, empty/1-piece totals, no-failure guarantee
-- [ ] Task: Verify coverage >80% on `src/core/pathing.ts`
+- [x] Task: TDD — Red→Green: dead-end reversal (pause + reverse), single-piece shuttle, empty/1-piece totals, no-failure guarantee — bb09b70
+  - Notes:
+    - `pathing.test.ts` open-layout suite: 2-piece line, L-shaped path through a corner, lone-piece shuttle, empty meadow no-op, deterministic component choice with two disjoint tracks, dead-end spur traversal. Red witnessed live before the Green fix.
+    - One real solver gap fixed: lone pieces (degree 0) hit the cycle branch and threw — start rules now treat `degreeOf < 2` as an open ride (enter via lower-key end, exit the other).
+    - Two fixture geometry bugs corrected along the way (solver was right both times): NW corners need rot 90 for east+south joins; an elbow turning south needs rot 180, since north = −y in this grid.
+    - Reversal *motion* (pause, reverse direction) is the ride layer's job in Phase 2 — the solver hands it `steps + closed`, and the ride layer shuttles open paths back and forth.
+- [x] Task: Verify coverage >80% on `src/core/pathing.ts` — bb09b70
+  - Notes:
+    - `vitest run --coverage`: pathing.ts 97.4% stmts / 86.4% branch / 100% lines & funcs. Bar cleared.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Ride State + Train Motion (src/state, src/scene)
