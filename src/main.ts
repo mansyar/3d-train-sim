@@ -25,4 +25,9 @@ if (root) {
     stopRide: () => scene?.stopRide(),
   });
   scene = initScene(canvas, world);
+
+  // Dev-only handle: lets Playwright smoke tests place pieces directly.
+  if (import.meta.env.DEV) {
+    (window as unknown as { __tinyTracksWorld: unknown }).__tinyTracksWorld = world;
+  }
 }
