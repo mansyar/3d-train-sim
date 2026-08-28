@@ -2,9 +2,10 @@
   "track_id": "choo-choo-sound-box",
   "title": "Choo-Choo Sound Box (Audio & Whistle)",
   "type": "feature",
-  "status": "in-progress",
+  "status": "in-review",
   "spec": "conductor/tracks/choo-choo-sound-box/spec.md",
   "plan": "conductor/tracks/choo-choo-sound-box/plan.md",
   "branch": "track/choo-choo-sound-box",
   "created": "2026-08-28"
 }
+
