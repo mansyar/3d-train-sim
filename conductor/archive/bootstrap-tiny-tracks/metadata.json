@@ -1,0 +1,9 @@
+{
+  "track_id": "bootstrap-tiny-tracks",
+  "title": "Bootstrap Tiny Tracks",
+  "status": "archived",
+  "spec": "conductor/archive/bootstrap-tiny-tracks/spec.md",
+  "plan": "conductor/archive/bootstrap-tiny-tracks/plan.md",
+  "completed": "2026-08-28",
+  "archived": "2026-08-28"
+}

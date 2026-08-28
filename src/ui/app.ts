@@ -1,3 +1,4 @@
+import type { AudioController } from '../audio/audio-controller';
 import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
 import type { PickedPiece } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
@@ -52,6 +53,8 @@ const RIDE_ICONS = {
 
 export interface AppOptions {
   world: WorldStore;
+  /** The sound box: whistle toots, placement dings, the big mute switch. */
+  audio: AudioController;
   cellFromPoint: CellFromPoint;
   /** Begin the in-scene ghost preview for a dragged piece type. */
   beginGhost(type: PieceType): void;
@@ -88,8 +91,11 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-expanded="false" data-drawer="track">🛤️</button>
       <button class="toy-slot" type="button" aria-label="Scenery (coming soon)">🌳</button>
       <button class="toy-slot" type="button" aria-label="Trains (coming soon)">🚂</button>
+      <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
       <button class="ride-toggle" type="button"
               aria-label="Ride the train">${RIDE_ICONS.play}</button>
+      <button class="mute-toggle" type="button" aria-pressed="false"
+              aria-label="Mute the sounds">🔊</button>
       <button class="trash-slot" type="button"
               aria-label="Trash bin — drop a track piece here to remove it">🗑️</button>
     </div>
@@ -180,6 +186,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     const { type, rotation, pickedId } = drag;
     const cell = options.cellFromPoint(clientX, clientY);
     let settled = false;
+    let binned = false;
     if (pickedId === null) {
       settled = cell !== null && options.world.place(type, cell, rotation) === 'placed';
     } else {
@@ -189,6 +196,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (overTrash) {
         options.world.remove(pickedId); // Binned.
         settled = true;
+        binned = true;
       } else if (cell && !overToolbar) {
         // Toolbar drops never relocate — the bottom grid row hides behind the
         // rail, so the piece wobble-returns to its cell instead.
@@ -196,8 +204,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       }
       options.setPieceVisible(pickedId, true); // Reconcile already moved or removed it.
     }
-    if (settled) ping(clientX, clientY);
-    else wobbleReturn(clientX, clientY);
+    if (settled) {
+      ping(clientX, clientY);
+      if (!binned) options.audio.ding(); // Trash drops stay silent — no scolding sounds.
+    } else {
+      wobbleReturn(clientX, clientY);
+    }
     options.endGhost();
     drag = null;
     rotateKnob.setAttribute('hidden', '');
@@ -299,6 +311,25 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     refreshRide();
   });
   refreshRide();
+
+  // ---- Sound box: a big toot anytime, and a parent-friendly mute ---------
+  const whistleToot = root.querySelector<HTMLButtonElement>('.whistle-toot');
+  const muteToggle = root.querySelector<HTMLButtonElement>('.mute-toggle');
+  if (!whistleToot || !muteToggle) {
+    throw new Error('sound box missing from app frame');
+  }
+
+  whistleToot.addEventListener('click', () => options.audio.whistle());
+
+  const refreshMute = () => {
+    const muted = options.audio.isMuted();
+    muteToggle.setAttribute('aria-pressed', String(muted));
+    muteToggle.textContent = muted ? '🔇' : '🔊';
+    muteToggle.setAttribute('aria-label', muted ? 'Unmute the sounds' : 'Mute the sounds');
+  };
+  muteToggle.addEventListener('click', () => options.audio.toggleMuted());
+  options.audio.subscribe(refreshMute);
+  refreshMute();
 
   return canvas;
 }

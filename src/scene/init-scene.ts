@@ -1,5 +1,7 @@
 import type { Object3D } from 'three';
 import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import type { AudioController } from '../audio/audio-controller';
+import { bindRideAudio } from '../audio/ride-audio';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
@@ -43,7 +45,11 @@ export interface SceneHandle {
   stopRide(): void;
 }
 
-export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHandle {
+export function initScene(
+  canvas: HTMLCanvasElement,
+  world: WorldStore,
+  audio: AudioController,
+): SceneHandle {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
 
@@ -60,6 +66,8 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
   scene.add(crate.mesh);
 
   const rides = createRideController(world);
+  // Motion and sound stay married: ride starts → chug starts, always.
+  const rideAudio = bindRideAudio(rides, audio);
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
 
@@ -78,7 +86,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
       // The ride owns the locomotive from here; the showcase spin pauses.
       spinTarget = null;
       locomotive = model;
-      rideUpdate = createRideMotion(model, world, rides).update;
+      rideUpdate = createRideMotion(model, world, rides, rideAudio.setPaused).update;
     })
     .catch(() => {
       // Kit asset unavailable — the crate remains as the fallback placeholder.
@@ -142,6 +150,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
       disposed = true;
       stopSpin();
       window.removeEventListener('resize', resize);
+      rideAudio.dispose();
       tracks.dispose();
       crate.dispose();
       for (const dispose of disposables) dispose();

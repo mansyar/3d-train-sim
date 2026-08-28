@@ -62,6 +62,33 @@ test('drag-placing a track piece renders it in the world', async ({ page }) => {
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('the sound box mounts: toot, mute flip, silent console', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  // Let the render loop and asset loads settle.
+  await page.waitForTimeout(1500);
+
+  // A big friendly toot — safe to press anytime.
+  const whistle = page.locator('.whistle-toot');
+  await expect(whistle).toBeVisible();
+  await whistle.click();
+
+  // The mute toggle flips its pressed state (sound starts on, session-only).
+  const mute = page.locator('.mute-toggle');
+  await expect(mute).toHaveAttribute('aria-pressed', 'false');
+  await mute.click();
+  await expect(mute).toHaveAttribute('aria-pressed', 'true');
+  await mute.click();
+  await expect(mute).toHaveAttribute('aria-pressed', 'false');
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('pressing play rides the train along the placed track', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

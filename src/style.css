@@ -111,6 +111,42 @@ body {
   transform: translateY(3px);
 }
 
+.whistle-toot {
+  background: var(--toy-orange);
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 34px;
+  min-height: 72px;
+  min-width: 72px;
+}
+
+.whistle-toot:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
+.mute-toggle {
+  background: var(--toy-cream);
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 30px;
+  min-height: 72px;
+  min-width: 72px;
+}
+
+.mute-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
+.mute-toggle.is-muted {
+  opacity: 0.55;
+}
+
 /* ---- Track drawer ------------------------------------------------------ */
 
 .track-drawer {

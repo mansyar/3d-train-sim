@@ -1,5 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 
+import { createAudioController } from './audio/audio-controller';
+import { createHowlerVoice } from './audio/howler-voice';
 import { initScene, type SceneHandle } from './scene/init-scene';
 import { createWorldStore } from './state/world';
 import { mountApp } from './ui/app';
@@ -11,9 +13,12 @@ registerSW({ immediate: true });
 const root = document.getElementById('app');
 if (root) {
   const world = createWorldStore();
+  // The sound box: ride-synced chug, whistle, dings, global mute.
+  const audio = createAudioController(createHowlerVoice());
   let scene: SceneHandle | null = null;
   const canvas = mountApp(root, {
     world,
+    audio,
     // The scene does not exist until the canvas mounts — bind late.
     cellFromPoint: (clientX, clientY) => scene?.cellFromPoint(clientX, clientY) ?? null,
     beginGhost: (type) => scene?.beginGhost(type),
@@ -25,7 +30,7 @@ if (root) {
     startRide: () => scene?.startRide() ?? false,
     stopRide: () => scene?.stopRide(),
   });
-  scene = initScene(canvas, world);
+  scene = initScene(canvas, world, audio);
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly.
   if (import.meta.env.DEV) {
