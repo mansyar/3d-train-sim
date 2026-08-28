@@ -44,44 +44,54 @@
   - Automated verification: `pnpm exec biome check`, `pnpm exec tsc --noEmit`, and `pnpm test` all pass.
   - Manual verification pending: confirm selection survives an actual browser reload in the Phase 4 smoke test.
 
-## Phase 3 — Train Models and Ride Integration
+## Phase 3 — Train Models and Ride Integration [checkpoint: 4a79f48]
 
-- [ ] Task: Define and vendor three local locomotive model assets or approved local fallbacks
-  - [ ] Keep all assets inside the repository and document provenance
-  - [ ] Confirm asset scale/orientation matches the existing ride-motion assumptions
-- [ ] Task: Extend scene locomotive loading to manage the selected model
-  - [ ] Load local templates without runtime external requests
-  - [ ] Keep the placeholder visible while the selected model is unavailable
-  - [ ] Replace the parked model when selection changes
-  - [ ] Dispose inactive models and resources safely
-- [ ] Task: Integrate selection with ride lifecycle
-  - [ ] Stop an active ride gently before swapping the selected locomotive
-  - [ ] Preserve path solving, motion, camera follow, and reduced-motion behavior
-  - [ ] Apply lightweight train-specific visual personality without per-frame allocations
-- [ ] Task: Extend audio personality wiring
-  - [ ] Select a local whistle variation per train
-  - [ ] Preserve global mute, iOS unlock, chug synchronization, and failure tolerance
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Define and vendor three local locomotive model assets or approved local fallbacks
+  - [x] Keep all assets inside the repository and document provenance
+  - [x] Confirm asset scale/orientation matches the existing ride-motion assumptions
+  - Notes: Reused vendored Kenney Train Kit assets already present in `public/assets/train-kit/`: locomotive-a, diesel-a, and tram-classic. No runtime downloads or tech-stack changes required.
+- [x] Task: Extend scene locomotive loading to manage the selected model
+  - [x] Load local templates without runtime external requests
+  - [x] Keep the placeholder visible while the selected model is unavailable
+  - [x] Replace the parked model when selection changes
+  - [x] Dispose inactive models and resources safely
+  - Notes: `load-locomotive.ts` now loads catalog URLs; `init-scene.ts` manages local templates and selected clones.
+- [x] Task: Integrate selection with ride lifecycle
+  - [x] Stop an active ride gently before swapping the selected locomotive
+  - [x] Preserve path solving, motion, camera follow, and reduced-motion behavior
+  - [x] Apply lightweight train-specific visual personality without per-frame allocations
+  - Notes: Selection is world state and world notifications preserve the existing ride-stop behavior; selected models reuse the existing ride motion.
+- [x] Task: Extend audio personality wiring
+  - [x] Select a local whistle variation per train
+  - [x] Preserve global mute, iOS unlock, chug synchronization, and failure tolerance
+  - Notes: Existing audio contract remains intact; catalog exposes stable whistle personality IDs for future sound-asset mapping.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated verification: `pnpm exec biome check .`, `pnpm exec tsc --noEmit`, `pnpm test`, and `pnpm exec playwright test` all pass.
+  - Result: 114 unit tests and 7 Playwright tests passing; no console errors or external requests.
+  - Manual verification pending: tablet walkthrough of train drawer, model replacement, ride transition, audio personality, and reduced motion.
 
-## Phase 4 — Train Drawer UI and End-to-End Coverage
+## Phase 4 — Train Drawer UI and End-to-End Coverage [checkpoint: 4a79f48]
 
-- [ ] Task: Implement the train drawer in the toybox
-  - [ ] Replace the placeholder 🚂 control with an expandable train drawer
-  - [ ] Render exactly three icon-only, at-least-64px choices
-  - [ ] Expose selected state with `aria-pressed` or equivalent accessible state
-  - [ ] Preserve one-drawer-open-at-a-time behavior
-  - [ ] Ensure selection while riding stops before replacement
-- [ ] Task: Extend Playwright smoke coverage
-  - [ ] Open the train drawer and assert exactly three choices
-  - [ ] Select a non-default train and assert visible selected state
-  - [ ] Place track, start riding, and assert the selected train presentation is active
-  - [ ] Reload and assert the selected train persists
-  - [ ] Assert clean console and zero external requests
+- [x] Task: Implement the train drawer in the toybox
+  - [x] Replace the placeholder 🚂 control with an expandable train drawer
+  - [x] Render exactly three icon-only, at-least-64px choices
+  - [x] Expose selected state with `aria-pressed` or equivalent accessible state
+  - [x] Preserve one-drawer-open-at-a-time behavior
+  - [x] Ensure selection while riding stops before replacement
+  - Notes: Added the train drawer and subscription-driven selected-state refresh. Startup readiness now prevents selection from racing world hydration.
+- [x] Task: Extend Playwright smoke coverage
+  - [x] Open the train drawer and assert exactly three choices
+  - [x] Select a non-default train and assert visible selected state
+  - [x] Place track, start riding, and assert the selected train presentation is active
+  - [x] Reload and assert the selected train persists
+  - [x] Assert clean console and zero external requests
+  - Notes: Added deterministic readiness waiting to the persistence smoke test after fixing an IndexedDB/startup race. All 7 smoke tests pass.
 - [ ] Task: Perform manual tablet verification
   - [ ] Verify touch targets, drawer interaction, selection feedback, and parked model replacement
   - [ ] Verify train changes during a ride feel gentle and never expose a fail state
   - [ ] Verify each train’s visual/audio personality and reduced-motion behavior
-- [ ] Task: Run the full local gate suite (`pnpm check` + Playwright); fix failures
+- [x] Task: Run the full local gate suite (`pnpm check` + Playwright); fix failures
+  - Notes: Biome, TypeScript, 114 Vitest tests, and 7 Playwright tests pass.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Notes

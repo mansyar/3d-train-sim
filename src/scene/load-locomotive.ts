@@ -1,12 +1,11 @@
 import type { Group } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { type TrainKind, trainModelUrl } from '../core/trains';
 
-const LOCOMOTIVE_URL = '/assets/train-kit/train-locomotive-a.glb';
-
-/** Loads the Kenney locomotive. Resolves with the model root ready for the scene. */
-export function loadLocomotive(): Promise<Group> {
+/** Loads one catalog locomotive from the local asset bundle. */
+export function loadLocomotive(kind: TrainKind = 'steam'): Promise<Group> {
   const loader = new GLTFLoader();
-  return loader.loadAsync(LOCOMOTIVE_URL).then((gltf) => {
+  return loader.loadAsync(trainModelUrl(kind)).then((gltf) => {
     const model = gltf.scene;
     model.scale.setScalar(1.5);
     return model;
