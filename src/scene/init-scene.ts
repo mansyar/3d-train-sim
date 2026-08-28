@@ -81,8 +81,9 @@ export function initScene(
     const template = locomotiveTemplates.get(kind);
     if (!template) return;
     if (locomotive) {
+      // Clones share geometry and materials with their cached template. The
+      // template owns those GPU resources and disposes them during teardown.
       scene.remove(locomotive);
-      disposeObject(locomotive);
     }
     const model = template.clone(true);
     scene.add(model);
