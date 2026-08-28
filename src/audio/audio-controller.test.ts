@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createAudioController } from "./audio-controller.ts";
+import { createAudioController } from "./audio-controller";
 
-import type { SoundHandle } from "./audio-controller.ts";
+import type { SoundHandle } from "./audio-controller";
 
 /**
  * Fakes a Howler sound handle. Records the calls the controller makes so tests
@@ -29,7 +29,7 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
 }
 
 /** Builds a controller wired to fake handles, one per requested sound name. */
-function makeWired(names: string[]) {
+function makeWired(_names: string[]) {
 	const handles = new Map<string, ReturnType<typeof fakeHandle>>();
 	const created: string[] = [];
 	const controller = createAudioController({
