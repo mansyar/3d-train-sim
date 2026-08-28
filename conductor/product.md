@@ -29,7 +29,7 @@ Supporting guardrails:
 - No multi-language, no accounts, no cloud sync, no app store distribution.
 
 ## Core Gameplay Loop
-1. **Build:** drag track pieces (straights, 90° curves, crossings) from the toybox; they snap satisfyingly to the grid.
+1. **Build:** drag track pieces (straights, 90° curves, crossings) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
 3. **Play:** press ▶ — the train chugs the full track with sound and steam; camera follows. Whistle button. ⏹ stops it.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).

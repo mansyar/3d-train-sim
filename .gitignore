@@ -17,3 +17,6 @@ test-results/
 # OS
 .DS_Store
 Thumbs.db
+
+.playwright-cli/
+drawer-icons*.png
