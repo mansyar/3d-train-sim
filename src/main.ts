@@ -18,6 +18,7 @@ if (root) {
   let scene: SceneHandle | null = null;
   const canvas = mountApp(root, {
     world,
+    audio,
     // The scene does not exist until the canvas mounts — bind late.
     cellFromPoint: (clientX, clientY) => scene?.cellFromPoint(clientX, clientY) ?? null,
     beginGhost: (type) => scene?.beginGhost(type),
