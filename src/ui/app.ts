@@ -1,10 +1,15 @@
 import type { AudioController } from '../audio/audio-controller';
+import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
-import type { PickedPiece } from '../scene/track-renderer';
+import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 
 /** Where a dropped piece maps on the meadow, or nowhere. */
 export type CellFromPoint = (clientX: number, clientY: number) => Cell | null;
+
+/** Rails drawer kinds are track pieces; everything else is a scenery toy. */
+const isPieceKind = (kind: PieceType | SceneryKind): kind is PieceType =>
+  !(SCENERY_KINDS as readonly string[]).includes(kind);
 
 const PIECE_LABELS: Record<PieceType, string> = {
   straight: 'Straight track piece',
@@ -56,14 +61,14 @@ export interface AppOptions {
   /** The sound box: whistle toots, placement dings, the big mute switch. */
   audio: AudioController;
   cellFromPoint: CellFromPoint;
-  /** Begin the in-scene ghost preview for a dragged piece type. */
-  beginGhost(type: PieceType): void;
+  /** Begin the in-scene ghost preview for a dragged track piece or scenery toy. */
+  beginGhost(kind: PieceType | SceneryKind): void;
   /** Snap the preview to a cell (null = off-meadow); tint by validity. */
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** End the preview. */
   endGhost(): void;
   /** The placed piece under a screen point, for relocate/trash drags. */
-  pickPiece(clientX: number, clientY: number): PickedPiece | null;
+  pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */
@@ -83,13 +88,22 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <button class="piece-slot" type="button" data-piece="corner"
               aria-label="${PIECE_LABELS.corner}">${PIECE_ICONS.corner}</button>
     </div>
+    <div class="scenery-drawer" role="group" aria-label="Scenery toys" hidden>
+      <button class="scenery-slot" type="button" data-scenery="tree"
+              aria-label="${sceneryAria('tree')}">🌳</button>
+      <button class="scenery-slot" type="button" data-scenery="bush"
+              aria-label="${sceneryAria('bush')}">🌿</button>
+      <button class="scenery-slot" type="button" data-scenery="rock"
+              aria-label="${sceneryAria('rock')}">🪨</button>
+    </div>
     <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
     <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
             aria-pressed="false">#</button>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Track pieces"
               aria-expanded="false" data-drawer="track">🛤️</button>
-      <button class="toy-slot" type="button" aria-label="Scenery (coming soon)">🌳</button>
+      <button class="toy-slot" type="button" aria-label="Scenery toys"
+              aria-expanded="false" data-drawer="scenery">🌳</button>
       <button class="toy-slot" type="button" aria-label="Trains (coming soon)">🚂</button>
       <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
       <button class="ride-toggle" type="button"
@@ -107,24 +121,37 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const drawer = root.querySelector<HTMLDivElement>('.track-drawer');
   const trackSlot = root.querySelector<HTMLButtonElement>('[data-drawer="track"]');
+  const sceneryDrawer = root.querySelector<HTMLDivElement>('.scenery-drawer');
+  const scenerySlot = root.querySelector<HTMLButtonElement>('[data-drawer="scenery"]');
   const rotateKnob = root.querySelector<HTMLButtonElement>('.rotate-knob');
-  if (!drawer || !trackSlot || !rotateKnob) {
+  if (!drawer || !trackSlot || !sceneryDrawer || !scenerySlot || !rotateKnob) {
     throw new Error('toybox chrome missing from app frame');
   }
 
+  // One drawer open at a time - the toybox flips between rails and scenery.
+  const setDrawer = (which: 'track' | 'scenery' | null) => {
+    const openTrack = which === 'track';
+    const openScenery = which === 'scenery';
+    drawer.toggleAttribute('hidden', !openTrack);
+    trackSlot.setAttribute('aria-expanded', String(openTrack));
+    sceneryDrawer.toggleAttribute('hidden', !openScenery);
+    scenerySlot.setAttribute('aria-expanded', String(openScenery));
+  };
   trackSlot.addEventListener('click', () => {
-    const open = drawer.hasAttribute('hidden');
-    drawer.toggleAttribute('hidden', !open);
-    trackSlot.setAttribute('aria-expanded', String(open));
+    setDrawer(drawer.hasAttribute('hidden') ? 'track' : null);
+  });
+  scenerySlot.addEventListener('click', () => {
+    setDrawer(sceneryDrawer.hasAttribute('hidden') ? 'scenery' : null);
   });
 
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
-  // pickedId set ⇒ the drag moves an existing placed piece (relocate or
-  // trash); null ⇒ a fresh piece from the drawer.
-  let drag: { type: PieceType; rotation: Rotation; pickedId: string | null } | null = null;
+  // pickedId set ⇒ the drag moves an existing placed toy (relocate or
+  // trash); null ⇒ a fresh toy from the drawer.
+  let drag: { kind: PieceType | SceneryKind; rotation: Rotation; pickedId: string | null } | null =
+    null;
   let lastPointer = { x: -1000, y: -1000 };
 
-  // Pressing a placed piece lifts it as a ghost (relocate / trash drags).
+  // Pressing a placed toy lifts it as a ghost (relocate / trash drags).
   // A plain tap releases on the same cell — relocate is a no-op snap-back.
   canvas.addEventListener('pointerdown', (event) => {
     if (drag) return;
@@ -132,10 +159,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     if (picked) beginPlacedDrag(picked);
   });
 
+  // Track pieces and scenery share the meadow: a cell holds at most one toy.
   const canPlaceAt = (cell: Cell): boolean => {
     for (const piece of options.world.pieces()) {
-      if (piece.id === drag?.pickedId) continue; // The dragged piece frees its own cell.
+      if (piece.id === drag?.pickedId) continue; // The dragged toy frees its own cell.
       if (piece.cell.x === cell.x && piece.cell.y === cell.y) return false;
+    }
+    for (const toy of options.world.scenery()) {
+      if (toy.id === drag?.pickedId) continue;
+      if (toy.cell.x === cell.x && toy.cell.y === cell.y) return false;
     }
     return true;
   };
@@ -152,16 +184,17 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     options.moveGhost(cell, drag.rotation, placeable);
   };
 
-  const beginDrag = (type: PieceType) => {
-    drag = { type, rotation: 0, pickedId: null };
-    options.beginGhost(type);
+  const beginDrag = (kind: PieceType | SceneryKind) => {
+    drag = { kind, rotation: 0, pickedId: null };
+    options.beginGhost(kind);
     rotateKnob.removeAttribute('hidden');
   };
 
-  const beginPlacedDrag = (picked: PickedPiece) => {
-    drag = { type: picked.type, rotation: picked.rotation, pickedId: picked.id };
+  const beginPlacedDrag = (picked: PickedItem) => {
+    const kind = picked.kind === 'piece' ? picked.type : picked.scenery;
+    drag = { kind, rotation: picked.rotation, pickedId: picked.id };
     options.setPieceVisible(picked.id, false); // The ghost stands in until the drop.
-    options.beginGhost(picked.type);
+    options.beginGhost(kind);
     rotateKnob.removeAttribute('hidden');
   };
 
@@ -183,24 +216,32 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const endDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
-    const { type, rotation, pickedId } = drag;
+    const { kind, rotation, pickedId } = drag;
     const cell = options.cellFromPoint(clientX, clientY);
     let settled = false;
     let binned = false;
     if (pickedId === null) {
-      settled = cell !== null && options.world.place(type, cell, rotation) === 'placed';
+      settled =
+        cell !== null &&
+        (isPieceKind(kind)
+          ? options.world.place(kind, cell, rotation)
+          : options.world.placeScenery(kind, cell, rotation)) === 'placed';
     } else {
       const dropTarget = document.elementFromPoint(clientX, clientY);
       const overTrash = dropTarget?.closest('.trash-slot') !== null;
       const overToolbar = dropTarget?.closest('.toybox-rail') !== null;
       if (overTrash) {
-        options.world.remove(pickedId); // Binned.
-        settled = true;
+        if (isPieceKind(kind)) options.world.remove(pickedId);
+        else options.world.removeScenery(pickedId);
+        settled = true; // Binned.
         binned = true;
       } else if (cell && !overToolbar) {
         // Toolbar drops never relocate — the bottom grid row hides behind the
-        // rail, so the piece wobble-returns to its cell instead.
-        settled = options.world.relocate(pickedId, cell, rotation) === 'placed';
+        // rail, so the toy wobble-returns to its cell instead.
+        settled =
+          (isPieceKind(kind)
+            ? options.world.relocate(pickedId, cell, rotation)
+            : options.world.relocateScenery(pickedId, cell, rotation)) === 'placed';
       }
       options.setPieceVisible(pickedId, true); // Reconcile already moved or removed it.
     }
@@ -236,12 +277,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     moveDrag(lastPointer.x, lastPointer.y);
   });
 
-  for (const button of root.querySelectorAll<HTMLButtonElement>('.piece-slot')) {
+  for (const button of root.querySelectorAll<HTMLButtonElement>('.piece-slot, .scenery-slot')) {
     button.addEventListener('pointerdown', (event) => {
       if (button.classList.contains('is-dimmed')) return;
       event.preventDefault();
-      const type = (button.dataset.piece ?? 'straight') as PieceType;
-      beginDrag(type);
+      const kind = button.dataset.piece ?? button.dataset.scenery ?? ('straight' as PieceType);
+      beginDrag(kind as PieceType | SceneryKind);
     });
   }
 
@@ -267,8 +308,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   // ---- Cap dimming -------------------------------------------------------
   const refreshCap = () => {
-    const full = options.world.pieces().length >= MAX_PIECES;
-    for (const button of root.querySelectorAll<HTMLButtonElement>('.piece-slot')) {
+    const full = options.world.pieces().length + options.world.scenery().length >= MAX_PIECES;
+    for (const button of root.querySelectorAll<HTMLButtonElement>('.piece-slot, .scenery-slot')) {
       button.classList.toggle('is-dimmed', full);
       button.toggleAttribute('disabled', full);
     }

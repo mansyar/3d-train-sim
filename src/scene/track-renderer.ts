@@ -16,12 +16,31 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { PIECE_TYPES, type PieceType } from '../core/pieces';
+import {
+  type PlacedScenery,
+  SCENERY_KINDS,
+  type SceneryKind,
+  sceneryLift,
+  sceneryScale,
+  sceneryUrl,
+} from '../core/scenery';
 import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
+
+/** Track pieces and scenery toys share one meadow renderer. */
+type MeadowItem = PlacedPiece | PlacedScenery;
+
+/** Track kit model kinds (scenery kinds carry no base yaw — they are decor). */
+const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: -Math.PI / 2 };
+
+const baseYawOf = (kind: PieceType | SceneryKind): number =>
+  kind in BASE_YAW ? BASE_YAW[kind as PieceType] : 0;
+
+const isPiece = (item: MeadowItem): item is PlacedPiece => 'type' in item;
 
 /** Kit models are authored on a 4-unit module (straight length = corner diameter). */
 const KIT_MODULE_UNITS = 4;
@@ -52,11 +71,6 @@ const PIECE_URLS: Record<PieceType, string> = {
   corner: '/assets/train-kit/railroad-corner-small.glb',
 };
 
-/** Unrotated model facing. With the Kenney corner's arc centre anchored on
- * the cell's shared corner, a −90° yaw swings its ends onto the graph's
- * north/east base edges, each tangent perpendicular to its edge. */
-const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: -Math.PI / 2 };
-
 /** The world-space center of a meadow cell (grid north is -Z). */
 export function cellToWorld(cell: Cell): { x: number; z: number } {
   return {
@@ -65,31 +79,25 @@ export function cellToWorld(cell: Cell): { x: number; z: number } {
   };
 }
 
-const hasPieceId = (pieces: readonly PlacedPiece[], id: string): boolean => {
-  for (const piece of pieces) if (piece.id === id) return true;
-  return false;
-};
-
-/** A placed piece found under the pointer, for relocate/remove drags. */
-export interface PickedPiece {
-  id: string;
-  type: PieceType;
-  rotation: Rotation;
-  cell: Cell;
-}
+/** A placed track piece or scenery toy found under the pointer, for
+ * relocate/remove drags. The kind discriminator tells the UI which store
+ * mutation to apply on drop. */
+export type PickedItem =
+  | { kind: 'piece'; id: string; type: PieceType; rotation: Rotation; cell: Cell }
+  | { kind: 'scenery'; id: string; scenery: SceneryKind; rotation: Rotation; cell: Cell };
 
 export interface TrackRenderer {
   dispose(): void;
   /** Begin a drag preview: the real model follows the pointer, grid-snapped. */
-  beginGhost(type: PieceType): void;
+  beginGhost(kind: PieceType | SceneryKind): void;
   /** Snap the ghost to a cell (null hides it off-meadow); tint by validity. */
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** Drop the preview ghost and release its per-drag materials. */
   endGhost(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
-  /** The placed piece whose cell is under a screen point, for relocate/return drags. */
-  pickPiece(clientX: number, clientY: number): PickedPiece | null;
+  /** The placed meadow item whose cell is under a screen point, for relocate/return drags. */
+  pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** Hide/show a placed clone (e.g. while its own drag ghost stands in). */
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */
@@ -103,10 +111,10 @@ export function startTrackRenderer(
   canvas: HTMLCanvasElement,
   world: WorldStore,
 ): TrackRenderer {
-  const templates = new Map<PieceType, Object3D>();
+  const templates = new Map<PieceType | SceneryKind, Object3D>();
   const rendered = new Map<string, Object3D>();
-  /** Piece records by id, mirroring the store for picking. */
-  const tracked = new Map<string, PlacedPiece>();
+  /** Meadow records by id, mirroring the store for picking. */
+  const tracked = new Map<string, MeadowItem>();
   const loader = new GLTFLoader();
   const raycaster = new Raycaster();
   const pointerNdc = new Vector2();
@@ -114,36 +122,40 @@ export function startTrackRenderer(
   const groundHit = new Vector3();
   let disposed = false;
 
-  function apply(piece: PlacedPiece): void {
-    const template = templates.get(piece.type);
-    if (!template) return; // Asset not ready (or unavailable) — piece stays tracked.
-    const yaw = -(piece.rotation * Math.PI) / 180 + BASE_YAW[piece.type];
-    const { x, z } = cellToWorld(piece.cell);
-    let model = rendered.get(piece.id);
+  function apply(item: MeadowItem): void {
+    const kind = isPiece(item) ? item.type : item.kind;
+    const template = templates.get(kind);
+    if (!template) return; // Asset not ready (or unavailable) — item stays tracked.
+    const yaw = -(item.rotation * Math.PI) / 180 + baseYawOf(kind);
+    const { x, z } = cellToWorld(item.cell);
+    let model = rendered.get(item.id);
     if (!model) {
       model = template.clone(true);
       scene.add(model);
-      rendered.set(piece.id, model);
+      rendered.set(item.id, model);
     }
     model.position.set(x, 0, z);
     model.rotation.y = yaw;
   }
 
-  function reconcile(pieces: readonly PlacedPiece[]): void {
+  function reconcile(): void {
+    const wanted = new Map<string, MeadowItem>();
+    for (const piece of world.pieces()) wanted.set(piece.id, piece);
+    for (const item of world.scenery()) wanted.set(item.id, item);
     for (const [id, model] of rendered) {
-      if (!hasPieceId(pieces, id)) {
+      if (!wanted.has(id)) {
         scene.remove(model); // Clones share template geometry — the template owns GPU resources.
         rendered.delete(id);
       }
     }
     tracked.clear();
-    for (const piece of pieces) {
-      tracked.set(piece.id, piece);
-      apply(piece);
+    for (const item of wanted.values()) {
+      tracked.set(item.id, item);
+      apply(item);
     }
   }
 
-  const unsubscribe = world.subscribe(reconcile);
+  const unsubscribe = world.subscribe(() => reconcile());
 
   // ---- Meadow grid: a debug overlay of the snap-cell boundaries -----------
   // One cell = CELL_SIZE world units starting at the meadow's north-west
@@ -177,7 +189,7 @@ export function startTrackRenderer(
 
   // ---- Drag ghost: a translucent clone of the real template --------------
   let ghost: Object3D | null = null;
-  let ghostType: PieceType | null = null;
+  let ghostType: PieceType | SceneryKind | null = null;
   const ghostTint = new Color();
   const TINT_VALID = new Color(1, 0.75, 0.35); // Warm amber glow while placeable.
   const TINT_BLOCKED = new Color(0.5, 0.5, 0.5); // Desaturated while blocked.
@@ -227,9 +239,9 @@ export function startTrackRenderer(
     }
   };
 
-  function beginGhost(type: PieceType): void {
+  function beginGhost(kind: PieceType | SceneryKind): void {
     endGhost();
-    ghostType = type;
+    ghostType = kind;
     spawnGhost();
   }
 
@@ -241,7 +253,7 @@ export function startTrackRenderer(
       ghost.visible = false;
       return;
     }
-    const yaw = -(rotation * Math.PI) / 180 + BASE_YAW[ghostType];
+    const yaw = -(rotation * Math.PI) / 180 + baseYawOf(ghostType);
     const { x, z } = cellToWorld(cell);
     ghost.position.set(x, 0, z);
     ghost.rotation.y = yaw;
@@ -274,16 +286,32 @@ export function startTrackRenderer(
   }
 
   /**
-   * The placed piece whose cell is under a screen point. The store keeps at
-   * most one piece per cell, so the cell itself is the tap target — far more
-   * forgiving for small fingers than raycasting thin rail geometry.
+   * The placed meadow item (piece or scenery) whose cell is under a screen
+   * point. The store keeps at most one toy per cell, so the cell itself is
+   * the tap target — far more forgiving for small fingers than raycasting
+   * thin rail geometry.
    */
-  function pickPiece(clientX: number, clientY: number): PickedPiece | null {
+  function pickPiece(clientX: number, clientY: number): PickedItem | null {
     const cell = cellFromPoint(clientX, clientY);
     if (!cell) return null;
-    for (const piece of tracked.values()) {
-      if (piece.cell.x === cell.x && piece.cell.y === cell.y) {
-        return { id: piece.id, type: piece.type, rotation: piece.rotation, cell: piece.cell };
+    for (const item of tracked.values()) {
+      if (item.cell.x === cell.x && item.cell.y === cell.y) {
+        if (isPiece(item)) {
+          return {
+            kind: 'piece',
+            id: item.id,
+            type: item.type,
+            rotation: item.rotation,
+            cell: item.cell,
+          };
+        }
+        return {
+          kind: 'scenery',
+          id: item.id,
+          scenery: item.kind,
+          rotation: item.rotation,
+          cell: item.cell,
+        };
       }
     }
     return null;
@@ -316,7 +344,32 @@ export function startTrackRenderer(
         const model = new Group();
         model.add(gltf.scene);
         templates.set(type, model);
-        reconcile(world.pieces()); // Render pieces placed before the asset arrived.
+        reconcile(); // Render items placed before the asset arrived.
+      },
+      undefined,
+      () => {
+        // Asset unavailable — the world keeps working, models stay absent.
+      },
+    );
+  }
+
+  // Scenery templates: authored with 1 unit ≈ 1 cell, so the catalog
+  // multiplier tunes each kind to toy-table size; the ground lift is baked
+  // into the template so every clone inherits it.
+  for (const kind of SCENERY_KINDS) {
+    loader.load(
+      sceneryUrl(kind),
+      (gltf) => {
+        if (disposed) {
+          disposeObject(gltf.scene);
+          return;
+        }
+        gltf.scene.scale.setScalar(CELL_SIZE * sceneryScale(kind));
+        gltf.scene.position.set(0, sceneryLift(kind), 0);
+        const model = new Group();
+        model.add(gltf.scene);
+        templates.set(kind, model);
+        reconcile();
       },
       undefined,
       () => {

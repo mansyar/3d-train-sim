@@ -7,5 +7,5 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 |---|---|---|---|
 
 Completed tracks are archived under [conductor/archive/](archive/):
-`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`.
+`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`.
 

@@ -119,3 +119,101 @@ describe('world store', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 });
+
+describe('world store scenery', () => {
+  it('places scenery on a free cell, generating an id and notifying', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.placeScenery('tree', ORIGIN, 0)).toBe('placed');
+    expect(store.scenery()).toHaveLength(1);
+    const item = store.scenery()[0];
+    expect(item?.kind).toBe('tree');
+    expect(item?.cell).toEqual(ORIGIN);
+    expect(item?.rotation).toBe(0);
+    expect(item?.id).toBeTruthy();
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('never lets track and scenery share a cell', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    expect(store.placeScenery('tree', ORIGIN, 0)).toBe('occupied');
+    expect(store.scenery()).toHaveLength(0);
+
+    store.placeScenery('bush', NEXT_CELL, 0);
+    expect(store.place('corner', NEXT_CELL, 90)).toBe('occupied');
+    expect(store.pieces()).toHaveLength(1);
+  });
+
+  it('rejects scenery outside the meadow bounds', () => {
+    const store = createWorldStore();
+    expect(store.placeScenery('rock', { x: 16, y: 0 }, 0)).toBe('out-of-bounds');
+    expect(store.scenery()).toHaveLength(0);
+  });
+
+  it('dims scenery at the shared 64-toy meadow cap', () => {
+    const store = createWorldStore();
+    fillWorld(store, MAX_PIECES);
+    expect(store.placeScenery('tree', { x: 0, y: 15 }, 0)).toBe('capacity');
+    expect(store.scenery()).toHaveLength(0);
+
+    // Room returns when a toy goes back to the drawer.
+    const first = store.pieces()[0];
+    if (first) store.remove(first.id);
+    expect(store.placeScenery('tree', { x: 0, y: 15 }, 0)).toBe('placed');
+  });
+
+  it('relocates scenery to a free cell and frees the old one', () => {
+    const store = createWorldStore();
+    store.placeScenery('tree', ORIGIN, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocateScenery(id, NEXT_CELL, 90)).toBe('placed');
+    expect(store.scenery()[0]?.cell).toEqual(NEXT_CELL);
+    expect(store.place('straight', ORIGIN, 0)).toBe('placed');
+  });
+
+  it('refuses to relocate scenery onto an occupied cell', () => {
+    const store = createWorldStore();
+    store.placeScenery('tree', ORIGIN, 0);
+    store.place('straight', NEXT_CELL, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocateScenery(id, NEXT_CELL, 0)).toBe('occupied');
+    expect(store.scenery()[0]?.cell).toEqual(ORIGIN);
+  });
+
+  it('treats relocating scenery onto its own cell as a no-op success', () => {
+    const store = createWorldStore();
+    store.placeScenery('bush', ORIGIN, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocateScenery(id, ORIGIN, 0)).toBe('placed');
+    expect(store.scenery()).toHaveLength(1);
+  });
+
+  it('reports not-found for unknown scenery ids and ignores unknown removes', () => {
+    const store = createWorldStore();
+    store.placeScenery('rock', ORIGIN, 0);
+
+    expect(store.relocateScenery('ghost', NEXT_CELL, 0)).toBe('not-found');
+    expect(() => store.removeScenery('ghost')).not.toThrow();
+    expect(store.scenery()).toHaveLength(1);
+  });
+
+  it('removes scenery back to the drawer and notifies', () => {
+    const store = createWorldStore();
+    store.placeScenery('tree', ORIGIN, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    store.removeScenery(id);
+    expect(store.scenery()).toHaveLength(0);
+    expect(store.place('straight', ORIGIN, 0)).toBe('placed');
+  });
+});
