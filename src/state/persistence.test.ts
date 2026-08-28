@@ -127,10 +127,12 @@ describe('mute preference', () => {
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     watchMutePersistence(audio, store, save);
 
+    // Notifications that do not change the mute value (the real controller
+    // also notifies on ride chug start/stop) never persist.
     audio.setMuted(true);
     audio.emit();
     audio.emit();
-    expect(save).toHaveBeenCalledTimes(2);
+    expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0]?.[0]).toMatchObject({
       version: 1,
       train: 'steam',
@@ -138,7 +140,11 @@ describe('mute preference', () => {
       scenery: [],
       preferences: { muted: true },
     });
-    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: true });
+
+    audio.setMuted(false);
+    audio.emit();
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: false });
   });
 
   it('treats storage failures as non-fatal', () => {
@@ -151,7 +157,9 @@ describe('mute preference', () => {
     });
     watchMutePersistence(audio, store, save);
 
+    audio.setMuted(true);
     expect(() => audio.emit()).not.toThrow();
+    audio.setMuted(false);
     audio.emit();
     expect(save).toHaveBeenCalledTimes(2);
   });

@@ -64,9 +64,14 @@ export function watchMutePersistence(
   world: WorldReader,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
 ): () => void {
+  // Chug start/stop also notify; only an actual mute change persists.
+  let lastPersisted = audio.isMuted();
   return audio.subscribe(() => {
+    const muted = audio.isMuted();
+    if (muted === lastPersisted) return;
+    lastPersisted = muted;
     try {
-      void save(snapshotOf(world, audio.isMuted()));
+      void save(snapshotOf(world, muted));
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
