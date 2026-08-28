@@ -58,6 +58,8 @@ const RIDE_ICONS = {
 
 export interface AppOptions {
   world: WorldStore;
+  /** Whether asynchronous startup restoration has finished. */
+  isReady?: () => boolean;
   /** The sound box: whistle toots, placement dings, the big mute switch. */
   audio: AudioController;
   cellFromPoint: CellFromPoint;
@@ -154,7 +156,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // Pressing a placed toy lifts it as a ghost (relocate / trash drags).
   // A plain tap releases on the same cell — relocate is a no-op snap-back.
   canvas.addEventListener('pointerdown', (event) => {
-    if (drag) return;
+    if (drag || (options.isReady && !options.isReady())) return;
     const picked = options.pickPiece(event.clientX, event.clientY);
     if (picked) beginPlacedDrag(picked);
   });
@@ -185,6 +187,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   };
 
   const beginDrag = (kind: PieceType | SceneryKind) => {
+    if (options.isReady && !options.isReady()) return;
     drag = { kind, rotation: 0, pickedId: null };
     options.beginGhost(kind);
     rotateKnob.removeAttribute('hidden');
@@ -337,6 +340,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   };
 
   rideToggle.addEventListener('click', () => {
+    if (options.isReady && !options.isReady()) return;
     if (riding) {
       options.stopRide();
       riding = false;

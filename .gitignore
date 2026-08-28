@@ -18,5 +18,8 @@ test-results/
 .DS_Store
 Thumbs.db
 
+# Freebuff local metadata
+.freebuff/
+
 .playwright-cli/
 drawer-icons*.png
