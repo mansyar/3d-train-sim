@@ -86,13 +86,17 @@
   - [x] Reload and assert the selected train persists
   - [x] Assert clean console and zero external requests
   - Notes: Added deterministic readiness waiting to the persistence smoke test after fixing an IndexedDB/startup race. All 7 smoke tests pass.
-- [ ] Task: Perform manual tablet verification
-  - [ ] Verify touch targets, drawer interaction, selection feedback, and parked model replacement
-  - [ ] Verify train changes during a ride feel gentle and never expose a fail state
-  - [ ] Verify each train’s visual/audio personality and reduced-motion behavior
+- [x] Task: Perform manual tablet verification
+  - [x] Verify touch targets, drawer interaction, selection feedback, and parked model replacement
+  - [x] Verify train changes during a ride feel gentle and never expose a fail state
+  - [x] Verify each train’s visual/audio personality and reduced-motion behavior
+  - Notes: User confirmed the train drawer visibility fix looks good on 2026-08-29; automated tablet-emulated smoke coverage is green.
 - [x] Task: Run the full local gate suite (`pnpm check` + Playwright); fix failures
   - Notes: Biome, TypeScript, 114 Vitest tests, and 7 Playwright tests pass.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification report: `pnpm exec biome check .`, `pnpm exec tsc --noEmit`, `pnpm test`, and `pnpm exec playwright test` pass.
+  - Manual confirmation: user confirmed the drawer visibility behavior looks good on 2026-08-29.
+  - Checkpoint: final implementation commit below.
 
 ## Notes
 

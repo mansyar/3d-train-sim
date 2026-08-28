@@ -158,7 +158,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     trackSlot.setAttribute('aria-expanded', String(openTrack));
     sceneryDrawer.toggleAttribute('hidden', !openScenery);
     scenerySlot.setAttribute('aria-expanded', String(openScenery));
-    trainDrawer.hidden = !openTrains;
+    trainDrawer.toggleAttribute('hidden', !openTrains);
     trainSlot.setAttribute('aria-expanded', String(openTrains));
   };
   trackSlot.addEventListener('click', () => {
