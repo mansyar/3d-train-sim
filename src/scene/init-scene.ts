@@ -1,5 +1,5 @@
 import type { Object3D } from 'three';
-import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
@@ -14,6 +14,14 @@ import { type PickedPiece, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
+
+/** Elevated oblique view framing the whole 60-unit meadow. */
+const OVERVIEW_POSITION = new Vector3(0, 52, 44);
+const OVERVIEW_LOOK = new Vector3(0, 0, 0);
+/** Chase offset over/behind the locomotive while riding (world-relative). */
+const FOLLOW_OFFSET = new Vector3(0, 9, 11);
+/** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
+const CAMERA_EASE = 2.5;
 
 export interface SceneHandle {
   dispose(): void;
@@ -39,9 +47,8 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(45, 1, 0.1, 200);
-  // Elevated oblique view framing the whole 60-unit meadow.
-  camera.position.set(0, 52, 44);
-  camera.lookAt(0, 0, 0);
+  camera.position.copy(OVERVIEW_POSITION);
+  camera.lookAt(OVERVIEW_LOOK);
 
   const disposables: Array<() => void> = [];
   disposables.push(createLights(scene));
@@ -52,6 +59,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
 
   const rides = createRideController(world);
   let rideUpdate: ((dt: number) => void) | null = null;
+  let locomotive: Object3D | null = null;
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
@@ -67,6 +75,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
       scene.add(model);
       // The ride owns the locomotive from here; the showcase spin pauses.
       spinTarget = null;
+      locomotive = model;
       rideUpdate = createRideMotion(model, world, rides).update;
     })
     .catch(() => {
@@ -83,12 +92,37 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
   resize();
   window.addEventListener('resize', resize);
 
+  // The camera glides after the train while riding and eases home on stop.
+  // Reduced-motion users keep the fixed overview — no chase, no drift.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const camLook = OVERVIEW_LOOK.clone();
+  const desiredPosition = new Vector3();
+  const desiredLook = new Vector3();
+  const updateCamera = (dt: number): void => {
+    if (reducedMotion) return;
+    const riding = rides.mode() === 'riding' && locomotive !== null;
+    if (riding && locomotive) {
+      desiredPosition.copy(locomotive.position).add(FOLLOW_OFFSET);
+      desiredLook.copy(locomotive.position);
+    } else {
+      desiredPosition.copy(OVERVIEW_POSITION);
+      desiredLook.copy(OVERVIEW_LOOK);
+    }
+    const ease = 1 - Math.exp(-CAMERA_EASE * dt);
+    camera.position.lerp(desiredPosition, ease);
+    camLook.lerp(desiredLook, ease);
+    camera.lookAt(camLook);
+  };
+
   const stopSpin = startSpinLoop(
     renderer,
     scene,
     camera,
     () => spinTarget,
-    (dt) => rideUpdate?.(dt),
+    (dt) => {
+      rideUpdate?.(dt);
+      updateCamera(dt);
+    },
   );
 
   return {
