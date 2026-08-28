@@ -30,7 +30,9 @@
     - `vitest run --coverage`: pathing.ts 97.4% stmts / 86.4% branch / 100% lines & funcs. Bar cleared.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 — Ride State + Train Motion (src/state, src/scene)
+## Phase 2 — Ride State + Train Motion (src/state, src/scene) [checkpoint: d1bfa81]
+
+- Verification Report: Confirmed 2026-08-28: `pnpm check` green; `vitest run --coverage` → ride.ts 100% stmts/branch/lines/funcs (55/55 tests); pathing.ts ≥80% retained. Visual ride walkthrough deferred to Phase 3's manual verification (UI trigger ▶ lands there).
 
 - [x] Task: TDD — Red→Green: ride state machine in `src/state/` (idle ⇄ riding; gentle stop on world mutation during ride) — d776a8e
   - Notes:
