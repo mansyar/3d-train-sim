@@ -206,7 +206,22 @@
     clean; user visually confirmed all flows in the dev server.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — d71acb3
 
-## Phase 5 — E2E + Full Verification
+## Phase 5 — E2E + Full Verification [checkpoint: 1d19290]
+
+### Verification Report (2026-08-28)
+
+- Automated: `pnpm check` fully green (Biome 26 files clean, tsc --noEmit
+  clean, vitest 35/35) and `pnpm exec playwright test` 2/2 on the iPad Mini
+  touch project — boot + drag-place interaction, zero external requests,
+  zero console errors.
+- Coverage: phase changed only e2e/smoke.spec.ts (test glue) — no
+  logic-bearing modules; logic coverage enforced in Phases 1–2.
+- Manual: user tablet walkthrough 2026-08-28 against the network-exposed
+  dev server — drag feel, snap bounce, snap-back, trashbin removal, rotation
+  knob, 60 FPS all confirmed ("all good"). Connectivity: user hand-built a
+  closed oval loop; pieces join seamlessly. Product guidelines hold: no fail
+  states, instant feedback, privacy (localhost-only requests), ≥64px targets.
+- User confirmation: 2026-08-28 (checkpoint question answered yes).
 
 - [x] Task: Extend Playwright smoke spec (open drawer, drag-place a piece,
     assert rendered world + clean console + localhost-only requests) — dd21256
@@ -229,7 +244,7 @@
   - Notes: user ran the walkthrough on a tablet against the network-exposed
     dev server (Wi-Fi http://192.168.0.114:5176) and confirmed "all good" —
     drag feel, snap bounce, snap-back, trashbin, and fluidity all pass.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — 1d19290
 
 ## Notes
 
