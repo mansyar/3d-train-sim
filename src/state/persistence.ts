@@ -1,5 +1,8 @@
 import { type DBSchema, openDB } from 'idb';
-import type { WorldSnapshot } from '../core/save';
+import { deserializePreferences, serializeWorld, type WorldSnapshot } from '../core/save';
+import type { PlacedScenery } from '../core/scenery';
+import type { PlacedPiece } from '../core/track-graph';
+import type { TrainKind } from '../core/trains';
 
 const DATABASE_NAME = 'tiny-tracks';
 const DATABASE_VERSION = 1;
@@ -31,20 +34,55 @@ export async function loadWorldSnapshot(): Promise<WorldSnapshot | null> {
   }
 }
 
-export function watchWorldPersistence(world: {
-  train(): import('../core/trains').TrainKind;
-  pieces(): readonly import('../core/track-graph').PlacedPiece[];
-  scenery(): readonly import('../core/scenery').PlacedScenery[];
+interface WorldReader {
+  train(): TrainKind;
+  pieces(): readonly PlacedPiece[];
+  scenery(): readonly PlacedScenery[];
   subscribe(listener: () => void): () => void;
-}): () => void {
+}
+
+function snapshotOf(world: WorldReader, muted: boolean): WorldSnapshot {
+  return serializeWorld(world.pieces(), world.scenery(), world.train(), muted);
+}
+
+export function watchWorldPersistence(
+  world: WorldReader,
+  readMuted: () => boolean = () => false,
+  save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+): () => void {
   return world.subscribe(() => {
-    void saveWorldSnapshot({
-      version: 1,
-      train: world.train(),
-      pieces: world.pieces().map((piece) => ({ ...piece, cell: { ...piece.cell } })),
-      scenery: world.scenery().map((item) => ({ ...item, cell: { ...item.cell } })),
-    });
+    void save(snapshotOf(world, readMuted()));
   });
+}
+
+/**
+ * Keeps the sound preference in storage: every mute change re-saves the full
+ * snapshot so world mutations and mute toggles can never clobber each other.
+ */
+export function watchMutePersistence(
+  audio: { isMuted(): boolean; subscribe(listener: () => void): () => void },
+  world: WorldReader,
+  save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+): () => void {
+  return audio.subscribe(() => {
+    try {
+      void save(snapshotOf(world, audio.isMuted()));
+    } catch {
+      // Storage is an enhancement; never make the toy world unusable.
+    }
+  });
+}
+
+/**
+ * Applies a snapshot's persisted mute state on boot. Always resolves to an
+ * explicit value (sound-on default) so the toggle reflects storage exactly
+ * once, and never depends on the browser audio unlock gesture.
+ */
+export function restoreMutePreference(
+  snapshot: unknown,
+  audio: { setMuted(muted: boolean): void },
+): void {
+  audio.setMuted(deserializePreferences(snapshot).muted);
 }
 
 export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> {

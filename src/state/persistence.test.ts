@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { WorldData, WorldSnapshot } from '../core/save';
+import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
+import { restoreMutePreference, watchMutePersistence, watchWorldPersistence } from './persistence';
 import { createWorldStore } from './world';
 
 const ORIGIN = { x: 0, y: 0 };
@@ -67,5 +68,95 @@ describe('autosave subscription', () => {
     expect(store.relocate('ghost', ORIGIN, 0)).toBe('not-found');
     store.removeScenery('ghost');
     expect(listener).not.toHaveBeenCalled();
+  });
+});
+
+describe('mute preference', () => {
+  const makeAudio = () => {
+    let muted = false;
+    let notify: (() => void) | null = null;
+    return {
+      setMuted: vi.fn((value: boolean) => {
+        muted = value;
+      }),
+      isMuted: () => muted,
+      subscribe: (listener: () => void) => {
+        notify = listener;
+        return () => {
+          notify = null;
+        };
+      },
+      emit: () => {
+        notify?.();
+      },
+    };
+  };
+
+  it('applies the persisted mute state exactly once on boot', () => {
+    const audio = makeAudio();
+
+    restoreMutePreference(
+      { version: 1, pieces: [], scenery: [], preferences: { muted: true } },
+      audio,
+    );
+    expect(audio.setMuted).toHaveBeenCalledTimes(1);
+    expect(audio.setMuted).toHaveBeenCalledWith(true);
+
+    restoreMutePreference(null, audio);
+    expect(audio.setMuted).toHaveBeenCalledTimes(2);
+    expect(audio.setMuted).toHaveBeenLastCalledWith(false);
+  });
+
+  it('saves exactly once per mute change with the current world', () => {
+    const audio = makeAudio();
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchMutePersistence(audio, store, save);
+
+    audio.setMuted(true);
+    audio.emit();
+    audio.emit();
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      version: 1,
+      train: 'steam',
+      pieces: [{ type: 'straight', cell: ORIGIN }],
+      scenery: [],
+      preferences: { muted: true },
+    });
+    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: true });
+  });
+
+  it('treats storage failures as non-fatal', () => {
+    const audio = makeAudio();
+    const store = createWorldStore();
+    let calls = 0;
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>(() => {
+      calls += 1;
+      if (calls === 1) throw new Error('storage unavailable');
+    });
+    watchMutePersistence(audio, store, save);
+
+    expect(() => audio.emit()).not.toThrow();
+    audio.emit();
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('carries the current mute preference into world-mutation saves', () => {
+    const audio = makeAudio();
+    audio.setMuted(true);
+    const store = createWorldStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => audio.isMuted(), save);
+
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ preferences: { muted: true } });
+
+    audio.setMuted(false);
+    store.place('corner', NEXT_CELL, 0);
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: false });
   });
 });

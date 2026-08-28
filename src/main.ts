@@ -4,7 +4,12 @@ import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { deserializeWorld } from './core/save';
 import { initScene, type SceneHandle } from './scene/init-scene';
-import { loadWorldSnapshot, watchWorldPersistence } from './state/persistence';
+import {
+  loadWorldSnapshot,
+  restoreMutePreference,
+  watchMutePersistence,
+  watchWorldPersistence,
+} from './state/persistence';
 import { createWorldStore } from './state/world';
 import { mountApp } from './ui/app';
 
@@ -15,14 +20,18 @@ registerSW({ immediate: true });
 const root = document.getElementById('app');
 if (root) {
   const world = createWorldStore();
+  // The sound box: ride-synced chug, whistle, dings, global mute.
+  const audio = createAudioController(createHowlerVoice());
   let restoring = true;
   void loadWorldSnapshot().then((snapshot) => {
     if (snapshot) world.hydrate(deserializeWorld(snapshot));
+    // The sound preference rides in the snapshot; apply it before the
+    // persistence watchers attach so boot hydration never rewrites storage.
+    restoreMutePreference(snapshot, audio);
     restoring = false;
-    watchWorldPersistence(world);
+    watchWorldPersistence(world, () => audio.isMuted());
+    watchMutePersistence(audio, world);
   });
-  // The sound box: ride-synced chug, whistle, dings, global mute.
-  const audio = createAudioController(createHowlerVoice());
   let scene: SceneHandle | null = null;
   const canvas = mountApp(root, {
     isReady: () => !restoring,
