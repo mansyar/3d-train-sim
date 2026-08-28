@@ -1,5 +1,4 @@
 import {
-  Box3,
   Color,
   Group,
   type Mesh,
@@ -21,6 +20,25 @@ import { GROUND_SIZE } from './ground';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
+/** Kit models are authored on a 4-unit module (straight length = corner diameter). */
+const KIT_MODULE_UNITS = 4;
+
+/**
+ * Model-space point per type that must sit on the cell centre, measured from
+ * the kit GLBs: the straight's rail midpoint, and the corner's quarter-arc
+ * centre (NOT its bounding-box centre — the arc must pivot on the cell so its
+ * ends land on the north/east edge midpoints the track graph connects).
+ * y is the model's underside (kit meshes are authored below the mat).
+ */
+const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
+  // Straight: midpoint of the 4-unit rail. Corner: the quarter-arc's center —
+  // the pivot both ends rotate around (ends sit at (0,0) and (-2,2) in model
+  // space, i.e. south and west of the center; the 180° base yaw below flips
+  // them onto the graph's north/east base edges).
+  straight: [0, -1, 2],
+  corner: [0, -1, 2],
+};
+
 const PIECE_URLS: Record<PieceType, string> = {
   straight: '/assets/train-kit/railroad-straight.glb',
   corner: '/assets/train-kit/railroad-corner-small.glb',
@@ -28,10 +46,13 @@ const PIECE_URLS: Record<PieceType, string> = {
 
 /**
  * Extra yaw per type aligning each Kenney model's default facing with the
- * compass endpoints the track graph computes. Tuned against the rendered
- * world during the Phase 5 walkthrough.
+ * compass endpoints the track graph computes. The kit's base facing already
+ * matches (straight: N/S, corner: N/E) — tune here only if an asset's
+ * authored orientation disagrees with the walkthrough.
  */
-const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: 0 };
+/** Unrotated model facing. The Kenney corner is authored south/west of its
+ * arc center, so it yaw-flips 180° to meet the graph's north/east base. */
+const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: Math.PI };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
 export function cellToWorld(cell: Cell): { x: number; z: number } {
@@ -232,12 +253,12 @@ export function startTrackRenderer(
     loader.load(
       PIECE_URLS[type],
       (gltf) => {
-        const box = new Box3().setFromObject(gltf.scene);
-        const center = box.getCenter(new Vector3());
-        // Kit models are authored off-origin (offset along the rail and below
-        // the mat) — bake the offset into a wrapper so every clone sits
-        // centered on its cell and rotates around it.
-        gltf.scene.position.set(-center.x, -box.min.y, -center.z);
+        // Scale the 4-unit kit module to the cell grid and anchor the model
+        // so its open ends land on the cell-edge midpoints the graph joins.
+        const scale = CELL_SIZE / KIT_MODULE_UNITS;
+        const [ax, ay, az] = KIT_ANCHORS[type];
+        gltf.scene.scale.setScalar(scale);
+        gltf.scene.position.set(-scale * ax, -scale * ay, -scale * az);
         const model = new Group();
         model.add(gltf.scene);
         templates.set(type, model);
