@@ -6,4 +6,3 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
 | `bootstrap-tiny-tracks` | Bootstrap Tiny Tracks | complete | [conductor/tracks/bootstrap-tiny-tracks/index.md](conductor/tracks/bootstrap-tiny-tracks/plan.md) |
-| `track-placement` | Track Placement (Build Mode) | complete | [conductor/tracks/track-placement/plan.md](conductor/tracks/track-placement/plan.md) |
