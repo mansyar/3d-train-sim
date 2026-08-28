@@ -107,4 +107,27 @@ describe('createRideController', () => {
 
     expect(listener).not.toHaveBeenCalled();
   });
+
+  it('ignores world edits while idle (no notifications)', () => {
+    const world = loopPieces();
+    const ride = createRideController(world);
+    const listener = vi.fn();
+    ride.subscribe(listener);
+
+    world.place('straight', { x: 3, y: 3 }, 0);
+
+    expect(ride.mode()).toBe('idle');
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('stop() while already idle is a no-op', () => {
+    const ride = createRideController(loopPieces());
+    const listener = vi.fn();
+    ride.subscribe(listener);
+
+    ride.stop();
+
+    expect(ride.mode()).toBe('idle');
+    expect(listener).not.toHaveBeenCalled();
+  });
 });
