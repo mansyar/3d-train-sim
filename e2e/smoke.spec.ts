@@ -23,6 +23,11 @@ test('app boots on a tablet with a clean console and zero external requests', as
     'aria-pressed',
     'true',
   );
+  await page.locator('.whistle-toot').click();
+  await page.locator('.train-slot[data-train="tram"]').click();
+  await page.locator('.whistle-toot').click();
+  await page.locator('.train-slot[data-train="steam"]').click();
+  await page.locator('.whistle-toot').click();
 
   // Let the render loop and asset loads (locomotive GLB, texture) settle.
   await page.waitForTimeout(1000);

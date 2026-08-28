@@ -14,6 +14,9 @@
  *  - One-shots (whistle, ding) are fire-and-forget; muted, they are silent.
  */
 
+import type { TrainKind } from '../core/trains';
+import { whistleRate } from '../core/whistle-profiles';
+
 export interface SoundHandle {
   /** Starts (or resumes) the sound. */
   play: () => number;
@@ -46,7 +49,7 @@ export interface AudioController {
   /** Dips the chug while the train pauses, restores it when rolling again. */
   setChugSoftened(softened: boolean): void;
   /** One toot, anytime. Silent while muted. */
-  whistle(): void;
+  whistle(train?: TrainKind): void;
   /** One happy blip for a successful drop. Silent while muted. */
   ding(): void;
   /** Observes state changes (mute or chug). Returns an unsubscribe fn. */
@@ -130,9 +133,12 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       sound('chug').rate(softened ? SOFTEN_RATE : ROLLING_RATE);
     },
 
-    whistle: () => {
+    whistle: (train = 'steam') => {
       if (muted) return;
-      sound('whistle').play();
+      const whistle = sound('whistle');
+      whistle.rate(whistleRate(train));
+      whistle.play();
+      whistle.rate(1);
     },
 
     ding: () => {

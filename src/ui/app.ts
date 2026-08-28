@@ -401,7 +401,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('sound box missing from app frame');
   }
 
-  whistleToot.addEventListener('click', () => options.audio.whistle());
+  whistleToot.addEventListener('click', () => options.audio.whistle(options.world.train()));
 
   const refreshMute = () => {
     const muted = options.audio.isMuted();

@@ -20,8 +20,8 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
     fade: vi.fn(() => {
       calls.push('fade');
     }),
-    rate: vi.fn(() => {
-      calls.push('rate');
+    rate: vi.fn((value: number) => {
+      calls.push(`rate:${value}`);
     }),
   };
 }
@@ -112,7 +112,7 @@ describe('createAudioController', () => {
     controller.setChugSoftened(false);
 
     const handle = handles.get('chug');
-    expect(handle?.calls.filter((c) => c === 'rate')).toHaveLength(2);
+    expect(handle?.calls.filter((c) => c.startsWith('rate:'))).toHaveLength(2);
   });
 
   it('one-shots play whistle and ding sounds', () => {
@@ -120,11 +120,26 @@ describe('createAudioController', () => {
     controller.whistle();
     controller.ding();
 
-    expect(handles.get('whistle')?.calls).toEqual(['play']);
+    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'play', 'rate:1']);
     expect(handles.get('ding')?.calls).toEqual(['play']);
   });
 
-  it('mutes keep every sound silent', () => {
+  it('plays each train whistle at its profile rate and resets to baseline', () => {
+    const { controller, handles } = makeWired();
+    controller.whistle('diesel');
+    controller.whistle('tram');
+
+    expect(handles.get('whistle')?.calls).toEqual([
+      'rate:0.92',
+      'play',
+      'rate:1',
+      'rate:1.08',
+      'play',
+      'rate:1',
+    ]);
+  });
+
+  it('mutes keep every train whistle silent', () => {
     const { controller, handles } = makeWired();
     controller.setMuted(true);
     controller.startChug();
