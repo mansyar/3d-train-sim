@@ -1,0 +1,10 @@
+{
+  "id": "train-ride",
+  "title": "Train Ride (Autonomous Locomotive)",
+  "status": "pending",
+  "created": "2026-08",
+  "spec": "conductor/tracks/train-ride/spec.md",
+  "plan": "conductor/tracks/train-ride/plan.md",
+  "phases": 4,
+  "tags": ["core", "pathing", "scene", "ui", "e2e"]
+}
