@@ -52,3 +52,11 @@
   and `worlds` object store specified by `conductor/tech-stack.md`.
 - Corrupt or unavailable storage is treated as an empty world, never as a
   toddler-visible failure.
+
+## Phase: Review Fixes
+
+- [x] Task: Prevent user mutations during asynchronous startup restoration
+- [x] Task: Restore synchronous WorldStore behavior for existing callers
+- [x] Task: Run full review-fix gates (`pnpm check` + Playwright)
+  - Automated: `pnpm check` passed (106/106 unit tests); `pnpm exec playwright test` passed (6/6).
+  - Review fix commit: `c2d83c9`.
