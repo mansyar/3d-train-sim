@@ -16,7 +16,7 @@ The quality bar. Every implementation track is reviewed against these rules. The
 
 1. **Sound rewards action.** Whistles, chugga-chugga, happy dings — audio confirms the kid's agency.
 2. **No sudden, loud, or scary sounds.** No sharp attacks, no screams, no low rumble menace. Max volume is capped well below device maximum.
-3. **Mute persists.** The mute toggle state survives reloads. Parents can silence it instantly.
+3. **Mute is instant.** One tap silences everything, right now. (Persistence across reloads arrives with the saving track.)
 
 ## Visual principles
 
@@ -45,3 +45,4 @@ The quality bar. Every implementation track is reviewed against these rules. The
 2. First meaningful interactive scene visible in <5s cold start.
 3. No GC hitches: pools and reuse for particles/audio nodes; no per-frame allocations in the render loop.
 4. Battery-aware: cap pixel ratio, pause rendering when the tab is hidden.
+

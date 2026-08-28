@@ -10,7 +10,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | 3D rendering | three | ^0.185 | `GLTFLoader` from `three/addons/loaders/GLTFLoader.js` (as used by `src/scene/load-locomotive.ts`) |
 | Build tool | Vite | ^8 | Single entry, static `dist/` output |
 | PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8 |
-| Audio | howler | ^2.2 | Chugga loop, whistle, UI bleeps; handles iOS unlock |
+| Audio | howler | ^2.2.4 | Ride-synced chug loop, whistle, placement ding; handles iOS unlock |
 | Persistence | idb | ^8 | Thin promise wrapper over IndexedDB; one object store `worlds` |
 | UI | Vanilla TS + DOM overlay | — | No framework. Chunky toy UI as HTML/CSS over the canvas |
 | Styling | Hand-written CSS | — | Custom properties, no preprocessor, no CSS framework |
@@ -75,3 +75,4 @@ git tag v1.2.3
 
 - Single environment: production. Family devices just load the domain.
 - No analytics, no error-tracking service in V1 (privacy first for kids).
+
