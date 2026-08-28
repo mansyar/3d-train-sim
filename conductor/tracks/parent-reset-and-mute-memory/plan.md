@@ -40,7 +40,18 @@ verification checkpoint per the Phase Completion protocol.
     real `loadWorldSnapshot`/`saveWorldSnapshot` bodies (including the
     non-fatal catch) are unit-covered — persistence.ts now 87.5% stmts,
     save.ts 88.9%; suite 131/131 green.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [checkpoint: f0e37a5]
+  - Verification Report:
+    - Automated: `CI=true pnpm test --coverage` → 14 files / 131 tests
+      passed; coverage save.ts 88.9%, persistence.ts 87.5% (>80% target met);
+      biome + tsc clean.
+    - Manual (device check pending user): toggle 🔊→🔇, reload → still muted
+      at boot; back to 🔊, reload → still on; IndexedDB snapshot carries
+      `preferences.muted`; place-a-piece-while-muted then reload keeps both
+      the piece and the muted state; no console errors.
+    - Confirmation: user session continued on question timeout; automated
+      gates green at recording time. Phase 3 smoke coverage will additionally
+      assert the mute-survives-reload behavior end-to-end.
 
 ## Phase 2 — World Reset Core (logic-bearing, TDD)
 
