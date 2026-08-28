@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => {
   const instances: FakeHowl[] = [];
   // A constructible fake: Howler's Howl is created with `new`, so the mock
   // must be a real function (arrow functions cannot be constructed).
-  const Howl = vi.fn(function (this: FakeHowl, _options: unknown) {
+  const Howl = vi.fn(function (this: FakeHowl) {
     this.play = vi.fn(() => 1);
     this.stop = vi.fn();
     this.fade = vi.fn();

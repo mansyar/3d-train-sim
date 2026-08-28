@@ -27,7 +27,7 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
 }
 
 /** Builds a controller wired to fake handles, one per requested sound name. */
-function makeWired(_names: string[]) {
+function makeWired() {
   const handles = new Map<string, ReturnType<typeof fakeHandle>>();
   const created: string[] = [];
   const controller = createAudioController({
@@ -48,12 +48,12 @@ afterEach(() => {
 
 describe('createAudioController', () => {
   it('defaults to unmuted', () => {
-    const { controller } = makeWired([]);
+    const { controller } = makeWired();
     expect(controller.isMuted()).toBe(false);
   });
 
   it('toggles mute and notifies the new state', () => {
-    const { controller } = makeWired([]);
+    const { controller } = makeWired();
     const seen: boolean[] = [];
     controller.subscribe(() => seen.push(controller.isMuted()));
 
@@ -75,7 +75,7 @@ describe('createAudioController', () => {
   });
 
   it('startChug plays the loop once and is idempotent', () => {
-    const { controller, handles, created } = makeWired(['chug']);
+    const { controller, handles, created } = makeWired();
     controller.startChug();
     controller.startChug();
 
@@ -85,7 +85,7 @@ describe('createAudioController', () => {
   });
 
   it('stopChug eases the loop out and is idempotent', () => {
-    const { controller, handles } = makeWired(['chug']);
+    const { controller, handles } = makeWired();
     controller.startChug();
     controller.stopChug();
     controller.stopChug();
@@ -96,7 +96,7 @@ describe('createAudioController', () => {
   });
 
   it('startChug after stopChug replays the same handle', () => {
-    const { controller, handles, created } = makeWired(['chug']);
+    const { controller, handles, created } = makeWired();
     controller.startChug();
     controller.stopChug();
     controller.startChug();
@@ -106,7 +106,7 @@ describe('createAudioController', () => {
   });
 
   it('softening dips the chug and restoring brings it back', () => {
-    const { controller, handles } = makeWired(['chug']);
+    const { controller, handles } = makeWired();
     controller.startChug();
     controller.setChugSoftened(true);
     controller.setChugSoftened(false);
@@ -116,7 +116,7 @@ describe('createAudioController', () => {
   });
 
   it('one-shots play whistle and ding sounds', () => {
-    const { controller, handles } = makeWired(['whistle', 'ding']);
+    const { controller, handles } = makeWired();
     controller.whistle();
     controller.ding();
 
@@ -125,7 +125,7 @@ describe('createAudioController', () => {
   });
 
   it('mutes keep every sound silent', () => {
-    const { controller, handles } = makeWired(['chug', 'whistle', 'ding']);
+    const { controller, handles } = makeWired();
     controller.setMuted(true);
     controller.startChug();
     controller.whistle();
@@ -138,7 +138,7 @@ describe('createAudioController', () => {
   });
 
   it('unmuting resumes a chug that was started while muted', () => {
-    const { controller, handles } = makeWired(['chug']);
+    const { controller, handles } = makeWired();
     controller.setMuted(true);
     controller.startChug();
     expect(handles.get('chug')?.calls).not.toContain('play');
@@ -148,7 +148,7 @@ describe('createAudioController', () => {
   });
 
   it('stopping the chug while muted stays silent on unmute', () => {
-    const { controller, handles } = makeWired(['chug']);
+    const { controller, handles } = makeWired();
     controller.setMuted(true);
     controller.startChug();
     controller.stopChug();
@@ -158,7 +158,7 @@ describe('createAudioController', () => {
   });
 
   it('notifications announce chug state changes', () => {
-    const { controller } = makeWired(['chug']);
+    const { controller } = makeWired();
     const seen: boolean[] = [];
     controller.subscribe(() => seen.push(controller.isChugging()));
 
@@ -168,7 +168,7 @@ describe('createAudioController', () => {
   });
 
   it('unsubscribing stops notifications', () => {
-    const { controller } = makeWired([]);
+    const { controller } = makeWired();
     const seen: boolean[] = [];
     const unsubscribe = controller.subscribe(() => seen.push(controller.isMuted()));
     unsubscribe();
