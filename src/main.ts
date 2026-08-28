@@ -15,14 +15,17 @@ registerSW({ immediate: true });
 const root = document.getElementById('app');
 if (root) {
   const world = createWorldStore();
+  let restoring = true;
   void loadWorldSnapshot().then((snapshot) => {
     if (snapshot) world.hydrate(deserializeWorld(snapshot));
+    restoring = false;
     watchWorldPersistence(world);
   });
   // The sound box: ride-synced chug, whistle, dings, global mute.
   const audio = createAudioController(createHowlerVoice());
   let scene: SceneHandle | null = null;
   const canvas = mountApp(root, {
+    isReady: () => !restoring,
     world,
     audio,
     // The scene does not exist until the canvas mounts — bind late.
