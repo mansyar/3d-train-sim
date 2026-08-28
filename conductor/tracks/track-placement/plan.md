@@ -173,6 +173,20 @@
       rendering. Verified in-browser (Playwright-driven drags): place,
       relocate, return-to-rail, tap snap-back all leave scene == world,
       console-errors 0; gate 35/35, biome + tsc clean.
+- [x] Task: Trashbin drop target for piece removal (replaces drag-to-rail;
+    rail drops wobble-return) — user-requested during Phase 4 verification — 3826566
+  - Acceptance criteria: a fixed 🗑️ trash button sits at the right end of
+    the toybox rail; dragging a placed piece onto it removes the piece from
+    the world (drawer slot frees, drop-ping feedback); dropping a dragged
+    piece on the rail/toolbar no longer removes — it wobble-returns to its
+    cell; touch target ≥64px; console clean.
+  - Notes: trash button mirrors `.toy-slot` styling (cream body, 72px
+    target, `margin-left: auto` pins it to the rail's right end); endDrag
+    now bins only over `.trash-slot`; toolbar drops (`.toybox-rail`) never
+    relocate — the bottom grid row hides behind the rail, so the piece
+    wobble-returns to its cell instead. Playwright: bin drop removes,
+    rail drop keeps (probe-press confirmed the piece still lifts), console
+    clean; user visually confirmed all flows in the dev server.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5 — E2E + Full Verification
