@@ -1,0 +1,11 @@
+{
+  "id": "parent-reset-and-mute-memory",
+  "title": "Parent Reset & Mute Memory",
+  "type": "feature",
+  "status": "new",
+  "branch": "track/parent-reset-and-mute-memory",
+  "created": "2026-08-29",
+  "updated": "2026-08-29",
+  "spec": "conductor/tracks/parent-reset-and-mute-memory/spec.md",
+  "plan": "conductor/tracks/parent-reset-and-mute-memory/plan.md"
+}
