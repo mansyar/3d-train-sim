@@ -55,17 +55,29 @@ verification checkpoint per the Phase Completion protocol.
 
 ## Phase 2 — World Reset Core (logic-bearing, TDD)
 
-- [ ] Task: Write failing unit tests for world reset (Red)
-  - [ ] Reset removes all track pieces and scenery
-  - [ ] Occupancy and the 64-item capacity are fully freed after reset
-  - [ ] Train selection returns to the default steam locomotive
-  - [ ] Exactly one persistence notification fires after reset (also on an
+- [x] Task: Write failing unit tests for world reset (Red) [4ca9d92]
+  - [x] Reset removes all track pieces and scenery
+  - [x] Occupancy and the 64-item capacity are fully freed after reset
+  - [x] Train selection returns to the default steam locomotive
+  - [x] Exactly one persistence notification fires after reset (also on an
         already-empty world)
-- [ ] Task: Implement world.reset() in src/state/world.ts (Green)
-- [ ] Task: Write failing unit tests for ride-aware reset ordering (Red)
-  - [ ] An active ride is gently stopped before any world clearing (order
+  - Notes: Red confirmed — 6 failing tests across the phase, all on the
+    missing `reset` API. Tests also pin fresh id generation (`piece-1`) and
+    the single-notification contract.
+- [x] Task: Implement world.reset() in src/state/world.ts (Green) [4ca9d92]
+  - Notes: One atomic mutation — train → steam, arrays cleared, ids restart,
+    a single `notify()`. Suite 137/137 green; world.ts 97.2% stmts.
+- [x] Task: Write failing unit tests for ride-aware reset ordering (Red) [4ca9d92]
+  - [x] An active ride is gently stopped before any world clearing (order
         asserted via fakes)
-- [ ] Task: Implement gentle-stop-before-clear ordering (Green)
+  - Notes: Ordering asserted with an event log — the ride-stop notification
+    lands before any world-driven UI reaction (`ride-stopped` then
+    `world-cleared`), and the last solved path is kept for the camera.
+- [x] Task: Implement gentle-stop-before-clear ordering (Green) [4ca9d92]
+  - Notes: No new implementation was required — the ride controller's
+    pre-existing world subscription (the established mid-ride-edit gentle
+    stop) composes with the single reset notification. Tests pin the
+    guarantee; an idle ride emits no ride event at all.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Parent Gate UI & Kid-Facing Feedback (non-logic, smoke + manual)
