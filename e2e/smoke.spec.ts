@@ -252,3 +252,123 @@ test('pressing play rides the train along the placed track', async ({ page }) =>
   expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
+
+test('the sound choice survives a reload through local autosave', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  // Let the render loop and asset loads settle.
+  await page.waitForTimeout(1500);
+
+  const mute = page.locator('.mute-toggle');
+  await expect(mute).toHaveAttribute('aria-pressed', 'false');
+  await mute.click();
+  await expect(mute).toHaveAttribute('aria-pressed', 'true');
+  // Let the preference save settle before reloading.
+  await page.waitForTimeout(400);
+  await page.reload();
+  await page.waitForTimeout(1500);
+
+  await expect(page.locator('.mute-toggle')).toHaveAttribute('aria-pressed', 'true');
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  // Let the render loop and asset loads settle.
+  await page.waitForTimeout(1500);
+
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+          selectTrain: (kind: string) => boolean;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 7, y: 7 }, 0);
+    world.selectTrain('diesel');
+  });
+  await page.waitForTimeout(400);
+
+  const gate = page.locator('.parent-gate');
+  const holdLabel = 'Parent gate — press and hold to reset the world';
+  await expect(gate).toHaveAttribute('aria-label', holdLabel);
+  const box = await gate.boundingBox();
+  if (!box) throw new Error('parent gate visible');
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+
+  // A quick toddler-style press releases early and cancels silently.
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.waitForTimeout(300);
+  await page.mouse.up();
+  await expect(gate).toHaveAttribute('aria-label', holdLabel);
+
+  // The full hold arms the icon-only confirm step…
+  await page.mouse.down();
+  await page.waitForTimeout(2400);
+  await page.mouse.up();
+  await expect(gate).toHaveAttribute('aria-label', /Confirm/i);
+
+  // …and a tap anywhere else dismisses it without destroying anything.
+  await page.mouse.click(400, 400);
+  await expect(gate).toHaveAttribute('aria-label', holdLabel);
+
+  // Hold → confirm → the meadow returns to its factory default.
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.waitForTimeout(2400);
+  await page.mouse.up();
+  await expect(gate).toHaveAttribute('aria-label', /Confirm/i);
+  // The armed gate pulses (by design) — a real finger taps right through it.
+  await gate.click({ force: true });
+
+  await page.waitForTimeout(400);
+  const after = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => readonly unknown[]; train: () => string };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces(), train: world.train() };
+  });
+  expect(after.pieces).toHaveLength(0);
+  expect(after.train).toBe('steam');
+
+  // The fresh empty world is what autosave keeps.
+  await page.reload();
+  await page.waitForTimeout(1500);
+  const restored = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => readonly unknown[] };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return world.pieces();
+  });
+  expect(restored).toHaveLength(0);
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});

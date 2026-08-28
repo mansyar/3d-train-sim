@@ -102,6 +102,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
     <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
             aria-pressed="false">#</button>
+    <button class="parent-gate" type="button"
+            aria-label="Parent gate — press and hold to reset the world">
+      <span class="gate-icon" aria-hidden="true">♻️</span>
+    </button>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Track pieces"
               aria-expanded="false" data-drawer="track">🛤️</button>
@@ -412,6 +416,100 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   muteToggle.addEventListener('click', () => options.audio.toggleMuted());
   options.audio.subscribe(refreshMute);
   refreshMute();
+
+  // ---- Parent gate: hold, then confirm — destruction is parent-gated -----
+  // A toddler taps; only a deliberate ~2s hold (with drift tolerance) arms
+  // the icon-only confirm step, and a tap anywhere else dismisses it.
+  const parentGate = root.querySelector<HTMLButtonElement>('.parent-gate');
+  if (!parentGate) {
+    throw new Error('parent gate missing from app frame');
+  }
+
+  const HOLD_MS = 2000;
+  const DRIFT_PX = 48;
+  const HOLD_LABEL = 'Parent gate — press and hold to reset the world';
+  const CONFIRM_LABEL = 'Confirm: tap again to clear the whole meadow';
+  let holdOrigin = { x: 0, y: 0 };
+  let holdRaf: number | null = null;
+  let holdTimer: ReturnType<typeof setTimeout> | null = null;
+  let confirmArmed = false;
+  let suppressNextClick = false; // The hold's own release must not confirm.
+
+  const cancelHold = () => {
+    if (holdRaf !== null) cancelAnimationFrame(holdRaf);
+    if (holdTimer !== null) clearTimeout(holdTimer);
+    holdRaf = holdTimer = null;
+    parentGate.style.setProperty('--hold', '0');
+    parentGate.classList.remove('is-holding');
+  };
+
+  const armConfirm = () => {
+    holdRaf = holdTimer = null;
+    parentGate.classList.remove('is-holding');
+    parentGate.style.setProperty('--hold', '0');
+    confirmArmed = true;
+    suppressNextClick = true;
+    parentGate.classList.add('is-confirm');
+    parentGate.setAttribute('aria-label', CONFIRM_LABEL);
+  };
+
+  const disarmConfirm = () => {
+    if (!confirmArmed) return;
+    confirmArmed = false;
+    parentGate.classList.remove('is-confirm');
+    parentGate.setAttribute('aria-label', HOLD_LABEL);
+  };
+
+  parentGate.addEventListener('pointerdown', (event) => {
+    if (confirmArmed) {
+      suppressNextClick = false; // A fresh tap always confirms for real.
+      return;
+    }
+    if (options.isReady && !options.isReady()) return;
+    event.preventDefault();
+    holdOrigin = { x: event.clientX, y: event.clientY };
+    parentGate.classList.add('is-holding');
+    const begin = performance.now();
+    const tick = (now: number) => {
+      const progress = Math.min((now - begin) / HOLD_MS, 1);
+      parentGate.style.setProperty('--hold', String(progress));
+      if (progress < 1) holdRaf = requestAnimationFrame(tick);
+    };
+    holdRaf = requestAnimationFrame(tick);
+    holdTimer = setTimeout(armConfirm, HOLD_MS);
+  });
+
+  // A wandering hand is not a reset: only small drift keeps the hold alive.
+  parentGate.addEventListener('pointermove', (event) => {
+    if (holdRaf === null && holdTimer === null) return;
+    const drift = Math.hypot(event.clientX - holdOrigin.x, event.clientY - holdOrigin.y);
+    if (drift > DRIFT_PX) cancelHold();
+  });
+
+  const endHold = () => {
+    if (!confirmArmed) cancelHold();
+  };
+  parentGate.addEventListener('pointerup', endHold);
+  parentGate.addEventListener('pointerleave', endHold);
+  parentGate.addEventListener('pointercancel', endHold);
+
+  parentGate.addEventListener('click', () => {
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
+    if (!confirmArmed) return;
+    disarmConfirm();
+    options.world.reset();
+    options.audio.ding();
+  });
+
+  // A tap anywhere outside the armed gate dismisses it silently.
+  window.addEventListener('pointerdown', (event) => {
+    if (!confirmArmed) return;
+    if (event.target instanceof Element && event.target.closest('.parent-gate')) return;
+    disarmConfirm();
+  });
 
   return canvas;
 }
