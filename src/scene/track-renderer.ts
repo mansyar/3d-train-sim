@@ -1,6 +1,9 @@
 import {
+  BufferGeometry,
   Color,
   Group,
+  Line,
+  LineBasicMaterial,
   type Mesh,
   type MeshStandardMaterial,
   type Object3D,
@@ -31,10 +34,15 @@ const KIT_MODULE_UNITS = 4;
  * y is the model's underside (kit meshes are authored below the mat).
  */
 const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
-  // Straight: midpoint of the 4-unit rail. Corner: the quarter-arc's center —
-  // the pivot both ends rotate around (ends sit at (0,0) and (-2,2) in model
-  // space, i.e. south and west of the center; the 180° base yaw below flips
-  // them onto the graph's north/east base edges).
+  // Straight: midpoint of the 4-unit rail (ends at z=0 and z=4, centreline
+  // x=0). Corner: the quarter-arc's centre, measured at (0, 2) in model
+  // space — its ends sit north (0, 0) and east (2, 2) of that centre, so the
+  // −90° base yaw below lands the centre on the cell's NE corner (the corner
+  // shared by the north/east edges) with the ends on those edge midpoints.
+  // Pivoting on the shared corner makes each end leave its edge
+  // perpendicular — vertical at north, horizontal at east — collinear with
+  // the neighbouring straights' rails and smooth across corner+corner
+  // junctions (matching ride-motion).
   straight: [0, -1, 2],
   corner: [0, -1, 2],
 };
@@ -44,9 +52,10 @@ const PIECE_URLS: Record<PieceType, string> = {
   corner: '/assets/train-kit/railroad-corner-small.glb',
 };
 
-/** Unrotated model facing. The Kenney corner is authored south/west of its
- * arc center, so it yaw-flips 180° to meet the graph's north/east base. */
-const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: Math.PI };
+/** Unrotated model facing. With the Kenney corner's arc centre anchored on
+ * the cell's shared corner, a −90° yaw swings its ends onto the graph's
+ * north/east base edges, each tangent perpendicular to its edge. */
+const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: -Math.PI / 2 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
 export function cellToWorld(cell: Cell): { x: number; z: number } {
@@ -83,6 +92,8 @@ export interface TrackRenderer {
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (e.g. while its own drag ghost stands in). */
   setPieceVisible(id: string, visible: boolean): void;
+  /** Debug aid: show the meadow's snap-cell boundaries. */
+  setGridVisible(visible: boolean): void;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -133,6 +144,36 @@ export function startTrackRenderer(
   }
 
   const unsubscribe = world.subscribe(reconcile);
+
+  // ---- Meadow grid: a debug overlay of the snap-cell boundaries -----------
+  // One cell = CELL_SIZE world units starting at the meadow's north-west
+  // corner, so the lines land exactly on the lattice pieces snap to.
+  const gridLines = new Group();
+  gridLines.visible = false;
+  const gridMaterial = new LineBasicMaterial({
+    color: 0x2d5a2d,
+    transparent: true,
+    opacity: 0.35,
+    depthWrite: false,
+  });
+  const gridGeometries: BufferGeometry[] = [];
+  {
+    const half = GROUND_SIZE / 2;
+    for (let i = 0; i <= MEADOW_CELLS; i += 1) {
+      const t = -half + i * CELL_SIZE;
+      const westEast = new BufferGeometry().setFromPoints([
+        new Vector3(-half, 0.05, t),
+        new Vector3(half, 0.05, t),
+      ]);
+      const northSouth = new BufferGeometry().setFromPoints([
+        new Vector3(t, 0.05, -half),
+        new Vector3(t, 0.05, half),
+      ]);
+      gridGeometries.push(westEast, northSouth);
+      gridLines.add(new Line(westEast, gridMaterial), new Line(northSouth, gridMaterial));
+    }
+  }
+  scene.add(gridLines);
 
   // ---- Drag ghost: a translucent clone of the real template --------------
   let ghost: Object3D | null = null;
@@ -253,6 +294,10 @@ export function startTrackRenderer(
     if (model) model.visible = visible;
   }
 
+  function setGridVisible(visible: boolean): void {
+    gridLines.visible = visible;
+  }
+
   for (const type of PIECE_TYPES) {
     loader.load(
       PIECE_URLS[type],
@@ -287,6 +332,7 @@ export function startTrackRenderer(
     endGhost,
     pickPiece,
     setPieceVisible,
+    setGridVisible,
     dispose(): void {
       disposed = true;
       unsubscribe();
@@ -296,6 +342,9 @@ export function startTrackRenderer(
       tracked.clear();
       for (const template of templates.values()) disposeObject(template);
       templates.clear();
+      scene.remove(gridLines);
+      for (const geometry of gridGeometries) geometry.dispose();
+      gridMaterial.dispose();
     },
   };
 }

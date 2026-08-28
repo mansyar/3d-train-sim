@@ -39,7 +39,7 @@ pnpm ^11 — strict, fast, workspace-ready if tracks ever split.
 | Layer | Tool | Scope |
 |---|---|---|
 | Unit/integration | Vitest ^4 | Colocated `*.test.ts` next to modules. **TDD enforced for pure logic**: track graph, snap resolution, path following, save/load |
-| E2E smoke | Playwright ^1.62 | `e2e/` — boots the app, places pieces, starts the train, asserts no console errors |
+| E2E smoke | Playwright ^1.62 | `e2e/` — boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors |
 
 ## Folder structure
 
@@ -54,7 +54,7 @@ src/
   scene/           # three.js wiring: renderer, cameras, environment, model loading
   ui/              # DOM overlay: toybox, play/stop/whistle, parent gate
   audio/           # Howler wrappers + sfx registry
-  state/           # app state machine: build ⇄ play
+  state/           # world piece store, ride controller (idle ⇄ riding)
 public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures
 e2e/                # Playwright specs

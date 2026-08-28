@@ -73,7 +73,7 @@ export function cellKey(cell: Cell): string {
 }
 
 /** The cell one step in a compass direction (north = -y). */
-function neighbourOf(cell: Cell, edge: Edge): Cell {
+export function neighbourOf(cell: Cell, edge: Edge): Cell {
   switch (edge) {
     case 'north':
       return { x: cell.x, y: cell.y - 1 };
@@ -86,7 +86,7 @@ function neighbourOf(cell: Cell, edge: Edge): Cell {
   }
 }
 
-function boundaryKey(a: Cell, b: Cell): EdgeKey {
+export function boundaryKey(a: Cell, b: Cell): EdgeKey {
   const [first, second] = [cellKey(a), cellKey(b)].sort();
   return `${first}|${second}`;
 }

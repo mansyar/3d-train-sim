@@ -21,6 +21,14 @@ if (root) {
     endGhost: () => scene?.endGhost(),
     pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
     setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
+    setGridVisible: (visible) => scene?.setGridVisible(visible),
+    startRide: () => scene?.startRide() ?? false,
+    stopRide: () => scene?.stopRide(),
   });
   scene = initScene(canvas, world);
+
+  // Dev-only handle: lets Playwright smoke tests place pieces directly.
+  if (import.meta.env.DEV) {
+    (window as unknown as { __tinyTracksWorld: unknown }).__tinyTracksWorld = world;
+  }
 }

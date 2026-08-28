@@ -37,7 +37,7 @@ Supporting guardrails:
 ## V1 Scope (Lean Core)
 - Grid-snap track building on a single grassy meadow
 - Scenery placement (trees, houses, animals, stations)
-- Autonomous train running any valid layout (dead ends not possible)
+- Autonomous train running any layout — closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
 - Go / stop / whistle control panel
 - Follow-camera
 - Sound: chug loop, whistle, happy dings

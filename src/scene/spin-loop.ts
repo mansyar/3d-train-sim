@@ -9,7 +9,10 @@ export function startSpinLoop(
   renderer: WebGLRenderer,
   scene: Scene,
   camera: Camera,
-  getTarget: () => Object3D,
+  /** Spun while it exists — null pauses the showcase spin (ride motion owns the model). */
+  getTarget: () => Object3D | null,
+  /** Extra per-frame animation (e.g. ride motion). Runs after the spin, same frame. */
+  onFrame?: (dt: number) => void,
 ): () => void {
   // Product guideline: gentle motion — respect the OS reduced-motion setting
   // by rendering a single static frame instead of animating.
@@ -28,8 +31,11 @@ export function startSpinLoop(
     const dt = Math.min((now - lastMs) / 1000, 0.1);
     lastMs = now;
     const target = getTarget();
-    target.rotation.y += SPIN_SPEED * dt;
-    target.rotation.x = Math.sin((now / 1000) * NOD_SPEED) * NOD_AMPLITUDE;
+    if (target) {
+      target.rotation.y += SPIN_SPEED * dt;
+      target.rotation.x = Math.sin((now / 1000) * NOD_SPEED) * NOD_AMPLITUDE;
+    }
+    onFrame?.(dt);
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(tick);
   };

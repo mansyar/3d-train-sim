@@ -68,7 +68,33 @@ body {
   transform: translateY(3px);
 }
 
-/* Auto margin pushes the trash bin to the rail's right end. */
+/* Auto margin pushes the ride trigger and trash bin to the rail's right end. */
+.ride-toggle {
+  background: var(--toy-green);
+  border: 4px solid var(--toy-brown);
+  border-radius: 50%;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  color: var(--toy-cream);
+  cursor: pointer;
+  margin-left: auto;
+  min-height: 72px;
+  min-width: 72px;
+  padding: 12px;
+}
+
+.ride-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
+.ride-toggle.is-riding {
+  background: var(--toy-orange);
+}
+
+.ride-toggle.is-dimmed {
+  opacity: 0.4;
+}
+
 .trash-slot {
   background: var(--toy-cream);
   border: 4px solid var(--toy-brown);
@@ -76,7 +102,6 @@ body {
   box-shadow: 0 4px 0 var(--toy-brown);
   cursor: pointer;
   font-size: 34px;
-  margin-left: auto;
   min-height: 72px;
   min-width: 72px;
 }
@@ -148,6 +173,37 @@ body {
   touch-action: none;
   transform: translateX(-50%);
   z-index: 40;
+}
+
+/* ---- Grid toggle (debug) ------------------------------------------------- */
+
+.grid-toggle {
+  background: var(--toy-cream);
+  border: 3px solid var(--toy-brown);
+  border-radius: 14px;
+  box-shadow: 0 3px 0 var(--toy-brown);
+  color: var(--toy-brown);
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  min-height: 44px;
+  min-width: 44px;
+  opacity: 0.55;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 30;
+}
+
+.grid-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(2px);
+}
+
+.grid-toggle.is-active {
+  background: var(--toy-green);
+  color: var(--toy-cream);
+  opacity: 0.85;
 }
 
 /* ---- Drop feedback ------------------------------------------------------ */
