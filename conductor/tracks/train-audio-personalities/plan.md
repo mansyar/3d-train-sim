@@ -30,7 +30,7 @@
 - [x] Task: Implement train-aware whistle playback through the existing Howler seam
   - Notes: `AudioController.whistle(train?)` applies the pure profile and retains backwards-compatible steam default behavior.
 - [x] Task: Add safe rate normalization when playback or asset setup fails
-  - Notes: Baseline rate is restored immediately after playback invocation.
+  - Notes: Baseline rate is restored by the backend's one-shot completion event; the completion callback is registered before playback starts.
 - [x] Task: Verify >80% coverage for changed audio-controller logic
   - Notes: Full suite passes with 118 tests.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
@@ -65,3 +65,10 @@
 - Reuses the existing bundled CC0 whistle recording; no asset download or dependency change is planned.
 - `src/core` remains pure TypeScript; Howler remains isolated in `src/audio`.
 - Pathing, train models, ride motion, persistence, and scenery are intentionally unchanged.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions b5064b2
+  - Corrected callback ordering so whistle-rate normalization is registered before playback.
+  - Corrected the plan note to describe end-event normalization accurately.
+  - Verification: Biome, TypeScript, 119 Vitest tests, and 7 Playwright tests pass.
