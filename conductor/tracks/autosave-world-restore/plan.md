@@ -12,29 +12,38 @@
 - [x] Task: TDD — Green: implement pure serialization/deserialization in `src/core/save.ts`
 - [x] Task: Refactor snapshot validation for readable, total-function behavior
 - [x] Task: Verify coverage >80% for new logic-bearing save code
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated: `pnpm check` passed (106/106 unit tests); coverage run passed.
+  - Manual: pending tablet walkthrough confirmation.
+  - Checkpoint: `a9025ee`
 
 ## Phase 2 — Persistent World Store (src/state, TDD)
 
-- [ ] Task: TDD — Red: write failing tests for hydration, autosave after successful mutations, and non-fatal storage failures
-  - [ ] Test hydration restores tracks and scenery while preserving shared occupancy and capacity rules
-  - [ ] Test placement, relocation, and removal schedule one persisted snapshot per successful mutation
-  - [ ] Test failed persistence does not prevent in-memory mutations or throw to callers
-- [ ] Task: TDD — Green: integrate the existing `idb` dependency with the world store and controlled hydration
-- [ ] Task: Ensure restored IDs advance the generated-ID counter without collisions
-- [ ] Task: Verify coverage >80% for new persistence/state logic
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: TDD — Red: write failing tests for hydration, autosave after successful mutations, and non-fatal storage failures
+  - [x] Test hydration restores tracks and scenery while preserving shared occupancy and capacity rules
+  - [x] Test placement, relocation, and removal schedule one persisted snapshot per successful mutation
+  - [x] Test failed persistence does not prevent in-memory mutations or throw to callers
+- [x] Task: TDD — Green: integrate the existing `idb` dependency with the world store and controlled hydration
+- [x] Task: Ensure restored IDs advance the generated-ID counter without collisions
+- [x] Task: Verify coverage >80% for new persistence/state logic
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated: `pnpm check` passed (106/106 unit tests); persistence-focused tests passed.
+  - Manual: pending tablet walkthrough confirmation.
+  - Checkpoint: `29a087a`
 
 ## Phase 3 — Startup Restore and Smoke Coverage (src/main.ts, e2e)
 
-- [ ] Task: Wire asynchronous startup loading so the latest valid world is restored during app boot
-  - [ ] Empty or unavailable storage starts a usable empty meadow
-  - [ ] Invalid storage is ignored without an uncaught error or kid-facing failure state
-  - [ ] Existing ride, scenery rendering, and interaction behavior remain intact
-- [ ] Task: Playwright smoke test — place track and scenery, reload, and verify both persist with zero console errors and zero external requests
-- [ ] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
+- [x] Task: Wire asynchronous startup loading so the latest valid world is restored during app boot
+  - [x] Empty or unavailable storage starts a usable empty meadow
+  - [x] Invalid storage is ignored without an uncaught error or kid-facing failure state
+  - [x] Existing ride, scenery rendering, and interaction behavior remain intact
+- [x] Task: Playwright smoke test — place track and scenery, reload, and verify both persist with zero console errors and zero external requests
+- [x] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
 - [ ] Task: Manual tablet walkthrough (place, relocate, remove, reload, then ride) — user-confirmed
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated: `pnpm check` passed (106/106 unit tests); `pnpm exec playwright test` passed (6/6).
+  - Manual: pending tablet walkthrough confirmation.
+  - Checkpoint: `29a087a`
 
 ## Notes
 
