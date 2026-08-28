@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { deserializeWorld, serializeWorld, type WorldSnapshot } from './save';
+import {
+  deserializePreferences,
+  deserializeWorld,
+  serializeWorld,
+  type WorldSnapshot,
+} from './save';
 import type { PlacedScenery } from './scenery';
 import type { PlacedPiece } from './track-graph';
 
@@ -85,5 +90,60 @@ describe('world snapshots', () => {
     const snapshot: WorldSnapshot = { version: 1, pieces: fullPieces, scenery: [] };
 
     expect(deserializeWorld(snapshot)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+  });
+});
+
+describe('device preferences', () => {
+  it('serializes a muted preference into the snapshot', () => {
+    const snapshot = serializeWorld(pieces, [], 'steam', true);
+
+    expect(snapshot).toEqual({
+      version: 1,
+      pieces,
+      scenery: [],
+      train: 'steam',
+      preferences: { muted: true },
+    });
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+  });
+
+  it('omits preferences when sound is on', () => {
+    expect(serializeWorld(pieces, scenery, 'steam')).toEqual({
+      version: 1,
+      pieces,
+      scenery,
+      train: 'steam',
+    });
+  });
+
+  it('round-trips the muted preference in both directions', () => {
+    expect(deserializePreferences(serializeWorld(pieces, scenery, 'steam', true))).toEqual({
+      muted: true,
+    });
+    expect(deserializePreferences(serializeWorld(pieces, scenery, 'steam', false))).toEqual({
+      muted: false,
+    });
+  });
+
+  it('restores sound-on for legacy snapshots without preferences', () => {
+    expect(deserializePreferences({ version: 1, pieces, scenery })).toEqual({ muted: false });
+  });
+
+  it('falls back to sound-on for invalid preferences without throwing', () => {
+    const invalid: unknown[] = [
+      null,
+      'bad',
+      42,
+      {},
+      { muted: 'yes' },
+      { muted: 1 },
+      { muted: null },
+    ];
+
+    for (const preferences of invalid) {
+      expect(deserializePreferences({ version: 1, pieces, scenery, preferences })).toEqual({
+        muted: false,
+      });
+    }
   });
 });
