@@ -61,3 +61,49 @@ test('drag-placing a track piece renders it in the world', async ({ page }) => {
   expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
+
+test('pressing play rides the train along the placed track', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  // Let the render loop and GLB loads (locomotive included) settle.
+  await page.waitForTimeout(1500);
+
+  // Lay a two-piece straight via the dev-only world handle, then ride it.
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 7, y: 7 }, 0);
+    world.place('straight', { x: 7, y: 8 }, 0);
+  });
+  await page.waitForTimeout(800);
+
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+
+  // Let the camera ease onto the chase and the train get moving, then
+  // sample two frames — riding must visibly change the scene.
+  await page.waitForTimeout(2500);
+  const a = await page.screenshot();
+  await page.waitForTimeout(1200);
+  const b = await page.screenshot();
+  expect(Buffer.compare(a, b)).not.toBe(0);
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
