@@ -216,8 +216,12 @@
     piece slot to the meadow (pointer events, works under touch emulation),
     asserts the viewport screenshot changed (piece rendered), zero external
     requests, zero console errors. Both tests green on the iPad Mini project.
-- [ ] Task: Run full local gate suite; fix any failures
+- [x] Task: Run full local gate suite; fix any failures — 7793414
   - Acceptance criteria: `pnpm check` + Playwright both exit 0.
+  - Notes: first run surfaced 4 Biome `noNonNullAssertion` warnings in the
+    new spec (guard clause replaces `box!`); rerun fully green — biome 26
+    files clean, tsc clean, vitest 35/35, Playwright 2/2 on the tablet
+    project.
 - [ ] Task: Manual tablet walkthrough per workflow (drag feel, snap bounce,
     snap-back, reduced-motion, 60 FPS)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
