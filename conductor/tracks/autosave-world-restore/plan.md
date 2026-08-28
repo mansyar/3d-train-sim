@@ -5,13 +5,13 @@
 
 ## Phase 1 — Pure Snapshot Format and Validation (src/core, TDD)
 
-- [ ] Task: TDD — Red: write failing tests for versioned snapshots, track/scenery round trips, ordering, IDs, rotations, and malformed data
-  - [ ] Test valid snapshots preserve every supported field exactly
-  - [ ] Test invalid versions, kinds, cells, duplicate occupancy, and capacity overflow are rejected safely
-  - [ ] Test serialization is JSON-safe and does not depend on browser or Three.js APIs
-- [ ] Task: TDD — Green: implement pure serialization/deserialization in `src/core/save.ts`
-- [ ] Task: Refactor snapshot validation for readable, total-function behavior
-- [ ] Task: Verify coverage >80% for new logic-bearing save code
+- [x] Task: TDD — Red: write failing tests for versioned snapshots, track/scenery round trips, ordering, IDs, rotations, and malformed data
+  - [x] Test valid snapshots preserve every supported field exactly
+  - [x] Test invalid versions, kinds, cells, duplicate occupancy, and capacity overflow are rejected safely
+  - [x] Test serialization is JSON-safe and does not depend on browser or Three.js APIs
+- [x] Task: TDD — Green: implement pure serialization/deserialization in `src/core/save.ts`
+- [x] Task: Refactor snapshot validation for readable, total-function behavior
+- [x] Task: Verify coverage >80% for new logic-bearing save code
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Persistent World Store (src/state, TDD)
