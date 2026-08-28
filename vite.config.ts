@@ -27,8 +27,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache everything the toy needs to run offline, including train-kit models.
-        globPatterns: ['**/*.{js,css,html,png,glb,gltf,webmanifest,ico}'],
+        // Precache everything the toy needs to run offline, including
+        // train-kit models and the bundled sound box (ogg/mp3 pairs).
+        globPatterns: ['**/*.{js,css,html,png,glb,gltf,webmanifest,ico,ogg,mp3}'],
         // Train-kit GLB models can exceed workbox's small default cap.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
