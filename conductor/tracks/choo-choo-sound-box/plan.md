@@ -35,5 +35,9 @@ Discipline per `conductor/workflow.md`: TDD (red → green per task), small comm
 
 ## Phase 5 — Wrap-up
 
-- [ ] **Task: Sync conductor docs** — note shipped behavior in `product.md`/`tech-stack.md` only where it diverged; registry status update.
-- [ ] **Task: Handoff** — track ready for `conductor-review`.
+- [x] **Task: Sync conductor docs** — shipped behavior noted; `product-guidelines.md` mute rule reconciled with the session-only mute (`9e5431f`).
+- [x] **Task: Handoff** — track handed to `conductor-review`; verdict: approved (all gates green).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions a38052b — fade-stop now targets only the faded voice; drop underscore param.
