@@ -1,5 +1,5 @@
-import type { Cell, PieceType, Rotation } from '../core/track-graph';
-import { MAX_PIECES } from '../core/track-graph';
+import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
+import type { PickedPiece } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 
 /** Where a dropped piece maps on the meadow, or nowhere. */
@@ -46,6 +46,10 @@ export interface AppOptions {
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** End the preview. */
   endGhost(): void;
+  /** The placed piece under a screen point, for relocate/return drags. */
+  pickPiece(clientX: number, clientY: number): PickedPiece | null;
+  /** Hide/show a placed clone (the ghost stands in while it is dragged). */
+  setPieceVisible(id: string, visible: boolean): void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -84,11 +88,22 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   });
 
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
-  let drag: { type: PieceType; rotation: Rotation } | null = null;
+  // pickedId set ⇒ the drag moves an existing placed piece (relocate or
+  // return-to-rail); null ⇒ a fresh piece from the drawer.
+  let drag: { type: PieceType; rotation: Rotation; pickedId: string | null } | null = null;
   let lastPointer = { x: -1000, y: -1000 };
+
+  // Pressing a placed piece lifts it as a ghost (relocate / return-to-rail).
+  // A plain tap releases on the same cell — relocate is a no-op snap-back.
+  canvas.addEventListener('pointerdown', (event) => {
+    if (drag) return;
+    const picked = options.pickPiece(event.clientX, event.clientY);
+    if (picked) beginPlacedDrag(picked);
+  });
 
   const canPlaceAt = (cell: Cell): boolean => {
     for (const piece of options.world.pieces()) {
+      if (piece.id === drag?.pickedId) continue; // The dragged piece frees its own cell.
       if (piece.cell.x === cell.x && piece.cell.y === cell.y) return false;
     }
     return true;
@@ -105,9 +120,17 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     const placeable = cell !== null && canPlaceAt(cell);
     options.moveGhost(cell, drag.rotation, placeable);
   };
+
   const beginDrag = (type: PieceType) => {
-    drag = { type, rotation: 0 };
+    drag = { type, rotation: 0, pickedId: null };
     options.beginGhost(type);
+    rotateKnob.removeAttribute('hidden');
+  };
+
+  const beginPlacedDrag = (picked: PickedPiece) => {
+    drag = { type: picked.type, rotation: picked.rotation, pickedId: picked.id };
+    options.setPieceVisible(picked.id, false); // The ghost stands in until the drop.
+    options.beginGhost(picked.type);
     rotateKnob.removeAttribute('hidden');
   };
 
@@ -129,10 +152,23 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const endDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
-    const { type, rotation } = drag;
+    const { type, rotation, pickedId } = drag;
     const cell = options.cellFromPoint(clientX, clientY);
-    const placed = cell !== null && options.world.place(type, cell, rotation) === 'placed';
-    if (placed) ping(clientX, clientY);
+    let settled = false;
+    if (pickedId === null) {
+      settled = cell !== null && options.world.place(type, cell, rotation) === 'placed';
+    } else {
+      const overRail =
+        document.elementFromPoint(clientX, clientY)?.closest('.toybox-rail') !== null;
+      if (overRail) {
+        options.world.remove(pickedId); // Returned to the toy box.
+        settled = true;
+      } else if (cell) {
+        settled = options.world.relocate(pickedId, cell, rotation) === 'placed';
+      }
+      options.setPieceVisible(pickedId, true); // Reconcile already moved or removed it.
+    }
+    if (settled) ping(clientX, clientY);
     else wobbleReturn(clientX, clientY);
     options.endGhost();
     drag = null;

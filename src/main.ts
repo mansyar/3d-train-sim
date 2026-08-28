@@ -19,6 +19,8 @@ if (root) {
     beginGhost: (type) => scene?.beginGhost(type),
     moveGhost: (cell, rotation, valid) => scene?.moveGhost(cell, rotation, valid),
     endGhost: () => scene?.endGhost(),
+    pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
+    setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
   });
   scene = initScene(canvas, world);
 }

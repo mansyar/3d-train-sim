@@ -1,21 +1,17 @@
 import type { Object3D } from 'three';
-import { PerspectiveCamera, Plane, Raycaster, Scene, Vector2, Vector3, WebGLRenderer } from 'three';
+import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
-import { MEADOW_CELLS } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
-import { createGround, GROUND_SIZE } from './ground';
+import { createGround } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { startSpinLoop } from './spin-loop';
-import { startTrackRenderer } from './track-renderer';
+import { type PickedPiece, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
-
-/** World units per grid cell — the 16×16 meadow tiles the 60-unit mat. */
-const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
 export interface SceneHandle {
   dispose(): void;
@@ -25,6 +21,10 @@ export interface SceneHandle {
   beginGhost(type: PieceType): void;
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   endGhost(): void;
+  /** The placed piece under a screen point, for relocate/return drags. */
+  pickPiece(clientX: number, clientY: number): PickedPiece | null;
+  /** Hide/show a placed clone (the ghost stands in while it is dragged). */
+  setPieceVisible(id: string, visible: boolean): void;
 }
 
 export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHandle {
@@ -40,7 +40,7 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
   const disposables: Array<() => void> = [];
   disposables.push(createLights(scene));
   disposables.push(createGround(scene));
-  const tracks = startTrackRenderer(scene, world);
+  const tracks = startTrackRenderer(scene, camera, canvas, world);
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
@@ -74,32 +74,14 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
 
   const stopSpin = startSpinLoop(renderer, scene, camera, () => spinTarget);
 
-  // ---- Screen point → meadow cell ---------------------------------------
-  const raycaster = new Raycaster();
-  const groundPlane = new Plane(new Vector3(0, 1, 0), 0);
-  const pointerNdc = new Vector2();
-  const groundHit = new Vector3();
-
-  const cellFromPoint = (clientX: number, clientY: number): Cell | null => {
-    const rect = canvas.getBoundingClientRect();
-    pointerNdc.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1,
-    );
-    raycaster.setFromCamera(pointerNdc, camera);
-    const hit = raycaster.ray.intersectPlane(groundPlane, groundHit);
-    if (!hit) return null;
-    const x = Math.floor((hit.x + GROUND_SIZE / 2) / CELL_SIZE);
-    const y = Math.floor((hit.z + GROUND_SIZE / 2) / CELL_SIZE);
-    if (x < 0 || x >= MEADOW_CELLS || y < 0 || y >= MEADOW_CELLS) return null;
-    return { x, y };
-  };
-
   return {
-    cellFromPoint,
+    // Ground→cell mapping lives in the track renderer, next to cellToWorld.
+    cellFromPoint: (clientX, clientY) => tracks.cellFromPoint(clientX, clientY),
     beginGhost: (type) => tracks.beginGhost(type),
     moveGhost: (cell, rotation, valid) => tracks.moveGhost(cell, rotation, valid),
     endGhost: () => tracks.endGhost(),
+    pickPiece: (clientX, clientY) => tracks.pickPiece(clientX, clientY),
+    setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
     dispose(): void {
       disposed = true;
       stopSpin();
