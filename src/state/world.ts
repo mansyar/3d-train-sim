@@ -40,6 +40,8 @@ export interface WorldStore {
   /** Returns a scenery toy to the drawer. Unknown ids are ignored. */
   removeScenery(id: string): void;
   hydrate(data: WorldData): void;
+  /** Returns the meadow to a factory-fresh world: empty, steam selected. */
+  reset(): void;
   subscribe(listener: WorldListener): () => void;
 }
 
@@ -163,6 +165,17 @@ export function createWorldStore(): WorldStore {
       nextId = 1;
       for (const piece of placed) advanceId(piece.id);
       for (const item of scenery) advanceId(item.id);
+      notify();
+    },
+
+    reset() {
+      // A factory-fresh meadow, delivered as ONE mutation: rides stop gently
+      // through the usual world subscription, and persistence saves exactly
+      // once — no per-item teardown cascades.
+      selectedTrain = 'steam';
+      placed.splice(0, placed.length);
+      scenery.splice(0, scenery.length);
+      nextId = 1;
       notify();
     },
 

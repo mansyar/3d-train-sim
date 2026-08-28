@@ -250,3 +250,50 @@ describe('world store train selection', () => {
     expect(store.scenery()).toEqual(beforeScenery);
   });
 });
+
+describe('world reset', () => {
+  it('clears every track piece and scenery toy in one notification', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.placeScenery('tree', NEXT_CELL, 0);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.reset();
+
+    expect(store.pieces()).toEqual([]);
+    expect(store.scenery()).toEqual([]);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('frees occupancy and the shared capacity after reset', () => {
+    const store = createWorldStore();
+    fillWorld(store, MAX_PIECES);
+
+    store.reset();
+
+    expect(store.place('straight', ORIGIN, 0)).toBe('placed');
+    expect(store.placeScenery('tree', NEXT_CELL, 0)).toBe('placed');
+    expect(store.pieces()[0]?.id).toBe('piece-1');
+  });
+
+  it('returns the train selection to the default steam locomotive', () => {
+    const store = createWorldStore();
+    store.selectTrain('diesel');
+
+    store.reset();
+
+    expect(store.train()).toBe('steam');
+  });
+
+  it('notifies exactly once even when the world is already empty', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.reset();
+    store.reset();
+
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+});
