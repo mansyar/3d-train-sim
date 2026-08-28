@@ -1,0 +1,11 @@
+{
+  "id": "autosave-world-restore",
+  "title": "Autosave & World Restore",
+  "type": "feature",
+  "status": "new",
+  "branch": "track/autosave-world-restore",
+  "created": "2026-08-28",
+  "updated": "2026-08-28",
+  "spec": "conductor/tracks/autosave-world-restore/spec.md",
+  "plan": "conductor/tracks/autosave-world-restore/plan.md"
+}
