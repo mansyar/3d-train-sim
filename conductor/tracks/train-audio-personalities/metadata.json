@@ -1,0 +1,11 @@
+{
+  "id": "train-audio-personalities",
+  "title": "Train Audio Personalities",
+  "type": "feature",
+  "status": "new",
+  "branch": "track/train-audio-personalities",
+  "created": "2026-08-29",
+  "updated": "2026-08-29",
+  "spec": "conductor/tracks/train-audio-personalities/spec.md",
+  "plan": "conductor/tracks/train-audio-personalities/plan.md"
+}
