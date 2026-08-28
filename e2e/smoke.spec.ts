@@ -99,6 +99,54 @@ test('drag-placing scenery decorates the meadow', async ({ page }) => {
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('track and scenery survive a reload through local autosave', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+          placeScenery: (kind: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    if (world.place('straight', { x: 7, y: 7 }, 0) !== 'placed') {
+      throw new Error('track placement failed');
+    }
+    if (world.placeScenery('tree', { x: 8, y: 7 }, 90) !== 'placed') {
+      throw new Error('scenery placement failed');
+    }
+  });
+  await page.waitForTimeout(500);
+  await page.reload();
+  await page.waitForTimeout(1500);
+
+  const restored = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          pieces: () => readonly unknown[];
+          scenery: () => readonly unknown[];
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces(), scenery: world.scenery() };
+  });
+  expect(restored.pieces).toHaveLength(1);
+  expect(restored.scenery).toHaveLength(1);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('the sound box mounts: toot, mute flip, silent console', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

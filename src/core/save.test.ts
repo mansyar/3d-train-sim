@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { deserializeWorld, serializeWorld, type WorldSnapshot } from './save';
 import type { PlacedScenery } from './scenery';
 import type { PlacedPiece } from './track-graph';
-import { deserializeWorld, serializeWorld, type WorldSnapshot } from './save';
 
 const pieces: PlacedPiece[] = [
   { id: 'piece-4', type: 'corner', cell: { x: 2, y: 3 }, rotation: 90 },

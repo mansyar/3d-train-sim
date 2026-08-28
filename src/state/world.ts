@@ -1,3 +1,4 @@
+import type { WorldData } from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
 import {
   type Cell,
@@ -33,6 +34,7 @@ export interface WorldStore {
   relocateScenery(id: string, cell: Cell, rotation: Rotation): PlacementResult;
   /** Returns a scenery toy to the drawer. Unknown ids are ignored. */
   removeScenery(id: string): void;
+  hydrate(data: WorldData): void;
   subscribe(listener: WorldListener): () => void;
 }
 
@@ -41,6 +43,11 @@ export function createWorldStore(): WorldStore {
   const scenery: PlacedScenery[] = [];
   const listeners = new Set<WorldListener>();
   let nextId = 1;
+
+  const advanceId = (id: string): void => {
+    const match = /(?:piece|scenery)-(\d+)$/.exec(id);
+    if (match?.[1]) nextId = Math.max(nextId, Number(match[1]) + 1);
+  };
 
   const notify = () => {
     for (const listener of listeners) listener(placed);
@@ -53,14 +60,14 @@ export function createWorldStore(): WorldStore {
   const meadowCount = () => placed.length + scenery.length;
 
   return {
-    /** A defensive copy — callers can never mutate the store's array. */
-    pieces: () => placed.slice(),
+    /** A defensive copy — callers can never mutate the store's records. */
+    pieces: () => placed.map((piece) => ({ ...piece, cell: { ...piece.cell } })),
 
     place(type, cell, rotation) {
       if (!inBounds(cell)) return 'out-of-bounds';
       if (holderOf(cell)) return 'occupied';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
-      placed.push({ id: `piece-${nextId++}`, type, cell, rotation });
+      placed.push({ id: `piece-${nextId++}`, type, cell: { ...cell }, rotation });
       notify();
       return 'placed';
     },
@@ -84,14 +91,14 @@ export function createWorldStore(): WorldStore {
       notify();
     },
 
-    /** A defensive copy — callers can never mutate the store's array. */
-    scenery: () => scenery.slice(),
+    /** A defensive copy — callers can never mutate the store's records. */
+    scenery: () => scenery.map((item) => ({ ...item, cell: { ...item.cell } })),
 
     placeScenery(kind, cell, rotation) {
       if (!inBounds(cell)) return 'out-of-bounds';
       if (holderOf(cell)) return 'occupied';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
-      scenery.push({ id: `scenery-${nextId++}`, kind, cell, rotation });
+      scenery.push({ id: `scenery-${nextId++}`, kind, cell: { ...cell }, rotation });
       notify();
       return 'placed';
     },
@@ -112,6 +119,29 @@ export function createWorldStore(): WorldStore {
       const index = scenery.findIndex((s) => s.id === id);
       if (index === -1) return;
       scenery.splice(index, 1);
+      notify();
+    },
+
+    hydrate(data) {
+      placed.splice(
+        0,
+        placed.length,
+        ...data.pieces.map((piece) => ({
+          ...piece,
+          cell: { ...piece.cell },
+        })),
+      );
+      scenery.splice(
+        0,
+        scenery.length,
+        ...data.scenery.map((item) => ({
+          ...item,
+          cell: { ...item.cell },
+        })),
+      );
+      nextId = 1;
+      for (const piece of placed) advanceId(piece.id);
+      for (const item of scenery) advanceId(item.id);
       notify();
     },
 
