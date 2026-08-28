@@ -129,7 +129,24 @@
     users get no ping/wobble; placement itself is instant either way.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4 — Scene Rendering of Placed Pieces
+## Phase 4 — Scene Rendering of Placed Pieces [checkpoint: d71acb3]
+
+### Verification Report (2026-08-28)
+
+- Automated: `pnpm exec biome check .` (26 files clean), `pnpm exec tsc --noEmit`
+  (clean), `pnpm test` (35/35) — all green at the checkpoint.
+- Coverage: phase touched only scene/UI/DOM glue (main.ts, init-scene.ts,
+  track-renderer.ts, style.css, app.ts) — no logic-bearing modules, so the
+  >80% coverage gate is N/A per workflow; logic coverage already enforced in
+  Phases 1–2.
+- Manual/Playwright: place (cell-centered, amber ghost, drop-ping), relocate,
+  tap snap-back, rotation mid-drag, occupied-cell wobble-return — all leave
+  scene == world, console-errors 0. Connectivity: user hand-built a closed
+  oval loop (2 straights + 4 corners), pieces join seamlessly (corner arc
+  realigned via 180° base yaw + arc-center anchor, c6e3013). Trashbin drop
+  target added during verification feedback (3826566): bin drop removes,
+  rail drop wobble-returns; user visually confirmed all flows.
+- User confirmation: 2026-08-28 ("all connected nicely", "all working").
 
 - [x] Task: Load straight + corner GLB templates; render placements via
     clone-per-piece; map grid cells to world positions; apply yaw per rotation — 8a535a8
@@ -187,7 +204,7 @@
     wobble-returns to its cell instead. Playwright: bin drop removes,
     rail drop keeps (probe-press confirmed the piece still lifts), console
     clean; user visually confirmed all flows in the dev server.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — d71acb3
 
 ## Phase 5 — E2E + Full Verification
 
