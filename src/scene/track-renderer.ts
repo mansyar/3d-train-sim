@@ -31,12 +31,13 @@ const KIT_MODULE_UNITS = 4;
  * y is the model's underside (kit meshes are authored below the mat).
  */
 const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
-  // Straight: midpoint of the 4-unit rail. Corner: the quarter-arc's centre,
-  // measured at the kit origin (0, 0) — its ends sit south (0, 2) and west
-  // (−2, 0) of that centre, so the 180° base yaw below flips them onto the
-  // graph's north/east base edges with the arc bulging north-east.
+  // Straight: midpoint of the 4-unit rail (ends at z=0 and z=4, centreline
+  // x=0). Corner: the quarter-arc's centre, measured at (-2, 0) in model
+  // space — its ends sit east (+2, 0) and south (0, +2) of that centre, so
+  // the +90° base yaw below swings them onto the graph's north/east base
+  // edges with the arc pivoting on the cell centre (matching ride-motion).
   straight: [0, -1, 2],
-  corner: [0, -1, 0],
+  corner: [-2, -1, 0],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -44,9 +45,10 @@ const PIECE_URLS: Record<PieceType, string> = {
   corner: '/assets/train-kit/railroad-corner-small.glb',
 };
 
-/** Unrotated model facing. The Kenney corner is authored south/west of its
- * arc center, so it yaw-flips 180° to meet the graph's north/east base. */
-const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: Math.PI };
+/** Unrotated model facing. The Kenney corner's arc centre sits at (-2, 0)
+ * with ends east and south of it, so a +90° yaw swings those ends onto the
+ * graph's north/east base edges, pivoting the arc on the cell centre. */
+const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: Math.PI / 2 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
 export function cellToWorld(cell: Cell): { x: number; z: number } {
