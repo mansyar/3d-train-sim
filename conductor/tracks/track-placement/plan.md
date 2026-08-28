@@ -146,10 +146,33 @@
     rotate-knob release no longer drops the piece. User confirmed placement
     and rotation; re-witnessed on 8a535a8: corner drop at 180° (R ×2)
     fans right, gate 35/35, console-errors 0.
-- [ ] Task: Sync renderer to world changes (add, relocate, remove-to-drawer
-    incremental scene updates; dispose clones on removal)
+- [x] Task: Sync renderer to world changes (add, relocate, remove-to-drawer
+    incremental scene updates; dispose clones on removal) — fd25fd1
   - Acceptance criteria: no per-frame allocations in sync path; scene matches
     world state after every interaction; gate green.
+  - Notes:
+    - Changes: wired canvas pointerdown → pickPiece → beginPlacedDrag so
+      placed pieces lift as ghosts for relocate / return-to-rail drags
+      (closes the Phase 3 deviation); app.ts, main.ts, init-scene.ts,
+      track-renderer.ts.
+    - Kit-model centering: the Kenney GLBs are authored off-origin (straight
+      rail geometry extends +2 units along local +Z; lift below the mat).
+      Templates are now wrapped in a Group with the Box3 offset baked in, so
+      clones sit centered on their cell and rotate around it. Removed the
+      per-type lift map (baked into the wrapper).
+    - Picking: replaced mesh raycasting with cell lookup — the store keeps
+      one piece per cell, so the whole cell is the tap target. Raycasting
+      proved unreliable (thin rail tops, gaps between sleepers catch the
+      steep camera ray). This supersedes the "needs mesh raycasting"
+      deviation note from Phase 3 with a simpler, more forgiving mechanism.
+    - cellFromPoint moved from init-scene into track-renderer (next to
+      cellToWorld, single source of grid↔world mapping); init-scene delegates.
+    - Why: the sync loop (reconcile) already added/relocated/removed clones
+      via world.subscribe; the missing half was the interaction loop that
+      mutates the world from an existing piece, plus faithful cell-centered
+      rendering. Verified in-browser (Playwright-driven drags): place,
+      relocate, return-to-rail, tap snap-back all leave scene == world,
+      console-errors 0; gate 35/35, biome + tsc clean.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5 — E2E + Full Verification
