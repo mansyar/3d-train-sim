@@ -32,7 +32,12 @@
 
 ## Phase 2 — Ride State + Train Motion (src/state, src/scene)
 
-- [ ] Task: TDD — Red→Green: ride state machine in `src/state/` (idle ⇄ riding; gentle stop on world mutation during ride)
+- [x] Task: TDD — Red→Green: ride state machine in `src/state/` (idle ⇄ riding; gentle stop on world mutation during ride) — d776a8e
+  - Notes:
+    - `src/state/ride.ts`: `createRideController(world)` — `mode()`, `ride()` (`{ path, direction }`), `start()` (solves live layout, refuses empty meadow), `stop()` (keeps last path for the camera), `subscribe()`.
+    - Gentle stop: the controller subscribes to the world; any piece mutation while riding flips to idle and notifies. The scene layer eases the motion out.
+    - Red witnessed live (`Cannot find module './ride'`); 9 tests covering idle start, loop solve, empty-meadow refusal, place/remove mid-ride auto-stop, re-solve after edit, listener notifications + unsubscribe.
+    - Full gates green: Biome ✓, tsc ✓, Vitest 53/53.
 - [ ] Task: Scene: locomotive follows solved path (position + yaw interpolation, constant gentle speed, no per-frame allocations)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
