@@ -3,7 +3,10 @@
 **Track ID:** `train-ride`
 **Spec:** `conductor/tracks/train-ride/spec.md`
 
-## Phase 1 — Path Solver (src/core/pathing.ts, TDD)
+## Phase 1 — Path Solver (src/core/pathing.ts, TDD) [checkpoint: 5f4557b]
+
+- Verification Report:
+  - Confirmed 2026-08-28: `pnpm check` green (Biome 28 files, `tsc --noEmit`, Vitest 44/44); `vitest run --coverage` → pathing.ts 97.4% stmts / 86.4% branch / 100% lines & funcs (>80% bar).
 
 - [x] Task: TDD — Red: failing unit tests for closed-loop traversal (order of pieces, entry/exit edges, deterministic output) — 4849721
   - Notes:
