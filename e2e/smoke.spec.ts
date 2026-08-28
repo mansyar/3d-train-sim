@@ -45,8 +45,8 @@ test('drag-placing a track piece renders it in the world', async ({ page }) => {
   await page.click('[data-drawer="track"]');
   const slot = page.locator('.piece-slot').first();
   const box = await slot.boundingBox();
-  expect(box, 'drawer piece slot visible').not.toBeNull();
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+  if (!box) throw new Error('drawer piece slot visible');
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(640, 380, { steps: 10 });
   await page.mouse.up();
