@@ -1,12 +1,14 @@
 import type { Object3D } from 'three';
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
+import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
 import { createGround } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { createPlaceholderCrate } from './placeholder-crate';
+import { createRideMotion } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
 import { type PickedPiece, startTrackRenderer } from './track-renderer';
 
@@ -25,6 +27,10 @@ export interface SceneHandle {
   pickPiece(clientX: number, clientY: number): PickedPiece | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
+  /** Begin riding the current layout. Refuses an empty meadow. */
+  startRide(): boolean;
+  /** Gently stop the ride. */
+  stopRide(): void;
 }
 
 export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHandle {
@@ -44,7 +50,10 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
-  let spinTarget: Object3D = crate.mesh;
+  const rides = createRideController(world);
+  let rideUpdate: ((dt: number) => void) | null = null;
+
+  let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
   loadLocomotive()
     .then((model) => {
@@ -56,7 +65,9 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
       scene.remove(crate.mesh);
       crate.dispose();
       scene.add(model);
-      spinTarget = model;
+      // The ride owns the locomotive from here; the showcase spin pauses.
+      spinTarget = null;
+      rideUpdate = createRideMotion(model, world, rides).update;
     })
     .catch(() => {
       // Kit asset unavailable — the crate remains as the fallback placeholder.
@@ -72,7 +83,13 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
   resize();
   window.addEventListener('resize', resize);
 
-  const stopSpin = startSpinLoop(renderer, scene, camera, () => spinTarget);
+  const stopSpin = startSpinLoop(
+    renderer,
+    scene,
+    camera,
+    () => spinTarget,
+    (dt) => rideUpdate?.(dt),
+  );
 
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
@@ -82,6 +99,8 @@ export function initScene(canvas: HTMLCanvasElement, world: WorldStore): SceneHa
     endGhost: () => tracks.endGhost(),
     pickPiece: (clientX, clientY) => tracks.pickPiece(clientX, clientY),
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
+    startRide: () => rides.start(),
+    stopRide: () => rides.stop(),
     dispose(): void {
       disposed = true;
       stopSpin();
