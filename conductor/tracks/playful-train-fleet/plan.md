@@ -103,3 +103,9 @@
 - This plan preserves the existing path solver and scenery behavior.
 - Logic-bearing modules in `src/core/` and `src/state/` require tests before implementation.
 - Scene, DOM, and audio glue are validated through Playwright and manual tablet verification per `conductor/workflow.md`.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions e96ee93
+  - Notes: Removed disposal of active locomotive clones during train swaps because clones share geometry/material resources with cached templates. Templates remain the single owners of GPU resources and are disposed during scene teardown. Full automated verification remains green.
+  - Review note: Distinct whistle IDs are catalog metadata only; implementing separate audio assets remains a future scope decision.
