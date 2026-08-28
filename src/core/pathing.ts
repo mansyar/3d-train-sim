@@ -142,9 +142,10 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
 
   let startId: string;
   let entryEdge: Edge;
-  if (chosen.some((id) => degreeOf(id) === 1)) {
-    // Start at a dead end, entering through its open end, and ride inward.
-    const endpoints = chosen.filter((id) => degreeOf(id) === 1).sort(byStartCell);
+  if (chosen.some((id) => degreeOf(id) < 2)) {
+    // Open path or lone piece: start at a dead end (degree ≤ 1), entering
+    // through its open end, and ride inward.
+    const endpoints = chosen.filter((id) => degreeOf(id) <= 1).sort(byStartCell);
     startId = invariant(endpoints[0], 'path component without an endpoint');
     const openEnds = endsOfPiece(startId)
       .filter((end) => !partnerOf.get(startId)?.has(end.key))

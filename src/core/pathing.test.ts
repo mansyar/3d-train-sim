@@ -104,3 +104,81 @@ describe('solvePath — closed loops', () => {
     expect(reversed).toEqual(first);
   });
 });
+
+describe('solvePath — open layouts (zero dead ends, guaranteed ride)', () => {
+  it('rides a two-piece straight line from one dead end to the other', () => {
+    const pieces = [piece('a', 'straight', 0, 0, 90), piece('b', 'straight', 1, 0, 90)];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['a', 'b']);
+    // The ride starts at a dead end, entering through the piece's open end.
+    expect(path.steps[0]).toEqual({ pieceId: 'a', from: 'west', to: 'east' });
+    expect(path.steps[1]).toEqual({ pieceId: 'b', from: 'west', to: 'east' });
+  });
+
+  it('rides an L-shaped dead-end path through a corner', () => {
+    const pieces = [
+      piece('elbow-a', 'corner', 0, 0, 90), // east+south
+      piece('mid', 'straight', 1, 0, 90), // east+west
+      piece('elbow-b', 'corner', 2, 0, 180), // south+west
+      piece('tail', 'straight', 2, 1, 0), // north+south
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['elbow-a', 'mid', 'elbow-b', 'tail']);
+    // Enters the first piece through its unconnected open end (south).
+    expect(path.steps[0]?.from).toBe('south');
+    // Exits the last piece through its unconnected open end (south).
+    expect(path.steps[3]?.to).toBe('south');
+  });
+
+  it('shuttles a single lone piece (one step, open)', () => {
+    const pieces = [piece('lonely', 'corner', 3, 4, 0)];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps).toEqual([{ pieceId: 'lonely', from: 'north', to: 'east' }]);
+  });
+
+  it('returns a no-op path for an empty meadow', () => {
+    expect(solvePath([])).toEqual({ steps: [], closed: false });
+  });
+
+  it('rides the deterministic component when two separate tracks exist', () => {
+    const pieces = [
+      piece('far', 'corner', 5, 5, 0),
+      piece('a', 'straight', 0, 0, 90),
+      piece('b', 'straight', 1, 0, 90),
+    ];
+
+    const path = solvePath(pieces);
+
+    // The component anchored at the smallest cell wins; the lone piece waits.
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['a', 'b']);
+    expect(path.closed).toBe(false);
+  });
+
+  it('reverses direction through a dead-end spur (ride layer shuttles back)', () => {
+    // Three-piece line with the smallest cell in the MIDDLE: the solver must
+    // still start at a dead end, not at the smallest cell.
+    const pieces = [
+      piece('head', 'straight', 0, 0, 90),
+      piece('mid', 'straight', 1, 0, 90),
+      piece('tail', 'straight', 2, 0, 90),
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    // Endpoints are head and tail; the tail sits on the smaller cell (0,0 is
+    // head) — start must be a degree-1 endpoint riding inward, open end first.
+    expect(path.steps[0]?.from).toBe('west');
+    expect(path.steps[2]?.to).toBe('east');
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['head', 'mid', 'tail']);
+  });
+});
