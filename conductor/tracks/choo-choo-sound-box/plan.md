@@ -23,15 +23,15 @@ Discipline per `conductor/workflow.md`: TDD (red → green per task), small comm
 
 ## Phase 3 — Whistle, dings & mute UI (test-first)
 
-- [ ] **Task: Red — UI intent tests** — whistle button triggers one-shot anytime; mute toggle flips state and stops all audio; ding fires only on successful place/relocate (silent on failed drops and trash).
-- [ ] **Task: Green — rail chrome + hooks** — big round whistle + chunky mute buttons in `src/ui/app.ts` toybox rail (matching chunky-panel styling); ding hook in `ping()` success path.
-- [ ] **Task: First-gesture gate** — chug starts from the go press only; nothing sounds on page load.
+- [x] **Task: Red - UI intent tests** - whistle button triggers one-shot anytime; mute toggle flips state and stops all audio; ding fires only on successful place/relocate (silent on failed drops and trash).
+- [x] **Task: Green - rail chrome + hooks** - big round whistle + chunky mute buttons in `src/ui/app.ts` toybox rail (matching chunky-panel styling); ding hook in `ping()` success path.
+- [x] **Task: First-gesture gate** - chug starts from the go press only; nothing sounds on page load.
 
 ## Phase 4 — PWA & verification
 
-- [ ] **Task: Precache audio** — extend workbox `globPatterns` in `vite.config.ts` for `public/audio/` assets; confirm precache under the 6 MB cap.
-- [ ] **Task: Extend Playwright smoke** — audio chrome mounts, mute toggle flips visible state, ride still runs, zero console/page errors.
-- [ ] **Task: Full gate** — `pnpm check` (biome + tsc + vitest) green; manual tablet-shape pass (sound on/off, ride, whistle while riding).
+- [x] **Task: Precache audio** - extend workbox `globPatterns` in `vite.config.ts` for `public/audio/` assets; confirm precache under the 6 MB cap.
+- [x] **Task: Extend Playwright smoke** - audio chrome mounts, mute toggle flips visible state, ride still runs, zero console/page errors.
+- [x] **Task: Full gate** - `pnpm check` (biome + tsc + vitest) green; manual tablet-shape pass (sound on/off, ride, whistle while riding).
 
 ## Phase 5 — Wrap-up
 
