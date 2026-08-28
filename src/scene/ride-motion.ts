@@ -95,9 +95,15 @@ export function createRideMotion(
           length: Math.hypot(exit.x - entry.x, exit.z - entry.z),
         });
       } else {
-        // The corner model's arc pivots on the cell centre; its open ends sit
-        // on the edge midpoints, a quarter turn apart.
-        const center = cellToWorld(piece.cell);
+        // The corner model's arc pivots on the cell corner shared by its two
+        // open edges; its ends sit on the edge midpoints, tangent-
+        // perpendicular to each edge (collinear with the straights' rails).
+        const a = cellToWorld(piece.cell);
+        const half = CELL_SIZE / 2;
+        const center = {
+          x: a.x + (step.from === 'east' || step.to === 'east' ? half : -half),
+          z: a.z + (step.from === 'south' || step.to === 'south' ? half : -half),
+        };
         const a0 = Math.atan2(entry.z - center.z, entry.x - center.x);
         const a1 = Math.atan2(exit.z - center.z, exit.x - center.x);
         let sweep = a1 - a0;
