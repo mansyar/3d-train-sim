@@ -23,6 +23,10 @@ function fakeHandle(): SoundHandle & { calls: string[] } {
     rate: vi.fn((value: number) => {
       calls.push(`rate:${value}`);
     }),
+    onEnd: vi.fn((listener: () => void) => {
+      calls.push('onEnd');
+      listener();
+    }),
   };
 }
 
@@ -120,7 +124,7 @@ describe('createAudioController', () => {
     controller.whistle();
     controller.ding();
 
-    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'play', 'rate:1']);
+    expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'play', 'onEnd', 'rate:1']);
     expect(handles.get('ding')?.calls).toEqual(['play']);
   });
 
@@ -132,9 +136,11 @@ describe('createAudioController', () => {
     expect(handles.get('whistle')?.calls).toEqual([
       'rate:0.92',
       'play',
+      'onEnd',
       'rate:1',
       'rate:1.08',
       'play',
+      'onEnd',
       'rate:1',
     ]);
   });

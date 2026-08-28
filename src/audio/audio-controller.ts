@@ -26,6 +26,8 @@ export interface SoundHandle {
   fade: () => void;
   /** Nudges playback tempo/character without restarting. */
   rate: (value: number) => void;
+  /** Runs after the one-shot finishes, if the backend supports completion hooks. */
+  onEnd?: (listener: () => void) => void;
 }
 
 export interface AudioControllerOptions {
@@ -138,7 +140,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       const whistle = sound('whistle');
       whistle.rate(whistleRate(train));
       whistle.play();
-      whistle.rate(1);
+      whistle.onEnd?.(() => whistle.rate(ROLLING_RATE));
     },
 
     ding: () => {
