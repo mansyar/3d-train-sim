@@ -160,10 +160,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     if (pickedId === null) {
       settled = cell !== null && options.world.place(type, cell, rotation) === 'placed';
     } else {
-      const overTrash =
-        document.elementFromPoint(clientX, clientY)?.closest('.trash-slot') !== null;
-      const overToolbar =
-        document.elementFromPoint(clientX, clientY)?.closest('.toybox-rail') !== null;
+      const dropTarget = document.elementFromPoint(clientX, clientY);
+      const overTrash = dropTarget?.closest('.trash-slot') !== null;
+      const overToolbar = dropTarget?.closest('.toybox-rail') !== null;
       if (overTrash) {
         options.world.remove(pickedId); // Binned.
         settled = true;

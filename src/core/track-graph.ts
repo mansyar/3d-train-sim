@@ -1,4 +1,4 @@
-import type { PieceType, Rotation } from './pieces';
+import { baseEndpointsFor, type PieceType, type Rotation } from './pieces';
 
 /** Buildable meadow extent in cells (16×16). */
 export const MEADOW_CELLS = 16;
@@ -97,8 +97,7 @@ function boundaryKey(a: Cell, b: Cell): EdgeKey {
  * step clockwise per 90° of yaw, matching how yaw-rotated models turn.
  */
 export function endpointEdgesFor(piece: PlacedPiece): EdgeKey[] {
-  const openEdges: readonly Edge[] =
-    piece.type === 'straight' ? ['north', 'south'] : ['north', 'east'];
+  const openEdges = baseEndpointsFor(piece.type);
   const steps = piece.rotation / 90;
   return openEdges.map((edge) => {
     let label = edge;

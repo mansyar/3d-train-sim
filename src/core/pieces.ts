@@ -17,6 +17,11 @@ export const FOOTPRINT_CELLS = 1;
 /** Fixed order endpoints are always returned in, for stable comparisons. */
 const CANONICAL_EDGES: readonly Edge[] = ['north', 'east', 'south', 'west'];
 
+/** The unrotated cell edges a piece's open ends join. */
+export function baseEndpointsFor(type: PieceType): readonly [Edge, Edge] {
+  return BASE_ENDPOINTS[type];
+}
+
 /** Unrotated endpoint geometry: the two cell edges each piece joins. */
 const BASE_ENDPOINTS: Record<PieceType, readonly [Edge, Edge]> = {
   straight: ['north', 'south'],

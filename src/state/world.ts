@@ -39,7 +39,8 @@ export function createWorldStore(): WorldStore {
   const holderOf = (cell: Cell) => placed.find((p) => p.cell.x === cell.x && p.cell.y === cell.y);
 
   return {
-    pieces: () => placed,
+    /** A defensive copy — callers can never mutate the store's array. */
+    pieces: () => placed.slice(),
 
     place(type, cell, rotation) {
       if (!inBounds(cell)) return 'out-of-bounds';

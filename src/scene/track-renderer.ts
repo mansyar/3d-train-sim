@@ -44,12 +44,6 @@ const PIECE_URLS: Record<PieceType, string> = {
   corner: '/assets/train-kit/railroad-corner-small.glb',
 };
 
-/**
- * Extra yaw per type aligning each Kenney model's default facing with the
- * compass endpoints the track graph computes. The kit's base facing already
- * matches (straight: N/S, corner: N/E) — tune here only if an asset's
- * authored orientation disagrees with the walkthrough.
- */
 /** Unrotated model facing. The Kenney corner is authored south/west of its
  * arc center, so it yaw-flips 180° to meet the graph's north/east base. */
 const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: Math.PI };
@@ -107,6 +101,7 @@ export function startTrackRenderer(
   const pointerNdc = new Vector2();
   const groundPlane = new Plane(new Vector3(0, 1, 0), 0);
   const groundHit = new Vector3();
+  let disposed = false;
 
   function apply(piece: PlacedPiece): void {
     const template = templates.get(piece.type);
@@ -162,6 +157,15 @@ export function startTrackRenderer(
     const template = templates.get(ghostType);
     if (!template) return; // Asset not loaded yet — retried on the next move.
     const model = template.clone(true);
+    // Clone materials per ghost so tint/dispose never touch the shared
+    // template materials (three.js clones share material references).
+    model.traverse((node) => {
+      const mesh = node as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map((mat) => mat.clone())
+        : mesh.material.clone();
+    });
     for (const mat of ghostMaterials(model)) {
       mat.transparent = true;
       mat.depthWrite = false;
@@ -253,6 +257,11 @@ export function startTrackRenderer(
     loader.load(
       PIECE_URLS[type],
       (gltf) => {
+        if (disposed) {
+          // Tore down before the asset arrived — release its GPU resources.
+          disposeObject(gltf.scene);
+          return;
+        }
         // Scale the 4-unit kit module to the cell grid and anchor the model
         // so its open ends land on the cell-edge midpoints the graph joins.
         const scale = CELL_SIZE / KIT_MODULE_UNITS;
@@ -279,6 +288,7 @@ export function startTrackRenderer(
     pickPiece,
     setPieceVisible,
     dispose(): void {
+      disposed = true;
       unsubscribe();
       endGhost();
       for (const model of rendered.values()) scene.remove(model);
