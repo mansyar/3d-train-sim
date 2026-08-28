@@ -1,7 +1,20 @@
-import { describe, expect, it, vi } from 'vitest';
+import { openDB } from 'idb';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
-import { restoreMutePreference, watchMutePersistence, watchWorldPersistence } from './persistence';
+import {
+  loadWorldSnapshot,
+  restoreMutePreference,
+  saveWorldSnapshot,
+  watchMutePersistence,
+  watchWorldPersistence,
+} from './persistence';
 import { createWorldStore } from './world';
+
+vi.mock('idb', () => ({
+  openDB: vi.fn(),
+}));
+
+const openDBMock = vi.mocked(openDB);
 
 const ORIGIN = { x: 0, y: 0 };
 const NEXT_CELL = { x: 1, y: 0 };
@@ -158,5 +171,55 @@ describe('mute preference', () => {
     store.place('corner', NEXT_CELL, 0);
     expect(save).toHaveBeenCalledTimes(2);
     expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: false });
+  });
+});
+
+describe('indexeddb storage', () => {
+  const makeDb = () => ({
+    get: vi.fn<(store: string, key: string) => Promise<unknown>>(async () => undefined),
+    put: vi.fn<(store: string, value: unknown, key: string) => Promise<undefined>>(
+      async () => undefined,
+    ),
+    close: vi.fn<() => void>(),
+  });
+
+  beforeEach(() => {
+    openDBMock.mockReset();
+  });
+
+  it('loads the stored world snapshot', async () => {
+    const db = makeDb();
+    const stored: WorldSnapshot = { version: 1, pieces: [], scenery: [] };
+    db.get.mockResolvedValue(stored);
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldSnapshot()).resolves.toEqual(stored);
+    expect(db.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads null when storage is empty or unavailable', async () => {
+    openDBMock.mockResolvedValue(makeDb() as never);
+    await expect(loadWorldSnapshot()).resolves.toBeNull();
+
+    openDBMock.mockRejectedValue(new Error('blocked'));
+    await expect(loadWorldSnapshot()).resolves.toBeNull();
+  });
+
+  it('saves snapshots and treats storage failures as non-fatal', async () => {
+    const db = makeDb();
+    openDBMock.mockResolvedValue(db as never);
+    const snapshot: WorldSnapshot = {
+      version: 1,
+      pieces: [],
+      scenery: [],
+      preferences: { muted: true },
+    };
+
+    await saveWorldSnapshot(snapshot);
+    expect(db.put).toHaveBeenCalledWith('worlds', snapshot, 'current');
+    expect(db.close).toHaveBeenCalledTimes(1);
+
+    openDBMock.mockRejectedValue(new Error('quota exceeded'));
+    await expect(saveWorldSnapshot(snapshot)).resolves.toBeUndefined();
   });
 });
