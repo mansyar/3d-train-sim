@@ -11,5 +11,6 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | `parent-reset-and-mute-memory` | Parent Reset & Mute Memory | complete | [tracks/parent-reset-and-mute-memory/](tracks/parent-reset-and-mute-memory/index.md) |
 
 Completed tracks are archived under [conductor/archive/](archive/):
-`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`.
+`bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
+`scenery-placement`.
 

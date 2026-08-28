@@ -1,6 +1,6 @@
 # Track: Scenery Placement (Decorate the Meadow)
 
-**ID:** `scenery-placement` · **Type:** Feature · **Status:** in-progress
+**ID:** `scenery-placement` · **Type:** Feature · **Status:** complete
 
 - [Specification](spec.md) — what the track ships
 - [Implementation Plan](plan.md) — phased TDD task list
