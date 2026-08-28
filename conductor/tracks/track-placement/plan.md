@@ -222,8 +222,13 @@
     new spec (guard clause replaces `box!`); rerun fully green — biome 26
     files clean, tsc clean, vitest 35/35, Playwright 2/2 on the tablet
     project.
-- [ ] Task: Manual tablet walkthrough per workflow (drag feel, snap bounce,
-    snap-back, reduced-motion, 60 FPS)
+- [x] Task: Manual tablet walkthrough per workflow (drag feel, snap bounce,
+    snap-back, reduced-motion, 60 FPS) — user walkthrough 2026-08-28
+  - Acceptance criteria: user confirms drag feel, snap bounce, snap-back,
+    reduced motion, and 60 FPS on a real tablet.
+  - Notes: user ran the walkthrough on a tablet against the network-exposed
+    dev server (Wi-Fi http://192.168.0.114:5176) and confirmed "all good" —
+    drag feel, snap bounce, snap-back, trashbin, and fluidity all pass.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Notes
