@@ -12,25 +12,46 @@ const scenery: PlacedScenery[] = [
 ];
 
 describe('world snapshots', () => {
-  it('serializes a JSON-safe, versioned snapshot', () => {
-    const snapshot = serializeWorld(pieces, scenery);
+  it('serializes a JSON-safe, versioned snapshot with the selected train', () => {
+    const snapshot = serializeWorld(pieces, scenery, 'diesel');
 
-    expect(snapshot).toEqual({ version: 1, pieces, scenery });
+    expect(snapshot).toEqual({ version: 1, pieces, scenery, train: 'diesel' });
     expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 
-  it('round-trips tracks and scenery without changing order or fields', () => {
-    const snapshot = serializeWorld(pieces, scenery);
+  it('round-trips tracks, scenery, and train without changing order or fields', () => {
+    const snapshot = serializeWorld(pieces, scenery, 'tram');
 
-    expect(deserializeWorld(snapshot)).toEqual({ pieces, scenery });
+    expect(deserializeWorld(snapshot)).toEqual({ pieces, scenery, train: 'tram' });
+  });
+
+  it('restores steam for legacy snapshots without a train field', () => {
+    expect(deserializeWorld({ version: 1, pieces, scenery })).toEqual({
+      pieces,
+      scenery,
+      train: 'steam',
+    });
+  });
+
+  it('restores steam for unknown persisted train identifiers', () => {
+    expect(deserializeWorld({ version: 1, pieces, scenery, train: 'hovercraft' })).toEqual({
+      pieces,
+      scenery,
+      train: 'steam',
+    });
   });
 
   it('rejects malformed and unknown-version snapshots safely', () => {
-    expect(deserializeWorld(null)).toEqual({ pieces: [], scenery: [] });
-    expect(deserializeWorld({ version: 2, pieces, scenery })).toEqual({ pieces: [], scenery: [] });
+    expect(deserializeWorld(null)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    expect(deserializeWorld({ version: 2, pieces, scenery })).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+    });
     expect(deserializeWorld({ version: 1, pieces: 'bad', scenery: [] })).toEqual({
       pieces: [],
       scenery: [],
+      train: 'steam',
     });
   });
 
@@ -41,7 +62,7 @@ describe('world snapshots', () => {
       scenery: [{ id: 'scenery-2', kind: 'house', cell: { x: 16, y: 0 }, rotation: 0 }],
     };
 
-    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [] });
+    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
   });
 
   it('rejects duplicate cells across tracks and scenery', () => {
@@ -51,7 +72,7 @@ describe('world snapshots', () => {
       scenery: [{ id: 'scenery-2', kind: 'tree', cell: { x: 0, y: 0 }, rotation: 0 }],
     };
 
-    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [] });
+    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
   });
 
   it('rejects snapshots over the shared capacity', () => {
@@ -63,6 +84,6 @@ describe('world snapshots', () => {
     }));
     const snapshot: WorldSnapshot = { version: 1, pieces: fullPieces, scenery: [] };
 
-    expect(deserializeWorld(snapshot)).toEqual({ pieces: [], scenery: [] });
+    expect(deserializeWorld(snapshot)).toEqual({ pieces: [], scenery: [], train: 'steam' });
   });
 });

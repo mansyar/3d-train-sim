@@ -32,6 +32,7 @@ export async function loadWorldSnapshot(): Promise<WorldSnapshot | null> {
 }
 
 export function watchWorldPersistence(world: {
+  train(): import('../core/trains').TrainKind;
   pieces(): readonly import('../core/track-graph').PlacedPiece[];
   scenery(): readonly import('../core/scenery').PlacedScenery[];
   subscribe(listener: () => void): () => void;
@@ -39,6 +40,7 @@ export function watchWorldPersistence(world: {
   return world.subscribe(() => {
     void saveWorldSnapshot({
       version: 1,
+      train: world.train(),
       pieces: world.pieces().map((piece) => ({ ...piece, cell: { ...piece.cell } })),
       scenery: world.scenery().map((item) => ({ ...item, cell: { ...item.cell } })),
     });

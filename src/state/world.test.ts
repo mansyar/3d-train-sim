@@ -217,3 +217,36 @@ describe('world store scenery', () => {
     expect(store.place('straight', ORIGIN, 0)).toBe('placed');
   });
 });
+
+describe('world store train selection', () => {
+  it('defaults to steam and changes across the train catalog', () => {
+    const store = createWorldStore();
+    expect(store.train()).toBe('steam');
+
+    expect(store.selectTrain('diesel')).toBe(true);
+    expect(store.train()).toBe('diesel');
+    expect(store.selectTrain('tram')).toBe(true);
+    expect(store.train()).toBe('tram');
+  });
+
+  it('falls back to steam for an invalid persisted selection', () => {
+    const store = createWorldStore();
+    expect(store.selectTrain('hovercraft')).toBe(false);
+    expect(store.train()).toBe('steam');
+  });
+
+  it('notifies selection changes without changing the meadow', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.placeScenery('tree', NEXT_CELL, 0);
+    const beforePieces = store.pieces();
+    const beforeScenery = store.scenery();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.selectTrain('diesel')).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(store.pieces()).toEqual(beforePieces);
+    expect(store.scenery()).toEqual(beforeScenery);
+  });
+});

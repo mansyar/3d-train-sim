@@ -6,6 +6,7 @@ const ORIGIN = { x: 0, y: 0 };
 const NEXT_CELL = { x: 1, y: 0 };
 
 const data: WorldData = {
+  train: 'diesel',
   pieces: [{ id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 }],
   scenery: [{ id: 'scenery-41', kind: 'tree', cell: NEXT_CELL, rotation: 90 }],
 };
@@ -17,6 +18,7 @@ describe('world hydration', () => {
 
     expect(store.pieces()).toEqual(data.pieces);
     expect(store.scenery()).toEqual(data.scenery);
+    expect(store.train()).toBe('diesel');
     expect(store.place('corner', { x: 2, y: 0 }, 0)).toBe('placed');
     expect(store.pieces()[1]?.id).toBe('piece-42');
   });
@@ -36,7 +38,12 @@ describe('autosave subscription', () => {
     const store = createWorldStore();
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     store.subscribe(() =>
-      save({ version: 1, pieces: [...store.pieces()], scenery: [...store.scenery()] }),
+      save({
+        version: 1,
+        train: store.train(),
+        pieces: [...store.pieces()],
+        scenery: [...store.scenery()],
+      }),
     );
 
     store.place('straight', ORIGIN, 0);

@@ -3,35 +3,46 @@
 **Track ID:** `playful-train-fleet`  
 **Spec:** `conductor/tracks/playful-train-fleet/spec.md`
 
-## Phase 1 — Train Catalog and World State (TDD)
+## Phase 1 — Train Catalog and World State (TDD) [checkpoint: dfb3463]
 
 - [x] Task: TDD — Red: add unit tests for the three-train catalog
   - [x] Assert exactly three stable train kinds are exposed
   - [x] Assert every train has a local model URL, accessible label, icon, and personality metadata
   - [x] Assert catalog helpers are total and pure
   - Notes: Added `src/core/trains.test.ts`; the Red run failed because the catalog module was absent, confirming the test exercised new behavior.
-- [ ] Task: TDD — Red: add world-store tests for train selection
-  - [ ] Assert new worlds default to the steam locomotive
-  - [ ] Assert selecting each catalog train updates the selected train
-  - [ ] Assert invalid train identifiers fall back safely
-  - [ ] Assert selection changes notify subscribers and do not alter pieces or scenery
-- [~] Task: Implement the pure train catalog and world-store selection API
-  - Notes: Catalog Green completed in `src/core/trains.ts`; world-store selection remains in progress.
-- [ ] Task: Refactor catalog/state code for clarity without changing behavior
-- [ ] Task: Verify >80% coverage for new logic-bearing catalog and state code
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: TDD — Red: add world-store tests for train selection
+  - [x] Assert new worlds default to the steam locomotive
+  - [x] Assert selecting each catalog train updates the selected train
+  - [x] Assert invalid train identifiers fall back safely
+  - [x] Assert selection changes notify subscribers and do not alter pieces or scenery
+  - Notes: Added train-selection coverage to `src/state/world.test.ts`; Red exposed the missing API while all existing world behavior stayed green.
+- [x] Task: Implement the pure train catalog and world-store selection API
+  - Notes: Added `src/core/trains.ts` and extended `src/state/world.ts` with default steam selection, validated selection, notification, and hydration support. Commit `dfb3463`.
+- [x] Task: Refactor catalog/state code for clarity without changing behavior
+  - Notes: Biome import organization applied to changed implementation files.
+- [x] Task: Verify >80% coverage for new logic-bearing catalog and state code
+  - Notes: `pnpm exec tsc --noEmit`, Biome checks, and the full Vitest suite pass: 13 files / 114 tests.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated verification: `pnpm exec biome check`, `pnpm exec tsc --noEmit`, and `pnpm test` all pass.
+  - Manual verification pending: run the tablet walkthrough after scene/UI integration is complete.
 
-## Phase 2 — Save/Load Compatibility (TDD)
+## Phase 2 — Save/Load Compatibility (TDD) [checkpoint: dfb3463]
 
-- [ ] Task: TDD — Red: extend save tests for selected-train serialization
-  - [ ] Assert snapshots include the selected train
-  - [ ] Assert round trips preserve the selected train
-  - [ ] Assert snapshots missing the train field restore the default
-  - [ ] Assert unknown train identifiers restore the default without losing track/scenery data
-- [ ] Task: Implement version-compatible save and deserialize behavior
-- [ ] Task: Update IndexedDB persistence wiring to save the selected train
-- [ ] Task: Verify >80% coverage for changed save/persistence logic
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: TDD — Red: extend save tests for selected-train serialization
+  - [x] Assert snapshots include the selected train
+  - [x] Assert round trips preserve the selected train
+  - [x] Assert snapshots missing the train field restore the default
+  - [x] Assert unknown train identifiers restore the default without losing track/scenery data
+  - Notes: Updated `src/core/save.test.ts` and persistence fixtures; legacy snapshots retain their world and default to steam.
+- [x] Task: Implement version-compatible save and deserialize behavior
+  - Notes: `src/core/save.ts` now serializes and validates train selection while preserving version-1 compatibility.
+- [x] Task: Update IndexedDB persistence wiring to save the selected train
+  - Notes: `watchWorldPersistence` now persists the selected train and hydration restores it.
+- [x] Task: Verify >80% coverage for changed save/persistence logic
+  - Notes: Focused and full Vitest suites pass; TypeScript and Biome gates are clean.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated verification: `pnpm exec biome check`, `pnpm exec tsc --noEmit`, and `pnpm test` all pass.
+  - Manual verification pending: confirm selection survives an actual browser reload in the Phase 4 smoke test.
 
 ## Phase 3 — Train Models and Ride Integration
 
