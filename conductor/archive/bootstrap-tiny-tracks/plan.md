@@ -1,7 +1,7 @@
 # Implementation Plan — Bootstrap Tiny Tracks
 
 **Track ID:** `bootstrap-tiny-tracks`
-**Spec:** `conductor/tracks/bootstrap-tiny-tracks/spec.md`
+**Spec:** `conductor/archive/bootstrap-tiny-tracks/spec.md`
 
 ## Phase 1 — Project Scaffold
 

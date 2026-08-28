@@ -1,0 +1,9 @@
+{
+  "track_id": "train-ride",
+  "title": "Train Ride (Autonomous Locomotive)",
+  "status": "archived",
+  "spec": "conductor/archive/train-ride/spec.md",
+  "plan": "conductor/archive/train-ride/plan.md",
+  "completed": "2026-08-28",
+  "archived": "2026-08-28"
+}

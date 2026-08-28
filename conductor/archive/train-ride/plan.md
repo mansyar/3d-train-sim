@@ -1,7 +1,7 @@
 # Implementation Plan — Train Ride (Autonomous Locomotive)
 
 **Track ID:** `train-ride`
-**Spec:** `conductor/tracks/train-ride/spec.md`
+**Spec:** `conductor/archive/train-ride/spec.md`
 
 ## Phase 1 — Path Solver (src/core/pathing.ts, TDD) [checkpoint: 5f4557b]
 
@@ -28,7 +28,7 @@
 - [x] Task: Verify coverage >80% on `src/core/pathing.ts` — bb09b70
   - Notes:
     - `vitest run --coverage`: pathing.ts 97.4% stmts / 86.4% branch / 100% lines & funcs. Bar cleared.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Ride State + Train Motion (src/state, src/scene) [checkpoint: d1bfa81]
 
@@ -48,7 +48,7 @@
     - `spin-loop.ts` now accepts a nullable spin target (showcase spin pauses once the ride owns the locomotive) and an `onFrame(dt)` hook; reduced-motion still renders a single static frame.
     - `init-scene.ts` creates the ride controller and exposes `startRide()`/`stopRide()` on `SceneHandle` (UI trigger lands in Phase 3 — visual ride verification therefore happens at the Phase 3 checkpoint walkthrough).
     - `MODEL_YAW_OFFSET = π` is a first guess at the Kenney locomotive's authored facing; to be confirmed during the Phase 3/4 tablet walkthrough.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Go/Stop Trigger + Follow Camera (src/ui, src/scene) [checkpoint: 6163261]
 
