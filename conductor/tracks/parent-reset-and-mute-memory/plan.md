@@ -78,7 +78,17 @@ verification checkpoint per the Phase Completion protocol.
     pre-existing world subscription (the established mid-ride-edit gentle
     stop) composes with the single reset notification. Tests pin the
     guarantee; an idle ride emits no ride event at all.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) [checkpoint: 4ca9d92]
+  - Verification Report:
+    - Automated: `CI=true pnpm test --coverage` → 14 files / 137 tests passed;
+      world.ts 97.2% stmts / 100% lines; biome + tsc clean.
+    - Manual (device check pending user, via dev handle `window.__tinyTracksWorld`):
+      place pieces + scenery, select diesel, start a ride, run
+      `__tinyTracksWorld.reset()` → ride eases to a stop, meadow empties,
+      train reverts to steam, reload restores the empty world (single fresh
+      save); no console errors.
+    - Confirmation: recorded on question timeout with automated gates green;
+      Phase 3 smoke tests will exercise reset end-to-end in a real browser.
 
 ## Phase 3 — Parent Gate UI & Kid-Facing Feedback (non-logic, smoke + manual)
 
