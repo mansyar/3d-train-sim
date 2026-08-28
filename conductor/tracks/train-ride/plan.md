@@ -75,8 +75,12 @@
 
 ## Phase 4 — E2E + Full Verification
 
-- [~] Task: Extend Playwright smoke: place pieces → press ▶ → train moves; console clean, zero external requests
-- [ ] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures
+- [x] Task: Extend Playwright smoke: place pieces → press ▶ → train moves; console clean, zero external requests — 8922c59
+
+  Notes: New smoke test "pressing play rides the train along the placed track": lays a 2-cell straight via the dev-only `__tinyTracksWorld` handle, clicks the real `.ride-toggle`, asserts `.is-riding`, then two screenshots ~1.2s apart must differ (visible motion), plus the standard zero-external-requests + clean-console assertions. 3/3 Playwright (tablet) green.
+- [x] Task: Run full local gate suite (`pnpm check` + Playwright); fix failures — 8922c59
+
+  Notes: biome 31 files clean (one formatting fix applied to the new spec), tsc clean, vitest 55/55, Playwright 3/3 (tablet).
 - [ ] Task: Manual tablet walkthrough (build loop, press ▶, watch ride, ⏹ camera ease-back)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
