@@ -193,3 +193,19 @@ verification checkpoint per the Phase Completion protocol.
     reduced-motion support; reset never touches the mute state. Gates at
     completion: biome + tsc clean, 137/137 unit tests (save.ts 88.9%,
     persistence.ts 87.5%, world.ts 97.2% stmts), Playwright 9/9.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions ba4433d
+  - Notes: conductor-review (2026-08-29, iterative, full diff `a2bebc1..0724697`)
+    verified all spec FRs, style, tests, and gates; no Critical/High issues.
+    One fix applied: `watchMutePersistence` now persists only on an actual
+    mute change — the real `AudioController` also notifies on ride chug
+    start/stop, which previously triggered redundant full-snapshot saves.
+    The persistence tests were refined to pin the spec contract ("every mute
+    change persists exactly once") including the de-dup behavior and a
+    second real change saving again. Informational (no action): the
+    renderer reads `prefers-reduced-motion` once at startup, and the gate
+    hold-fill uses `color-mix` (graceful fallback below Safari 16.2).
+    Verification: `pnpm check` (biome + tsc + 137/137 Vitest) and Playwright
+    9/9 green after the fix. Review fix commit: `ba4433d`.
