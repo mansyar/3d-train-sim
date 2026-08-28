@@ -52,6 +52,7 @@ export function createRideMotion(
   model: Object3D,
   world: WorldStore,
   ride: RideController,
+  onPausedChange?: (paused: boolean) => void,
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -65,6 +66,14 @@ export function createRideMotion(
     if (mode === 'riding' && state) beginRide(state);
     // Idle keeps the last pose — update() eases speedScale to 0 in place.
   });
+
+  /** Reports dead-end pauses upward so the chug softens with the motion. */
+  let paused = false;
+  const setPaused = (next: boolean): void => {
+    if (next === paused) return;
+    paused = next;
+    onPausedChange?.(next);
+  };
 
   function edgeMidpoint(cell: { x: number; y: number }, edge: Edge): { x: number; z: number } {
     const a = cellToWorld(cell);
@@ -186,7 +195,10 @@ export function createRideMotion(
 
       if (pauseTimer > 0) {
         pauseTimer -= dt;
-        if (pauseTimer <= 0) travelDirection = travelDirection === 1 ? -1 : 1;
+        if (pauseTimer <= 0) {
+          travelDirection = travelDirection === 1 ? -1 : 1;
+          setPaused(false); // Rolling again — the chug returns to full tempo.
+        }
         return;
       }
 
@@ -197,15 +209,20 @@ export function createRideMotion(
         } else {
           distance = total;
           pauseTimer = END_PAUSE_SECONDS; // Dead end: pause, then shuttle back.
+          setPaused(true);
         }
       } else if (distance <= 0) {
         distance = 0;
-        if (travelDirection === -1) pauseTimer = END_PAUSE_SECONDS;
+        if (travelDirection === -1) {
+          pauseTimer = END_PAUSE_SECONDS; // Back home: pause, then roll out again.
+          setPaused(true);
+        }
       }
       poseAt(distance);
     },
 
     dispose() {
+      setPaused(false); // End-of-motion report: nothing stays softened.
       unsubscribe?.();
       unsubscribe = null;
       segments = [];
