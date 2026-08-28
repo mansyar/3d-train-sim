@@ -2,6 +2,7 @@ import type { Object3D } from 'three';
 import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
@@ -12,7 +13,7 @@ import { loadLocomotive } from './load-locomotive';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createRideMotion } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
-import { type PickedPiece, startTrackRenderer } from './track-renderer';
+import { type PickedItem, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -29,12 +30,12 @@ export interface SceneHandle {
   dispose(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
-  /** In-scene ghost preview of the piece being dragged from the drawer. */
-  beginGhost(type: PieceType): void;
+  /** In-scene ghost preview of the toy being dragged from the drawer. */
+  beginGhost(kind: PieceType | SceneryKind): void;
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   endGhost(): void;
   /** The placed piece under a screen point, for relocate/return drags. */
-  pickPiece(clientX: number, clientY: number): PickedPiece | null;
+  pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */

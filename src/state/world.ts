@@ -1,4 +1,4 @@
-import { type PlacedScenery } from '../core/scenery';
+import type { PlacedScenery } from '../core/scenery';
 import {
   type Cell,
   inBounds,
