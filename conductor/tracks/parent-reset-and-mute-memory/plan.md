@@ -145,16 +145,51 @@ verification checkpoint per the Phase Completion protocol.
 ## Phase 4 — Track Completion
 
 - [x] Task: Run full local gates (biome check, tsc --noEmit, Vitest with
-      coverage, Playwright) [4ecccc1]
+      coverage, Playwright) [657baa4]
   - Notes: `pnpm exec biome check .` → clean (47 files); `pnpm exec tsc
     --noEmit` → clean; `vitest run --coverage` → 14 files / 137 tests passed;
     `pnpm exec playwright test` → 9/9 passed (43.6s) including the parent-gate
     hold-and-confirm flow. All gates green at Phase 4.
-- [x] Task: Verify new logic-bearing modules exceed 80% coverage [4ecccc1]
+- [x] Task: Verify new logic-bearing modules exceed 80% coverage [657baa4]
   - Notes: This track's logic-bearing modules: save.ts 88.9% stmts /
     97.8% lines, persistence.ts 87.5% stmts / 91.3% lines, world.ts 97.2%
     stmts / 100% lines — all above the 80% target. (Full-tree: 95.66% stmts.)
-- [ ] Task: Review against product-guidelines checklist (no fail states,
-      parent-gated destruction, instant feedback, privacy)
-- [ ] Task: Update tracks.md registry + metadata.json status, archive-ready
-      summary in this plan
+- [x] Task: Review against product-guidelines checklist (no fail states,
+      parent-gated destruction, instant feedback, privacy) [657baa4]
+  - Checklist review (src/ui/app.ts gate wiring, src/style.css gate styles,
+    src/scene/track-renderer.ts pop, src/state/* logic):
+    - ✅ No fail states: persistence failures non-fatal (unit-pinned); reset on
+      an already-empty world is a safe no-op with one save.
+    - ✅ Parent-gated destruction: 2s hold + icon-only confirm + outside-tap
+      dismiss; toddler taps/early releases cancel silently (smoke-pinned).
+    - ✅ No reading required: gate is icon-only (♻️); labels are aria-only for
+      parents; no text ever renders in the kid UI.
+    - ✅ Instant feedback: placement ding + 320ms scale-down pop on clear;
+      mute toggle is one tap.
+    - ✅ Toddler-proof: ≥64px gate (min-height/width 64px), 48px drift
+      tolerance, pointer-events only, no hover/hover-dependent UI.
+    - ✅ Autosave always: reset emits exactly one save; empty world survives
+      reload (smoke-pinned); mute survives reload (smoke-pinned).
+    - ✅ Gentle motion: rAF hold fill, 0.9s confirm pulse, pop — all
+      reduced-motion-aware (CSS + track-renderer guard).
+    - ✅ Privacy: zero external requests asserted by smoke tests; IndexedDB
+      only; no identifiers; no navigation/dialog triggers from the gate
+      (plain button, preventDefault on pointerdown).
+    - ✅ Train autonomous: reset gently stops an active ride before clearing
+      (unit-pinned ordering).
+    - Findings: no violations; no fixes required.
+- [x] Task: Update tracks.md registry + metadata.json status, archive-ready
+      summary in this plan [final]
+  - Archive-ready summary: Tiny Tracks gained a parent-gated factory reset
+    and a persistent mute preference. The versioned world snapshot now
+    carries an optional `preferences.muted` field (pure serialization in
+    `src/core/save.ts` with safe sound-on fallbacks for old/invalid saves);
+    `src/state/persistence.ts` persists every mute change exactly once and
+    restores it on boot without requiring an audio unlock gesture.
+    `src/state/world.ts` exposes an atomic `reset()` — gentle ride stop,
+    full clear, freed occupancy, default steam locomotive, exactly one save.
+    `src/ui/app.ts` + `src/style.css` add a visually muted corner gate
+    (≥64px, hold 2s → icon-only confirm → celebratory pop + ding) with full
+    reduced-motion support; reset never touches the mute state. Gates at
+    completion: biome + tsc clean, 137/137 unit tests (save.ts 88.9%,
+    persistence.ts 87.5%, world.ts 97.2% stmts), Playwright 9/9.
