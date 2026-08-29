@@ -122,3 +122,18 @@ reload — all with zero console errors and zero external requests.
   - Notes: biome ✅ (55 files) · tsc --noEmit ✅ · 193 unit tests ✅ ·
     Playwright 12/12 ✅ (2026-08-30, includes the new wagon-riding test).
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (0f244aa)
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions (4cbef8f)
+  - Review found one Medium issue: `parkFollowersBehind` assumed the engine's
+    authored front faces -Z at yaw 0, contradicting the ride's own yaw
+    convention (`MODEL_YAW_OFFSET` implies +Z) — parked wagons rested on the
+    engine's front side. Fixed by parking along the negated front direction,
+    matching the ride pose convention (also correct for engines carrying a
+    ride yaw after late wagon loads).
+  - Gates after fix: biome ✅ · tsc ✅ · 193 tests ✅ · Playwright 12/12 ✅
+    (2026-08-30). A Low note (hand-measured `FOLLOWER_GAP = 4.2` suits the
+    current kit models; per-model bounding-box gap is a future robustness
+    follow-up) was accepted as-is.
+  - Commit `fix(conductor): Apply review suggestions for track 'chugging-cargo'`.
