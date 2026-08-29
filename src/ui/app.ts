@@ -149,10 +149,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <span class="gate-icon" aria-hidden="true">♻️</span>
     </button>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
-      <button class="toy-slot" type="button" aria-label="Rails toys"
-              aria-expanded="false" data-drawer="track">🛤️</button>
-      <button class="toy-slot" type="button" aria-label="Scenery toys"
-              aria-expanded="false" data-drawer="scenery">🌳</button>
+      <button class="toy-slot" type="button" aria-label="Toybox"
+              aria-expanded="false" data-drawer="toys">🧸</button>
       <button class="toy-slot" type="button" aria-label="Train collection"
               aria-expanded="false" data-drawer="trains">🚂</button>
       <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
@@ -170,8 +168,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   }
 
   const drawer = root.querySelector<HTMLDivElement>('.toy-drawer');
-  const trackSlot = root.querySelector<HTMLButtonElement>('[data-drawer="track"]');
-  const scenerySlot = root.querySelector<HTMLButtonElement>('[data-drawer="scenery"]');
+  const toysSlot = root.querySelector<HTMLButtonElement>('[data-drawer="toys"]');
   const trainSlot = root.querySelector<HTMLButtonElement>('[data-drawer="trains"]');
   const trainDrawer = document.createElement('div');
   trainDrawer.className = 'train-drawer';
@@ -190,7 +187,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   }
   root.append(trainDrawer);
   const rotateKnob = root.querySelector<HTMLButtonElement>('.rotate-knob');
-  if (!drawer || !trackSlot || !scenerySlot || !trainSlot || !rotateKnob) {
+  if (!drawer || !toysSlot || !trainSlot || !rotateKnob) {
     throw new Error('toybox chrome missing from app frame');
   }
 
@@ -230,34 +227,19 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   }
 
   // One drawer open at a time — the toybox flips between toys and trains.
-  const setDrawer = (which: 'toys' | 'trains' | null, tab: DrawerTabId = 'rails') => {
+  // The single 🧸 toggle remembers the tab you were on (Rails first time).
+  const setDrawer = (which: 'toys' | 'trains' | null) => {
     const openToys = which === 'toys';
     const openTrains = which === 'trains';
     drawer.toggleAttribute('hidden', !openToys);
-    trackSlot.setAttribute('aria-expanded', String(openToys));
-    scenerySlot.setAttribute('aria-expanded', String(openToys));
+    toysSlot.setAttribute('aria-expanded', String(openToys));
     trainDrawer.toggleAttribute('hidden', !openTrains);
     trainSlot.setAttribute('aria-expanded', String(openTrains));
-    if (openToys) showTab(tab);
-    else {
-      activeTab = null; // Closing clears the selection — reopening starts fresh.
-      for (const button of tabButtons.values()) {
-        button.setAttribute('aria-pressed', 'false');
-        button.classList.toggle('is-active', false);
-      }
-      for (const panel of panels.values()) panel.setAttribute('hidden', '');
-    }
+    if (openToys) showTab(activeTab ?? 'rails');
   };
-
-  // A rail slot opens the toybox on its tab; while open it switches tabs,
-  // and a second tap on the already-active tab's slot closes the drawer.
-  const openToysOn = (tab: DrawerTabId) => {
-    if (drawer.hasAttribute('hidden')) setDrawer('toys', tab);
-    else if (activeTab !== tab) showTab(tab);
-    else setDrawer(null);
-  };
-  trackSlot.addEventListener('click', () => openToysOn('rails'));
-  scenerySlot.addEventListener('click', () => openToysOn('nature'));
+  toysSlot.addEventListener('click', () => {
+    setDrawer(drawer.hasAttribute('hidden') ? 'toys' : null);
+  });
   trainSlot.addEventListener('click', () => {
     setDrawer(trainDrawer.hidden ? 'trains' : null);
   });

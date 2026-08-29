@@ -14,7 +14,7 @@ test('app boots on a tablet with a clean console and zero external requests', as
 
   await expect(page).toHaveTitle('Tiny Tracks');
   await expect(page.locator('.scene-canvas')).toBeVisible();
-  await expect(page.locator('.toy-slot')).toHaveCount(3);
+  await expect(page.locator('.toy-slot')).toHaveCount(2);
 
   await page.click('[data-drawer="trains"]');
   await expect(page.locator('.train-slot')).toHaveCount(3);
@@ -74,8 +74,8 @@ test('drag-placing a track piece renders it in the world', async ({ page }) => {
 
   const before = await page.screenshot();
 
-  // Open the track drawer and drag a piece onto the meadow.
-  await page.click('[data-drawer="track"]');
+  // Open the toybox (Rails tab) and drag a piece onto the meadow.
+  await page.click('[data-drawer="toys"]');
   const slot = page.locator('.piece-slot').first();
   const box = await slot.boundingBox();
   if (!box) throw new Error('drawer piece slot visible');
@@ -111,8 +111,9 @@ test('drag-placing scenery decorates the meadow', async ({ page }) => {
 
   const before = await page.screenshot();
 
-  // Open the scenery drawer and drag a tree onto the meadow.
-  await page.click('[data-drawer="scenery"]');
+  // Open the toybox on the Nature tab and drag a tree onto the meadow.
+  await page.click('[data-drawer="toys"]');
+  await page.click('.drawer-tab[data-tab="nature"]');
   const slot = page.locator('.scenery-slot').first();
   const box = await slot.boundingBox();
   if (!box) throw new Error('drawer scenery slot visible');
@@ -441,18 +442,20 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
   // Let the render loop and GLB loads settle before interacting.
   await page.waitForTimeout(1500);
 
-  // The toybox starts closed; the nature slot opens it on the Nature tab.
+  // The toybox starts closed; the 🧸 toggle opens it on the Rails tab.
   await expect(page.locator('.toy-drawer')).toBeHidden();
-  await page.click('[data-drawer="scenery"]');
+  await page.click('[data-drawer="toys"]');
   await expect(page.locator('.toy-drawer')).toBeVisible();
-  await expect(page.locator('.drawer-tab[data-tab="nature"]')).toHaveAttribute(
+  await expect(page.locator('.drawer-tab[data-tab="rails"]')).toHaveAttribute(
     'aria-pressed',
     'true',
   );
+  await expect(page.locator('.drawer-panel[data-panel="rails"]')).toBeVisible();
+
+  // Walk the tabs: Nature, Town (the buildings), Critters (the animals).
+  await page.click('.drawer-tab[data-tab="nature"]');
   await expect(page.locator('.drawer-panel[data-panel="nature"]')).toBeVisible();
   await expect(page.locator('.drawer-panel[data-panel="nature"] .scenery-slot')).toHaveCount(3);
-
-  // Walk the tabs: Town shows the buildings, Critters the animals.
   await page.click('.drawer-tab[data-tab="town"]');
   await expect(page.locator('.drawer-tab[data-tab="town"]')).toHaveAttribute(
     'aria-pressed',
