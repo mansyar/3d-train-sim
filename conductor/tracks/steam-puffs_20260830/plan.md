@@ -47,7 +47,9 @@
   - [ ] Run focused coverage and then the full Vitest suite.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3 — Procedural Billboard Scene Integration
+## Phase 3 — Procedural Billboard Scene Integration [checkpoint: 7bbf61f]
+
+**Verification Report:** Automated — Biome passed; strict TypeScript passed; 201 Vitest tests passed; production build passed; Playwright tablet smoke passed 12/12 with no console or external-request failures (2026-08-30). Manual — user confirmed puff appearance, rise/expand/fade animation, camera readability, all locomotive placements, stop fade-out, and extended ride stability (2026-08-30).
 
 - [x] Task: Add the procedural puff renderer and fixed scene pool (51d7cda)
   - [x] Create reusable procedural billboard geometry/material resources.
@@ -72,7 +74,7 @@
 
 ## Phase 4 — E2E Smoke and Full Quality Gates
 
-- [ ] Task: Extend Playwright smoke coverage
+- [~] Task: Extend Playwright smoke coverage
   - [ ] Start a ride and assert the puff system is active through a dev-only diagnostic seam or observable scene state.
   - [ ] Stop the ride and assert no new puffs appear while active puffs can expire.
   - [ ] Switch among all three locomotives and verify each has a puff origin.
