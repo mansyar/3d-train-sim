@@ -9,7 +9,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | Language | TypeScript | ~7.0 | Native compiler. `strict: true`; typecheck gate: `tsc --noEmit` |
 | 3D rendering | three | ^0.185 | `GLTFLoader` from `three/addons/loaders/GLTFLoader.js` (as used by `src/scene/load-locomotive.ts`) |
 | Build tool | Vite | ^8 | Single entry, static `dist/` output |
-| PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8 |
+| PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8. `workbox-window` (devDependency) required for the production build — the `virtual:pwa-register` module imports it (`generateSW` mode); found missing on the first containerized build (2026-08-29, release-pipeline track) |
 | Audio | howler | ^2.2.4 | Ride-synced chug loop, whistle, placement ding; handles iOS unlock |
 | Persistence | idb | ^8 | Thin promise wrapper over IndexedDB; one object store `worlds` |
 | UI | Vanilla TS + DOM overlay | — | No framework. Chunky toy UI as HTML/CSS over the canvas |

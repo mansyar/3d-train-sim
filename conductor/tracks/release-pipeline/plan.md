@@ -2,13 +2,29 @@
 
 ## Phase 1 — Container (non-logic)
 
-- [ ] Task: Write the multi-stage `Dockerfile` (Node 24/pnpm build →
+- [x] Task: Write the multi-stage `Dockerfile` (Node 24/pnpm build →
       nginx:alpine serve)
-- [ ] Task: Write `nginx.conf` (SPA fallback, sw.js/manifest/index no-cache,
+- [x] Task: Write `nginx.conf` (SPA fallback, sw.js/manifest/index no-cache,
       hashed assets immutable, gzip)
   - Acceptance: `docker build -t tiny-tracks .` succeeds; `docker run` serves
     the app; `curl -I` shows the expected cache headers; deep links serve
     `index.html`
+
+  Notes:
+  - Added `.dockerignore` (node_modules, dist, conductor, e2e, coverage…).
+  - **Deviation (documented in tech-stack.md):** the first containerized
+    build failed — `vite-plugin-pwa`'s `virtual:pwa-register` imports
+    `workbox-window`, which was never installed. `pnpm build` had evidently
+    never been run in this repo (dev-server e2e masked it). Fixed by adding
+    `workbox-window@7.4.1` as a devDependency.
+  - Verified against the running container: `/` 200 + no-cache · `/sw.js`
+    no-cache · `/manifest.webmanifest` no-cache · hashed `assets/*.js`
+    immutable 1y · train-kit GLBs + icons 7d · deep link `/build-now`
+    200 via SPA fallback.
+  - Build output: 124 precache entries (8.4 MB incl. GLBs/audio — code well
+    under the 2 MB gzipped rule; assets excluded by the pre-deploy rule).
+  - Files: `Dockerfile`, `nginx.conf`, `.dockerignore`, `pnpm-lock.yaml`,
+    `package.json`, `conductor/tech-stack.md`.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Release Workflow (non-logic)
