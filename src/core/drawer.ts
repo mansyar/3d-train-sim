@@ -4,8 +4,9 @@
  * stays the single source of truth for scenery grouping. Pure data — no
  * browser or Three.js coupling.
  */
-import { SCENERY_KINDS, type SceneryKind, sceneryCategory } from './scenery';
+
 import { PIECE_TYPES, type PieceType } from './pieces';
+import { SCENERY_KINDS, type SceneryKind, sceneryCategory } from './scenery';
 
 /** The four toddler-visible drawer tabs, in toybox order. */
 export const DRAWER_TABS = ['rails', 'nature', 'town', 'critter'] as const;

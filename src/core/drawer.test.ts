@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SCENERY_KINDS } from './scenery';
-import { type PieceType } from './track-graph';
 import { DRAWER_TABS, drawerTabs, tabForKind } from './drawer';
+import { SCENERY_KINDS } from './scenery';
+import type { PieceType } from './track-graph';
 
 describe('drawerTabs', () => {
   it('exposes exactly the four toddler tabs in order', () => {

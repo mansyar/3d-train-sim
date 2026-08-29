@@ -1,4 +1,5 @@
 import type { AudioController } from '../audio/audio-controller';
+import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
@@ -30,13 +31,6 @@ const SCENERY_ICONS: Record<SceneryKind, string> = {
   sheep: '🐑',
   pug: '🐶',
 };
-
-/** One drawer button per catalog kind, in catalog order. */
-const scenerySlots = SCENERY_KINDS.map(
-  (kind) => `
-      <button class="scenery-slot" type="button" data-scenery="${kind}"
-              aria-label="${sceneryAria(kind)}">${SCENERY_ICONS[kind]}</button>`,
-).join('');
 
 const PIECE_ICONS: Record<PieceType, string> = {
   straight: `
@@ -81,6 +75,27 @@ const PIECE_ICONS: Record<PieceType, string> = {
     </svg>`,
 };
 
+/** One drawer button per catalog kind on a tab, in tab order. */
+const toySlot = (kind: PieceType | SceneryKind): string =>
+  isPieceKind(kind)
+    ? `<button class="piece-slot" type="button" data-piece="${kind}"
+              aria-label="${PIECE_LABELS[kind]}">${PIECE_ICONS[kind]}</button>`
+    : `<button class="scenery-slot" type="button" data-scenery="${kind}"
+              aria-label="${sceneryAria(kind)}">${SCENERY_ICONS[kind]}</button>`;
+
+/** The four chunky tabs (Rails / Nature / Town / Critters) of the toybox. */
+const TOY_TABS = drawerTabs();
+const tabStrip = TOY_TABS.map(
+  (tab) => `<button class="drawer-tab" type="button" data-tab="${tab.id}"
+              aria-label="${tab.aria}" aria-pressed="false">${tab.icon}</button>`,
+).join('');
+const tabPanels = TOY_TABS.map(
+  (tab) =>
+    `<div class="drawer-panel" data-panel="${tab.id}" hidden>${tab.kinds
+      .map(toySlot)
+      .join('')}</div>`,
+).join('');
+
 const RIDE_ICONS = {
   play: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -122,15 +137,9 @@ export interface AppOptions {
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
   root.innerHTML = `
     <canvas class="scene-canvas" aria-label="Tiny Tracks 3D world"></canvas>
-    <div class="track-drawer" role="group" aria-label="Track pieces" hidden>
-      <button class="piece-slot" type="button" data-piece="straight"
-              aria-label="${PIECE_LABELS.straight}">${PIECE_ICONS.straight}</button>
-      <button class="piece-slot" type="button" data-piece="corner"
-              aria-label="${PIECE_LABELS.corner}">${PIECE_ICONS.corner}</button>
-      <button class="piece-slot" type="button" data-piece="crossing"
-              aria-label="${PIECE_LABELS.crossing}">${PIECE_ICONS.crossing}</button>
-    </div>
-    <div class="scenery-drawer" role="group" aria-label="Scenery toys" hidden>${scenerySlots}
+    <div class="toy-drawer" role="group" aria-label="Toybox" hidden>
+      <div class="drawer-tabs" role="tablist" aria-label="Toy groups">${tabStrip}</div>
+      ${tabPanels}
     </div>
     <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
     <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
@@ -140,7 +149,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <span class="gate-icon" aria-hidden="true">♻️</span>
     </button>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
-      <button class="toy-slot" type="button" aria-label="Track pieces"
+      <button class="toy-slot" type="button" aria-label="Rails toys"
               aria-expanded="false" data-drawer="track">🛤️</button>
       <button class="toy-slot" type="button" aria-label="Scenery toys"
               aria-expanded="false" data-drawer="scenery">🌳</button>
@@ -160,9 +169,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('scene canvas missing from app frame');
   }
 
-  const drawer = root.querySelector<HTMLDivElement>('.track-drawer');
+  const drawer = root.querySelector<HTMLDivElement>('.toy-drawer');
   const trackSlot = root.querySelector<HTMLButtonElement>('[data-drawer="track"]');
-  const sceneryDrawer = root.querySelector<HTMLDivElement>('.scenery-drawer');
   const scenerySlot = root.querySelector<HTMLButtonElement>('[data-drawer="scenery"]');
   const trainSlot = root.querySelector<HTMLButtonElement>('[data-drawer="trains"]');
   const trainDrawer = document.createElement('div');
@@ -182,28 +190,74 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   }
   root.append(trainDrawer);
   const rotateKnob = root.querySelector<HTMLButtonElement>('.rotate-knob');
-  if (!drawer || !trackSlot || !sceneryDrawer || !scenerySlot || !trainSlot || !rotateKnob) {
+  if (!drawer || !trackSlot || !scenerySlot || !trainSlot || !rotateKnob) {
     throw new Error('toybox chrome missing from app frame');
   }
 
-  // One drawer open at a time - the toybox flips between rails and scenery.
-  const setDrawer = (which: 'track' | 'scenery' | 'trains' | null) => {
-    const openTrack = which === 'track';
-    const openScenery = which === 'scenery';
+  // ---- Tabbed toybox drawer (Rails / Nature / Town / Critters) -----------
+  // One tab active at a time; the drawer itself is one of the three
+  // toybox drawers (toys / trains) — never two at once.
+  const tabButtons = new Map(
+    [...root.querySelectorAll<HTMLButtonElement>('.drawer-tab')].map((button) => [
+      button.dataset.tab as DrawerTabId,
+      button,
+    ]),
+  );
+  const panels = new Map(
+    [...root.querySelectorAll<HTMLDivElement>('.drawer-panel')].map((panel) => [
+      panel.dataset.panel as DrawerTabId,
+      panel,
+    ]),
+  );
+  let activeTab: DrawerTabId | null = null;
+
+  const showTab = (tab: DrawerTabId | null) => {
+    activeTab = tab;
+    for (const [id, button] of tabButtons) {
+      button.setAttribute('aria-pressed', String(id === tab));
+      button.classList.toggle('is-active', id === tab);
+    }
+    for (const [id, panel] of panels) panel.toggleAttribute('hidden', id !== tab);
+  };
+
+  for (const button of tabButtons.values()) {
+    button.addEventListener('click', () => {
+      const tab = button.dataset.tab as DrawerTabId;
+      // A tap on the active tab closes the whole drawer — no empty strip state.
+      if (activeTab === tab) setDrawer(null);
+      else showTab(tab);
+    });
+  }
+
+  // One drawer open at a time — the toybox flips between toys and trains.
+  const setDrawer = (which: 'toys' | 'trains' | null, tab: DrawerTabId = 'rails') => {
+    const openToys = which === 'toys';
     const openTrains = which === 'trains';
-    drawer.toggleAttribute('hidden', !openTrack);
-    trackSlot.setAttribute('aria-expanded', String(openTrack));
-    sceneryDrawer.toggleAttribute('hidden', !openScenery);
-    scenerySlot.setAttribute('aria-expanded', String(openScenery));
+    drawer.toggleAttribute('hidden', !openToys);
+    trackSlot.setAttribute('aria-expanded', String(openToys));
+    scenerySlot.setAttribute('aria-expanded', String(openToys));
     trainDrawer.toggleAttribute('hidden', !openTrains);
     trainSlot.setAttribute('aria-expanded', String(openTrains));
+    if (openToys) showTab(tab);
+    else {
+      activeTab = null; // Closing clears the selection — reopening starts fresh.
+      for (const button of tabButtons.values()) {
+        button.setAttribute('aria-pressed', 'false');
+        button.classList.toggle('is-active', false);
+      }
+      for (const panel of panels.values()) panel.setAttribute('hidden', '');
+    }
   };
-  trackSlot.addEventListener('click', () => {
-    setDrawer(drawer.hasAttribute('hidden') ? 'track' : null);
-  });
-  scenerySlot.addEventListener('click', () => {
-    setDrawer(sceneryDrawer.hasAttribute('hidden') ? 'scenery' : null);
-  });
+
+  // A rail slot opens the toybox on its tab; while open it switches tabs,
+  // and a second tap on the already-active tab's slot closes the drawer.
+  const openToysOn = (tab: DrawerTabId) => {
+    if (drawer.hasAttribute('hidden')) setDrawer('toys', tab);
+    else if (activeTab !== tab) showTab(tab);
+    else setDrawer(null);
+  };
+  trackSlot.addEventListener('click', () => openToysOn('rails'));
+  scenerySlot.addEventListener('click', () => openToysOn('nature'));
   trainSlot.addEventListener('click', () => {
     setDrawer(trainDrawer.hidden ? 'trains' : null);
   });
