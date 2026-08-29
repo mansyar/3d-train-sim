@@ -30,13 +30,20 @@ follow `conductor/workflow.md` for the full task lifecycle.
 
 ## Phase 2: Ride Following (scene)
 
-- [ ] Task: Extend `ride-motion.ts` so follower objects ride at a fixed
-      negative path distance behind the locomotive
+- [x] Task: Extend `ride-motion.ts` so follower objects ride at a fixed
+      negative path distance behind the locomotive (066edf0)
   - Acceptance criteria (non-logic — record & verify manually / via smoke):
     - Wagons share every ride behavior: loop cycling, shuttle reversal with
       the end pause, station stops (whole train rests), mid-ride ease-out.
     - Reversing keeps wagons behind the travel direction.
     - Segment geometry is reused; zero per-frame allocations in `update()`.
+  - Notes: followers ride at `distance − travelDirection · (i+1) · FOLLOWER_GAP`
+    clamped to `[0, total]`, reusing the same segment pose math via a new
+    `target`/`faceTravel` parameter on `poseAt` — wagons trail behind the
+    travel direction, keep their course during shuttles (only the engine
+    turns around), and rest where the train stopped when parked. All pose
+    writes go through one `poseTrain()` helper; no per-frame allocations.
+    Review caught and fixed an initial direction-flip bug before commit.
   - Commit `feat(scene): Make ride motion support path followers`.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
