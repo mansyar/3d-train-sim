@@ -96,10 +96,24 @@
       deep-dispose immediately; `dispose()` deep-disposes every template
       (placed clones share template geometry/materials, so template dispose
       covers them).
-- [ ] Task: Implement procedural critter animation
-  - [ ] Subtle idle breathe/bob (~1–2% scale sway) using the shared tick pattern
-  - [ ] Hop with squash-and-stretch when the train passes within ~1–2 cells
-  - [ ] No per-frame allocations; cheap for N critters; dispose cleanly
+- [x] Task: Implement procedural critter animation
+  - Notes: New `src/scene/critter-life.ts` holds per-critter state (resting
+    transform, random breathe phase, hop timer, cooldown) and writes motion
+    straight onto each model's transform — zero allocations per frame.
+  - [x] Subtle idle breathe/bob (~1–2% scale sway) using the shared tick pattern
+    - Wired through the spin-loop's `onFrame` (which reduced-motion users
+      never enter — they keep a single static frame, per product guidelines).
+  - [x] Hop with squash-and-stretch when the train passes within ~1–2 cells
+    - Trigger radius 1.5 cells (squared-distance check), fires only while the
+      ride is active (a parked train reports null — hops read as passing, not
+      presence), 2.5 s cooldown per critter prevents retrigger buzz. Hop:
+      20% anticipation squash → sine bounce with stretch up / squash wide.
+  - [x] No per-frame allocations; cheap for N critters; dispose cleanly
+    - Scalar math only; roster synced in reconcile (event-driven, not per
+      frame); `dispose()` clears the roster; renderer dispose covers models.
+    - Files: `src/scene/critter-life.ts` (new), `track-renderer.ts`
+      (roster sync + `updateCritters` API), `init-scene.ts` (feeds the
+      riding locomotive's position). Commit `b782609`.
 - [ ] Task: Implement per-critter chirp audio via the existing Howler voice system (mute-respecting, volume-capped)
 - [ ] Task: Implement the station stop in ride motion
   - [ ] Gentle deceleration, ~2s pause with happy ding-ding, smooth re-acceleration
