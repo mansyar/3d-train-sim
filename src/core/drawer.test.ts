@@ -1,0 +1,50 @@
+import { describe, expect, it } from 'vitest';
+import { SCENERY_KINDS } from './scenery';
+import { type PieceType } from './track-graph';
+import { DRAWER_TABS, drawerTabs, tabForKind } from './drawer';
+
+describe('drawerTabs', () => {
+  it('exposes exactly the four toddler tabs in order', () => {
+    expect(DRAWER_TABS).toEqual(['rails', 'nature', 'town', 'critter']);
+    expect(drawerTabs().map((tab) => tab.id)).toEqual(['rails', 'nature', 'town', 'critter']);
+  });
+
+  it('holds the three track pieces on the Rails tab, in piece order', () => {
+    const rails = drawerTabs().find((tab) => tab.id === 'rails');
+    expect(rails?.kinds).toEqual<PieceType[]>(['straight', 'corner', 'crossing']);
+  });
+
+  it('groups scenery kinds by their catalog category, in catalog order', () => {
+    const byId = new Map(drawerTabs().map((tab) => [tab.id, tab]));
+    expect(byId.get('nature')?.kinds).toEqual(['tree', 'bush', 'rock']);
+    expect(byId.get('town')?.kinds).toEqual(['house', 'cottage', 'station']);
+    expect(byId.get('critter')?.kinds).toEqual(['pig', 'sheep', 'pug']);
+  });
+
+  it('covers every catalog kind exactly once across all tabs', () => {
+    const all = drawerTabs().flatMap((tab) => tab.kinds);
+    expect(all).toHaveLength(SCENERY_KINDS.length + 3); // + 3 track pieces
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it('gives every tab an icon and an aria label (icon-only UI)', () => {
+    for (const tab of drawerTabs()) {
+      expect(tab.icon.length).toBeGreaterThan(0);
+      expect(tab.aria.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('tabForKind', () => {
+  it('maps track pieces to the Rails tab', () => {
+    expect(tabForKind('straight')).toBe('rails');
+    expect(tabForKind('corner')).toBe('rails');
+    expect(tabForKind('crossing')).toBe('rails');
+  });
+
+  it('maps each scenery kind to its catalog category tab', () => {
+    expect(tabForKind('tree')).toBe('nature');
+    expect(tabForKind('station')).toBe('town');
+    expect(tabForKind('pug')).toBe('critter');
+  });
+});
