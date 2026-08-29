@@ -50,8 +50,8 @@ shadow visibility itself is deferred to Phase 2 when casters are wired.
 
 ## Phase 2: Casters & Receiver (scene objects)
 
-- [ ] Task: Mark cast/receive flags in `src/scene/track-renderer.ts`,
-      `load-locomotive.ts`, `load-wagons.ts`, and `ground.ts`
+- [x] Task: Mark cast/receive flags in `src/scene/track-renderer.ts`,
+      `load-locomotive.ts`, `load-wagons.ts`, and `ground.ts` (1f0ab96)
   - Acceptance criteria:
     - Track pieces and scenery cast shadows (set on GLB templates so clones
       inherit; traverse clones defensively where templates are shared).
@@ -59,6 +59,17 @@ shadow visibility itself is deferred to Phase 2 when casters are wired.
       follows it while riding.
     - Ground plane receives shadows; drag ghosts never cast.
   - Commit `feat(scene): Ground the toys with cast shadows`.
+  - Notes: New `src/scene/shadows.ts` helpers (`enableCastShadows` /
+    `disableShadows`) traverse an object tree and set mesh flags. Track and
+    scenery GLB templates are marked casting on load in `track-renderer.ts`,
+    so every placed clone inherits the flag via `clone(true)`; drag ghosts
+    explicitly opt out with `disableShadows` (clones copy the template's
+    casting flag). `load-locomotive.ts` / `load-wagons.ts` mark the train
+    models casting at load (locomotive templates are cloned per show, wagons
+    are added directly). `ground.ts` sets `receiveShadow`. Gates: biome ✅,
+    `tsc --noEmit` ✅, 193 unit tests ✅. Also: `biome.json` now ignores the
+    local `.freebuff` worktree dir, which had begun tripping Biome's
+    nested-root-config error (committed separately, b7cf4b2).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Verification, Performance & Polish
