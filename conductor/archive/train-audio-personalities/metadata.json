@@ -2,10 +2,10 @@
   "id": "train-audio-personalities",
   "title": "Train Audio Personalities",
   "type": "feature",
-  "status": "new",
+  "status": "archived",
   "branch": "track/train-audio-personalities",
   "created": "2026-08-29",
-  "updated": "2026-08-29",
+  "updated": "2026-08-30",
   "spec": "conductor/tracks/train-audio-personalities/spec.md",
   "plan": "conductor/tracks/train-audio-personalities/plan.md"
 }

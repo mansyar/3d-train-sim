@@ -47,7 +47,7 @@ Supporting guardrails:
 
 ## Future Scope (Roadmap Candidates)
 - ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
-- Expanded train collection (colors, cargo wagons)
+- ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons (colors/other variants still roadmap)
 - Track switches and branches
 - Bridges, tunnels, elevation
 - Time of day and weather

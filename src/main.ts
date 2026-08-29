@@ -50,13 +50,16 @@ if (root) {
   });
   scene = initScene(canvas, world, audio);
 
-  // Dev-only handle: lets Playwright smoke tests place pieces directly.
+  // Dev-only handle: lets Playwright smoke tests place pieces directly and
+  // probe the live scene (e.g. the cargo wagon count).
   if (import.meta.env.DEV) {
     const devWindow = window as unknown as {
       __tinyTracksWorld: unknown;
+      __tinyTracksScene: unknown;
       __tinyTracksReady: boolean;
     };
     devWindow.__tinyTracksWorld = world;
+    devWindow.__tinyTracksScene = scene;
     devWindow.__tinyTracksReady = false;
     void loadWorldSnapshot().then(() => {
       devWindow.__tinyTracksReady = true;

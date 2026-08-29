@@ -25,6 +25,33 @@ const STATION_STOP_SECONDS = 2;
 const BRAKE_DISTANCE = (RIDE_SPEED * STOP_EASE_SECONDS) / 2;
 /** Yaw offset aligning the Kenney locomotive's authored facing with travel. */
 const MODEL_YAW_OFFSET = Math.PI;
+/**
+ * Path distance between couplers. The 1.5-scaled Kenney models run long —
+ * engines ~3.6–3.9 units, wagons ~4.05 — so nose-to-tail couplers need a
+ * good four units of rail plus a slack beat.
+ */
+const FOLLOWER_GAP = 4.2;
+
+/**
+ * Parked default pose: wagons rest in a straight line behind the engine's
+ * tail (used before the first ride of a freshly selected train). Uses the
+ * same coupler gap as the ride, so the little train looks identical at rest.
+ */
+export function parkFollowersBehind(engine: Object3D, followers: readonly Object3D[]): void {
+  for (let i = 0; i < followers.length; i++) {
+    const follower = followers[i];
+    if (!follower) continue;
+    const gap = FOLLOWER_GAP * (i + 1);
+    // The authored front faces +Z at yaw 0 (see MODEL_YAW_OFFSET), so behind
+    // is the front direction — (sin yaw, cos yaw) — negated.
+    follower.position.set(
+      engine.position.x - Math.sin(engine.rotation.y) * gap,
+      0,
+      engine.position.z - Math.cos(engine.rotation.y) * gap,
+    );
+    follower.rotation.y = engine.rotation.y;
+  }
+}
 
 /**
  * One leg of the ride between two cell-edge midpoints: either a straight run
@@ -63,6 +90,7 @@ export function createRideMotion(
   ride: RideController,
   onPausedChange?: (paused: boolean) => void,
   onStationStop?: (stationId: string) => void,
+  followers: readonly Object3D[] = [],
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -183,7 +211,7 @@ export function createRideMotion(
     pendingStationId = null;
     setPaused(false); // A fresh ride always rolls at full voice.
     speedScale = 1; // ▶ starts the chug immediately.
-    poseAt(0);
+    poseTrain(0);
   }
 
   /**
@@ -219,18 +247,24 @@ export function createRideMotion(
     for (let i = 0; i < stops.length; i++) armed.add(i);
   }
 
-  /** Write the pose for forward-path distance `d` into the model. */
-  function poseAt(d: number): void {
-    let remaining = d;
-    let segment = segments[0];
+  /** Write the pose for forward-path distance `d` into `target`. */
+  function poseAt(d: number, target: Object3D = model, faceTravel = true): void {
+    const first = segments[0];
+    if (!first) return;
+    // Coupled wagons can hang past a short path's ends. The overhang runs
+    // straight along the end tangent — like a real train overhanging the
+    // last rail — instead of snapping onto the engine.
+    const clamped = Math.min(Math.max(d, 0), total);
+    const over = d - clamped;
+    let remaining = clamped;
+    let segment = first;
     for (const candidate of segments) {
-      if (remaining < candidate.length) {
+      if (remaining <= candidate.length) {
         segment = candidate;
         break;
       }
       remaining -= candidate.length;
     }
-    if (!segment) return;
 
     const u = segment.length > 0 ? remaining / segment.length : 0;
     let x: number;
@@ -250,13 +284,45 @@ export function createRideMotion(
       tangentX = -Math.sin(angle) * Math.sign(segment.sweep);
       tangentZ = Math.cos(angle) * Math.sign(segment.sweep);
     }
-    // Shuttling back reverses the facing, not the position.
-    tangentX *= travelDirection;
-    tangentZ *= travelDirection;
+    // Shuttling back reverses the facing, not the position. Trailing wagons
+    // never flip — only the engine turns around; wagons keep their course.
+    if (faceTravel) {
+      tangentX *= travelDirection;
+      tangentZ *= travelDirection;
+    }
 
-    model.position.set(x, 0, z);
+    if (over !== 0) {
+      // Straight overhang past the path ends, along the local tangent.
+      x += tangentX * over;
+      z += tangentZ * over;
+    }
+
+    target.position.set(x, 0, z);
     // The locomotive's forward is -Z at yaw 0 (plus the kit's authored offset).
-    model.rotation.y = Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET;
+    target.rotation.y = Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET;
+  }
+
+  /**
+   * Writes every trailing wagon's pose at its coupler distance behind the
+   * locomotive. Wagons sit at fixed path distances behind the engine — in
+   * path order, whatever the travel direction — so shuttling back never
+   * teleports them through the engine, and short layouts let them overhang
+   * the path ends instead of piling onto it. Wagons never flip their
+   * course; only the engine turns around (faceTravel false). Allocates
+   * nothing per frame.
+   */
+  function poseFollowers(): void {
+    for (let i = 0; i < followers.length; i++) {
+      const follower = followers[i];
+      if (!follower) continue;
+      poseAt(distance - (i + 1) * FOLLOWER_GAP, follower, false);
+    }
+  }
+
+  /** One pose write for the whole little train: engine plus wagons. */
+  function poseTrain(d: number): void {
+    poseAt(d);
+    poseFollowers();
   }
 
   return {
@@ -291,14 +357,14 @@ export function createRideMotion(
           distance = brakeTarget;
           brakeTarget = null;
           pendingStationId = null;
-          poseAt(distance);
+          poseTrain(distance);
           if (ride.mode() === 'riding') {
             stationStopTimer = STATION_STOP_SECONDS;
             if (stationId) onStationStop?.(stationId); // Ding-ding from rest.
           }
           return;
         }
-        return poseAt(distance);
+        return poseTrain(distance);
       }
 
       if (speedScale <= 0) return; // Parked — the train rests where it stopped.
@@ -318,30 +384,30 @@ export function createRideMotion(
         if (distance >= total) {
           if (ride.mode() === 'riding' && ride.ride()?.path.closed) {
             // Closed loops finish the lap, then roll on from the top.
-            if (brakeForStopsInWindow(prev, total)) return poseAt(distance);
+            if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
             distance %= total;
             armAll();
-            if (brakeForStopsInWindow(0, distance)) return poseAt(distance);
+            if (brakeForStopsInWindow(0, distance)) return poseTrain(distance);
           } else {
             distance = total;
-            if (brakeForStopsInWindow(prev, total)) return poseAt(distance);
+            if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
             pauseTimer = END_PAUSE_SECONDS; // Dead end: pause, then shuttle back.
             setPaused(true);
             armAll(); // The way back owes every station again.
           }
         } else if (brakeForStopsInWindow(prev, distance)) {
-          return poseAt(distance);
+          return poseTrain(distance);
         }
       } else if (distance <= 0) {
         distance = 0;
-        if (brakeForStopsInWindow(0, prev)) return poseAt(distance);
+        if (brakeForStopsInWindow(0, prev)) return poseTrain(distance);
         pauseTimer = END_PAUSE_SECONDS; // Back home: pause, then roll out again.
         setPaused(true);
         armAll(); // The way out owes every station again.
       } else if (brakeForStopsInWindow(distance, prev)) {
-        return poseAt(distance);
+        return poseTrain(distance);
       }
-      poseAt(distance);
+      poseTrain(distance);
     },
 
     dispose() {

@@ -2,10 +2,10 @@
   "id": "playful-train-fleet",
   "title": "Playful Train Fleet",
   "type": "feature",
-  "status": "new",
+  "status": "archived",
   "branch": "track/playful-train-fleet",
   "created": "2026-08-28",
-  "updated": "2026-08-28",
+  "updated": "2026-08-30",
   "spec": "conductor/tracks/playful-train-fleet/spec.md",
   "plan": "conductor/tracks/playful-train-fleet/plan.md"
 }
