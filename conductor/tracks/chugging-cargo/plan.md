@@ -52,7 +52,13 @@ Phase 3 when models are wired into the scene.
   - Commit `feat(scene): Make ride motion support path followers`.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (3e7895f)
 
-## Phase 3: Wagon Lifecycle & Composition (scene)
+## Phase 3: Wagon Lifecycle & Composition (scene) [checkpoint: d43edae]
+
+**Verification Report:** Automated — `biome` ✅, `tsc --noEmit` ✅, 193 unit
+tests ✅ (2026-08-29, re-run after the coupling fix d43edae). Manual — user
+confirmed the corrected coupling meets expectations (2026-08-30): wagons sit
+coupled nose-to-tail behind the engine, with no overlap at play start or
+after dead-end reversals.
 
 - [x] Task: Load both wagon models in the `load-locomotive.ts` pattern; swap
       the set when the selected train changes; dispose cleanly (294a24b)
@@ -87,11 +93,11 @@ Phase 3 when models are wired into the scene.
     overhangs straight past short path ends; fixed a latent off-by-one
     that snapped the engine to the path start when `distance === total`.
     Gates: biome ✅ · tsc ✅ · 193 tests ✅ (2026-08-29).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (d43edae)
 
 ## Phase 4: E2E Coverage & Track Completion
 
-- [ ] Task: Extend `e2e/smoke.spec.ts`
+- [~] Task: Extend `e2e/smoke.spec.ts`
   - Ride with wagons present; switch trains mid-session and confirm the
     wagon set stays consistent; reload and confirm the world restores
     unchanged; no console errors; no external requests.
