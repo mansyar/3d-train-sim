@@ -38,8 +38,8 @@ jobs:
       - name: Full gate (biome + typecheck + vitest)
         run: pnpm check
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Install Playwright browsers (WebKit for the iPad profile)
+        run: pnpm exec playwright install --with-deps
 
       - name: E2E smoke (tablet profile)
         run: pnpm exec playwright test
