@@ -2,8 +2,8 @@
 
 Registry of active development tracks.
 
-No active tracks — the meadow is caught up. New work starts with the
-`conductor-new-track` skill.
+- [ ] **Track: Steam puffs — a pooled, zero-allocation emitter synchronized with the chug rhythm**  
+  *Link: [conductor/tracks/steam-puffs_20260830/index.md](tracks/steam-puffs_20260830/index.md)*
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
