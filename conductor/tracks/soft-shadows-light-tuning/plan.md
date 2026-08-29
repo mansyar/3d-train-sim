@@ -81,7 +81,18 @@ wagons cast while riding; shadows are soft with warm undersides.
     criteria verified manually + user confirmed 2026-08-30.
   - Checkpoint: 1f0ab96 (last functional commit).
 
-## Phase 3: Verification, Performance & Polish
+## Phase 3: Verification, Performance & Polish [checkpoint: 1f0ab96]
+
+**Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 193 unit
+tests ✅, 12 Playwright smoke ✅ with zero console errors and zero external
+requests (2026-08-30, single runs). Manual — user confirmed 2026-08-30 with
+a dev-server screenshot (station houses, trees, sheep critter, parked train
+and lumber wagon all cast soft directional shadows with warm undersides and
+no blown highlights), plus the ride/performance/reduced-motion checklist:
+train shadow moves with it during a ride, 60 FPS feel holds, reduced-motion
+renders a static frame with shadows present. Docs sync — the guidelines'
+"sunlit playroom … soft shadows" visual principle is met; no `product.md`
+or `tech-stack.md` changes (no new dependencies, product scope unchanged).
 
 - [x] Task: Run full gates + Playwright smoke suite
   - `biome check` + `tsc --noEmit` + vitest + Playwright: zero console
@@ -98,12 +109,20 @@ wagons cast while riding; shadows are soft with warm undersides.
     a known tooling limitation, not an app bug; smoke assertions (console,
     requests, interactions) remain the automated gate, and shadow visuals
     are verified manually. Temp debug artifacts removed; suite re-run green.
-- [ ] Task: Manual tablet verification & record report
+- [x] Task: Manual tablet verification & record report
   - `pnpm dev` on tablet (iPad Safari / Android Chrome, or touch emulation):
     shadows soft and moving with the train; undersides warm not black; no
     blown highlights; 60 FPS feel with a ride running; reduced-motion
     unaffected. Record the verification report in `plan.md`.
-- [ ] Task: Docs sync check
+  - Notes: User confirmed 2026-08-30 — soft moving shadows during ride,
+    60 FPS feel holds, warm undersides, no blown highlights, reduced-motion
+    static frame with shadows present (see the phase report above).
+- [x] Task: Docs sync check
   - Confirm the guidelines' "soft shadows" principle is met; no
     `tech-stack.md` deviation expected (no new dependencies).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: `product-guidelines.md` visual principle 1 ("sunlit playroom …
+    soft shadows") is met — no guideline edit required (the track
+    implemented the documented bar). `product.md` and `tech-stack.md`
+    unchanged: visual polish only, zero new dependencies.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - User confirmed 2026-08-30. Checkpoint: 1f0ab96 (last functional commit).
