@@ -12,12 +12,12 @@ import {
 
 const NATURE_KINDS: readonly SceneryKind[] = ['tree', 'bush', 'rock'];
 const TOWN_KINDS: readonly SceneryKind[] = ['house', 'cottage', 'station'];
-const CRITTER_KINDS: readonly SceneryKind[] = ['bird', 'sheep', 'rabbit'];
+const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug'];
 
 describe('scenery catalog', () => {
   it('offers exactly nine toys: nature, town, and critters', () => {
     expect([...SCENERY_KINDS].sort()).toEqual(
-      ['bird', 'bush', 'cottage', 'house', 'rabbit', 'rock', 'sheep', 'station', 'tree'].sort(),
+      ['bush', 'cottage', 'house', 'pig', 'pug', 'rock', 'sheep', 'station', 'tree'].sort(),
     );
   });
 
@@ -47,9 +47,9 @@ describe('sceneryUrl', () => {
     }
   });
 
-  it('serves critters from the vendored Kenney animal pack', () => {
+  it('serves critters from the vendored Quaternius farm pack', () => {
     for (const kind of CRITTER_KINDS) {
-      expect(sceneryUrl(kind)).toMatch(/^\/assets\/animal-pack\/[\w-]+\.glb$/);
+      expect(sceneryUrl(kind)).toMatch(/^\/assets\/quaternius-farm\/[\w-]+\.glb$/);
     }
   });
 });
@@ -57,7 +57,7 @@ describe('sceneryUrl', () => {
 describe('sceneryVoice', () => {
   it('gives every critter its own gentle voice id', () => {
     for (const kind of CRITTER_KINDS) {
-      expect(sceneryVoice(kind)).toMatch(/^(chirp|baa|squeak)-[\w]+$/);
+      expect(sceneryVoice(kind)).toMatch(/^(oink|baa|woof)-[\w]+$/);
     }
   });
 
@@ -65,8 +65,7 @@ describe('sceneryVoice', () => {
     for (const kind of [...NATURE_KINDS, ...TOWN_KINDS]) {
       expect(sceneryVoice(kind)).toBeNull();
     }
-  });
-});
+  });});
 
 describe('sceneryScale', () => {
   it('scales every kind into toy-table proportions', () => {

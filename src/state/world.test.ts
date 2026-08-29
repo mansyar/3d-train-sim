@@ -225,16 +225,16 @@ describe('world store toy categories', () => {
     store.subscribe(listener);
 
     expect(store.placeScenery('station', ORIGIN, 0)).toBe('placed');
-    expect(store.placeScenery('bird', NEXT_CELL, 0)).toBe('placed');
+    expect(store.placeScenery('pig', NEXT_CELL, 0)).toBe('placed');
     const kinds = store.scenery().map((item) => item.kind);
-    expect(kinds).toEqual(['station', 'bird']);
+    expect(kinds).toEqual(['station', 'pig']);
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
   it('never lets two toy categories share a cell', () => {
     const store = createWorldStore();
     expect(store.placeScenery('station', ORIGIN, 0)).toBe('placed');
-    expect(store.placeScenery('bird', ORIGIN, 0)).toBe('occupied');
+    expect(store.placeScenery('pig', ORIGIN, 0)).toBe('occupied');
     expect(store.scenery()).toHaveLength(1);
 
     expect(store.placeScenery('house', NEXT_CELL, 0)).toBe('placed');
@@ -261,11 +261,11 @@ describe('world store toy categories', () => {
   it('counts town and critter toys toward the shared meadow cap', () => {
     const store = createWorldStore();
     fillWorld(store, MAX_PIECES - 1);
-    expect(store.placeScenery('rabbit', { x: 0, y: 15 }, 0)).toBe('placed');
+    expect(store.placeScenery('pug', { x: 0, y: 15 }, 0)).toBe('placed');
     expect(store.placeScenery('cottage', { x: 1, y: 15 }, 0)).toBe('capacity');
 
-    const rabbit = store.scenery()[0];
-    if (rabbit) store.removeScenery(rabbit.id);
+    const pug = store.scenery()[0];
+    if (pug) store.removeScenery(pug.id);
     expect(store.placeScenery('cottage', { x: 1, y: 15 }, 0)).toBe('placed');
   });
 });

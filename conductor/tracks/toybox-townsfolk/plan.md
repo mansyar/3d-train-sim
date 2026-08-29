@@ -43,8 +43,9 @@
 
 ## Phase 3 — Assets: Blender Prep and Vendoring
 
-- [ ] Task: Download Kenney Fantasy Town Kit and Kenney Animal Pack (CC0) and record provenance/licenses
-- [ ] Task: Prep each new GLB in Blender: scale to meadow cell size, origin at base, orientation verified via viewport screenshots
+- [x] Task: Download Kenney Fantasy Town Kit and Kenney Animal Pack (CC0) and record provenance/licenses
+  - Notes: **Deviation (documented in spec.md Decisions):** the Kenney "Animal Pack" is 2D icons only (PNG/SVG, no 3D) — grounded replacement: **Quaternius Farm Animal Pack** (CC0, 7 animated animals; picking Sheep, Pig, Pug), fetched via Google Drive with its License.txt. Fantasy Town Kit 2.0 downloaded from kenney.nl (CC0, License.txt vendored). Kits: `public/assets/quaternius-farm/`, `public/assets/fantasy-town-kit/`.
+- [~] Task: Prep each new GLB in Blender: scale to meadow cell size, origin at base, orientation verified via viewport screenshots
 - [ ] Task: Vendor the prepped GLBs under `public/assets/` and wire the catalog URLs
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 

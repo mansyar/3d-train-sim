@@ -9,7 +9,6 @@ import type { Cell, Rotation } from './track-graph';
 
 /** The drawer groups the tabbed toybox shows. Rails pieces live elsewhere. */
 export const SCENERY_CATEGORIES = ['nature', 'town', 'critter'] as const;
-
 export type SceneryCategory = (typeof SCENERY_CATEGORIES)[number];
 
 export const SCENERY_KINDS = [
@@ -19,9 +18,9 @@ export const SCENERY_KINDS = [
   'house',
   'cottage',
   'station',
-  'bird',
+  'pig',
   'sheep',
-  'rabbit',
+  'pug',
 ] as const;
 
 export type SceneryKind = (typeof SCENERY_KINDS)[number];
@@ -39,12 +38,12 @@ const SCENERY_URLS: Record<SceneryKind, string> = {
   tree: '/assets/nature-kit/tree_default.glb',
   bush: '/assets/nature-kit/plant_bushDetailed.glb',
   rock: '/assets/nature-kit/rock_smallA.glb',
-  house: '/assets/fantasy-town-kit/building-house.glb',
-  cottage: '/assets/fantasy-town-kit/building-cottage.glb',
-  station: '/assets/fantasy-town-kit/building-station.glb',
-  bird: '/assets/animal-pack/bird.glb',
-  sheep: '/assets/animal-pack/sheep.glb',
-  rabbit: '/assets/animal-pack/rabbit.glb',
+  house: '/assets/fantasy-town-kit/house.glb',
+  cottage: '/assets/fantasy-town-kit/cottage.glb',
+  station: '/assets/fantasy-town-kit/station.glb',
+  pig: '/assets/quaternius-farm/pig.glb',
+  sheep: '/assets/quaternius-farm/sheep.glb',
+  pug: '/assets/quaternius-farm/pug.glb',
 };
 
 /** The drawer group each kind belongs to. */
@@ -55,11 +54,10 @@ const SCENERY_CATEGORIES_BY_KIND: Record<SceneryKind, SceneryCategory> = {
   house: 'town',
   cottage: 'town',
   station: 'town',
-  bird: 'critter',
+  pig: 'critter',
   sheep: 'critter',
-  rabbit: 'critter',
+  pug: 'critter',
 };
-
 /**
  * Scale relative to one meadow cell. The kits are authored with 1 unit ~= 1
  * cell, so these are tuning multipliers: trees tower toy-like, buildings and
@@ -69,12 +67,12 @@ const SCENERY_SCALES: Record<SceneryKind, number> = {
   tree: 0.5,
   bush: 0.65,
   rock: 0.8,
-  house: 1.1,
-  cottage: 1.05,
-  station: 1.5,
-  bird: 0.35,
-  sheep: 0.5,
-  rabbit: 0.35,
+  house: 1,
+  cottage: 1,
+  station: 0.7,
+  pig: 1,
+  sheep: 1,
+  pug: 1,
 };
 
 /** Ground-plane lift so decor never z-fights with the meadow mat. */
@@ -85,9 +83,9 @@ const SCENERY_LIFTS: Record<SceneryKind, number> = {
   house: 0.02,
   cottage: 0.02,
   station: 0.02,
-  bird: 0.01,
+  pig: 0.01,
   sheep: 0.01,
-  rabbit: 0.01,
+  pug: 0.01,
 };
 
 /** Drawer button labels (aria only - the UI itself is icon-only). */
@@ -98,9 +96,9 @@ const SCENERY_ARIA: Record<SceneryKind, string> = {
   house: 'House',
   cottage: 'Cottage',
   station: 'Train station',
-  bird: 'Bird',
+  pig: 'Pig',
   sheep: 'Sheep',
-  rabbit: 'Rabbit',
+  pug: 'Pug',
 };
 
 /**
@@ -108,9 +106,9 @@ const SCENERY_ARIA: Record<SceneryKind, string> = {
  * Non-critters stay silent; the audio layer maps ids to bundled sounds.
  */
 const SCENERY_VOICES: Partial<Record<SceneryKind, string>> = {
-  bird: 'chirp-bird',
+  pig: 'oink-pig',
   sheep: 'baa-sheep',
-  rabbit: 'squeak-rabbit',
+  pug: 'woof-pug',
 };
 
 export function sceneryCategory(kind: SceneryKind): SceneryCategory {

@@ -75,9 +75,9 @@ describe('world snapshots', () => {
       { id: 'scenery-1', kind: 'station', cell: { x: 2, y: 2 }, rotation: 0 },
       { id: 'scenery-2', kind: 'house', cell: { x: 3, y: 2 }, rotation: 90 },
       { id: 'scenery-3', kind: 'cottage', cell: { x: 4, y: 2 }, rotation: 180 },
-      { id: 'scenery-4', kind: 'bird', cell: { x: 5, y: 2 }, rotation: 0 },
+      { id: 'scenery-4', kind: 'pig', cell: { x: 5, y: 2 }, rotation: 0 },
       { id: 'scenery-5', kind: 'sheep', cell: { x: 6, y: 2 }, rotation: 270 },
-      { id: 'scenery-6', kind: 'rabbit', cell: { x: 7, y: 2 }, rotation: 90 },
+      { id: 'scenery-6', kind: 'pug', cell: { x: 7, y: 2 }, rotation: 90 },
     ];
     const snapshot = serializeWorld(pieces, townAndCritters, 'steam');
 
