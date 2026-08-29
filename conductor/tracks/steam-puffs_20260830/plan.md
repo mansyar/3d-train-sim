@@ -6,12 +6,13 @@
 
 ## Phase 1 — Chug Rhythm Contract (logic/audio seam)
 
-- [ ] Task: Write failing tests for the chug-beat contract
-  - [ ] Define expected beat notification behavior and listener cleanup.
-  - [ ] Assert one notification per rhythm beat while chugging.
-  - [ ] Assert no beat notifications after `stopChug`.
-  - [ ] Assert mute affects sound only and does not corrupt ride rhythm state.
-  - [ ] Run the focused suite and confirm the new tests fail (Red phase).
+- [x] Task: Write failing tests for the chug-beat contract (2c1f9e3)
+  - [x] Define expected beat notification behavior and listener cleanup.
+  - [x] Assert one notification per rhythm beat while chugging.
+  - [x] Assert no beat notifications after `stopChug`.
+  - [x] Assert mute affects sound only and does not corrupt ride rhythm state.
+  - [x] Run the focused suite and confirm the new tests fail (Red phase).
+  - Notes: Added an injectable `subscribeToChugBeat` source and an `onChugBeat` consumer API. The controller forwards beats only while chugging; mute leaves rhythm state untouched and consumer unsubscribe is independent. Red phase showed 3 new failures with the existing 193 tests green; Green phase passed 196 tests, strict TypeScript, and Biome. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`.
 - [ ] Task: Implement the minimal reusable chug-beat signal
   - [ ] Preserve existing Howler playback, mute, fade, and rate behavior.
   - [ ] Provide a stable subscription/disposal seam for the scene.
