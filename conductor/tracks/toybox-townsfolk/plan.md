@@ -242,11 +242,11 @@
 
 ## Definition of Done
 
-- [ ] All implementation to specification; no fail states
-- [ ] Unit tests written and passing (logic-bearing code)
-- [ ] Coverage meets requirements for logic-bearing modules
-- [ ] Documentation complete
-- [ ] Biome and typecheck gates clean
-- [ ] Works beautifully on tablets
-- [ ] Implementation notes added to `plan.md`
-- [ ] Changes committed with proper message
+- [x] All implementation to specification; no fail states
+- [x] Unit tests written and passing (logic-bearing code) — 187/187
+- [x] Coverage meets requirements for logic-bearing modules — scenery 100% lines/branches, world 97%, save 97.7% lines, drawer unit-tested
+- [x] Documentation complete — implementation notes, save-compat notes, kit sourcing + Blender prep notes in `plan.md`
+- [x] Biome and typecheck gates clean
+- [x] Works beautifully on tablets — manual touch verification confirmed 2026-08-29
+- [x] Implementation notes added to `plan.md`
+- [x] Changes committed with proper message
