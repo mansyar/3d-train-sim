@@ -76,6 +76,17 @@ Phase 3 when models are wired into the scene.
     Load failures are swallowed — the train chugs on without a wagon;
     teardown deep-disposes the wagon set. Gates: biome ✅ · tsc ✅ · 193
     tests ✅ (2026-08-29).
+  - Phase-3 verification correction (d43edae): user reported wagons
+    overlapping the engine, including at play start. Root cause:
+    `poseFollowers` offset wagons by `travelDirection` and clamped them to
+    the path, piling them onto the engine at distance 0 and teleporting
+    them through it at dead-end reversals; the 2.25-unit coupler gap was
+    also far too small for the 1.5-scaled models (engine ≈3.6–3.9, wagons
+    ≈4.05 units measured). Wagons now hold a fixed path-order offset
+    (direction-independent), gap raised to 4.2, and `poseAt` extrapolates
+    overhangs straight past short path ends; fixed a latent off-by-one
+    that snapped the engine to the path start when `distance === total`.
+    Gates: biome ✅ · tsc ✅ · 193 tests ✅ (2026-08-29).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: E2E Coverage & Track Completion
