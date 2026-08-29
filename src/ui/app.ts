@@ -18,6 +18,26 @@ const PIECE_LABELS: Record<PieceType, string> = {
   crossing: 'Crossing track piece',
 };
 
+/** Emoji stand-ins until the toys get their GLB thumbnails. */
+const SCENERY_ICONS: Record<SceneryKind, string> = {
+  tree: '🌳',
+  bush: '🌿',
+  rock: '🪨',
+  house: '🏠',
+  cottage: '🛖',
+  station: '🚉',
+  pig: '🐷',
+  sheep: '🐑',
+  pug: '🐶',
+};
+
+/** One drawer button per catalog kind, in catalog order. */
+const scenerySlots = SCENERY_KINDS.map(
+  (kind) => `
+      <button class="scenery-slot" type="button" data-scenery="${kind}"
+              aria-label="${sceneryAria(kind)}">${SCENERY_ICONS[kind]}</button>`,
+).join('');
+
 const PIECE_ICONS: Record<PieceType, string> = {
   straight: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -110,13 +130,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <button class="piece-slot" type="button" data-piece="crossing"
               aria-label="${PIECE_LABELS.crossing}">${PIECE_ICONS.crossing}</button>
     </div>
-    <div class="scenery-drawer" role="group" aria-label="Scenery toys" hidden>
-      <button class="scenery-slot" type="button" data-scenery="tree"
-              aria-label="${sceneryAria('tree')}">🌳</button>
-      <button class="scenery-slot" type="button" data-scenery="bush"
-              aria-label="${sceneryAria('bush')}">🌿</button>
-      <button class="scenery-slot" type="button" data-scenery="rock"
-              aria-label="${sceneryAria('rock')}">🪨</button>
+    <div class="scenery-drawer" role="group" aria-label="Scenery toys" hidden>${scenerySlots}
     </div>
     <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
     <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
