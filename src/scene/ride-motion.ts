@@ -1,5 +1,5 @@
 import type { Object3D } from 'three';
-import { stationStopSteps } from '../core/station-stops';
+import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf } from '../core/track-graph';
 import type { RideController, RideState } from '../state/ride';
@@ -159,8 +159,9 @@ export function createRideMotion(
     }
     total = 0;
     for (const segment of segments) total += segment.length;
-    // The stations standing beside the rails become pause points: the cell
-    // midpoint of the first path step each station touches (spec FR4).
+    // The stations standing beside the rails become pause points: the point
+    // on the rails closest to each station, so the train rests AT the station
+    // rather than at the entry to its cell (spec FR4).
     const stopSteps = stationStopSteps(
       cells,
       world.scenery().filter((item) => item.kind === 'station'),
@@ -168,7 +169,8 @@ export function createRideMotion(
     stops = stopSteps.map((stop) => {
       let at = 0;
       for (let i = 0; i < stop.stepIndex; i++) at += segments[i]?.length ?? 0;
-      at += (segments[stop.stepIndex]?.length ?? 0) / 2;
+      const segment = segments[stop.stepIndex];
+      if (segment) at += closestPointFraction(segment, cellToWorld(stop.cell)) * segment.length;
       return { at, stationId: stop.stationId };
     });
     armed.clear();

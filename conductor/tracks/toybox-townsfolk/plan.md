@@ -128,10 +128,33 @@
     `howler-voice.ts`, `critter-life.ts`, `track-renderer.ts`, `init-scene.ts`,
     `public/audio/{baa-sheep,oink-pig,woof-pug}.{ogg,mp3}`, `CREDITS.md`.
     Commit `8b39df6`.
-- [ ] Task: Implement the station stop in ride motion
-  - [ ] Gentle deceleration, ~2s pause with happy ding-ding, smooth re-acceleration
-  - [ ] Works on loops and shuttles; multiple stations each stop once; no retrigger mid-stop
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement the station stop in ride motion
+  - [x] Gentle deceleration, ~2s pause with happy ding-ding, smooth re-acceleration
+  - [x] Works on loops and shuttles; multiple stations each stop once; no retrigger mid-stop
+  - Notes: Pure stop planner `src/core/station-stops.ts` maps each station to
+    the first path step it touches (8-neighbourhood; a station on the path's
+    own cell wins over diagonal touches) — TDD, 9 tests, 100% coverage.
+    `ride-motion.ts` consumes it: crossing a stop point snaps the train to
+    the cell midpoint, eases it down (shared STOP_EASE), rests 2 s with the
+    chug softened via the existing pause channel, then eases back up. Stops
+    are owed once per pass — loop wraps and shuttle end-flips re-arm them;
+    two stations sharing one cell are served in a single stop. `init-scene`
+    rings the ding-ding (two dings, 350 ms apart; late blips skip after
+    teardown). E2E: loop + station ride stays riding past the stop with a
+    clean console (10/10 pass). Files: `src/core/station-stops.ts` (+test),
+    `src/scene/ride-motion.ts`, `src/scene/init-scene.ts`, `e2e/smoke.spec.ts`.
+    Commit `a3fca82`.
+  - In-flight refinement (`51c98a4`): the first cut froze the train at the
+    stop point — spec FR4 wants a gentle deceleration. Braking now begins
+    `BRAKE_DISTANCE` (≈0.66 units, the distance the shared ease covers)
+    before the station cell, whichever way the train travels; the train
+    coasts in under the existing ease, rests 2 s, and rolls out on the same
+    ease. Brake points clamp to the path ends so stations beside the first
+    or last cell still stop the train; a ride stopped mid-brake cancels
+    cleanly (no orphan ding or stuck pause), and `beginRide` always starts
+    at full voice. Re-verified: Biome + tsc clean, 175/175 unit tests,
+    station-stops 100% coverage, Playwright 10/10.
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5 — Tabbed Drawer UI and End-to-End Coverage
 
