@@ -5,7 +5,12 @@
 Workflow: scene wiring only — verified via acceptance criteria + smoke tests +
 manual tablet check (`conductor/workflow.md`). One task in flight at a time.
 
-## Phase 1: Shadowed Sun & Tuned Light (lighting foundation)
+## Phase 1: Shadowed Sun & Tuned Light (lighting foundation) [checkpoint: d2b9a68]
+
+**Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 193 unit
+tests ✅ (2026-08-30, `pnpm test` single run). Manual — user confirmed the
+tuned warm/fill lighting and tone mapping meet expectations (2026-08-30);
+shadow visibility itself is deferred to Phase 2 when casters are wired.
 
 - [x] Task: Tune the key light and add fill lights in `src/scene/lights.ts` (b4b710f)
   - Acceptance criteria (non-logic — record & verify manually / via smoke):
@@ -38,7 +43,10 @@ manual tablet check (`conductor/workflow.md`). One task in flight at a time.
     itself; reduced-motion's single rendered frame still computes the map
     once. Pixel-ratio cap (2) untouched. Gates: biome ✅, `tsc --noEmit` ✅,
     193 unit tests ✅.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Phase changes are scene-only (`lights.ts`, `init-scene.ts`) — no unit
+    tests required; acceptance criteria verified manually + via smoke later.
+  - User confirmed 2026-08-30. Checkpoint: d2b9a68 (last functional commit).
 
 ## Phase 2: Casters & Receiver (scene objects)
 
