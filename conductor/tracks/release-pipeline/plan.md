@@ -103,3 +103,19 @@
   user (2026-08-29) — confirmed with yes.
 - Later commits on main (`daf56c7` toybox-townsfolk merge) are outside
   this track's scope.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions `d6e7291`
+
+  Scope (all Low severity, from the post-completion conductor-review):
+  1. `release.yml` — workflow-level `permissions: contents: read`
+     (least privilege; `publish` keeps its `packages: write` override).
+  2. `release.yml` — `concurrency: release-<ref>` guard so rapid tag
+     pushes queue instead of racing publish/deploy.
+  3. `release.yml` — `timeout-minutes: 15` on both jobs (fail fast
+     instead of eating the 6-hour default).
+  4. Informational only (no change): `corepack enable` works on
+     `node:24-alpine` but Corepack is absent from Node 25+ — install
+     pnpm explicitly when the base image is eventually bumped.
+  Validation: `workflow_dispatch` dry run on main after merge.
