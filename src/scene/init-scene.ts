@@ -5,14 +5,16 @@ import { bindRideAudio } from '../audio/ride-audio';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
+import { wagonSlots } from '../core/wagons';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { disposeObject } from './dispose-object';
 import { createGround } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
+import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
-import { createRideMotion } from './ride-motion';
+import { createRideMotion, parkFollowersBehind } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
 import { type PickedItem, startTrackRenderer } from './track-renderer';
 
@@ -76,6 +78,13 @@ export function initScene(
   let locomotive: Object3D | null = null;
   let loadedTrain: TrainKind | null = null;
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
+  /**
+   * The live cargo wagons in the scene, in pulling order (index 0 rides
+   * directly behind the engine). One set serves every locomotive kind, so
+   * train switches re-attach it instead of rebuilding it — nothing to swap,
+   * nothing to leak.
+   */
+  const wagonSet: Object3D[] = wagonSlots().map(() => null as unknown as Object3D);
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
@@ -106,7 +115,9 @@ export function initScene(
           if (!disposed) audio.ding();
         }, STATION_DING_GAP_MS);
       },
+      wagonSet,
     ).update;
+    parkFollowersBehind(model, wagonSet);
   };
 
   for (const kind of TRAIN_KINDS) {
@@ -121,6 +132,25 @@ export function initScene(
       })
       .catch(() => {
         // Kit asset unavailable — the crate remains as the fallback placeholder.
+      });
+  }
+
+  const slots = wagonSlots();
+  for (let i = 0; i < slots.length; i++) {
+    const slot = slots[i];
+    if (!slot) continue;
+    loadWagon(slot)
+      .then((wagon) => {
+        if (disposed) {
+          disposeObject(wagon);
+          return;
+        }
+        wagonSet[i] = wagon; // Pulling order: index 0 rides behind the engine.
+        scene.add(wagon);
+        if (locomotive) parkFollowersBehind(locomotive, wagonSet);
+      })
+      .catch(() => {
+        // Wagon asset unavailable — the train chugs on without it.
       });
   }
 
@@ -199,6 +229,10 @@ export function initScene(
       crate.dispose();
       for (const model of locomotiveTemplates.values()) disposeObject(model);
       locomotiveTemplates.clear();
+      for (const wagon of wagonSet) {
+        if (wagon) disposeObject(wagon);
+      }
+      wagonSet.length = 0;
       for (const dispose of disposables) dispose();
       renderer.dispose();
     },

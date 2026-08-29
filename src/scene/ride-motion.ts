@@ -32,6 +32,26 @@ const MODEL_YAW_OFFSET = Math.PI;
 const FOLLOWER_GAP = CELL_SIZE * 0.6;
 
 /**
+ * Parked default pose: wagons rest in a straight line behind the engine's
+ * tail (used before the first ride of a freshly selected train). Uses the
+ * same coupler gap as the ride, so the little train looks identical at rest.
+ */
+export function parkFollowersBehind(engine: Object3D, followers: readonly Object3D[]): void {
+  for (let i = 0; i < followers.length; i++) {
+    const follower = followers[i];
+    if (!follower) continue;
+    const gap = FOLLOWER_GAP * (i + 1);
+    // Engine forward is -Z at yaw 0, so behind is +Z in the engine's frame.
+    follower.position.set(
+      engine.position.x + Math.sin(engine.rotation.y) * gap,
+      0,
+      engine.position.z + Math.cos(engine.rotation.y) * gap,
+    );
+    follower.rotation.y = engine.rotation.y;
+  }
+}
+
+/**
  * One leg of the ride between two cell-edge midpoints: either a straight run
  * or a quarter-arc pivoting on the cell centre (matching how the corner
  * models are anchored). Built once per ride start — never per frame.
