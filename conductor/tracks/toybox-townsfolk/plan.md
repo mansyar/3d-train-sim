@@ -3,7 +3,7 @@
 **Track ID:** `toybox-townsfolk`  
 **Spec:** `conductor/tracks/toybox-townsfolk/spec.md`
 
-## Phase 1 — Expanded Toy Catalog and World State (TDD)
+## Phase 1 — Expanded Toy Catalog and World State (TDD) [checkpoint: d5eac90]
 
 - [x] Task: TDD — Red: extend the scenery catalog tests for the new toy kinds
   - [x] Assert the catalog exposes station + 2 house variants (Town) and 2–3 critters (Critters) alongside tree/bush/rock
@@ -21,7 +21,9 @@
   - Notes: Dropped an unused `SCENERY_CATEGORIES` import from the test; catalog kept table-driven, matching the existing trains.ts pattern. Biome + `tsc --noEmit` clean.
 - [x] Task: Verify >80% coverage for new logic-bearing catalog/state code
   - Notes: Coverage run: `scenery.ts` 100% lines/branches, `world.ts` 97% — full suite 159 tests green.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated verification: Biome, `tsc --noEmit`, and the full Vitest suite (159 tests) pass; `scenery.ts` 100%, `world.ts` 97% coverage.
+  - Manual verification: user confirmed 2026-08-29 — phase is catalog/state-only (new GLBs not yet vendored), app behavior unchanged.
 
 ## Phase 2 — Save/Load Compatibility (TDD)
 
