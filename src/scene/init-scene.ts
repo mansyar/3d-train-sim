@@ -1,5 +1,12 @@
 import type { Object3D } from 'three';
-import { PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three';
+import {
+  NeutralToneMapping,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import type { SceneryKind } from '../core/scenery';
@@ -60,6 +67,11 @@ export function initScene(
 ): SceneHandle {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
+  // Soft shadow maps pair with the shadowed sun in lights.ts; neutral tone
+  // mapping keeps bright toy surfaces from clipping to white.
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFSoftShadowMap;
+  renderer.toneMapping = NeutralToneMapping;
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(45, 1, 0.1, 200);
