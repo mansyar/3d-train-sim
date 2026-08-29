@@ -67,5 +67,9 @@ in Blender and committed to `public/assets/train-kit/`.
 
 - Turning at crossings / branch choice (future "Track Switches & Branches"
   track).
+- **Known limitation (straight-through routing):** a crossing shared by two
+  loops (figure-eight) or a loop with dead-end spurs rides one end-to-end
+  pass deterministically; unridden parts of the component wait. Fail-state
+  free per product rules; richer traversal belongs to the switches track.
 - Special sounds, animations, or ghost tints for the crossing.
 - Any other new piece types (ramps, hills, bends).

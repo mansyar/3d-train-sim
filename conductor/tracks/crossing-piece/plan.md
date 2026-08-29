@@ -162,3 +162,18 @@
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
   Covered by the combined Verification Report above (checkpoint `f13c158`).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions
+
+  Notes:
+  - Principal-engineer review of the full track diff (c3b49f7..HEAD): plan
+    compliance, style guides, tests, coverage, and privacy all pass; zero
+    correctness defects.
+  - Applied the one accepted suggestion: documented the figure-eight /
+    spur-layout known limitation in the spec's Out of Scope, pointing the
+    richer traversal to the future switches track.
+  - Declined (low value, deferred): shifting one pathing test fixture into
+    meadow bounds — the solver is pure graph math and existing tests already
+    use arbitrary coordinates.
