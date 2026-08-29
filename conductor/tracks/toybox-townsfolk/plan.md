@@ -62,6 +62,10 @@
     and cleaned up in `05e1f45` (removed stray duplicate GLBs from the
     assets root). Nine-toy catalog: nature (tree/bush/rock), town
     (house/cottage/station), critters (sheep/pig/pug).
+  - In-flight refinement (`4e11fe3`): the scenery drawer HTML hardcoded only
+    tree/bush/rock, so the new toys were invisible in the toybox. The drawer
+    now builds one slot per catalog kind (emoji stand-ins until Phase 5's
+    tabbed drawer with GLB thumbnails).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — Scene: Placement, Critter Life, Station Stop
