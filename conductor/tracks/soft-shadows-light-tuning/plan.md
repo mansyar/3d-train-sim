@@ -7,7 +7,7 @@ manual tablet check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 1: Shadowed Sun & Tuned Light (lighting foundation)
 
-- [ ] Task: Tune the key light and add fill lights in `src/scene/lights.ts`
+- [~] Task: Tune the key light and add fill lights in `src/scene/lights.ts`
   - Acceptance criteria (non-logic — record & verify manually / via smoke):
     - Key "sun" directional light casts soft shadows; shadow camera frustum
       confined to the 16×16 grid play area (derived from core grid constants,

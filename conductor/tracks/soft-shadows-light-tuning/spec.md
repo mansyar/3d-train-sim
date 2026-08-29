@@ -15,7 +15,7 @@ The product guidelines call for a "sunlit playroom: warm palette, rounded forms,
 
 ## Non-Functional Requirements
 
-- 60 FPS target on mid-spec tablets still holds with the shadow pass enabled (shadow frustum + map size chosen for this).
+- 60 FPS target on mid-spec tablets (2020+ iPad, mid-range Android) still holds with the shadow pass enabled (shadow frustum + map size chosen for this).
 - No per-frame allocations in the render loop; pixel-ratio cap and battery-aware behavior unchanged.
 - Reduced-motion static-frame rendering still works (shadow map renders once, no flicker).
 - Zero external requests; offline PWA unaffected.
