@@ -76,7 +76,7 @@
   Notes:
   - `pieces.ts` 100% · `pathing.ts` 97.5% · `track-graph.ts` 95.7% ·
     `save.ts` 88.9% — all above the 80% bar with 149/149 tests passing.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Asset & Scene Wiring (non-logic)
 
@@ -132,7 +132,16 @@
     kit's cream/brown/steel palette variables, same chunky stroke language
     as the straight and corner icons. Ghost preview, cap dimming, and the
     rotate knob work through the existing generic piece machinery.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phases 1–3 (combined checkpoint) `[checkpoint: f13c158]`
+
+- Automated: `pnpm check` (biome + typecheck + 149/149 vitest) ✅ ·
+  `pnpm exec playwright test` 9/9 on the tablet profile ✅
+- Manual verification steps proposed (drawer slot, snap, straight-through
+  ride, dead-end shuttle, autosave reload, rotation no-op) — user confirmed
+  all meet expectations on the dev server (2026-08-29).
+- Coverage: pieces 100% · pathing 97.5% · track-graph 95.7% · save 88.9%.
 
 ## Phase 3 — Gates & Verification
 
@@ -143,6 +152,13 @@
   - `pnpm check` green (biome · typecheck · 149/149 vitest).
   - Playwright e2e: 9/9 passed on the tablet profile (44s), including the
     silent-console assertion — the crossing GLB loads without errors.
-- [ ] Task: Manual tablet verification (build a cross layout, ride through,
+- [x] Task: Manual tablet verification (build a cross layout, ride through,
       autosave reload)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Notes:
+  - User confirmed on the dev server (2026-08-29): crossing renders aligned
+    and kit-consistent, rides straight through, dead-end edges shuttle back,
+    autosave restores the crossing, rotation is a visual no-op.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Covered by the combined Verification Report above (checkpoint `f13c158`).
