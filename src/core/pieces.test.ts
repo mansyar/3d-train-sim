@@ -11,8 +11,8 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the V1 piece set: straight and corner', () => {
-    expect([...PIECE_TYPES].sort()).toEqual(['corner', 'straight']);
+  it('offers exactly the V1 piece set: straight, corner, and crossing', () => {
+    expect([...PIECE_TYPES].sort()).toEqual(['corner', 'crossing', 'straight']);
   });
 
   it('gives every piece a 1-cell footprint', () => {
@@ -45,11 +45,24 @@ describe('endpointsFor', () => {
     }
   });
 
-  it('gives every piece exactly two endpoints (one joins two edges)', () => {
-    for (const type of PIECE_TYPES) {
+  it('gives two-end pieces exactly two endpoints (one joins two edges)', () => {
+    for (const type of ['straight', 'corner'] as const) {
       for (const rotation of ALL_ROTATIONS) {
         expect(endpointsFor(type, rotation)).toHaveLength(2);
       }
     }
+  });
+});
+
+describe('endpointsFor — crossing', () => {
+  it('joins all four edges at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('crossing', rotation)).toEqual(CANONICAL);
+    }
+  });
+
+  it('is rotation-invariant (4-fold symmetric)', () => {
+    expect(endpointsFor('crossing', 90)).toEqual(endpointsFor('crossing', 0));
+    expect(endpointsFor('crossing', 270)).toEqual(endpointsFor('crossing', 0));
   });
 });

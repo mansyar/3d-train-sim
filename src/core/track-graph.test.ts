@@ -74,6 +74,26 @@ describe('endpointEdgesFor', () => {
   });
 });
 
+describe('endpointEdgesFor — crossing', () => {
+  it('bridges all four cell edges at 0°', () => {
+    expect(endpointEdgesFor(piece('x', 'crossing', 2, 3, 0))).toEqual([
+      '2,2|2,3', // north
+      '2,3|3,3', // east
+      '2,3|2,4', // south
+      '1,3|2,3', // west
+    ]);
+  });
+
+  it('is rotation-invariant: the same four boundaries at every rotation', () => {
+    const atZero = endpointEdgesFor(piece('x', 'crossing', 2, 3, 0));
+    for (const rotation of [90, 180, 270] as const) {
+      expect(endpointEdgesFor(piece('x', 'crossing', 2, 3, rotation))).toEqual([
+        ...atZero,
+      ].sort());
+    }
+  });
+});
+
 describe('connectionsFor', () => {
   it('connects two straights joined end-to-end', () => {
     const pieces = [piece('a', 'straight', 2, 3, 0), piece('b', 'straight', 2, 4, 0)];
@@ -93,5 +113,37 @@ describe('connectionsFor', () => {
   it('returns no connections for isolated pieces', () => {
     const pieces = [piece('a', 'straight', 0, 0, 0), piece('b', 'corner', 8, 8, 180)];
     expect(connectionsFor(pieces)).toEqual([]);
+  });
+
+  it('connects a crossing to neighbors on all four sides', () => {
+    const pieces = [
+      piece('x', 'crossing', 2, 3, 0),
+      piece('n', 'straight', 2, 2, 0), // south edge meets crossing north
+      piece('e', 'straight', 3, 3, 90), // west edge meets crossing east
+      piece('s', 'straight', 2, 4, 0), // north edge meets crossing south
+      piece('w', 'straight', 1, 3, 90), // east edge meets crossing west
+    ];
+    const connections = connectionsFor(pieces).map((c) => [c.a, c.b, c.via]);
+    expect(connections).toHaveLength(4);
+    expect(connections).toContainEqual(['x', 'n', '2,2|2,3']);
+    expect(connections).toContainEqual(['x', 'e', '2,3|3,3']);
+    expect(connections).toContainEqual(['x', 's', '2,3|2,4']);
+    expect(connections).toContainEqual(['x', 'w', '1,3|2,3']);
+  });
+
+  it('connects a rotated crossing identically (4-fold symmetry)', () => {
+    const pieces = [
+      piece('x', 'crossing', 2, 3, 270),
+      piece('n', 'straight', 2, 2, 0),
+      piece('e', 'straight', 3, 3, 90),
+      piece('s', 'straight', 2, 4, 0),
+      piece('w', 'straight', 1, 3, 90),
+    ];
+    const connections = connectionsFor(pieces).map((c) => [c.a, c.b, c.via]);
+    expect(connections).toHaveLength(4);
+    expect(connections).toContainEqual(['x', 'n', '2,2|2,3']);
+    expect(connections).toContainEqual(['x', 'e', '2,3|3,3']);
+    expect(connections).toContainEqual(['x', 's', '2,3|2,4']);
+    expect(connections).toContainEqual(['x', 'w', '1,3|2,3']);
   });
 });
