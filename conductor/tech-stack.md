@@ -66,13 +66,26 @@ conductor/          # project management source of truth
 ## Build & Deployment Pipeline
 
 ```
-git tag v1.2.3
-  → GitHub Actions: pnpm build (biome check + typecheck + vitest must pass)
-  → Docker build (nginx:alpine serving dist/)
-  → Push image to ghcr.io/<owner>/tiny-tracks:1.2.3 (public)
-  → Deploy via Coolify API (webhook/tag trigger) — production only
+git tag v1.2.3 && git push --tags
+  → GitHub Actions release.yml (tag-triggered):
+      1. Gates: pnpm check (biome + typecheck + vitest) + Playwright e2e
+      2. Docker build (multi-stage: node:24-alpine/pnpm build →
+         nginx:alpine serving dist/, PWA-aware cache rules)
+      3. Push image to ghcr.io/mansyar/tiny-tracks:1.2.3 + :latest
+         (public, GITHUB_TOKEN with packages:write)
+      4. Deploy: POST to the Coolify deploy webhook — production only
 ```
 
+- Merging to main never deploys; only `v*` tags ship.
+- `workflow_dispatch` on release.yml runs a **dry run** (gates + image build,
+  no publish, no deploy) — the way to validate workflow changes safely.
+- Repo secrets (Settings → Secrets and variables → Actions):
+  `COOLIFY_WEBHOOK_URL` (deploy webhook) and `COOLIFY_TOKEN` (bearer token).
+- Rollback: redeploy the previous image digest (or re-tag) in Coolify.
+- Runbook — cutting a release: `pnpm check` locally → merge →
+  `git tag vX.Y.Z && git push origin vX.Y.Z` → watch the Release workflow →
+  load the domain on a family device (build a loop, press play, hear the
+  whistle).
 - Single environment: production. Family devices just load the domain.
 - No analytics, no error-tracking service in V1 (privacy first for kids).
 
