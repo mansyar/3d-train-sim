@@ -19,7 +19,20 @@
   - [ ] `pieces.test.ts`: `baseEndpointsFor('crossing')` returns all four edges
   - [ ] `track-graph.test.ts`: crossing connects to neighbors on all four
         sides, at every rotation (0/90/180/270)
-- [ ] Task: Implement the `crossing` type in `src/core/pieces.ts` (Green)
+- [x] Task: Implement the `crossing` type in `src/core/pieces.ts` (Green) `[05c5a34]`
+
+  Notes:
+  - `PIECE_TYPES` gains `crossing`; `BASE_ENDPOINTS['crossing']` returns all
+    four canonical edges. `baseEndpointsFor` widened from a 2-tuple to
+    `readonly Edge[]` — `endpointsFor`, `endpointEdgesFor`, and the pathing
+    `endsOf` all consume it generically, so no other core code changed.
+  - One test fix during Green: the rotation-invariance test sorted only the
+    expected array; `toEqual` is order-sensitive for arrays, so the actual
+    list is now sorted too.
+  - Files: `src/core/pieces.ts`, `src/core/track-graph.test.ts` (test fix).
+  - Why: connectivity is pure data once the catalog knows the crossing joins
+    all four edges — the existing boundary-key algorithms do the rest.
+  - Verified: `pnpm test` 143/143 green.
 - [ ] Task: Write failing tests for straight-through pathing (Red)
   - [ ] `pathing.test.ts`: enter from north → exit south; enter from west →
         exit east
