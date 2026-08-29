@@ -428,6 +428,69 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('steam puffs emit during rides, stop cleanly, and cover the fleet', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    const corners = [
+      [{ x: 7, y: 7 }, 90],
+      [{ x: 8, y: 7 }, 180],
+      [{ x: 8, y: 8 }, 270],
+      [{ x: 7, y: 8 }, 0],
+    ] as const;
+    for (const [cell, rotation] of corners) world.place('corner', cell, rotation);
+  });
+  await page.waitForTimeout(700);
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+  await page.waitForFunction(() => {
+    const scene = (window as unknown as { __tinyTracksScene?: { steamPuffCount: () => number } })
+      .__tinyTracksScene;
+    return (scene?.steamPuffCount() ?? 0) > 0;
+  });
+  const active = await page.evaluate(() =>
+    (
+      window as unknown as { __tinyTracksScene: { steamPuffCount: () => number } }
+    ).__tinyTracksScene.steamPuffCount(),
+  );
+  expect(active).toBeGreaterThan(0);
+
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).not.toHaveClass(/is-riding/);
+  await page.waitForFunction(() => {
+    const scene = (window as unknown as { __tinyTracksScene?: { steamPuffCount: () => number } })
+      .__tinyTracksScene;
+    return scene?.steamPuffCount() === 0;
+  });
+
+  await page.click('[data-drawer="trains"]');
+  for (const train of ['diesel', 'tram', 'steam']) {
+    await page.locator(`.train-slot[data-train="${train}"]`).click();
+    await expect(page.locator(`.train-slot[data-train="${train}"]`)).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.waitForTimeout(300);
+  }
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('cargo wagons ride along, survive a train switch and a reload', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

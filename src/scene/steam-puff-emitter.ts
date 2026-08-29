@@ -24,6 +24,7 @@ export interface SteamPuffEmitter {
   emit(): boolean;
   update(dt: number): void;
   setEmitting(emitting: boolean): void;
+  activeCount(): number;
   dispose(): void;
 }
 
@@ -76,6 +77,7 @@ export function createSteamPuffEmitter(
     group,
     emit,
     setEmitting: (emitting) => pool.setEmitting(emitting),
+    activeCount: () => pool.activeCount(),
     update(dt) {
       pool.update(dt);
       for (let i = 0; i < meshes.length; i += 1) {
