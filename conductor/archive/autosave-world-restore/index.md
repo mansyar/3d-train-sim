@@ -1,6 +1,6 @@
 # Track: Autosave & World Restore
 
-**ID:** `autosave-world-restore` · **Type:** Feature · **Status:** new
+**ID:** `autosave-world-restore` · **Type:** Feature · **Status:** complete
 
 - [Specification](spec.md) — persistence behavior and acceptance criteria
 - [Implementation Plan](plan.md) — phased TDD task list
