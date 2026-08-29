@@ -187,6 +187,14 @@
   - [x] Icon-only tabs, ≥64px targets, obvious active state, tap (or swipe) switching
   - [x] Preserve one-drawer-open-at-a-time and existing rails behavior exactly
 
+  - **In-flight refinement (`07abde1`, user feedback during phase
+    verification):** the 🛤️ and 🌳 rail toggles were redundant — both opened
+    the same tabbed drawer. Joined into a single 🧸 **Toybox** toggle that
+    opens the drawer on the last-visited tab (Rails first) and closes it on
+    a second tap; tabs inside the drawer do the switching. The toybox rail
+    is now: 🧸 toys · 🚂 trains · 🎺 · ▶ · 🔊 · 🗑️. E2E updated (2 toy
+    slots; walkthrough opens on Rails, then walks Nature/Town/Critters).
+
   Notes:
   - Pure model committed earlier (`557fc71`): `src/core/drawer.ts` derives the
     four tabs from the piece + scenery catalogs; 7 unit tests.
