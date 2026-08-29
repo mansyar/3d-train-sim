@@ -41,7 +41,7 @@
   - Manual verification: user confirmed 2026-08-29 — save format is backward compatible; no user-visible change this phase.
   - [checkpoint: a860120]
 
-## Phase 3 — Assets: Blender Prep and Vendoring
+## Phase 3 — Assets: Blender Prep and Vendoring [checkpoint: 4e11fe3]
 
 - [x] Task: Download Kenney Fantasy Town Kit and Kenney Animal Pack (CC0) and record provenance/licenses
   - Notes: **Deviation (documented in spec.md Decisions):** the Kenney "Animal Pack" is 2D icons only (PNG/SVG, no 3D) — grounded replacement: **Quaternius Farm Animal Pack** (CC0, 7 animated animals; picking Sheep, Pig, Pug), fetched via Google Drive with its License.txt. Fantasy Town Kit 2.0 downloaded from kenney.nl (CC0, License.txt vendored). Kits: `public/assets/quaternius-farm/`, `public/assets/fantasy-town-kit/`.
@@ -66,7 +66,21 @@
     tree/bush/rock, so the new toys were invisible in the toybox. The drawer
     now builds one slot per catalog kind (emoji stand-ins until Phase 5's
     tabbed drawer with GLB thumbnails).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phase 3 (assets)
+
+- Automated: Biome clean, `tsc --noEmit` clean, Vitest 162/162 pass,
+  Playwright e2e 9/9 pass (tablet viewport, incl. scenery drag-place and
+  reload-autosave). All six new GLBs additionally verified via headless
+  Blender renders + vision analysis (scale ≈ 1 unit/cell, origin at base,
+  orientation, no defects).
+- Manual verification: dev server on tablet — all 9 toys visible in the
+  scenery drawer after the drawer fix (`4e11fe3`); houses/cottage/station
+  place chunky and flat on the meadow; critters sit low beside the rails;
+  world autosaves and reloads with the new toys intact.
+- User confirmed 2026-08-29 ("all working").
+- [checkpoint: 4e11fe3]
 
 ## Phase 4 — Scene: Placement, Critter Life, Station Stop
 
