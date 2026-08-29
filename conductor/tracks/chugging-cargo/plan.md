@@ -8,16 +8,18 @@ follow `conductor/workflow.md` for the full task lifecycle.
 
 ## Phase 1: Wagon Catalog (pure core, TDD)
 
-- [ ] Task: Write failing unit tests for the wagon catalog
+- [x] Task: Write failing unit tests for the wagon catalog (573f4ac)
   - Create `src/core/wagons.test.ts` covering: exactly two wagon slots; stable
     model URLs pointing at bundled `train-carriage-*.glb` assets; resolvers
     apply to every `TrainKind`; fixed-count invariant; catalog is pure data
     (no Three.js/browser imports).
-  - Run `CI=true pnpm test` and confirm the new tests fail (Red phase).
-- [ ] Task: Implement `src/core/wagons.ts` in the `trains.ts` data pattern
+  - Run the suite and confirm the new tests fail (Red phase). ✅ Confirmed —
+    the wagon catalog file was the only failing suite (16 passed, 187 other
+    tests green).
+- [~] Task: Implement `src/core/wagons.ts` in the `trains.ts` data pattern
   - Minimum pure data + resolver functions to make the tests pass (Green
     phase); refactor if clarity improves.
-  - Run `CI=true pnpm test -- --coverage`; >80% on the new module.
+  - Run the suite with coverage; >80% on the new module.
   - Commit `feat(core): Add cargo wagon catalog`.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 

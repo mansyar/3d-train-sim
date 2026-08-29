@@ -11,15 +11,13 @@ describe('wagon catalog', () => {
 
   it('gives every wagon a bundled local cargo model', () => {
     for (const slot of wagonSlots()) {
-      expect(wagonModelUrl(slot)).toMatch(
-        /^\/assets\/train-kit\/train-carriage-[\w-]+\.glb$/,
-      );
+      expect(wagonModelUrl(slot)).toMatch(/^\/assets\/train-kit\/train-carriage-[\w-]+\.glb$/);
     }
   });
 
   it('varies the cargo between the wagons', () => {
-    const [lead, rear] = wagonSlots();
-    expect(wagonModelUrl(lead)).not.toBe(wagonModelUrl(rear));
+    const urls = wagonSlots().map((slot) => wagonModelUrl(slot));
+    expect(new Set(urls).size).toBe(wagonSlots().length);
   });
 
   it('resolves the same wagon set for every locomotive kind', () => {
