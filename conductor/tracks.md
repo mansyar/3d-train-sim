@@ -8,7 +8,7 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | `autosave-world-restore` | Autosave & World Restore | complete | [tracks/autosave-world-restore/](tracks/autosave-world-restore/index.md) |
 | `playful-train-fleet` | Playful Train Fleet | complete | [tracks/playful-train-fleet/](tracks/playful-train-fleet/index.md) |
 | `train-audio-personalities` | Train Audio Personalities | complete | [tracks/train-audio-personalities/](tracks/train-audio-personalities/index.md) |
-| `release-pipeline` | Release Pipeline | in progress | [tracks/release-pipeline/](tracks/release-pipeline/index.md) |
+| `release-pipeline` | Release Pipeline | complete | [tracks/release-pipeline/](tracks/release-pipeline/index.md) |
 | `toybox-townsfolk` | Toybox Townsfolk | complete | [tracks/toybox-townsfolk/](tracks/toybox-townsfolk/index.md) |
 
 Completed tracks are archived under [conductor/archive/](archive/):

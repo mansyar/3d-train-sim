@@ -2,7 +2,7 @@
   "id": "release-pipeline",
   "title": "Release Pipeline",
   "type": "chore",
-  "status": "new",
+  "status": "complete",
   "branch": "track/release-pipeline",
   "created": "2026-08-29",
   "updated": "2026-08-29",
