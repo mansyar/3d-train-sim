@@ -43,7 +43,20 @@
   - [ ] `pathing.test.ts`: both travel directions resolve symmetrically
   - [ ] `pathing.test.ts`: partially-connected crossing (T-shape use) falls
         through to existing dead-end behavior
-- [ ] Task: Implement crossing routing in `src/core/pathing.ts` (Green)
+- [x] Task: Implement crossing routing in `src/core/pathing.ts` (Green) `[4a13f47]`
+
+  Notes:
+  - Added `OPPOSITE_EDGE` and a general exit rule: two-end pieces exit
+    through their only other end; four-end pieces (crossings) route straight
+    through to the edge opposite the entry. Unconnected exits remain open
+    ends — the existing dead-end pause/shuttle behavior covers them with no
+    special casing.
+  - Refreshed the component-collection comment (components may now be trees
+    through crossings, not only simple paths/cycles).
+  - Files: `src/core/pathing.ts`.
+  - Why: minimal solver change — straight-through routing is a property of
+    exit selection, not of the graph.
+  - Verified: `pnpm test` 147/147 green.
 - [ ] Task: Save/load round-trip tests for crossing pieces (Red → Green,
       expect little/no change in `save.ts`)
 - [ ] Task: Coverage check: `CI=true pnpm test -- --coverage`, >80% on new core
