@@ -82,10 +82,20 @@ git tag v1.2.3 && git push --tags
 - Repo secrets (Settings → Secrets and variables → Actions):
   `COOLIFY_WEBHOOK_URL` (deploy webhook) and `COOLIFY_TOKEN` (bearer token).
 - Rollback: redeploy the previous image digest (or re-tag) in Coolify.
-- Runbook — cutting a release: `pnpm check` locally → merge →
-  `git tag vX.Y.Z && git push origin vX.Y.Z` → watch the Release workflow →
-  load the domain on a family device (build a loop, press play, hear the
-  whistle).
+- Runbook — cutting a release (full flow, bump to deploy):
+  1. Bump the version in `package.json` (`pnpm version patch|minor|major`
+     bumps, commits, and creates the `v` tag in one step — or edit the
+     version by hand and tag manually with `git tag vX.Y.Z`)
+  2. `pnpm check` locally (gates), changelog note in the track's `plan.md`
+  3. Merge the release track to `main`, then push: `git push origin main`
+     followed by `git push origin vX.Y.Z` (pushing the tag triggers
+     `release.yml`; pushing main alone never deploys)
+  4. Watch the Release workflow on GitHub Actions — gates, image build,
+     GHCR push, Coolify webhook
+  5. Verify production on a family device: load the domain cold, build a
+     loop, press play, hear the whistle
+- Image tags mirror the git tag without the `v` (`v1.2.3` → `1.2.3`), plus a
+  moving `:latest`. Keep `package.json`'s `version` in sync with the tag.
 - Single environment: production. Family devices just load the domain.
 - No analytics, no error-tracking service in V1 (privacy first for kids).
 
