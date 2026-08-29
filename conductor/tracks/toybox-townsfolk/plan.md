@@ -27,12 +27,15 @@
 
 ## Phase 2 — Save/Load Compatibility (TDD)
 
-- [ ] Task: TDD — Red: extend save tests for new scenery kinds
-  - [ ] Assert round trips preserve placed town/critter items
-  - [ ] Assert legacy snapshots without the new kinds load unchanged
-  - [ ] Assert unknown kind identifiers restore safely without losing other data
-- [ ] Task: Implement version-compatible save/deserialize for the new kinds
-- [ ] Task: Verify >80% coverage for changed save/persistence logic
+- [x] Task: TDD — Red: extend save tests for new scenery kinds
+  - [x] Assert round trips preserve placed town/critter items
+  - [x] Assert legacy snapshots without the new kinds load unchanged
+  - [x] Assert unknown kind identifiers restore safely without losing other data
+  - Notes: Extended `src/core/save.test.ts`: town/critter round trip, V1-kinds legacy load, and an unknown-kind tolerance test (Red: 1 failure — the old code discarded the whole world). Also refreshed the stale "unknown kinds" fixture that used `house` (now a real kind) to `dragon`.
+- [x] Task: Implement version-compatible save/deserialize for the new kinds
+  - Notes: `src/core/save.ts` already validated kinds against the widened catalog; the real change is tolerance — unknown scenery kinds now drop to the drawer while the rest of the world restores (pieces stay strict; duplicate-cell check runs on what remains). Commit `a860120`.
+- [x] Task: Verify >80% coverage for changed save/persistence logic
+  - Notes: Coverage: `save.ts` 88.9% stmts / 97.7% lines; full suite 162 tests green; Biome + `tsc --noEmit` clean.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Assets: Blender Prep and Vendoring
