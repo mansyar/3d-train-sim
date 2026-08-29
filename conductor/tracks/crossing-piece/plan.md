@@ -165,7 +165,7 @@
 
 ## Phase: Review Fixes
 
-- [x] Task: Apply review suggestions
+- [x] Task: Apply review suggestions `[46dcb8d]`
 
   Notes:
   - Principal-engineer review of the full track diff (c3b49f7..HEAD): plan
