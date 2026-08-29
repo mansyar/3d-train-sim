@@ -218,6 +218,58 @@ describe('world store scenery', () => {
   });
 });
 
+describe('world store toy categories', () => {
+  it('places town and critter toys under the same rules as nature scenery', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.placeScenery('station', ORIGIN, 0)).toBe('placed');
+    expect(store.placeScenery('bird', NEXT_CELL, 0)).toBe('placed');
+    const kinds = store.scenery().map((item) => item.kind);
+    expect(kinds).toEqual(['station', 'bird']);
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('never lets two toy categories share a cell', () => {
+    const store = createWorldStore();
+    expect(store.placeScenery('station', ORIGIN, 0)).toBe('placed');
+    expect(store.placeScenery('bird', ORIGIN, 0)).toBe('occupied');
+    expect(store.scenery()).toHaveLength(1);
+
+    expect(store.placeScenery('house', NEXT_CELL, 0)).toBe('placed');
+    expect(store.place('straight', NEXT_CELL, 0)).toBe('occupied');
+    expect(store.pieces()).toHaveLength(0);
+  });
+
+  it('retains the toy kind through relocation and removal', () => {
+    const store = createWorldStore();
+    store.placeScenery('sheep', ORIGIN, 0);
+    const sheep = store.scenery()[0];
+    if (!sheep) throw new Error('fixture failed: sheep missing');
+
+    expect(store.relocateScenery(sheep.id, NEXT_CELL, 90)).toBe('placed');
+    const moved = store.scenery()[0];
+    expect(moved?.kind).toBe('sheep');
+    expect(moved?.cell).toEqual(NEXT_CELL);
+    expect(moved?.rotation).toBe(90);
+
+    store.removeScenery(sheep.id);
+    expect(store.scenery()).toHaveLength(0);
+  });
+
+  it('counts town and critter toys toward the shared meadow cap', () => {
+    const store = createWorldStore();
+    fillWorld(store, MAX_PIECES - 1);
+    expect(store.placeScenery('rabbit', { x: 0, y: 15 }, 0)).toBe('placed');
+    expect(store.placeScenery('cottage', { x: 1, y: 15 }, 0)).toBe('capacity');
+
+    const rabbit = store.scenery()[0];
+    if (rabbit) store.removeScenery(rabbit.id);
+    expect(store.placeScenery('cottage', { x: 1, y: 15 }, 0)).toBe('placed');
+  });
+});
+
 describe('world store train selection', () => {
   it('defaults to steam and changes across the train catalog', () => {
     const store = createWorldStore();
