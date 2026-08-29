@@ -57,8 +57,19 @@
   - Why: minimal solver change — straight-through routing is a property of
     exit selection, not of the graph.
   - Verified: `pnpm test` 147/147 green.
-- [ ] Task: Save/load round-trip tests for crossing pieces (Red → Green,
-      expect little/no change in `save.ts`)
+- [x] Task: Save/load round-trip tests for crossing pieces (Red → Green,
+      expect little/no change in `save.ts`) `[780bc25]`
+
+  Notes:
+  - Zero production change needed: `isPieceType` validates against
+    `PIECE_TYPES`, which the catalog update already extended — snapshots
+    round-trip crossings verbatim, rotation included.
+  - Also repaired a test fixture my catalog change had silently weakened:
+    `save.test.ts` used `type: 'crossing'` as its "unknown kind" fixture; it
+    now uses a genuinely unknown type (`hovercraft`) so the test still
+    asserts what its name says.
+  - Files: `src/core/save.test.ts`.
+  - Verified: `pnpm test` 149/149 green.
 - [ ] Task: Coverage check: `CI=true pnpm test -- --coverage`, >80% on new core
       code
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
