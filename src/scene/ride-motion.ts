@@ -26,10 +26,11 @@ const BRAKE_DISTANCE = (RIDE_SPEED * STOP_EASE_SECONDS) / 2;
 /** Yaw offset aligning the Kenney locomotive's authored facing with travel. */
 const MODEL_YAW_OFFSET = Math.PI;
 /**
- * Path distance between couplers: each trailing wagon rides this far behind
- * whatever is ahead of it (a wagon-length plus a slack beat, roughly).
+ * Path distance between couplers. The 1.5-scaled Kenney models run long —
+ * engines ~3.6–3.9 units, wagons ~4.05 — so nose-to-tail couplers need a
+ * good four units of rail plus a slack beat.
  */
-const FOLLOWER_GAP = CELL_SIZE * 0.6;
+const FOLLOWER_GAP = 4.2;
 
 /**
  * Parked default pose: wagons rest in a straight line behind the engine's
@@ -247,16 +248,22 @@ export function createRideMotion(
 
   /** Write the pose for forward-path distance `d` into `target`. */
   function poseAt(d: number, target: Object3D = model, faceTravel = true): void {
-    let remaining = d;
-    let segment = segments[0];
+    const first = segments[0];
+    if (!first) return;
+    // Coupled wagons can hang past a short path's ends. The overhang runs
+    // straight along the end tangent — like a real train overhanging the
+    // last rail — instead of snapping onto the engine.
+    const clamped = Math.min(Math.max(d, 0), total);
+    const over = d - clamped;
+    let remaining = clamped;
+    let segment = first;
     for (const candidate of segments) {
-      if (remaining < candidate.length) {
+      if (remaining <= candidate.length) {
         segment = candidate;
         break;
       }
       remaining -= candidate.length;
     }
-    if (!segment) return;
 
     const u = segment.length > 0 ? remaining / segment.length : 0;
     let x: number;
@@ -283,6 +290,12 @@ export function createRideMotion(
       tangentZ *= travelDirection;
     }
 
+    if (over !== 0) {
+      // Straight overhang past the path ends, along the local tangent.
+      x += tangentX * over;
+      z += tangentZ * over;
+    }
+
     target.position.set(x, 0, z);
     // The locomotive's forward is -Z at yaw 0 (plus the kit's authored offset).
     target.rotation.y = Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET;
@@ -290,18 +303,18 @@ export function createRideMotion(
 
   /**
    * Writes every trailing wagon's pose at its coupler distance behind the
-   * locomotive. Wagon distances sit on the far side of the travel direction —
-   * rides, shuttles, and stops alike — so wagons always trail *behind* the
-   * train, and parked wagons rest exactly where the train stopped. Wagons
-   * never flip their course; only the engine turns around (faceTravel false).
-   * Allocates nothing per frame.
+   * locomotive. Wagons sit at fixed path distances behind the engine — in
+   * path order, whatever the travel direction — so shuttling back never
+   * teleports them through the engine, and short layouts let them overhang
+   * the path ends instead of piling onto it. Wagons never flip their
+   * course; only the engine turns around (faceTravel false). Allocates
+   * nothing per frame.
    */
   function poseFollowers(): void {
     for (let i = 0; i < followers.length; i++) {
       const follower = followers[i];
       if (!follower) continue;
-      const d = Math.min(Math.max(distance - travelDirection * (i + 1) * FOLLOWER_GAP, 0), total);
-      poseAt(d, follower, false);
+      poseAt(distance - (i + 1) * FOLLOWER_GAP, follower, false);
     }
   }
 
