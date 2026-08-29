@@ -13,10 +13,11 @@
   - [x] Assert mute affects sound only and does not corrupt ride rhythm state.
   - [x] Run the focused suite and confirm the new tests fail (Red phase).
   - Notes: Added an injectable `subscribeToChugBeat` source and an `onChugBeat` consumer API. The controller forwards beats only while chugging; mute leaves rhythm state untouched and consumer unsubscribe is independent. Red phase showed 3 new failures with the existing 193 tests green; Green phase passed 196 tests, strict TypeScript, and Biome. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`.
-- [~] Task: Implement the minimal reusable chug-beat signal
-  - [ ] Preserve existing Howler playback, mute, fade, and rate behavior.
-  - [ ] Provide a stable subscription/disposal seam for the scene.
-  - [ ] Avoid allocations in the recurring beat callback path.
+- [x] Task: Implement the minimal reusable chug-beat signal (7382432)
+  - [x] Preserve existing Howler playback, mute, fade, and rate behavior.
+  - [x] Provide a stable subscription/disposal seam for the scene.
+  - [x] Avoid allocations in the recurring beat callback path.
+  - Notes: Added a fixed 500 ms visual beat clock to the Howler voice and explicit controller lifecycle hooks. The controller forwards beats only while chugging; audio mute/softening behavior remains unchanged. The source timer is created once per voice, starts/stops idempotently with the chug, and does not allocate on each beat. Verification: 197 focused/full Vitest tests passed, strict TypeScript passed, and Biome passed. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`, `src/audio/howler-voice.ts`.
 - [ ] Task: Refactor and verify logic coverage
   - [ ] Keep the rhythm contract small and independently testable.
   - [ ] Run `CI=true pnpm test -- --coverage`.
