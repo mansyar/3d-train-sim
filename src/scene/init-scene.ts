@@ -23,6 +23,7 @@ import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createRideMotion, parkFollowersBehind } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
+import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { type PickedItem, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
@@ -54,6 +55,8 @@ export interface SceneHandle {
   setGridVisible(visible: boolean): void;
   /** Debug aid: how many cargo wagons are live in the scene. */
   wagonCount(): number;
+  /** Debug aid: number of currently visible steam puffs. */
+  steamPuffCount(): number;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -90,6 +93,7 @@ export function initScene(
   const rideAudio = bindRideAudio(rides, audio);
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
+  let steamPuffs: SteamPuffEmitter | null = null;
   let loadedTrain: TrainKind | null = null;
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
   /**
@@ -102,6 +106,7 @@ export function initScene(
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
+  let visibleSteamPuffs = 0;
   const showTrain = (kind: TrainKind): void => {
     const template = locomotiveTemplates.get(kind);
     if (!template) return;
@@ -114,6 +119,10 @@ export function initScene(
     scene.add(model);
     locomotive = model;
     loadedTrain = kind;
+    steamPuffs?.dispose();
+    if (steamPuffs) scene.remove(steamPuffs.group);
+    steamPuffs = createSteamPuffEmitter(model, camera, kind);
+    scene.add(steamPuffs.group);
     scene.remove(crate.mesh);
     spinTarget = null;
     rideUpdate = createRideMotion(
@@ -168,6 +177,13 @@ export function initScene(
       });
   }
 
+  const unsubscribeBeat = audio.onChugBeat(() => {
+    if (rides.mode() === 'riding') steamPuffs?.emit();
+  });
+  const unsubscribeRideForPuffs = rides.subscribe((mode) => {
+    steamPuffs?.setEmitting(mode === 'riding');
+  });
+
   const unsubscribeTrain = world.subscribe(() => {
     const kind = world.train();
     if (kind !== loadedTrain) showTrain(kind);
@@ -218,6 +234,8 @@ export function initScene(
       const trainX = riding && locomotive ? locomotive.position.x : null;
       const trainZ = riding && locomotive ? locomotive.position.z : null;
       tracks.updateCritters(dt, trainX, trainZ);
+      steamPuffs?.update(dt);
+      visibleSteamPuffs = steamPuffs?.activeCount() ?? 0;
       updateCamera(dt);
     },
   );
@@ -232,6 +250,7 @@ export function initScene(
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => wagonSet.filter((wagon) => wagon !== null).length,
+    steamPuffCount: () => visibleSteamPuffs,
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     dispose(): void {
@@ -239,7 +258,12 @@ export function initScene(
       stopSpin();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
+      unsubscribeBeat();
+      unsubscribeRideForPuffs();
+      steamPuffs?.dispose();
+      if (steamPuffs) scene.remove(steamPuffs.group);
       unsubscribeTrain();
+      audio.dispose();
       tracks.dispose();
       crate.dispose();
       for (const model of locomotiveTemplates.values()) disposeObject(model);

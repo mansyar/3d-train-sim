@@ -36,6 +36,9 @@ function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
 function makeWired() {
   const handles = new Map<string, ReturnType<typeof fakeHandle>>();
   const created: string[] = [];
+  const beatListeners: Array<() => void> = [];
+  const startBeatClock = vi.fn();
+  const stopBeatClock = vi.fn();
   const controller = createAudioController({
     createSound: (name: string) => {
       created.push(name);
@@ -44,8 +47,26 @@ function makeWired() {
       return handle;
     },
     setGlobalMute: vi.fn(),
+    startChugBeatClock: startBeatClock,
+    stopChugBeatClock: stopBeatClock,
+    subscribeToChugBeat: (listener: () => void) => {
+      beatListeners.push(listener);
+      return () => {
+        const index = beatListeners.indexOf(listener);
+        if (index >= 0) beatListeners.splice(index, 1);
+      };
+    },
   });
-  return { controller, handles, created };
+  return {
+    controller,
+    handles,
+    created,
+    emitChugBeat: () => {
+      for (const listener of beatListeners) listener();
+    },
+    startBeatClock,
+    stopBeatClock,
+  };
 }
 
 afterEach(() => {
@@ -88,6 +109,18 @@ describe('createAudioController', () => {
     expect(created).toEqual(['chug']);
     expect(handles.get('chug')?.calls).toEqual(['play']);
     expect(controller.isChugging()).toBe(true);
+  });
+
+  it('starts and stops the beat clock with the chug lifecycle', () => {
+    const { controller, startBeatClock, stopBeatClock } = makeWired();
+
+    controller.startChug();
+    controller.startChug();
+    controller.stopChug();
+    controller.stopChug();
+
+    expect(startBeatClock).toHaveBeenCalledOnce();
+    expect(stopBeatClock).toHaveBeenCalledOnce();
   });
 
   it('stopChug eases the loop out and is idempotent', () => {
@@ -206,6 +239,66 @@ describe('createAudioController', () => {
     controller.chirp('woof-pug');
 
     expect(handles.get('woof-pug')?.calls).toEqual(['play']);
+  });
+
+  it('notifies chug-beat listeners once for each beat while chugging', () => {
+    const { controller, emitChugBeat } = makeWired();
+    const beats: number[] = [];
+    controller.onChugBeat(() => beats.push(beats.length));
+
+    emitChugBeat();
+    controller.startChug();
+    emitChugBeat();
+    emitChugBeat();
+    controller.stopChug();
+    emitChugBeat();
+
+    expect(beats).toHaveLength(2);
+  });
+
+  it('unsubscribes a chug-beat listener cleanly', () => {
+    const { controller, emitChugBeat } = makeWired();
+    const beats: number[] = [];
+    const unsubscribe = controller.onChugBeat(() => beats.push(1));
+
+    unsubscribe();
+    controller.startChug();
+    emitChugBeat();
+
+    expect(beats).toEqual([]);
+  });
+
+  it('mute does not change chug-beat state', () => {
+    const { controller, emitChugBeat } = makeWired();
+    let beats = 0;
+    controller.onChugBeat(() => {
+      beats += 1;
+    });
+
+    controller.setMuted(true);
+    controller.startChug();
+    emitChugBeat();
+    controller.setMuted(false);
+    emitChugBeat();
+
+    expect(beats).toBe(2);
+    expect(controller.isChugging()).toBe(true);
+  });
+
+  it('dispose stops the beat clock and clears beat listeners', () => {
+    const { controller, emitChugBeat, startBeatClock, stopBeatClock } = makeWired();
+    let beats = 0;
+    controller.onChugBeat(() => {
+      beats += 1;
+    });
+    controller.startChug();
+    controller.dispose();
+    emitChugBeat();
+
+    expect(stopBeatClock).toHaveBeenCalledOnce();
+    expect(beats).toBe(0);
+    expect(controller.isChugging()).toBe(false);
+    expect(startBeatClock).toHaveBeenCalledOnce();
   });
 
   it('notifications announce chug state changes', () => {

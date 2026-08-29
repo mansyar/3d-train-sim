@@ -10,4 +10,4 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `scenery-placement`, `parent-reset-and-mute-memory`, `crossing-piece`,
 `release-pipeline`, `chugging-cargo`, `autosave-world-restore`,
 `playful-train-fleet`, `train-audio-personalities`, `toybox-townsfolk`,
-`soft-shadows-light-tuning`.
+`steam-puffs_20260830`, `soft-shadows-light-tuning`.
