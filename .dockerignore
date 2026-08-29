@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+test-results
+playwright-report
+.github
+conductor
+e2e
+*.md
+.gitignore
