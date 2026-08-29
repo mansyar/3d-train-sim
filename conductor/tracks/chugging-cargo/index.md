@@ -1,6 +1,6 @@
 # Track: Chugging Cargo
 
-**ID:** `chugging-cargo` · **Type:** Feature · **Status:** new
+**ID:** `chugging-cargo` · **Type:** Feature · **Status:** complete
 
 - [Specification](spec.md) — two trailing cargo wagons on every locomotive
 - [Implementation Plan](plan.md) — phased task list (TDD catalog, ride
