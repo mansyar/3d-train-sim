@@ -1,0 +1,8 @@
+{
+  "trackId": "steam-puffs_20260830",
+  "type": "feature",
+  "status": "new",
+  "description": "Add a pooled, zero-allocation steam-puff emitter synchronized with the train chug rhythm.",
+  "createdAt": "2026-08-30T00:00:00.000Z",
+  "updatedAt": "2026-08-30T00:00:00.000Z"
+}

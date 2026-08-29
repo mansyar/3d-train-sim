@@ -16,6 +16,8 @@ const SOUNDS: Record<string, { base: string; loop: boolean; volume: number }> = 
 
 /** How long a stop eases the chug out. */
 const FADE_MS = 600;
+/** Fixed visual rhythm: two readable puffs per second while rolling. */
+const CHUG_BEAT_MS = 500;
 
 /**
  * The Howler-backed speaker wiring — real sound at last. Built to satisfy the
@@ -23,6 +25,22 @@ const FADE_MS = 600;
  * behind the same contract.
  */
 export function createHowlerVoice(): AudioControllerOptions {
+  let chugBeatListener: (() => void) | null = null;
+  let chugBeatTimer: ReturnType<typeof setInterval> | null = null;
+
+  function startChugBeatClock(): void {
+    if (chugBeatTimer !== null) return;
+    chugBeatTimer = setInterval(() => {
+      chugBeatListener?.();
+    }, CHUG_BEAT_MS);
+  }
+
+  function stopChugBeatClock(): void {
+    if (chugBeatTimer === null) return;
+    clearInterval(chugBeatTimer);
+    chugBeatTimer = null;
+  }
+
   function createSound(name: string): SoundHandle {
     const sound = SOUNDS[name];
     if (!sound) throw new Error(`unknown sound: ${name}`);
@@ -53,5 +71,13 @@ export function createHowlerVoice(): AudioControllerOptions {
   return {
     createSound,
     setGlobalMute: (muted) => Howler.mute(muted),
+    subscribeToChugBeat: (listener) => {
+      chugBeatListener = listener;
+      return () => {
+        if (chugBeatListener === listener) chugBeatListener = null;
+      };
+    },
+    startChugBeatClock,
+    stopChugBeatClock,
   };
 }
