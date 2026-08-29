@@ -285,6 +285,22 @@ describe('createAudioController', () => {
     expect(controller.isChugging()).toBe(true);
   });
 
+  it('dispose stops the beat clock and clears beat listeners', () => {
+    const { controller, emitChugBeat, startBeatClock, stopBeatClock } = makeWired();
+    let beats = 0;
+    controller.onChugBeat(() => {
+      beats += 1;
+    });
+    controller.startChug();
+    controller.dispose();
+    emitChugBeat();
+
+    expect(stopBeatClock).toHaveBeenCalledOnce();
+    expect(beats).toBe(0);
+    expect(controller.isChugging()).toBe(false);
+    expect(startBeatClock).toHaveBeenCalledOnce();
+  });
+
   it('notifications announce chug state changes', () => {
     const { controller } = makeWired();
     const seen: boolean[] = [];

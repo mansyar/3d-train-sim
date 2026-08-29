@@ -66,6 +66,8 @@ export interface AudioController {
   subscribe(listener: () => void): () => void;
   /** Observes chug beats while the chug is active. Returns an unsubscribe fn. */
   onChugBeat(listener: () => void): () => void;
+  /** Releases rhythm listeners and any injected clock resources. */
+  dispose(): void;
 }
 
 /** Tempo dip while the train catches its breath at a dead end. */
@@ -183,6 +185,13 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       return () => {
         beatListeners.delete(listener);
       };
+    },
+
+    dispose: () => {
+      stopChugBeatClock?.();
+      beatListeners.clear();
+      listeners.clear();
+      chugging = false;
     },
   };
 }

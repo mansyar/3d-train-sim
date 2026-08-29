@@ -222,7 +222,6 @@ export function initScene(
       const trainX = riding && locomotive ? locomotive.position.x : null;
       const trainZ = riding && locomotive ? locomotive.position.z : null;
       tracks.updateCritters(dt, trainX, trainZ);
-      steamPuffs?.setEmitting(riding);
       steamPuffs?.update(dt);
       visibleSteamPuffs = steamPuffs?.activeCount() ?? 0;
       updateCamera(dt);
@@ -252,6 +251,7 @@ export function initScene(
       steamPuffs?.dispose();
       if (steamPuffs) scene.remove(steamPuffs.group);
       unsubscribeTrain();
+      audio.dispose();
       tracks.dispose();
       crate.dispose();
       for (const model of locomotiveTemplates.values()) disposeObject(model);
