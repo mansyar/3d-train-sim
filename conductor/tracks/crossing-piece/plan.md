@@ -33,7 +33,11 @@
   - Why: connectivity is pure data once the catalog knows the crossing joins
     all four edges — the existing boundary-key algorithms do the rest.
   - Verified: `pnpm test` 143/143 green.
-- [ ] Task: Write failing tests for straight-through pathing (Red)
+- [x] Task: Write failing tests for straight-through pathing (Red) `[339b182]`
+
+  Notes:
+  - Red confirmed: 4 failing tests in a new `solvePath — crossing` block.
+  - Files: `src/core/pathing.test.ts`.
   - [ ] `pathing.test.ts`: enter from north → exit south; enter from west →
         exit east
   - [ ] `pathing.test.ts`: both travel directions resolve symmetrically
