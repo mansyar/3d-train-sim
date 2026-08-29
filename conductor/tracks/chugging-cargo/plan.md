@@ -28,7 +28,12 @@ follow `conductor/workflow.md` for the full task lifecycle.
     16 other suites / 187 other tests stayed green. Green phase landed with
     100% coverage on the new module; both lint and typecheck gates clean."
 
-## Phase 2: Ride Following (scene)
+## Phase 2: Ride Following (scene) [checkpoint: 066edf0]
+
+**Verification Report:** Automated — `biome` ✅, `tsc --noEmit` ✅, 193 unit
+tests ✅ (2026-08-29). Manual — user confirmed Phase 2 follower capability
+meets expectations (2026-08-29); visual wagon verification deferred to
+Phase 3 when models are wired into the scene.
 
 - [x] Task: Extend `ride-motion.ts` so follower objects ride at a fixed
       negative path distance behind the locomotive (066edf0)
