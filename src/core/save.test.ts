@@ -63,11 +63,38 @@ describe('world snapshots', () => {
   it('rejects unknown kinds, invalid rotations, and invalid cells', () => {
     const invalid = {
       version: 1,
-      pieces: [{ id: 'piece-1', type: 'crossing', cell: { x: 0, y: 0 }, rotation: 45 }],
+      pieces: [{ id: 'piece-1', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 45 }],
       scenery: [{ id: 'scenery-2', kind: 'house', cell: { x: 16, y: 0 }, rotation: 0 }],
     };
 
     expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+  });
+
+  it('round-trips crossing pieces like any other track piece', () => {
+    const crossing: PlacedPiece[] = [
+      { id: 'piece-1', type: 'crossing', cell: { x: 3, y: 4 }, rotation: 90 },
+      { id: 'piece-2', type: 'straight', cell: { x: 3, y: 3 }, rotation: 0 },
+    ];
+
+    const snapshot = serializeWorld(crossing, [], 'steam');
+
+    expect(snapshot.pieces).toEqual(crossing);
+    expect(deserializeWorld(snapshot)).toEqual({ pieces: crossing, scenery: [], train: 'steam' });
+  });
+
+  it('restores a persisted crossing snapshot (rotation preserved verbatim)', () => {
+    expect(
+      deserializeWorld({
+        version: 1,
+        pieces: [{ id: 'piece-9', type: 'crossing', cell: { x: 5, y: 6 }, rotation: 270 }],
+        scenery: [],
+        train: 'steam',
+      }),
+    ).toEqual({
+      pieces: [{ id: 'piece-9', type: 'crossing', cell: { x: 5, y: 6 }, rotation: 270 }],
+      scenery: [],
+      train: 'steam',
+    });
   });
 
   it('rejects duplicate cells across tracks and scenery', () => {
