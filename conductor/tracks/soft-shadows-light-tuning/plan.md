@@ -25,14 +25,20 @@ manual tablet check (`conductor/workflow.md`). One task in flight at a time.
     near/far 8/110, bias −0.0002 + normalBias 0.1 against acne/peter-panning.
     Teardown removes and disposes all three lights. Gates: biome ✅,
     `tsc --noEmit` ✅, 193 unit tests ✅.
-- [~] Task: Enable renderer shadow maps + neutral tone mapping in `src/scene/init-scene.ts`
+- [x] Task: Enable renderer shadow maps + neutral tone mapping in `src/scene/init-scene.ts` (d2b9a68)
   - Acceptance criteria:
     - `shadowMap.enabled` with `PCFSoftShadowMap`; neutral tone mapping so
       bright toy surfaces don't clip.
     - Reduced-motion static frame still renders the shadow map once (no
       flicker); pixel-ratio cap and no-per-frame-allocation rules unchanged.
   - Commit `feat(scene): Enable shadow maps and neutral tone mapping`.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: `init-scene.ts` sets `shadowMap.enabled` + `PCFSoftShadowMap` and
+    `toneMapping = NeutralToneMapping` right after the pixel-ratio cap —
+    one-time renderer config, no per-frame cost beyond the shadow pass
+    itself; reduced-motion's single rendered frame still computes the map
+    once. Pixel-ratio cap (2) untouched. Gates: biome ✅, `tsc --noEmit` ✅,
+    193 unit tests ✅.
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Casters & Receiver (scene objects)
 
