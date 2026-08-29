@@ -16,12 +16,17 @@ follow `conductor/workflow.md` for the full task lifecycle.
   - Run the suite and confirm the new tests fail (Red phase). ✅ Confirmed —
     the wagon catalog file was the only failing suite (16 passed, 187 other
     tests green).
-- [~] Task: Implement `src/core/wagons.ts` in the `trains.ts` data pattern
+- [x] Task: Implement `src/core/wagons.ts` in the `trains.ts` data pattern (06db97a)
   - Minimum pure data + resolver functions to make the tests pass (Green
     phase); refactor if clarity improves.
   - Run the suite with coverage; >80% on the new module.
   - Commit `feat(core): Add cargo wagon catalog`.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Gates: `biome` lint ✅ · `tsc --noEmit` strict ✅ · 193 tests passed ✅
+  - `wagons.ts` at 100% statements/branches/functions/lines (target >80% ✅)
+  - Notes: "Red phase confirmed the catalog suite as the only failing file —
+    16 other suites / 187 other tests stayed green. Green phase landed with
+    100% coverage on the new module; both lint and typecheck gates clean."
 
 ## Phase 2: Ride Following (scene)
 
