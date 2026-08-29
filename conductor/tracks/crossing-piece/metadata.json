@@ -1,0 +1,11 @@
+{
+  "id": "crossing-piece",
+  "title": "Crossing Piece",
+  "type": "feature",
+  "status": "new",
+  "branch": "track/crossing-piece",
+  "created": "2026-08-29",
+  "updated": "2026-08-29",
+  "spec": "conductor/tracks/crossing-piece/spec.md",
+  "plan": "conductor/tracks/crossing-piece/plan.md"
+}
