@@ -10,6 +10,8 @@ export function createGround(scene: Scene): () => void {
   const material = new MeshStandardMaterial({ color: 0x8fce8f });
   const ground = new Mesh(geometry, material);
   ground.rotation.x = -Math.PI / 2;
+  // The play mat catches every toy's soft shadow (lights.ts sun).
+  ground.receiveShadow = true;
   scene.add(ground);
   return () => {
     scene.remove(ground);

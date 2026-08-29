@@ -1,0 +1,11 @@
+{
+  "id": "soft-shadows-light-tuning",
+  "title": "Soft Shadows & Light Tuning",
+  "type": "chore",
+  "status": "in progress",
+  "branch": "track/soft-shadows-light-tuning",
+  "created": "2026-08-30",
+  "updated": "2026-08-30",
+  "spec": "conductor/tracks/soft-shadows-light-tuning/spec.md",
+  "plan": "conductor/tracks/soft-shadows-light-tuning/plan.md"
+}
