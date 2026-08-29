@@ -201,9 +201,20 @@
     init (`Cannot access 'PIECE_ICONS' before initialization`) — `tabPanels`
     rendered before the icon tables were declared. Moved `PIECE_ICONS` above
     `toySlot`; boot restored (all 10 e2e were failing, now 10/10 pass).
-- [ ] Task: Extend e2e and unit coverage
-  - [ ] Unit: drawer model/grouping logic
-  - [ ] Playwright: tabbed drawer walkthrough, place a critter + station, start ride, assert no console errors
+- [x] Task: Extend e2e and unit coverage
+  - [x] Unit: drawer model/grouping logic
+  - [x] Playwright: tabbed drawer walkthrough, place a critter + station, start ride, assert no console errors
+
+  Notes:
+  - Unit coverage for the pure drawer model shipped with the model itself
+    (`557fc71`, 7 tests in `src/core/drawer.test.ts`).
+  - New e2e `tabbed toybox walkthrough` (`0605725`): boots with the drawer
+    closed, opens via 🌳 on Nature, walks Town and Critters tabs asserting
+    `aria-pressed`/panel visibility and slot counts, drag-places a sheep
+    (Critters tab) and a station (Town tab), verifies both in the world
+    store, builds a collision-free 2×2 corner loop through the dev handle,
+    starts a ride, asserts it keeps rolling, zero console errors and zero
+    external requests.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Definition of Done
