@@ -4,7 +4,9 @@
 **Type:** Feature  
 **Workflow:** TDD for logic-bearing code; scene/audio/render wiring verified with smoke tests and manual checks.
 
-## Phase 1 — Chug Rhythm Contract (logic/audio seam)
+## Phase 1 — Chug Rhythm Contract (logic/audio seam) [checkpoint: f56e3d2]
+
+**Verification Report:** Automated — `CI=true pnpm test -- --coverage` passed with 197 tests; `pnpm exec biome check .` passed across 55 files; `pnpm exec tsc --noEmit` passed; full `CI=true pnpm test` passed (2026-08-30). Manual — user confirmed the ride/chug lifecycle, repeated start/stop behavior, mute behavior, and clean runtime/network behavior meet expectations (2026-08-30).
 
 - [x] Task: Write failing tests for the chug-beat contract (2c1f9e3)
   - [x] Define expected beat notification behavior and listener cleanup.
@@ -27,7 +29,7 @@
 
 ## Phase 2 — Pooled Steam-Puff Emitter
 
-- [ ] Task: Write failing tests for pool and animation logic
+- [~] Task: Write failing tests for pool and animation logic
   - [ ] Assert exactly 16 reusable puff slots.
   - [ ] Assert emission uses an inactive slot and drops gracefully when saturated.
   - [ ] Assert a puff expires at exactly 1.0 second.
