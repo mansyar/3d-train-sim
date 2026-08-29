@@ -153,6 +153,12 @@ export function initScene(
     () => spinTarget,
     (dt) => {
       rideUpdate?.(dt);
+      // Critters idle always and hop while the riding train passes close.
+      // A parked train reports null — hops read as passing, not presence.
+      const riding = rides.mode() === 'riding' && locomotive !== null;
+      const trainX = riding && locomotive ? locomotive.position.x : null;
+      const trainZ = riding && locomotive ? locomotive.position.z : null;
+      tracks.updateCritters(dt, trainX, trainZ);
       updateCamera(dt);
     },
   );

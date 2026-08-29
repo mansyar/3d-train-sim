@@ -20,12 +20,14 @@ import {
   type PlacedScenery,
   SCENERY_KINDS,
   type SceneryKind,
+  sceneryCategory,
   sceneryLift,
   sceneryScale,
   sceneryUrl,
 } from '../core/scenery';
 import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
+import { createCritterLife } from './critter-life';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
 
@@ -98,6 +100,8 @@ export type PickedItem =
 
 export interface TrackRenderer {
   dispose(): void;
+  /** Advance critter idle sway/hops; the train position triggers hops. */
+  updateCritters(dt: number, trainX: number | null, trainZ: number | null): void;
   /** Begin a drag preview: the real model follows the pointer, grid-snapped. */
   beginGhost(kind: PieceType | SceneryKind): void;
   /** Snap the ghost to a cell (null hides it off-meadow); tint by validity. */
@@ -125,6 +129,9 @@ export function startTrackRenderer(
   const rendered = new Map<string, Object3D>();
   /** Meadow records by id, mirroring the store for picking. */
   const tracked = new Map<string, MeadowItem>();
+  /** Placed critter ids with live idle/hop animation (see critter-life). */
+  const animatedCritters = new Set<string>();
+  const critterLife = createCritterLife();
   const loader = new GLTFLoader();
   const raycaster = new Raycaster();
   const pointerNdc = new Vector2();
@@ -192,6 +199,30 @@ export function startTrackRenderer(
     for (const item of wanted.values()) {
       tracked.set(item.id, item);
       apply(item);
+    }
+    syncCritterAnimations(wanted);
+  }
+
+  /** Keeps the critter animator's roster matched to the placed critters. */
+  function syncCritterAnimations(wanted: Map<string, MeadowItem>): void {
+    const next = new Set<string>();
+    for (const [id, item] of wanted) {
+      if (!isPiece(item) && sceneryCategory(item.kind) === 'critter') next.add(id);
+    }
+    for (const id of next) {
+      if (!animatedCritters.has(id)) {
+        const model = rendered.get(id);
+        if (model) {
+          critterLife.track(model, id);
+          animatedCritters.add(id);
+        }
+      }
+    }
+    for (const id of animatedCritters) {
+      if (!next.has(id)) {
+        critterLife.forget(id);
+        animatedCritters.delete(id);
+      }
     }
   }
 
@@ -420,6 +451,10 @@ export function startTrackRenderer(
 
   return {
     cellFromPoint,
+    updateCritters(dt, trainX, trainZ): void {
+      if (disposed) return;
+      critterLife.update(dt, trainX, trainZ);
+    },
     beginGhost,
     moveGhost,
     endGhost,
@@ -439,6 +474,8 @@ export function startTrackRenderer(
       tracked.clear();
       for (const template of templates.values()) disposeObject(template);
       templates.clear();
+      critterLife.dispose();
+      animatedCritters.clear();
       scene.remove(gridLines);
       for (const geometry of gridGeometries) geometry.dispose();
       gridMaterial.dispose();
