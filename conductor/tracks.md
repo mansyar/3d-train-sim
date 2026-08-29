@@ -8,9 +8,8 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 | `autosave-world-restore` | Autosave & World Restore | complete | [tracks/autosave-world-restore/](tracks/autosave-world-restore/index.md) |
 | `playful-train-fleet` | Playful Train Fleet | complete | [tracks/playful-train-fleet/](tracks/playful-train-fleet/index.md) |
 | `train-audio-personalities` | Train Audio Personalities | complete | [tracks/train-audio-personalities/](tracks/train-audio-personalities/index.md) |
-| `crossing-piece` | Crossing Piece | complete | [tracks/crossing-piece/](tracks/crossing-piece/index.md) |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
-`scenery-placement`, `parent-reset-and-mute-memory`.
+`scenery-placement`, `parent-reset-and-mute-memory`, `crossing-piece`.
 
