@@ -50,7 +50,7 @@ Phase 3 when models are wired into the scene.
     writes go through one `poseTrain()` helper; no per-frame allocations.
     Review caught and fixed an initial direction-flip bug before commit.
   - Commit `feat(scene): Make ride motion support path followers`.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (3e7895f)
 
 ## Phase 3: Wagon Lifecycle & Composition (scene)
 
