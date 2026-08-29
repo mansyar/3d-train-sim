@@ -29,18 +29,20 @@
 
 ## Phase 2 — Pooled Steam-Puff Emitter
 
-- [~] Task: Write failing tests for pool and animation logic
-  - [ ] Assert exactly 16 reusable puff slots.
-  - [ ] Assert emission uses an inactive slot and drops gracefully when saturated.
-  - [ ] Assert a puff expires at exactly 1.0 second.
-  - [ ] Assert position rises, scale expands, and opacity fades over its lifetime.
-  - [ ] Assert stopping emission does not remove already-active puffs.
-  - [ ] Assert update/emission paths use stable storage without per-frame allocations.
-  - [ ] Run the focused suite and confirm the new tests fail (Red phase).
-- [ ] Task: Implement pure puff lifecycle logic
-  - [ ] Add a Three.js-independent pool/state module under `src/core/` or `src/state/` following existing boundaries.
-  - [ ] Use fixed-size state and deterministic lifecycle updates.
-  - [ ] Implement graceful saturation drops.
+- [x] Task: Write failing tests for pool and animation logic (7735143)
+  - [x] Assert exactly 16 reusable puff slots.
+  - [x] Assert emission uses an inactive slot and drops gracefully when saturated.
+  - [x] Assert a puff expires at exactly 1.0 second.
+  - [x] Assert position rises, scale expands, and opacity fades over its lifetime.
+  - [x] Assert stopping emission does not remove already-active puffs.
+  - [x] Assert update/emission paths use stable storage without per-frame allocations.
+  - [x] Run the focused suite and confirm the new tests fail (Red phase).
+  - Notes: Red phase confirmed the missing module while all 197 existing tests stayed green. Added the pure fixed-size lifecycle pool and tests; the Green suite now passes 201 tests, coverage, strict TypeScript, and Biome. Files: `src/core/steam-puffs.ts`, `src/core/steam-puffs.test.ts`.
+- [x] Task: Implement pure puff lifecycle logic (7735143)
+  - [x] Add a Three.js-independent pool/state module under `src/core/` or `src/state/` following existing boundaries.
+  - [x] Use fixed-size state and deterministic lifecycle updates.
+  - [x] Implement graceful saturation drops.
+  - Notes: Implemented sixteen reusable slots with one-second lifetimes, upward motion, scale expansion, opacity fade, graceful saturation drops, and emission gating. Update and emission use the preallocated slot array without temporary allocations.
 - [ ] Task: Verify >80% coverage for the new lifecycle logic
   - [ ] Run focused coverage and then the full Vitest suite.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
