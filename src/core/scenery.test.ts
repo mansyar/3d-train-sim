@@ -65,7 +65,8 @@ describe('sceneryVoice', () => {
     for (const kind of [...NATURE_KINDS, ...TOWN_KINDS]) {
       expect(sceneryVoice(kind)).toBeNull();
     }
-  });});
+  });
+});
 
 describe('sceneryScale', () => {
   it('scales every kind into toy-table proportions', () => {
