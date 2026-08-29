@@ -5,17 +5,22 @@
 
 ## Phase 1 — Expanded Toy Catalog and World State (TDD)
 
-- [ ] Task: TDD — Red: extend the scenery catalog tests for the new toy kinds
-  - [ ] Assert the catalog exposes station + 2 house variants (Town) and 2–3 critters (Critters) alongside tree/bush/rock
-  - [ ] Assert every kind has a local GLB URL, aria label, scale, and lift
-  - [ ] Assert new kinds obey one-toy-per-cell and the single global cap in the world store
-  - [ ] Assert critters expose a stable chirp id and a category (nature/town/critter) for drawer grouping
-- [ ] Task: TDD — Red: extend world-store tests for category grouping
-  - [ ] Assert placed items retain their kind and category through placement/relocation/removal
-  - [ ] Assert existing placement rules (occupied, out-of-bounds, capacity) apply unchanged to new kinds
-- [ ] Task: Implement the pure toy catalog extensions and category data
-- [ ] Task: Refactor catalog code for clarity without changing behavior
-- [ ] Task: Verify >80% coverage for new logic-bearing catalog/state code
+- [x] Task: TDD — Red: extend the scenery catalog tests for the new toy kinds
+  - [x] Assert the catalog exposes station + 2 house variants (Town) and 2–3 critters (Critters) alongside tree/bush/rock
+  - [x] Assert every kind has a local GLB URL, aria label, scale, and lift
+  - [x] Assert new kinds obey one-toy-per-cell and the single global cap in the world store
+  - [x] Assert critters expose a stable chirp id and a category (nature/town/critter) for drawer grouping
+  - Notes: Rewrote `src/core/scenery.test.ts` around a nine-toy catalog (nature/town/critter) and added a `world store toy categories` suite to `src/state/world.test.ts`. Red run: 7 failures in `scenery.test.ts` (missing kinds, `SCENERY_CATEGORIES`, `sceneryCategory`, `sceneryVoice`), confirming the tests exercise new behavior.
+- [x] Task: TDD — Red: extend world-store tests for category grouping
+  - [x] Assert placed items retain their kind and category through placement/relocation/removal
+  - [x] Assert existing placement rules (occupied, out-of-bounds, capacity) apply unchanged to new kinds
+  - Notes: Red run confirmed the new world-store suite passes against the current generic placement rules (the store is kind-agnostic); the catalog becomes the single source of category truth.
+- [x] Task: Implement the pure toy catalog extensions and category data
+  - Notes: `src/core/scenery.ts` now holds a nine-toy catalog across three drawer groups (nature/town/critter) with per-kind URL, category, scale, lift, aria, and critter voice data. Commit `d5eac90`.
+- [x] Task: Refactor catalog code for clarity without changing behavior
+  - Notes: Dropped an unused `SCENERY_CATEGORIES` import from the test; catalog kept table-driven, matching the existing trains.ts pattern. Biome + `tsc --noEmit` clean.
+- [x] Task: Verify >80% coverage for new logic-bearing catalog/state code
+  - Notes: Coverage run: `scenery.ts` 100% lines/branches, `world.ts` 97% — full suite 159 tests green.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Save/Load Compatibility (TDD)
