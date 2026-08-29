@@ -1,10 +1,6 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of all development tracks. Each track lives in `conductor/tracks/<track_id>/`
-with `spec.md`, `plan.md`, and `metadata.json`.
-
-| Track ID | Title | Status | Track Index |
-|---|---|---|---|
+Registry of active development tracks.
 
 No active tracks — the meadow is caught up. New work starts with the
 `conductor-new-track` skill.
