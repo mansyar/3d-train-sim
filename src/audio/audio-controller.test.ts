@@ -36,6 +36,7 @@ function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
 function makeWired() {
   const handles = new Map<string, ReturnType<typeof fakeHandle>>();
   const created: string[] = [];
+  const beatListeners: Array<() => void> = [];
   const controller = createAudioController({
     createSound: (name: string) => {
       created.push(name);
@@ -44,8 +45,22 @@ function makeWired() {
       return handle;
     },
     setGlobalMute: vi.fn(),
+    subscribeToChugBeat: (listener: () => void) => {
+      beatListeners.push(listener);
+      return () => {
+        const index = beatListeners.indexOf(listener);
+        if (index >= 0) beatListeners.splice(index, 1);
+      };
+    },
   });
-  return { controller, handles, created };
+  return {
+    controller,
+    handles,
+    created,
+    emitChugBeat: () => {
+      for (const listener of beatListeners) listener();
+    },
+  };
 }
 
 afterEach(() => {
@@ -206,6 +221,50 @@ describe('createAudioController', () => {
     controller.chirp('woof-pug');
 
     expect(handles.get('woof-pug')?.calls).toEqual(['play']);
+  });
+
+  it('notifies chug-beat listeners once for each beat while chugging', () => {
+    const { controller, emitChugBeat } = makeWired();
+    const beats: number[] = [];
+    controller.onChugBeat(() => beats.push(beats.length));
+
+    emitChugBeat();
+    controller.startChug();
+    emitChugBeat();
+    emitChugBeat();
+    controller.stopChug();
+    emitChugBeat();
+
+    expect(beats).toHaveLength(2);
+  });
+
+  it('unsubscribes a chug-beat listener cleanly', () => {
+    const { controller, emitChugBeat } = makeWired();
+    const beats: number[] = [];
+    const unsubscribe = controller.onChugBeat(() => beats.push(1));
+
+    unsubscribe();
+    controller.startChug();
+    emitChugBeat();
+
+    expect(beats).toEqual([]);
+  });
+
+  it('mute does not change chug-beat state', () => {
+    const { controller, emitChugBeat } = makeWired();
+    let beats = 0;
+    controller.onChugBeat(() => {
+      beats += 1;
+    });
+
+    controller.setMuted(true);
+    controller.startChug();
+    emitChugBeat();
+    controller.setMuted(false);
+    emitChugBeat();
+
+    expect(beats).toBe(2);
+    expect(controller.isChugging()).toBe(true);
   });
 
   it('notifications announce chug state changes', () => {

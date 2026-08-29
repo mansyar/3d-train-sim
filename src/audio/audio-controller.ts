@@ -35,6 +35,8 @@ export interface AudioControllerOptions {
   createSound: (name: string) => SoundHandle;
   /** Mutes or unmutes every sound at once (the global kill switch). */
   setGlobalMute: (muted: boolean) => void;
+  /** Connects the controller to the established chug rhythm. */
+  subscribeToChugBeat?: (listener: () => void) => () => void;
 }
 
 export interface AudioController {
@@ -58,6 +60,8 @@ export interface AudioController {
   chirp(voice: string): void;
   /** Observes state changes (mute or chug). Returns an unsubscribe fn. */
   subscribe(listener: () => void): () => void;
+  /** Observes chug beats while the chug is active. Returns an unsubscribe fn. */
+  onChugBeat(listener: () => void): () => void;
 }
 
 /** Tempo dip while the train catches its breath at a dead end. */
@@ -70,6 +74,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
 
   const sounds = new Map<string, SoundHandle>();
   const listeners = new Set<() => void>();
+  const beatListeners = new Set<() => void>();
   let muted = false;
   let chugging = false;
   let softened = false;
@@ -87,10 +92,17 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     for (const listener of listeners) listener();
   }
 
+  function notifyChugBeat(): void {
+    if (!chugging) return;
+    for (const listener of beatListeners) listener();
+  }
+
   /** A chug that was requested while muted speaks up as soon as we unmute. */
   function speakIfDue(): void {
     if (chugging && !muted) sound('chug').play();
   }
+
+  options.subscribeToChugBeat?.(notifyChugBeat);
 
   function applyMuted(next: boolean): void {
     if (next === muted) return;
@@ -158,6 +170,13 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+
+    onChugBeat: (listener) => {
+      beatListeners.add(listener);
+      return () => {
+        beatListeners.delete(listener);
+      };
     },
   };
 }
