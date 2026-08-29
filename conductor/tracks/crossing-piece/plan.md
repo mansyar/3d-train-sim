@@ -16,8 +16,8 @@
   - Files: `src/core/pieces.test.ts`, `src/core/track-graph.test.ts`.
   - Why: the spec's first requirement — 4-endpoint connectivity — needs its
     acceptance harness in place before any implementation exists.
-  - [ ] `pieces.test.ts`: `baseEndpointsFor('crossing')` returns all four edges
-  - [ ] `track-graph.test.ts`: crossing connects to neighbors on all four
+  - [x] `pieces.test.ts`: `baseEndpointsFor('crossing')` returns all four edges
+  - [x] `track-graph.test.ts`: crossing connects to neighbors on all four
         sides, at every rotation (0/90/180/270)
 - [x] Task: Implement the `crossing` type in `src/core/pieces.ts` (Green) `[05c5a34]`
 
@@ -70,13 +70,23 @@
     asserts what its name says.
   - Files: `src/core/save.test.ts`.
   - Verified: `pnpm test` 149/149 green.
-- [ ] Task: Coverage check: `CI=true pnpm test -- --coverage`, >80% on new core
+- [x] Task: Coverage check: `CI=true pnpm test -- --coverage`, >80% on new core
       code
+
+  Notes:
+  - `pieces.ts` 100% · `pathing.ts` 97.5% · `track-graph.ts` 95.7% ·
+    `save.ts` 88.9% — all above the 80% bar with 149/149 tests passing.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Asset & Scene Wiring (non-logic)
 
-- [ ] Task: Author `railroad-crossing.glb` in Blender
+> **Sequencing note (2026-08-29):** The catalog change made the exhaustive
+> `Record<PieceType, …>` types in `track-renderer.ts` and `app.ts` incomplete,
+> so the typecheck gate cannot pass until this phase's wiring exists. Phase 2
+> tasks are therefore executed alongside Phase 1's tail (user-approved
+> pull-forward), with one combined checkpoint at the end.
+
+- [~] Task: Author `railroad-crossing.glb` in Blender
   - [ ] Two straight rails crossing at 90° on the 4-unit module,
         below-the-mat geometry
   - [ ] Materials matched to kit straights; export GLB, calibrate anchor at
