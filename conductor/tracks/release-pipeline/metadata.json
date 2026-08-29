@@ -1,0 +1,11 @@
+{
+  "id": "release-pipeline",
+  "title": "Release Pipeline",
+  "type": "chore",
+  "status": "new",
+  "branch": "track/release-pipeline",
+  "created": "2026-08-29",
+  "updated": "2026-08-29",
+  "spec": "conductor/tracks/release-pipeline/spec.md",
+  "plan": "conductor/tracks/release-pipeline/plan.md"
+}
