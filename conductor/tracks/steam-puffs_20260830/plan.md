@@ -13,7 +13,7 @@
   - [x] Assert mute affects sound only and does not corrupt ride rhythm state.
   - [x] Run the focused suite and confirm the new tests fail (Red phase).
   - Notes: Added an injectable `subscribeToChugBeat` source and an `onChugBeat` consumer API. The controller forwards beats only while chugging; mute leaves rhythm state untouched and consumer unsubscribe is independent. Red phase showed 3 new failures with the existing 193 tests green; Green phase passed 196 tests, strict TypeScript, and Biome. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`.
-- [ ] Task: Implement the minimal reusable chug-beat signal
+- [~] Task: Implement the minimal reusable chug-beat signal
   - [ ] Preserve existing Howler playback, mute, fade, and rate behavior.
   - [ ] Provide a stable subscription/disposal seam for the scene.
   - [ ] Avoid allocations in the recurring beat callback path.

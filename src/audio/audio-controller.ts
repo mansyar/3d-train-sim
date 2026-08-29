@@ -37,6 +37,10 @@ export interface AudioControllerOptions {
   setGlobalMute: (muted: boolean) => void;
   /** Connects the controller to the established chug rhythm. */
   subscribeToChugBeat?: (listener: () => void) => () => void;
+  /** Starts the visual rhythm clock when the chug becomes active. */
+  startChugBeatClock?: () => void;
+  /** Stops the visual rhythm clock when the chug ends. */
+  stopChugBeatClock?: () => void;
 }
 
 export interface AudioController {
@@ -70,7 +74,7 @@ const SOFTEN_RATE = 0.85;
 const ROLLING_RATE = 1;
 
 export function createAudioController(options: AudioControllerOptions): AudioController {
-  const { createSound, setGlobalMute } = options;
+  const { createSound, setGlobalMute, startChugBeatClock, stopChugBeatClock } = options;
 
   const sounds = new Map<string, SoundHandle>();
   const listeners = new Set<() => void>();
@@ -131,6 +135,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       // holds its breath until the mute lifts.
       const chug = sound('chug');
       if (!muted) chug.play();
+      startChugBeatClock?.();
       notify();
     },
 
@@ -138,6 +143,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       if (!chugging) return;
       chugging = false;
       softened = false;
+      stopChugBeatClock?.();
       sound('chug').fade();
       notify();
     },

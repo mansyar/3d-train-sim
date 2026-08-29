@@ -37,6 +37,8 @@ function makeWired() {
   const handles = new Map<string, ReturnType<typeof fakeHandle>>();
   const created: string[] = [];
   const beatListeners: Array<() => void> = [];
+  const startBeatClock = vi.fn();
+  const stopBeatClock = vi.fn();
   const controller = createAudioController({
     createSound: (name: string) => {
       created.push(name);
@@ -45,6 +47,8 @@ function makeWired() {
       return handle;
     },
     setGlobalMute: vi.fn(),
+    startChugBeatClock: startBeatClock,
+    stopChugBeatClock: stopBeatClock,
     subscribeToChugBeat: (listener: () => void) => {
       beatListeners.push(listener);
       return () => {
@@ -60,6 +64,8 @@ function makeWired() {
     emitChugBeat: () => {
       for (const listener of beatListeners) listener();
     },
+    startBeatClock,
+    stopBeatClock,
   };
 }
 
@@ -103,6 +109,18 @@ describe('createAudioController', () => {
     expect(created).toEqual(['chug']);
     expect(handles.get('chug')?.calls).toEqual(['play']);
     expect(controller.isChugging()).toBe(true);
+  });
+
+  it('starts and stops the beat clock with the chug lifecycle', () => {
+    const { controller, startBeatClock, stopBeatClock } = makeWired();
+
+    controller.startChug();
+    controller.startChug();
+    controller.stopChug();
+    controller.stopChug();
+
+    expect(startBeatClock).toHaveBeenCalledOnce();
+    expect(stopBeatClock).toHaveBeenCalledOnce();
   });
 
   it('stopChug eases the loop out and is idempotent', () => {
