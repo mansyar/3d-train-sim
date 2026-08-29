@@ -31,7 +31,7 @@ Supporting guardrails:
 ## Core Gameplay Loop
 1. **Build:** drag track pieces (straights, 90° curves, crossings) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
-3. **Play:** choose one of three friendly locomotives, then press ▶ — the train chugs the full track with sound and steam; camera follows. Whistle button. ⏹ stops it.
+3. **Play:** choose one of three friendly locomotives, then press ▶ — the train chugs the full track with sound and steam, pausing ~2 s at any station with a happy ding-ding; camera follows. Whistle button. ⏹ stops it.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
 
 ## V1 Scope (Lean Core)
@@ -46,7 +46,7 @@ Supporting guardrails:
 - PWA offline install
 
 ## Future Scope (Roadmap Candidates)
-- Reactive characters (waving animals, crossing guards)
+- ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
 - Expanded train collection (colors, cargo wagons)
 - Track switches and branches
 - Bridges, tunnels, elevation
