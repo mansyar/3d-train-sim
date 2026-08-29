@@ -59,9 +59,16 @@
   - Runbook + secret names live in the updated `tech-stack.md` pipeline
     section; values are added by hand in repo Settings → Secrets (never
     committed).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3 — Docs & Verification
+### Verification Report — Phase 2 (dry run)
+
+- `workflow_dispatch` dry run on main: **success** — gates (biome + typecheck
+  + vitest + 9/9 e2e incl. WebKit) and publish (image build, nothing pushed)
+  both green (run 33225406553).
+- One fix found by the dry run: the e2e `tablet` project emulates iPad Mini
+  (WebKit) — the workflow originally installed only Chromium (#11).
+- Secrets confirmed present: `COOLIFY_WEBHOOK_URL`, `COOLIFY_TOKEN`.
 
 - [x] Task: Update `tech-stack.md` pipeline section to match the built
       reality (image name, tag format, secrets, e2e in gate)
