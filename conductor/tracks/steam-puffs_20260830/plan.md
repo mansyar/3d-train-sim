@@ -18,10 +18,11 @@
   - [x] Provide a stable subscription/disposal seam for the scene.
   - [x] Avoid allocations in the recurring beat callback path.
   - Notes: Added a fixed 500 ms visual beat clock to the Howler voice and explicit controller lifecycle hooks. The controller forwards beats only while chugging; audio mute/softening behavior remains unchanged. The source timer is created once per voice, starts/stops idempotently with the chug, and does not allocate on each beat. Verification: 197 focused/full Vitest tests passed, strict TypeScript passed, and Biome passed. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`, `src/audio/howler-voice.ts`.
-- [ ] Task: Refactor and verify logic coverage
-  - [ ] Keep the rhythm contract small and independently testable.
-  - [ ] Run `CI=true pnpm test -- --coverage`.
-  - [ ] Confirm >80% coverage for new logic-bearing code.
+- [x] Task: Refactor and verify logic coverage (pending plan commit)
+  - [x] Keep the rhythm contract small and independently testable.
+  - [x] Run `CI=true pnpm test -- --coverage`.
+  - [x] Confirm >80% coverage for new logic-bearing code.
+  - Notes: No additional refactor was needed after review. Coverage run passed with 197 tests; full Biome check passed across 55 files; strict TypeScript passed; full test suite passed. The new rhythm seam remains isolated to the audio boundary and introduces no runtime dependency or persistence change.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Pooled Steam-Puff Emitter
