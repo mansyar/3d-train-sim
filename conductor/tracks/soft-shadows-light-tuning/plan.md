@@ -48,7 +48,13 @@ shadow visibility itself is deferred to Phase 2 when casters are wired.
     tests required; acceptance criteria verified manually + via smoke later.
   - User confirmed 2026-08-30. Checkpoint: d2b9a68 (last functional commit).
 
-## Phase 2: Casters & Receiver (scene objects)
+## Phase 2: Casters & Receiver (scene objects) [checkpoint: 1f0ab96]
+
+**Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 193 unit
+tests ✅ (2026-08-30, `pnpm test` single run). No unit tests required — all
+phase changes are scene wiring. Manual — user confirmed 2026-08-30: track
+pieces and scenery cast soft shadows; ghost previews do not cast; train and
+wagons cast while riding; shadows are soft with warm undersides.
 
 - [x] Task: Mark cast/receive flags in `src/scene/track-renderer.ts`,
       `load-locomotive.ts`, `load-wagons.ts`, and `ground.ts` (1f0ab96)
@@ -70,7 +76,10 @@ shadow visibility itself is deferred to Phase 2 when casters are wired.
     `tsc --noEmit` ✅, 193 unit tests ✅. Also: `biome.json` now ignores the
     local `.freebuff` worktree dir, which had begun tripping Biome's
     nested-root-config error (committed separately, b7cf4b2).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Phase changes are scene-only — no unit tests required; acceptance
+    criteria verified manually + user confirmed 2026-08-30.
+  - Checkpoint: 1f0ab96 (last functional commit).
 
 ## Phase 3: Verification, Performance & Polish
 
