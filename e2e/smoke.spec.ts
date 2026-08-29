@@ -426,3 +426,119 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
   expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
+
+test('tabbed toybox walkthrough: place a critter and a station, then ride', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  // Let the render loop and GLB loads settle before interacting.
+  await page.waitForTimeout(1500);
+
+  // The toybox starts closed; the nature slot opens it on the Nature tab.
+  await expect(page.locator('.toy-drawer')).toBeHidden();
+  await page.click('[data-drawer="scenery"]');
+  await expect(page.locator('.toy-drawer')).toBeVisible();
+  await expect(page.locator('.drawer-tab[data-tab="nature"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.locator('.drawer-panel[data-panel="nature"]')).toBeVisible();
+  await expect(page.locator('.drawer-panel[data-panel="nature"] .scenery-slot')).toHaveCount(3);
+
+  // Walk the tabs: Town shows the buildings, Critters the animals.
+  await page.click('.drawer-tab[data-tab="town"]');
+  await expect(page.locator('.drawer-tab[data-tab="town"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.locator('.drawer-panel[data-panel="nature"]')).toBeHidden();
+  await expect(page.locator('.drawer-panel[data-panel="town"]')).toBeVisible();
+  await expect(
+    page.locator('.drawer-panel[data-panel="town"] [data-scenery="station"]'),
+  ).toBeVisible();
+  await page.click('.drawer-tab[data-tab="critter"]');
+  await expect(page.locator('.drawer-panel[data-panel="critter"]')).toBeVisible();
+  await expect(page.locator('.drawer-panel[data-panel="critter"] .scenery-slot')).toHaveCount(3);
+
+  // Drag a sheep from the Critters tab onto the meadow.
+  const dragFrom = async (selector: string, x: number, y: number) => {
+    const box = await page.locator(selector).boundingBox();
+    if (!box) throw new Error(`drawer slot not visible: ${selector}`);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(x, y, { steps: 10 });
+    await page.mouse.up();
+    // Let the scene sync and the drop-ping animation finish.
+    await page.waitForTimeout(600);
+  };
+  await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', 640, 380);
+
+  // Back to Town, drag the station onto a second meadow spot.
+  await page.click('.drawer-tab[data-tab="town"]');
+  await dragFrom('.drawer-panel[data-panel="town"] [data-scenery="station"]', 500, 300);
+
+  // Both toys really placed — a failed drop wobble-returns and would not count.
+  const toys = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          scenery: () => { kind: string; cell: { x: number; y: number } }[];
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return world.scenery().map((toy) => ({ kind: toy.kind, cell: toy.cell }));
+  });
+  expect(toys.map((toy) => toy.kind).sort()).toEqual(['sheep', 'station']);
+
+  // Build a 2x2 corner loop that avoids the placed toys, then ride it.
+  const busy = new Set(toys.map((toy) => `${toy.cell.x},${toy.cell.y}`));
+  let loop: { x: number; y: number }[] | null = null;
+  for (let x = 0; x < 15 && !loop; x += 1) {
+    for (let y = 0; y < 15 && !loop; y += 1) {
+      const block = [
+        { x, y },
+        { x: x + 1, y },
+        { x: x + 1, y: y + 1 },
+        { x, y: y + 1 },
+      ];
+      if (block.every((cell) => !busy.has(`${cell.x},${cell.y}`))) loop = block;
+    }
+  }
+  if (!loop) throw new Error('no free 2x2 block for the ride loop');
+  await page.evaluate((block) => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    const rotations = [90, 180, 270, 0];
+    block.forEach((cell, i) => {
+      if (world.place('corner', cell, rotations[i] ?? 0) !== 'placed') {
+        throw new Error(`loop corner placement failed at ${cell.x},${cell.y}`);
+      }
+    });
+  }, loop);
+  await page.waitForTimeout(800);
+
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+  await page.waitForTimeout(4000);
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
