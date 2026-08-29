@@ -83,10 +83,21 @@ wagons cast while riding; shadows are soft with warm undersides.
 
 ## Phase 3: Verification, Performance & Polish
 
-- [ ] Task: Run full gates + Playwright smoke suite
+- [x] Task: Run full gates + Playwright smoke suite
   - `biome check` + `tsc --noEmit` + vitest + Playwright: zero console
     errors, zero external requests, shadows present in the smoke run's
     screenshots.
+  - Notes: All 12 Playwright smoke tests pass (zero console errors, zero
+    external requests); biome ✅, `tsc --noEmit` ✅, 193 unit tests ✅.
+    Shadow-visibility investigation: headless-Chromium (SwiftShader)
+    screenshots showed no shadow map output even though the scene state was
+    fully correct (verified via a temporary debug hook + minimal repro —
+    real-browser rendering was fine throughout). The user's dev-server
+    screenshot confirms soft shadows on houses, trees, the train, and
+    critters. Headless SwiftShader shadow rendering is therefore treated as
+    a known tooling limitation, not an app bug; smoke assertions (console,
+    requests, interactions) remain the automated gate, and shadow visuals
+    are verified manually. Temp debug artifacts removed; suite re-run green.
 - [ ] Task: Manual tablet verification & record report
   - `pnpm dev` on tablet (iPad Safari / Android Chrome, or touch emulation):
     shadows soft and moving with the train; undersides warm not black; no
