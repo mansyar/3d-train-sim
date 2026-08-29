@@ -223,7 +223,22 @@
     store, builds a collision-free 2×2 corner loop through the dev handle,
     starts a ride, asserts it keeps rolling, zero console errors and zero
     external requests.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phase 5 (tabbed drawer UI + e2e coverage)
+
+- Automated: Biome clean, `tsc --noEmit` clean, Vitest 187/187 pass,
+  Playwright e2e 11/11 pass (tablet viewport) including the new
+  "tabbed toybox walkthrough: place a critter and a station, then ride"
+  (drawer closed at boot, tab walk with aria-pressed assertions, drag-place
+  sheep + station, collision-free loop, ride keeps rolling, zero console
+  errors, zero external requests).
+- Manual verification (tablet / touch emulation): drawer starts closed; 🧸
+  opens on the last-visited tab (Rails first); tabs switch panels; active
+  tab tap closes the drawer; second 🧸 tap closes; drag-place works from
+  every tab; rails dragging unchanged. User confirmed 2026-08-29 ("yes"),
+  including the joined-toggle refinement (`07abde1`).
+- [checkpoint: 07abde1]
 
 ## Definition of Done
 
