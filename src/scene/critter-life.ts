@@ -18,6 +18,8 @@ const HOP_ANTICIPATION = 0.2;
 
 interface Critter {
   model: Object3D;
+  /** Catalog voice id chirped on a hop; null for silent critters. */
+  voice: string | null;
   /** Resting transform, captured once so sway/hop always restore it. */
   baseY: number;
   baseScaleX: number;
@@ -33,7 +35,7 @@ interface Critter {
 
 export interface CritterLife {
   /** Begin animating a placed critter clone (no-op if already tracked). */
-  track(model: Object3D, id: string): void;
+  track(model: Object3D, id: string, voice?: string): void;
   /** Stop animating (the model leaves the scene or the renderer tears down). */
   forget(id: string): void;
   /** Advance idle sway and hops by dt seconds. Allocates nothing per frame. */
@@ -45,17 +47,19 @@ export interface CritterLife {
  * Procedural critter life (spec FR3): every critter breathes so the meadow
  * feels alive before ▶, and squash-stretch hops when the riding train
  * passes close by. Motion is written straight onto each model's transform —
- * no vectors, no closures, no allocations in the frame path.
+ * no vectors, no closures, no allocations in the frame path. A hop start
+ * announces the critter's catalog voice so the audio layer chirps it.
  */
-export function createCritterLife(): CritterLife {
+export function createCritterLife(onChirp: (voice: string) => void): CritterLife {
   const critters = new Map<string, Critter>();
   let elapsed = 0;
 
   return {
-    track(model, id) {
+    track(model, id, voice) {
       if (critters.has(id)) return;
       critters.set(id, {
         model,
+        voice: voice ?? null,
         baseY: model.position.y,
         baseScaleX: model.scale.x,
         baseScaleY: model.scale.y,
@@ -112,6 +116,7 @@ export function createCritterLife(): CritterLife {
           if (dx * dx + dz * dz <= HOP_RADIUS_SQUARED) {
             critter.hopStart = elapsed;
             critter.cooldownUntil = elapsed + HOP_COOLDOWN_SECONDS;
+            if (critter.voice) onChirp(critter.voice);
           }
         }
 

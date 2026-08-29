@@ -15,6 +15,7 @@ import {
   Vector3,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import type { AudioController } from '../audio/audio-controller';
 import { PIECE_TYPES, type PieceType } from '../core/pieces';
 import {
   type PlacedScenery,
@@ -24,6 +25,7 @@ import {
   sceneryLift,
   sceneryScale,
   sceneryUrl,
+  sceneryVoice,
 } from '../core/scenery';
 import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
@@ -124,6 +126,7 @@ export function startTrackRenderer(
   camera: PerspectiveCamera,
   canvas: HTMLCanvasElement,
   world: WorldStore,
+  audio: AudioController,
 ): TrackRenderer {
   const templates = new Map<PieceType | SceneryKind, Object3D>();
   const rendered = new Map<string, Object3D>();
@@ -131,7 +134,7 @@ export function startTrackRenderer(
   const tracked = new Map<string, MeadowItem>();
   /** Placed critter ids with live idle/hop animation (see critter-life). */
   const animatedCritters = new Set<string>();
-  const critterLife = createCritterLife();
+  const critterLife = createCritterLife((voice) => audio.chirp(voice));
   const loader = new GLTFLoader();
   const raycaster = new Raycaster();
   const pointerNdc = new Vector2();
@@ -210,12 +213,12 @@ export function startTrackRenderer(
       if (!isPiece(item) && sceneryCategory(item.kind) === 'critter') next.add(id);
     }
     for (const id of next) {
-      if (!animatedCritters.has(id)) {
-        const model = rendered.get(id);
-        if (model) {
-          critterLife.track(model, id);
-          animatedCritters.add(id);
-        }
+      if (animatedCritters.has(id)) continue;
+      const model = rendered.get(id);
+      const item = wanted.get(id);
+      if (model && item && !isPiece(item)) {
+        critterLife.track(model, id, sceneryVoice(item.kind) ?? undefined);
+        animatedCritters.add(id);
       }
     }
     for (const id of animatedCritters) {

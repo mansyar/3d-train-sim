@@ -63,7 +63,7 @@ export function initScene(
   const disposables: Array<() => void> = [];
   disposables.push(createLights(scene));
   disposables.push(createGround(scene));
-  const tracks = startTrackRenderer(scene, camera, canvas, world);
+  const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
