@@ -20,7 +20,7 @@
   - [x] Provide a stable subscription/disposal seam for the scene.
   - [x] Avoid allocations in the recurring beat callback path.
   - Notes: Added a fixed 500 ms visual beat clock to the Howler voice and explicit controller lifecycle hooks. The controller forwards beats only while chugging; audio mute/softening behavior remains unchanged. The source timer is created once per voice, starts/stops idempotently with the chug, and does not allocate on each beat. Verification: 197 focused/full Vitest tests passed, strict TypeScript passed, and Biome passed. Files: `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`, `src/audio/howler-voice.ts`.
-- [x] Task: Refactor and verify logic coverage (pending plan commit)
+- [x] Task: Refactor and verify logic coverage (51d7cda)
   - [x] Keep the rhythm contract small and independently testable.
   - [x] Run `CI=true pnpm test -- --coverage`.
   - [x] Confirm >80% coverage for new logic-bearing code.
@@ -49,18 +49,18 @@
 
 ## Phase 3 — Procedural Billboard Scene Integration
 
-- [x] Task: Add the procedural puff renderer and fixed scene pool (pending plan commit)
+- [x] Task: Add the procedural puff renderer and fixed scene pool (51d7cda)
   - [x] Create reusable procedural billboard geometry/material resources.
   - [x] Create exactly 16 reusable scene instances with no per-emission geometry/material/node allocation.
   - [x] Continuously orient active puffs toward the follow camera.
   - [x] Animate rise, scale, opacity, and deactivation using the pure lifecycle state.
   - Notes: Added `src/scene/steam-puff-emitter.ts` with shared procedural circle geometry/material and sixteen reusable billboard meshes. The renderer mirrors the pure pool state and updates visibility, transform, opacity, and camera-facing orientation without creating per-frame particle resources. Automated verification: Biome, TypeScript, 201 Vitest tests, production build, and 12 Playwright tablet smoke tests passed.
-- [x] Task: Add locomotive chimney placement (pending plan commit)
+- [x] Task: Add locomotive chimney placement (51d7cda)
   - [x] Resolve valid per-locomotive chimney anchors where available.
   - [x] Add documented fallback offsets for steam, diesel, and tram.
   - [x] Ensure fallback offsets are static and allocation-free at runtime.
   - Notes: The emitter searches model descendants for chimney/smokestack/stack anchors and otherwise uses documented static offsets for steam, diesel, and tram. Placement is wired during locomotive composition and supports train switching.
-- [x] Task: Connect ride/audio lifecycle (pending plan commit)
+- [x] Task: Connect ride/audio lifecycle (51d7cda)
   - [x] Start emission only when the ride is active.
   - [x] Emit one puff per chug beat.
   - [x] Stop new emissions immediately on ride stop while allowing active puffs to finish.
