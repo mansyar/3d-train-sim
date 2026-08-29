@@ -54,8 +54,8 @@ Phase 3 when models are wired into the scene.
 
 ## Phase 3: Wagon Lifecycle & Composition (scene)
 
-- [ ] Task: Load both wagon models in the `load-locomotive.ts` pattern; swap
-      the set when the selected train changes; dispose cleanly
+- [x] Task: Load both wagon models in the `load-locomotive.ts` pattern; swap
+      the set when the selected train changes; dispose cleanly (294a24b)
   - Acceptance criteria (non-logic):
     - Parked train shows the complete little train at rest; default pose
       behind the engine before the first ride.
@@ -64,6 +64,18 @@ Phase 3 when models are wired into the scene.
     - Only the active wagon set stays in the scene; clean disposal on train
       switch (no leaks).
   - Commit `feat(scene): Attach cargo wagons to the selected locomotive`.
+  - Notes: New `src/scene/load-wagons.ts` mirrors `load-locomotive.ts`
+    (GLTFLoader, bundled `train-carriage-lumber/box.glb`, 1.5 scale). Since
+    the catalog is identical for every train kind, the scene keeps one
+    persistent two-wagon set (pulling order by slot index) and re-attaches it
+    on train switch instead of cloning per switch — same set in the scene,
+    nothing to swap, nothing to leak. `createRideMotion` now receives the
+    live `wagonSet` as followers; a new `parkFollowersBehind` helper (same
+    coupler gap as the ride) gives wagons a sensible default pose behind a
+    freshly selected parked engine, and re-poses late-arriving wagons.
+    Load failures are swallowed — the train chugs on without a wagon;
+    teardown deep-disposes the wagon set. Gates: biome ✅ · tsc ✅ · 193
+    tests ✅ (2026-08-29).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: E2E Coverage & Track Completion
