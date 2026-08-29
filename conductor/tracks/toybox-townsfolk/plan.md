@@ -114,7 +114,20 @@
     - Files: `src/scene/critter-life.ts` (new), `track-renderer.ts`
       (roster sync + `updateCritters` API), `init-scene.ts` (feeds the
       riding locomotive's position). Commit `b782609`.
-- [ ] Task: Implement per-critter chirp audio via the existing Howler voice system (mute-respecting, volume-capped)
+- [x] Task: Implement per-critter chirp audio via the existing Howler voice system (mute-respecting, volume-capped)
+  - Notes: `audio-controller.chirp(voice)` plays a one-shot, silent while
+    muted; `howler-voice` registers the three catalog voices
+    (`oink-pig`/`baa-sheep`/`woof-pug`) at 0.5 volume so a hop chorus never
+    clips over the chug; `critter-life` fires the critter's voice exactly
+    when a hop starts (cooldown-gated, like the hop itself); renderer +
+    init-scene thread the controller in. **Assets:** three short CC0/CC-BY
+    clips vendored as ogg+mp3 (sheep baa from Wikimedia Commons CC0, dog
+    bark from Freesound CC0, pig oink from Freesound CC-BY 4.0 — attributed
+    in `public/audio/CREDITS.md`). Tests: +4 (chirp plays, mute silences,
+    unmute speaks, volume-capped registration). Files: `audio-controller.ts`,
+    `howler-voice.ts`, `critter-life.ts`, `track-renderer.ts`, `init-scene.ts`,
+    `public/audio/{baa-sheep,oink-pig,woof-pug}.{ogg,mp3}`, `CREDITS.md`.
+    Commit `8b39df6`.
 - [ ] Task: Implement the station stop in ride motion
   - [ ] Gentle deceleration, ~2s pause with happy ding-ding, smooth re-acceleration
   - [ ] Works on loops and shuttles; multiple stations each stop once; no retrigger mid-stop
