@@ -49,22 +49,25 @@
 
 ## Phase 3 — Procedural Billboard Scene Integration
 
-- [ ] Task: Add the procedural puff renderer and fixed scene pool
-  - [ ] Create reusable procedural billboard geometry/material resources.
-  - [ ] Create exactly 16 reusable scene instances with no per-emission geometry/material/node allocation.
-  - [ ] Continuously orient active puffs toward the follow camera.
-  - [ ] Animate rise, scale, opacity, and deactivation using the pure lifecycle state.
-- [ ] Task: Add locomotive chimney placement
-  - [ ] Resolve valid per-locomotive chimney anchors where available.
-  - [ ] Add documented fallback offsets for steam, diesel, and tram.
-  - [ ] Ensure fallback offsets are static and allocation-free at runtime.
-- [ ] Task: Connect ride/audio lifecycle
-  - [ ] Start emission only when the ride is active.
-  - [ ] Emit one puff per chug beat.
-  - [ ] Stop new emissions immediately on ride stop while allowing active puffs to finish.
-  - [ ] Dispose subscriptions and pooled resources with the scene.
-- [ ] Task: Record observable acceptance criteria in `plan.md`
-  - [ ] Confirm visual appearance, camera-facing behavior, placement, lifecycle, and stop fade behavior.
+- [x] Task: Add the procedural puff renderer and fixed scene pool (pending plan commit)
+  - [x] Create reusable procedural billboard geometry/material resources.
+  - [x] Create exactly 16 reusable scene instances with no per-emission geometry/material/node allocation.
+  - [x] Continuously orient active puffs toward the follow camera.
+  - [x] Animate rise, scale, opacity, and deactivation using the pure lifecycle state.
+  - Notes: Added `src/scene/steam-puff-emitter.ts` with shared procedural circle geometry/material and sixteen reusable billboard meshes. The renderer mirrors the pure pool state and updates visibility, transform, opacity, and camera-facing orientation without creating per-frame particle resources. Automated verification: Biome, TypeScript, 201 Vitest tests, production build, and 12 Playwright tablet smoke tests passed.
+- [x] Task: Add locomotive chimney placement (pending plan commit)
+  - [x] Resolve valid per-locomotive chimney anchors where available.
+  - [x] Add documented fallback offsets for steam, diesel, and tram.
+  - [x] Ensure fallback offsets are static and allocation-free at runtime.
+  - Notes: The emitter searches model descendants for chimney/smokestack/stack anchors and otherwise uses documented static offsets for steam, diesel, and tram. Placement is wired during locomotive composition and supports train switching.
+- [x] Task: Connect ride/audio lifecycle (pending plan commit)
+  - [x] Start emission only when the ride is active.
+  - [x] Emit one puff per chug beat.
+  - [x] Stop new emissions immediately on ride stop while allowing active puffs to finish.
+  - [x] Dispose subscriptions and pooled resources with the scene.
+  - Notes: `init-scene.ts` subscribes to `audio.onChugBeat`, emits only during riding, updates the emitter every render frame, and disables new emissions on stop while active puffs naturally expire. Scene disposal removes the beat subscription, emitter group, and shared GPU resources.
+- [x] Task: Record observable acceptance criteria in `plan.md`
+  - [x] Confirm visual appearance, camera-facing behavior, placement, lifecycle, and stop fade behavior.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E Smoke and Full Quality Gates

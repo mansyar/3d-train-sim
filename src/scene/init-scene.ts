@@ -16,6 +16,7 @@ import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createRideMotion, parkFollowersBehind } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
+import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { type PickedItem, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
@@ -78,6 +79,7 @@ export function initScene(
   const rideAudio = bindRideAudio(rides, audio);
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
+  let steamPuffs: SteamPuffEmitter | null = null;
   let loadedTrain: TrainKind | null = null;
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
   /**
@@ -102,6 +104,10 @@ export function initScene(
     scene.add(model);
     locomotive = model;
     loadedTrain = kind;
+    steamPuffs?.dispose();
+    if (steamPuffs) scene.remove(steamPuffs.group);
+    steamPuffs = createSteamPuffEmitter(model, camera, kind);
+    scene.add(steamPuffs.group);
     scene.remove(crate.mesh);
     spinTarget = null;
     rideUpdate = createRideMotion(
@@ -156,6 +162,10 @@ export function initScene(
       });
   }
 
+  const unsubscribeBeat = audio.onChugBeat(() => {
+    if (rides.mode() === 'riding') steamPuffs?.emit();
+  });
+
   const unsubscribeTrain = world.subscribe(() => {
     const kind = world.train();
     if (kind !== loadedTrain) showTrain(kind);
@@ -206,6 +216,8 @@ export function initScene(
       const trainX = riding && locomotive ? locomotive.position.x : null;
       const trainZ = riding && locomotive ? locomotive.position.z : null;
       tracks.updateCritters(dt, trainX, trainZ);
+      steamPuffs?.setEmitting(riding);
+      steamPuffs?.update(dt);
       updateCamera(dt);
     },
   );
@@ -227,6 +239,9 @@ export function initScene(
       stopSpin();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
+      unsubscribeBeat();
+      steamPuffs?.dispose();
+      if (steamPuffs) scene.remove(steamPuffs.group);
       unsubscribeTrain();
       tracks.dispose();
       crate.dispose();
