@@ -11,5 +11,5 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
-`scenery-placement`, `parent-reset-and-mute-memory`.
+`scenery-placement`, `parent-reset-and-mute-memory`, `crossing-piece`.
 

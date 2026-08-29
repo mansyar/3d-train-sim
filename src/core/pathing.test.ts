@@ -182,3 +182,64 @@ describe('solvePath — open layouts (zero dead ends, guaranteed ride)', () => {
     expect(path.steps.map((s) => s.pieceId)).toEqual(['head', 'mid', 'tail']);
   });
 });
+
+describe('solvePath — crossing (straight-through only)', () => {
+  it('rides a plus layout straight through: enter west, exit east', () => {
+    const pieces = [
+      piece('w', 'straight', 0, 0, 90), // east edge meets crossing west
+      piece('x', 'crossing', 1, 0, 0),
+      piece('e', 'straight', 2, 0, 90), // west edge meets crossing east
+      piece('n', 'straight', 1, -1, 0), // south edge meets crossing north
+      piece('s', 'straight', 1, 1, 0), // north edge meets crossing south
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    // Dead ends sort to the west arm (cell '0,0'), so the ride starts there.
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['w', 'x', 'e']);
+    expect(path.steps[1]).toEqual({ pieceId: 'x', from: 'west', to: 'east' });
+  });
+
+  it('exits opposite when entering from the north (deterministic start picks the north arm)', () => {
+    // No west arm: the north arm holds the smallest cell, so the solver
+    // starts there and enters the crossing through its north edge.
+    const pieces = [
+      piece('n', 'straight', 1, 0, 0),
+      piece('x', 'crossing', 1, 1, 0),
+      piece('e', 'straight', 2, 1, 90),
+      piece('s', 'straight', 1, 2, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['n', 'x', 's']);
+    expect(path.steps[1]).toEqual({ pieceId: 'x', from: 'north', to: 'south' });
+  });
+
+  it('treats an unconnected crossing edge as a dead end (pause + shuttle back)', () => {
+    // A lone spur into a crossing: the south exit is unconnected, so the
+    // ride ends there — the ride layer pauses and shuttles back.
+    const pieces = [piece('n', 'straight', 1, 0, 0), piece('x', 'crossing', 1, 1, 0)];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps).toEqual([
+      { pieceId: 'n', from: 'north', to: 'south' },
+      { pieceId: 'x', from: 'north', to: 'south' },
+    ]);
+  });
+
+  it('shuttles a lone crossing west-to-east (opposite, never an arbitrary end)', () => {
+    const pieces = [piece('x', 'crossing', 2, 2, 0)];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    // With four open ends the solver enters through the lowest-key open end
+    // (west) — the exit MUST be the opposite edge, not just "another end".
+    expect(path.steps).toEqual([{ pieceId: 'x', from: 'west', to: 'east' }]);
+  });
+});

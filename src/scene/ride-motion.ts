@@ -89,7 +89,9 @@ export function createRideMotion(
       if (!piece) continue; // Stale step — re-solves on the next start.
       const entry = edgeMidpoint(piece.cell, step.from);
       const exit = edgeMidpoint(piece.cell, step.to);
-      if (piece.type === 'straight') {
+      // Straights and crossings ride a line through the cell; only corners
+      // pivot on a quarter-arc.
+      if (piece.type === 'straight' || piece.type === 'crossing') {
         segments.push({
           kind: 'line',
           ax: entry.x,

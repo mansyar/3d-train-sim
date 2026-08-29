@@ -33,6 +33,14 @@ const NEXT_EDGE: Record<Edge, Edge> = {
   west: 'north',
 };
 
+/** The edge across the cell — how a crossing routes straight through. */
+const OPPOSITE_EDGE: Record<Edge, Edge> = {
+  north: 'south',
+  east: 'west',
+  south: 'north',
+  west: 'east',
+};
+
 /** One piece endpoint: its world-oriented compass edge and boundary key. */
 interface End {
   pieceId: string;
@@ -94,9 +102,11 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
 
   const degreeOf = (id: string) => partnerOf.get(id)?.size ?? 0;
 
-  // Components are simple paths or cycles (every piece joins at most two
-  // neighbours). Collect them, then ride the one whose smallest cell comes
-  // first — a deterministic choice that never depends on array order.
+  // Components are simple paths, cycles, or trees through crossings (a
+  // crossing joins up to four neighbours but routes straight through, so
+  // rides still walk one end-to-end pass). Collect them, then ride the one
+  // whose smallest cell comes first — a deterministic choice that never
+  // depends on array order.
   const visited = new Set<string>();
   const components: string[][] = [];
   for (const p of pieces) {
@@ -172,9 +182,15 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
       ends.find((end) => end.edge === curEntry),
       `piece ${curId} has no ${curEntry} end`,
     );
+    // Two-end pieces exit through their only other end; a crossing (four
+    // ends) routes straight through to the edge opposite the entry.
     const exitEnd = invariant(
-      ends.find((end) => end.key !== entryEnd.key),
-      `piece ${curId} has a single end`,
+      ends.length === 2
+        ? ends.find((end) => end.key !== entryEnd.key)
+        : ends.find((end) => end.edge === OPPOSITE_EDGE[curEntry]),
+      ends.length === 2
+        ? `piece ${curId} has a single end`
+        : `piece ${curId} has no ${OPPOSITE_EDGE[curEntry]} end`,
     );
     steps.push({ pieceId: curId, from: curEntry, to: exitEnd.edge });
     ridden.add(curId);

@@ -15,6 +15,7 @@ const isPieceKind = (kind: PieceType | SceneryKind): kind is PieceType =>
 const PIECE_LABELS: Record<PieceType, string> = {
   straight: 'Straight track piece',
   corner: 'Corner track piece',
+  crossing: 'Crossing track piece',
 };
 
 const PIECE_ICONS: Record<PieceType, string> = {
@@ -41,6 +42,22 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-cream)" stroke-width="16" stroke-linecap="round"/>
       <path d="M22 2 Q24 26 46 24" fill="none"
             stroke="var(--toy-steel)" stroke-width="5" stroke-linecap="round"/>
+    </svg>`,
+  crossing: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="6" y="4" width="36" height="40" rx="6" fill="var(--toy-cream)"/>
+      <line x1="24" y1="4" x2="24" y2="44"
+            stroke="var(--toy-brown)" stroke-width="14" stroke-linecap="round"/>
+      <line x1="8" y1="24" x2="40" y2="24"
+            stroke="var(--toy-brown)" stroke-width="14" stroke-linecap="round"/>
+      <line x1="24" y1="4" x2="24" y2="44"
+            stroke="var(--toy-cream)" stroke-width="9" stroke-linecap="round"/>
+      <line x1="8" y1="24" x2="40" y2="24"
+            stroke="var(--toy-cream)" stroke-width="9" stroke-linecap="round"/>
+      <line x1="24" y1="4" x2="24" y2="44"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="8" y1="24" x2="40" y2="24"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
     </svg>`,
 };
 
@@ -90,6 +107,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="${PIECE_LABELS.straight}">${PIECE_ICONS.straight}</button>
       <button class="piece-slot" type="button" data-piece="corner"
               aria-label="${PIECE_LABELS.corner}">${PIECE_ICONS.corner}</button>
+      <button class="piece-slot" type="button" data-piece="crossing"
+              aria-label="${PIECE_LABELS.crossing}">${PIECE_ICONS.crossing}</button>
     </div>
     <div class="scenery-drawer" role="group" aria-label="Scenery toys" hidden>
       <button class="scenery-slot" type="button" data-scenery="tree"

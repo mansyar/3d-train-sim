@@ -35,7 +35,12 @@ const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 type MeadowItem = PlacedPiece | PlacedScenery;
 
 /** Track kit model kinds (scenery kinds carry no base yaw — they are decor). */
-const BASE_YAW: Record<PieceType, number> = { straight: 0, corner: -Math.PI / 2 };
+const BASE_YAW: Record<PieceType, number> = {
+  straight: 0,
+  corner: -Math.PI / 2,
+  // 4-fold symmetric: every yaw looks identical, so rotation is a no-op.
+  crossing: 0,
+};
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
   kind in BASE_YAW ? BASE_YAW[kind as PieceType] : 0;
@@ -64,11 +69,16 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // junctions (matching ride-motion).
   straight: [0, -1, 2],
   corner: [0, -1, 2],
+  // The crossing centre (where the two rails intersect) sits at the same
+  // model-space point as the straight's rail midpoint: x=0, underside y=−1,
+  // mid-length z=2 — the cell centre the graph pivots rides around.
+  crossing: [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
   straight: '/assets/train-kit/railroad-straight.glb',
   corner: '/assets/train-kit/railroad-corner-small.glb',
+  crossing: '/assets/train-kit/railroad-crossing.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
