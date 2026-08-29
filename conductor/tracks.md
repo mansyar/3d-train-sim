@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [soft-shadows-light-tuning](tracks/soft-shadows-light-tuning/) | Soft Shadows & Light Tuning | chore | in progress |
+| [soft-shadows-light-tuning](tracks/soft-shadows-light-tuning/) | Soft Shadows & Light Tuning | chore | [x] complete |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
