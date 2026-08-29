@@ -84,7 +84,18 @@
 
 ## Phase 4 — Scene: Placement, Critter Life, Station Stop
 
-- [ ] Task: Extend scenery rendering to load and dispose the new models safely
+- [x] Task: Extend scenery rendering to load and dispose the new models safely
+  - Notes: No code change needed — `track-renderer.ts` is already generic
+    over `SCENERY_KINDS` (template load → clone → place, plus pop-out
+    removal). Verified:
+    - Loading: all 9 templates load on boot (e2e "drag-placing scenery
+      decorates the meadow" + manual placement of every new kind, user
+      confirmed 2026-08-29); a failed/unavailable GLB is a silent no-op and
+      the world keeps working.
+    - Disposal: late arrivals after teardown hit the `disposed` guard and
+      deep-dispose immediately; `dispose()` deep-disposes every template
+      (placed clones share template geometry/materials, so template dispose
+      covers them).
 - [ ] Task: Implement procedural critter animation
   - [ ] Subtle idle breathe/bob (~1–2% scale sway) using the shared tick pattern
   - [ ] Hop with squash-and-stretch when the train passes within ~1–2 cells
