@@ -136,8 +136,13 @@
 
 ## Phase 3 — Gates & Verification
 
-- [ ] Task: Full quality gates: `pnpm check` (biome + typecheck + vitest) and
+- [x] Task: Full quality gates: `pnpm check` (biome + typecheck + vitest) and
       `pnpm exec playwright test`
+
+  Notes:
+  - `pnpm check` green (biome · typecheck · 149/149 vitest).
+  - Playwright e2e: 9/9 passed on the tablet profile (44s), including the
+    silent-console assertion — the crossing GLB loads without errors.
 - [ ] Task: Manual tablet verification (build a cross layout, ride through,
       autosave reload)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
