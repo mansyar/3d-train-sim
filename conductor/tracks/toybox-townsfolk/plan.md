@@ -154,6 +154,13 @@
     cleanly (no orphan ding or stuck pause), and `beginRide` always starts
     at full voice. Re-verified: Biome + tsc clean, 175/175 unit tests,
     station-stops 100% coverage, Playwright 10/10.
+  - In-flight refinement (`7ab71dc`): the stop point now sits at the point
+    on the rails closest to the station centre (new pure
+    `closestPointFraction` for lines and arcs; `stationStopSteps` returns
+    the station cell and prefers the edge-touching step over a diagonal
+    one), so the train rests AT the station rather than at the entry to
+    its cell. Re-verified: Biome + tsc clean, 180/180 unit tests,
+    station-stops 100% coverage, Playwright 10/10.
 - [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 5 — Tabbed Drawer UI and End-to-End Coverage
