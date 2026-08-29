@@ -61,14 +61,16 @@ export function deserializeWorld(value: unknown): WorldData {
   if (!Array.isArray(value.pieces) || !Array.isArray(value.scenery)) return emptyWorld();
   if (value.pieces.length + value.scenery.length > MAX_PIECES) return emptyWorld();
 
-  const pieces = value.pieces.map(parsePiece);
-  const scenery = value.scenery.map(parseScenery);
-  if (pieces.some((piece) => piece === null) || scenery.some((item) => item === null)) {
-    return emptyWorld();
-  }
+  const parsedPieces = value.pieces.map(parsePiece);
+  if (parsedPieces.some((piece) => piece === null)) return emptyWorld();
+  const validPieces = parsedPieces as PlacedPiece[];
 
-  const validPieces = pieces as PlacedPiece[];
-  const validScenery = scenery as PlacedScenery[];
+  // Unknown scenery kinds (e.g. from a newer version) drop back to the
+  // drawer; everything else restores exactly as it was. A lost toy is a
+  // pity — a lost world is a tragedy.
+  const parsedScenery = value.scenery.map(parseScenery);
+  const validScenery = parsedScenery.filter((item): item is PlacedScenery => item !== null);
+
   const cells = [...validPieces, ...validScenery].map((item) => `${item.cell.x},${item.cell.y}`);
   if (new Set(cells).size !== cells.length) return emptyWorld();
 
