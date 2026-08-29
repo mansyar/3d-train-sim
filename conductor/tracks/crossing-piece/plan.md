@@ -86,21 +86,52 @@
 > tasks are therefore executed alongside Phase 1's tail (user-approved
 > pull-forward), with one combined checkpoint at the end.
 
-- [~] Task: Author `railroad-crossing.glb` in Blender
-  - [ ] Two straight rails crossing at 90° on the 4-unit module,
+- [x] Task: Author `railroad-crossing.glb` in Blender
+  - [x] Two straight rails crossing at 90° on the 4-unit module,
         below-the-mat geometry
-  - [ ] Materials matched to kit straights; export GLB, calibrate anchor at
+  - [x] Materials matched to kit straights; export GLB, calibrate anchor at
         (0, −1, 2) equivalent
-  - [ ] Save to `public/assets/train-kit/`
-- [ ] Task: Register the model in `src/scene/track-renderer.ts` (`PIECE_URLS`,
+  - [x] Save to `public/assets/train-kit/`
+
+  Notes:
+  - Authored in Blender 5.2 from the kit's own `railroad-straight.glb`:
+    duplicated the straight, rotated 90° about the vertical through the
+    anchor (0, −2, −1) Blender-space, joined, exported as-is — so the
+    crossing centre lands at glTF (0, −1, 2), exactly the anchor the
+    renderer maps to the cell centre. No new calibration needed.
+  - Verified by re-import: X∈[−2,2], Y∈[−4,0], Z∈[−1,−0.9]; single shared
+    `colormap` material like the kit pieces.
+  - User visually confirmed the GLB (2026-08-29).
+  - Files: `public/assets/train-kit/railroad-crossing.glb` (`3b129d0`).
+- [x] Task: Register the model in `src/scene/track-renderer.ts` (`PIECE_URLS`,
       `KIT_ANCHORS`, yaw no-op)
   - Acceptance: placed crossing renders aligned to the grid, rails collinear
     with neighbors
-- [ ] Task: Add the toybox slot in `src/ui/app.ts`
-  - [ ] `data-piece="crossing"` button + hand-drawn SVG icon (existing
+
+  Notes:
+  - `PIECE_URLS.crossing` → the authored GLB; `KIT_ANCHORS.crossing` = the
+    straight's anchor (0, −1, 2), which the authored model already honours;
+    `BASE_YAW.crossing` = 0 (4-fold symmetric — rotation is a visual no-op).
+  - Also fixed `ride-motion.ts`: crossings ride a line through the cell
+    centre; only corners take the quarter-arc branch (the old `else` would
+    have arced a crossing wrongly).
+  - Pulled forward from the plan's sequencing note: these entries are what
+    the compiler demanded once `PIECE_TYPES` gained `crossing`.
+  - Files: `src/scene/track-renderer.ts`, `src/scene/ride-motion.ts`,
+    `src/ui/app.ts` (plus a biome formatting fix in
+    `src/core/track-graph.test.ts`).
+  - Gates: biome clean · typecheck clean · 149/149 tests (`f13c158`).
+- [x] Task: Add the toybox slot in `src/ui/app.ts`
+  - [x] `data-piece="crossing"` button + hand-drawn SVG icon (existing
         palette/stroke style), `PIECE_LABELS` entry
   - Acceptance: drag → ghost preview → snap works; rotate knob does not
     visibly change the piece
+
+  Notes:
+  - Third drawer slot with a hand-drawn SVG: two crossing rails in the
+    kit's cream/brown/steel palette variables, same chunky stroke language
+    as the straight and corner icons. Ghost preview, cap dimming, and the
+    rotate knob work through the existing generic piece machinery.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Gates & Verification
