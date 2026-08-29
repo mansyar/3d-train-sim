@@ -123,6 +123,32 @@ describe('createHowlerVoice', () => {
     expect(mocks.Howler.mute.mock.calls).toEqual([[true], [false]]);
   });
 
+  it('chirps register as volume-capped critter one-shots', () => {
+    const voice = createHowlerVoice();
+    voice.createSound('oink-pig');
+    voice.createSound('baa-sheep');
+    voice.createSound('woof-pug');
+
+    expect(mocks.Howl).toHaveBeenNthCalledWith(1, {
+      src: ['/audio/oink-pig.ogg', '/audio/oink-pig.mp3'],
+      loop: false,
+      volume: 0.5,
+      preload: true,
+    });
+    expect(mocks.Howl).toHaveBeenNthCalledWith(2, {
+      src: ['/audio/baa-sheep.ogg', '/audio/baa-sheep.mp3'],
+      loop: false,
+      volume: 0.5,
+      preload: true,
+    });
+    expect(mocks.Howl).toHaveBeenNthCalledWith(3, {
+      src: ['/audio/woof-pug.ogg', '/audio/woof-pug.mp3'],
+      loop: false,
+      volume: 0.5,
+      preload: true,
+    });
+  });
+
   it('rejects unknown sound names loudly', () => {
     expect(() => createHowlerVoice().createSound('boop')).toThrow('unknown sound');
   });

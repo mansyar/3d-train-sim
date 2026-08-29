@@ -182,6 +182,32 @@ describe('createAudioController', () => {
     expect(handles.get('chug')?.calls).not.toContain('play');
   });
 
+  it('chirps play the critter one-shot for a passing train', () => {
+    const { controller, handles, created } = makeWired();
+    controller.chirp('oink-pig');
+
+    expect(created).toEqual(['oink-pig']);
+    expect(handles.get('oink-pig')?.calls).toEqual(['play']);
+  });
+
+  it('mute keeps every chirp silent', () => {
+    const { controller, handles } = makeWired();
+    controller.setMuted(true);
+    controller.chirp('baa-sheep');
+
+    expect(handles.get('baa-sheep')?.calls ?? []).not.toContain('play');
+  });
+
+  it('chirps speak again after the mute lifts', () => {
+    const { controller, handles } = makeWired();
+    controller.setMuted(true);
+    controller.chirp('woof-pug');
+    controller.setMuted(false);
+    controller.chirp('woof-pug');
+
+    expect(handles.get('woof-pug')?.calls).toEqual(['play']);
+  });
+
   it('notifications announce chug state changes', () => {
     const { controller } = makeWired();
     const seen: boolean[] = [];

@@ -64,10 +64,55 @@ describe('world snapshots', () => {
     const invalid = {
       version: 1,
       pieces: [{ id: 'piece-1', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 45 }],
-      scenery: [{ id: 'scenery-2', kind: 'house', cell: { x: 16, y: 0 }, rotation: 0 }],
+      scenery: [{ id: 'scenery-2', kind: 'dragon', cell: { x: 16, y: 0 }, rotation: 0 }],
     };
 
     expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+  });
+
+  it('round-trips town buildings and critters like any other scenery', () => {
+    const townAndCritters: PlacedScenery[] = [
+      { id: 'scenery-1', kind: 'station', cell: { x: 2, y: 2 }, rotation: 0 },
+      { id: 'scenery-2', kind: 'house', cell: { x: 3, y: 2 }, rotation: 90 },
+      { id: 'scenery-3', kind: 'cottage', cell: { x: 4, y: 2 }, rotation: 180 },
+      { id: 'scenery-4', kind: 'pig', cell: { x: 5, y: 2 }, rotation: 0 },
+      { id: 'scenery-5', kind: 'sheep', cell: { x: 6, y: 2 }, rotation: 270 },
+      { id: 'scenery-6', kind: 'pug', cell: { x: 7, y: 2 }, rotation: 90 },
+    ];
+    const snapshot = serializeWorld(pieces, townAndCritters, 'steam');
+
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery: townAndCritters,
+      train: 'steam',
+    });
+  });
+
+  it('loads a legacy world of only V1 kinds unchanged', () => {
+    const legacy = serializeWorld(pieces, scenery, 'steam');
+    expect(deserializeWorld(legacy)).toEqual({ pieces, scenery, train: 'steam' });
+  });
+
+  it('drops unknown scenery kinds but keeps the rest of the world', () => {
+    const mixed = {
+      version: 1,
+      pieces,
+      scenery: [
+        { id: 'scenery-1', kind: 'dragon', cell: { x: 9, y: 1 }, rotation: 0 },
+        { id: 'scenery-2', kind: 'station', cell: { x: 2, y: 9 }, rotation: 90 },
+        { id: 'scenery-3', kind: 'sheep', cell: { x: 3, y: 9 }, rotation: 0 },
+      ],
+      train: 'steam',
+    };
+
+    expect(deserializeWorld(mixed)).toEqual({
+      pieces,
+      scenery: [
+        { id: 'scenery-2', kind: 'station', cell: { x: 2, y: 9 }, rotation: 90 },
+        { id: 'scenery-3', kind: 'sheep', cell: { x: 3, y: 9 }, rotation: 0 },
+      ],
+      train: 'steam',
+    });
   });
 
   it('round-trips crossing pieces like any other track piece', () => {

@@ -26,6 +26,8 @@ const OVERVIEW_LOOK = new Vector3(0, 0, 0);
 const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 /** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
 const CAMERA_EASE = 2.5;
+/** The breath between the two dings of a station welcome. */
+const STATION_DING_GAP_MS = 350;
 
 export interface SceneHandle {
   dispose(): void;
@@ -63,7 +65,7 @@ export function initScene(
   const disposables: Array<() => void> = [];
   disposables.push(createLights(scene));
   disposables.push(createGround(scene));
-  const tracks = startTrackRenderer(scene, camera, canvas, world);
+  const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
@@ -91,7 +93,20 @@ export function initScene(
     loadedTrain = kind;
     scene.remove(crate.mesh);
     spinTarget = null;
-    rideUpdate = createRideMotion(model, world, rides, rideAudio.setPaused).update;
+    rideUpdate = createRideMotion(
+      model,
+      world,
+      rides,
+      rideAudio.setPaused,
+      // A station stop earns a happy ding-ding (spec FR4). Two blips, a
+      // breath apart; late blips are skipped if the scene has been torn down.
+      () => {
+        audio.ding();
+        window.setTimeout(() => {
+          if (!disposed) audio.ding();
+        }, STATION_DING_GAP_MS);
+      },
+    ).update;
   };
 
   for (const kind of TRAIN_KINDS) {
@@ -153,6 +168,12 @@ export function initScene(
     () => spinTarget,
     (dt) => {
       rideUpdate?.(dt);
+      // Critters idle always and hop while the riding train passes close.
+      // A parked train reports null — hops read as passing, not presence.
+      const riding = rides.mode() === 'riding' && locomotive !== null;
+      const trainX = riding && locomotive ? locomotive.position.x : null;
+      const trainZ = riding && locomotive ? locomotive.position.z : null;
+      tracks.updateCritters(dt, trainX, trainZ);
       updateCamera(dt);
     },
   );

@@ -7,6 +7,11 @@ const SOUNDS: Record<string, { base: string; loop: boolean; volume: number }> = 
   chug: { base: 'chug-loop', loop: true, volume: 0.75 },
   whistle: { base: 'whistle', loop: false, volume: 1 },
   ding: { base: 'ding', loop: false, volume: 1 },
+  // Critter chirps sit well under the train's voice so a chorus of hops
+  // beside a chugging engine never clips (product guidelines: capped volume).
+  'oink-pig': { base: 'oink-pig', loop: false, volume: 0.5 },
+  'baa-sheep': { base: 'baa-sheep', loop: false, volume: 0.5 },
+  'woof-pug': { base: 'woof-pug', loop: false, volume: 0.5 },
 };
 
 /** How long a stop eases the chug out. */
