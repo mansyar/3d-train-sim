@@ -72,7 +72,34 @@
 
 - [x] Task: Update `tech-stack.md` pipeline section to match the built
       reality (image name, tag format, secrets, e2e in gate)
-- [ ] Task: Cut the first real release (`v0.1.0`): tag, watch the workflow,
+- [x] Task: Cut the first real release (`v0.1.0`): tag, watch the workflow,
       verify production on a family device
-- [ ] Task: Full quality gates: `pnpm check`
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Notes:
+  - Tag `v0.1.0` on commit `cbe5fb1` (main); release workflow run
+    33225678157 completed **success** (gates + publish + deploy, 3m1s,
+    2026-08-29). Image published as
+    `ghcr.io/mansyar/tiny-tracks:v0.1.0` + `latest`; Coolify deploy
+    webhook fired.
+  - Production verified on a family device by the user (2026-08-29).
+- [x] Task: Full quality gates: `pnpm check`
+
+  Notes:
+  - `pnpm check` (biome 52 files + `tsc --noEmit` + vitest) — all green:
+    187/187 unit tests pass (2026-08-29, post-release).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  `[checkpoint: cbe5fb1]`
+
+### Verification Report — Release (`v0.1.0`)
+
+- Tag `v0.1.0` cut on commit `cbe5fb1` (main); pushed to origin.
+- **Automated:** release workflow run 33225678157 on the tag push —
+  **success** (biome + typecheck + vitest + 9/9 e2e incl. WebKit; image
+  published to `ghcr.io/mansyar/tiny-tracks:v0.1.0` + `latest`; Coolify
+  deploy fired; 3m1s, 2026-08-29).
+- **Automated (post-release):** `pnpm check` — biome (52 files),
+  `tsc --noEmit`, 187/187 unit tests green.
+- **Manual:** production loaded and verified on a family device by the
+  user (2026-08-29) — confirmed with yes.
+- Later commits on main (`daf56c7` toybox-townsfolk merge) are outside
+  this track's scope.
