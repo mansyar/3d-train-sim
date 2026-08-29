@@ -85,11 +85,11 @@ describe('endpointEdgesFor — crossing', () => {
   });
 
   it('is rotation-invariant: the same four boundaries at every rotation', () => {
-    const atZero = endpointEdgesFor(piece('x', 'crossing', 2, 3, 0));
+    const atZero = endpointEdgesFor(piece('x', 'crossing', 2, 3, 0)).slice().sort();
     for (const rotation of [90, 180, 270] as const) {
-      expect(endpointEdgesFor(piece('x', 'crossing', 2, 3, rotation))).toEqual([
-        ...atZero,
-      ].sort());
+      expect(endpointEdgesFor(piece('x', 'crossing', 2, 3, rotation)).slice().sort()).toEqual(
+        atZero,
+      );
     }
   });
 });

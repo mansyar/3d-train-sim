@@ -1,5 +1,5 @@
 /** The V1 track-piece set. More shapes arrive with later tracks. */
-export const PIECE_TYPES = ['straight', 'corner'] as const;
+export const PIECE_TYPES = ['straight', 'corner', 'crossing'] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
 
@@ -18,14 +18,18 @@ export const FOOTPRINT_CELLS = 1;
 const CANONICAL_EDGES: readonly Edge[] = ['north', 'east', 'south', 'west'];
 
 /** The unrotated cell edges a piece's open ends join. */
-export function baseEndpointsFor(type: PieceType): readonly [Edge, Edge] {
+export function baseEndpointsFor(type: PieceType): readonly Edge[] {
   return BASE_ENDPOINTS[type];
 }
 
-/** Unrotated endpoint geometry: the two cell edges each piece joins. */
-const BASE_ENDPOINTS: Record<PieceType, readonly [Edge, Edge]> = {
+/**
+ * Unrotated endpoint geometry: the cell edges each piece joins. Two ends for
+ * straights and corners; the crossing joins all four.
+ */
+const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   straight: ['north', 'south'],
   corner: ['north', 'east'],
+  crossing: ['north', 'east', 'south', 'west'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */
@@ -35,7 +39,7 @@ function rotateEdge(edge: Edge, steps: number): Edge {
 }
 
 /**
- * The two cell edges a piece joins at the given rotation, in canonical order.
+ * The cell edges a piece joins at the given rotation, in canonical order.
  * Pure and total for every catalog piece and rotation.
  */
 export function endpointsFor(type: PieceType, rotation: Rotation): Edge[] {
