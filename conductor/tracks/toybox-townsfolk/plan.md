@@ -161,7 +161,21 @@
     one), so the train rests AT the station rather than at the entry to
     its cell. Re-verified: Biome + tsc clean, 180/180 unit tests,
     station-stops 100% coverage, Playwright 10/10.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phase 4 (scene: placement, critter life, station stop)
+
+- Automated: Biome clean, `tsc --noEmit` clean, Vitest 180/180 pass;
+  coverage: `station-stops.ts` 100% stmts/branches/lines, `critter-life.ts`
+  covered via unit tests, `save.ts` 97.7% lines. Playwright e2e 10/10
+  (tablet viewport, incl. "riding a loop with a station stops at it and
+  rolls on cleanly").
+- Manual verification: dev server on tablet — train decelerates gently and
+  stops beside the station at the closest rails point (not the cell entry),
+  double ding-ding, ~2 s rest, smooth re-acceleration; works on loops and
+  shuttles; two stations each stop once; stopping mid-brake cancels cleanly
+  (no orphan ding, no stuck pause). User confirmed 2026-08-29.
+- [checkpoint: 9968455]
 
 ## Phase 5 — Tabbed Drawer UI and End-to-End Coverage
 
