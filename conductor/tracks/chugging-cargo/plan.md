@@ -95,14 +95,30 @@ after dead-end reversals.
     Gates: biome ✅ · tsc ✅ · 193 tests ✅ (2026-08-29).
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (d43edae)
 
-## Phase 4: E2E Coverage & Track Completion
+## Phase 4: E2E Coverage & Track Completion [checkpoint: 0f244aa]
 
-- [~] Task: Extend `e2e/smoke.spec.ts`
+**Verification Report:** Automated — `biome` ✅ (55 files), `tsc --noEmit` ✅,
+193 unit tests ✅, Playwright 12/12 smoke tests ✅ (2026-08-30). The wagon
+smoke test covers the spec's e2e requirements directly: riding with wagons
+present, wagon-set consistency across a train switch, and world restore on
+reload — all with zero console errors and zero external requests.
+
+- [x] Task: Extend `e2e/smoke.spec.ts` (0f244aa)
   - Ride with wagons present; switch trains mid-session and confirm the
     wagon set stays consistent; reload and confirm the world restores
     unchanged; no console errors; no external requests.
+  - Notes: New "cargo wagons ride along, survive a train switch and a
+    reload" smoke test — places a 2x2 corner loop via the dev handle,
+    waits for both wagons to couple, rides, asserts the wagon count stays
+    2 mid-ride and after a mid-ride train switch (which eases the ride to
+    a stop per the ride controller's world-change rule), then reloads and
+    asserts pieces, selected train, and wagon set all restore. Backed by
+    a dev-only `wagonCount()` debug aid on `SceneHandle`, exposed to
+    tests via `__tinyTracksScene` (same pattern as `__tinyTracksWorld`).
   - Commit `test(e2e): Cover cargo wagon riding`.
-- [ ] Task: Full quality gate
+- [x] Task: Full quality gate (0f244aa)
   - `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test`
   - Playwright smoke run.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: biome ✅ (55 files) · tsc --noEmit ✅ · 193 unit tests ✅ ·
+    Playwright 12/12 ✅ (2026-08-30, includes the new wagon-riding test).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) (0f244aa)
