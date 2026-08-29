@@ -17,6 +17,12 @@ const END_PAUSE_SECONDS = 0.9;
 const STOP_EASE_SECONDS = 0.6;
 /** How long the train rests at a station, ding-ding and all. */
 const STATION_STOP_SECONDS = 2;
+/**
+ * Path distance covered while the ease pulls the train from full chug to a
+ * standstill. Braking begins this far before a station so the glide reads as
+ * gentle deceleration (spec FR4), never a freeze.
+ */
+const BRAKE_DISTANCE = (RIDE_SPEED * STOP_EASE_SECONDS) / 2;
 /** Yaw offset aligning the Kenney locomotive's authored facing with travel. */
 const MODEL_YAW_OFFSET = Math.PI;
 
@@ -70,6 +76,10 @@ export function createRideMotion(
   const armed = new Set<number>();
   /** > 0 while the train rests at a station; counts down in update(). */
   let stationStopTimer = 0;
+  /** Path distance the train coasts toward while braking for a station. */
+  let brakeTarget: number | null = null;
+  /** The station the brake in progress serves; announced when the train rests. */
+  let pendingStationId: string | null = null;
   /** Eases 0 (parked) ⇄ 1 (riding) so stops and starts stay gentle. */
   let speedScale = 0;
   let unsubscribe: (() => void) | null = ride.subscribe((mode, state) => {
@@ -167,31 +177,39 @@ export function createRideMotion(
     travelDirection = state.direction;
     pauseTimer = 0;
     stationStopTimer = 0;
+    brakeTarget = null;
+    pendingStationId = null;
+    setPaused(false); // A fresh ride always rolls at full voice.
     speedScale = 1; // ▶ starts the chug immediately.
     poseAt(0);
   }
 
   /**
-   * Stops the train at every owed station whose point lies in the distance
-   * window just travelled. The first one starts the pause; the rest (e.g. two
-   * stations flanking one cell) are served silently in the same stop.
+   * Begins braking for the first owed station whose brake point lies in the
+   * distance window just crossed (travel order: low → high, inclusive). The
+   * train then coasts the last stretch and comes to rest at the station cell.
+   * Stations sharing the stop cell (flanking one step) are served together.
    */
-  function triggerStops(from: number, to: number): boolean {
-    let hit = false;
+  function brakeForStopsInWindow(low: number, high: number): boolean {
+    if (brakeTarget !== null || stationStopTimer > 0) return false;
+    let chosen: { at: number; stationId: string } | null = null;
     for (let i = 0; i < stops.length; i++) {
-      if (!armed.has(i)) continue;
       const stop = stops[i];
-      if (!stop || !(stop.at > from && stop.at <= to)) continue;
+      if (!stop || !armed.has(i)) continue;
+      // Brake early enough to glide to a halt exactly at the station cell,
+      // whichever way the train is travelling.
+      const raw = travelDirection === 1 ? stop.at - BRAKE_DISTANCE : stop.at + BRAKE_DISTANCE;
+      const point = Math.min(Math.max(raw, 0), total);
+      if (point < low || point > high) continue;
       armed.delete(i);
-      if (!hit) {
-        distance = stop.at; // Rest exactly at the station cell.
-        stationStopTimer = STATION_STOP_SECONDS;
-        setPaused(true); // The chug softens while the train rests.
-        onStationStop?.(stop.stationId);
-        hit = true;
-      }
+      if (!chosen) chosen = stop;
+      else if (Math.abs(stop.at - chosen.at) > 0.01) armed.add(i); // Its own stop later.
     }
-    return hit;
+    if (!chosen) return false;
+    brakeTarget = chosen.at;
+    pendingStationId = chosen.stationId;
+    setPaused(true); // The chug softens while the train slows.
+    return true;
   }
 
   /** A fresh pass owes every stop again (loop lap or shuttle leg). */
@@ -251,14 +269,34 @@ export function createRideMotion(
       }
 
       if (stopping) {
-        // The pause counts down even at a standstill; the easing above lets
-        // the train glide in and roll out around it.
+        // The pause counts down at a standstill; the ease that follows lets
+        // the train roll out gently when it ends.
         stationStopTimer -= dt;
         if (stationStopTimer <= 0) {
           stationStopTimer = 0;
           setPaused(false); // Rolling again — the chug returns to full tempo.
         }
-        return; // Not a wheel-turn while the station pause counts down.
+        return; // No wheel-turn while the station pause counts down.
+      }
+
+      if (brakeTarget !== null) {
+        // Braking for a station: the ease above pulls the speed down while
+        // the train coasts the last stretch to the station cell (spec FR4).
+        distance += travelDirection * RIDE_SPEED * speedScale * dt;
+        const arrived = travelDirection === 1 ? distance >= brakeTarget : distance <= brakeTarget;
+        if (arrived || speedScale <= 0) {
+          const stationId = pendingStationId;
+          distance = brakeTarget;
+          brakeTarget = null;
+          pendingStationId = null;
+          poseAt(distance);
+          if (ride.mode() === 'riding') {
+            stationStopTimer = STATION_STOP_SECONDS;
+            if (stationId) onStationStop?.(stationId); // Ding-ding from rest.
+          }
+          return;
+        }
+        return poseAt(distance);
       }
 
       if (speedScale <= 0) return; // Parked — the train rests where it stopped.
@@ -278,27 +316,27 @@ export function createRideMotion(
         if (distance >= total) {
           if (ride.mode() === 'riding' && ride.ride()?.path.closed) {
             // Closed loops finish the lap, then roll on from the top.
-            if (triggerStops(prev, total)) return poseAt(distance);
+            if (brakeForStopsInWindow(prev, total)) return poseAt(distance);
             distance %= total;
             armAll();
-            if (triggerStops(0, distance)) return poseAt(distance);
+            if (brakeForStopsInWindow(0, distance)) return poseAt(distance);
           } else {
             distance = total;
-            if (triggerStops(prev, total)) return poseAt(distance);
+            if (brakeForStopsInWindow(prev, total)) return poseAt(distance);
             pauseTimer = END_PAUSE_SECONDS; // Dead end: pause, then shuttle back.
             setPaused(true);
             armAll(); // The way back owes every station again.
           }
-        } else if (triggerStops(prev, distance)) {
+        } else if (brakeForStopsInWindow(prev, distance)) {
           return poseAt(distance);
         }
       } else if (distance <= 0) {
         distance = 0;
-        if (triggerStops(0, prev)) return poseAt(distance);
+        if (brakeForStopsInWindow(0, prev)) return poseAt(distance);
         pauseTimer = END_PAUSE_SECONDS; // Back home: pause, then roll out again.
         setPaused(true);
         armAll(); // The way out owes every station again.
-      } else if (triggerStops(distance, prev)) {
+      } else if (brakeForStopsInWindow(distance, prev)) {
         return poseAt(distance);
       }
       poseAt(distance);
@@ -313,6 +351,8 @@ export function createRideMotion(
       stops = [];
       armed.clear();
       stationStopTimer = 0;
+      brakeTarget = null;
+      pendingStationId = null;
     },
   };
 }
