@@ -42,11 +42,12 @@ export function parkFollowersBehind(engine: Object3D, followers: readonly Object
     const follower = followers[i];
     if (!follower) continue;
     const gap = FOLLOWER_GAP * (i + 1);
-    // Engine forward is -Z at yaw 0, so behind is +Z in the engine's frame.
+    // The authored front faces +Z at yaw 0 (see MODEL_YAW_OFFSET), so behind
+    // is the front direction — (sin yaw, cos yaw) — negated.
     follower.position.set(
-      engine.position.x + Math.sin(engine.rotation.y) * gap,
+      engine.position.x - Math.sin(engine.rotation.y) * gap,
       0,
-      engine.position.z + Math.cos(engine.rotation.y) * gap,
+      engine.position.z - Math.cos(engine.rotation.y) * gap,
     );
     follower.rotation.y = engine.rotation.y;
   }
