@@ -179,9 +179,28 @@
 
 ## Phase 5 — Tabbed Drawer UI and End-to-End Coverage
 
-- [ ] Task: Implement tabbed toybox drawer (Rails / Nature / Town / Critters)
-  - [ ] Icon-only tabs, ≥64px targets, obvious active state, tap (or swipe) switching
-  - [ ] Preserve one-drawer-open-at-a-time and existing rails behavior exactly
+- [x] Task: Implement tabbed toybox drawer (Rails / Nature / Town / Critters)
+  - Acceptance criteria (non-logic): drawer closed at boot; 🛤️/🌳 slots open
+    the toybox on the Rails/Nature tab; tabs are icon-only, ≥64px, obvious
+    active state, tap switching; one drawer open at a time; rails tab
+    behavior identical to the old track drawer.
+  - [x] Icon-only tabs, ≥64px targets, obvious active state, tap (or swipe) switching
+  - [x] Preserve one-drawer-open-at-a-time and existing rails behavior exactly
+
+  Notes:
+  - Pure model committed earlier (`557fc71`): `src/core/drawer.ts` derives the
+    four tabs from the piece + scenery catalogs; 7 unit tests.
+  - UI wiring (`61d7671`): `.toy-drawer` replaces the separate track/scenery
+    drawers — one `role="tablist"` strip (🛤️ 🌳 🏠 🐾) + one panel per tab,
+    chunky `.drawer-tab` buttons (64px+ icons, `.is-active` pop), drag-to-place
+    slots unchanged per kind. Interaction (user-confirmed): 🛤️/🌳 rail slots
+    open the toybox on their tab, switch tabs while open, close on a second
+    tap of the active tab's slot; tapping the active tab inside the drawer
+    closes the whole drawer (no empty tab-strip state); drawer starts closed.
+  - **Bug fixed during verification:** the in-flight wiring crashed at module
+    init (`Cannot access 'PIECE_ICONS' before initialization`) — `tabPanels`
+    rendered before the icon tables were declared. Moved `PIECE_ICONS` above
+    `toySlot`; boot restored (all 10 e2e were failing, now 10/10 pass).
 - [ ] Task: Extend e2e and unit coverage
   - [ ] Unit: drawer model/grouping logic
   - [ ] Playwright: tabbed drawer walkthrough, place a critter + station, start ride, assert no console errors
