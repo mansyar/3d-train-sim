@@ -5,6 +5,7 @@ with `spec.md`, `plan.md`, and `metadata.json`.
 
 | Track ID | Title | Status | Track Index |
 |---|---|---|---|
+| `chugging-cargo` | Chugging Cargo | new | [tracks/chugging-cargo/](tracks/chugging-cargo/index.md) |
 | `autosave-world-restore` | Autosave & World Restore | complete | [tracks/autosave-world-restore/](tracks/autosave-world-restore/index.md) |
 | `playful-train-fleet` | Playful Train Fleet | complete | [tracks/playful-train-fleet/](tracks/playful-train-fleet/index.md) |
 | `train-audio-personalities` | Train Audio Personalities | complete | [tracks/train-audio-personalities/](tracks/train-audio-personalities/index.md) |
