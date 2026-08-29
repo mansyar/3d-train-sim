@@ -118,4 +118,9 @@
   4. Informational only (no change): `corepack enable` works on
      `node:24-alpine` but Corepack is absent from Node 25+ — install
      pnpm explicitly when the base image is eventually bumped.
-  Validation: `workflow_dispatch` dry run on main after merge.
+  Validation: `workflow_dispatch` dry run on main after merge —
+  run 33253453265 **success** (gates 2m28s, build-only publish 49s,
+  deploy skipped). Note for future maintenance: GHA annotation warns
+  that actions/checkout@v4, setup-node@v4, and pnpm/action-setup@v4
+  target Node 20 (forced to Node 24) — bump to their next major
+  versions when available.
