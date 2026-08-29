@@ -45,6 +45,8 @@ export interface SceneHandle {
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */
   setGridVisible(visible: boolean): void;
+  /** Debug aid: how many cargo wagons are live in the scene. */
+  wagonCount(): number;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -217,6 +219,7 @@ export function initScene(
     pickPiece: (clientX, clientY) => tracks.pickPiece(clientX, clientY),
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
     setGridVisible: (visible) => tracks.setGridVisible(visible),
+    wagonCount: () => wagonSet.filter((wagon) => wagon !== null).length,
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     dispose(): void {

@@ -428,6 +428,106 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('cargo wagons ride along, survive a train switch and a reload', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+
+  type SceneProbe = { wagonCount: () => number };
+  const wagonCount = (): Promise<number | undefined> =>
+    page.evaluate(() =>
+      (
+        window as unknown as { __tinyTracksScene?: { wagonCount: () => number } }
+      ).__tinyTracksScene?.wagonCount(),
+    );
+
+  // A 2x2 corner loop to ride, via the dev handle.
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    const corners = [
+      { cell: { x: 7, y: 7 }, rotation: 90 },
+      { cell: { x: 8, y: 7 }, rotation: 180 },
+      { cell: { x: 8, y: 8 }, rotation: 270 },
+      { cell: { x: 7, y: 8 }, rotation: 0 },
+    ];
+    for (const { cell, rotation } of corners) {
+      if (world.place('corner', cell, rotation) !== 'placed') {
+        throw new Error(`loop corner placement failed at ${cell.x},${cell.y}`);
+      }
+    }
+  });
+
+  // Both wagons couple up behind the parked engine (loads are async).
+  await page.waitForFunction(() => {
+    const scene = (window as unknown as { __tinyTracksScene?: SceneProbe }).__tinyTracksScene;
+    return scene?.wagonCount() === 2;
+  });
+
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+  // Mid-lap: the whole little train is out there riding — still two wagons.
+  await page.waitForTimeout(2500);
+  expect(await wagonCount()).toBe(2);
+
+  // Switching trains mid-ride eases the ride to a stop; the same wagon set
+  // re-attaches behind the new engine — never a third wagon, never none.
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { selectTrain: (kind: string) => boolean };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    if (!world.selectTrain('diesel')) throw new Error('train selection failed');
+  });
+  await expect(page.locator('.ride-toggle')).not.toHaveClass(/is-riding/);
+  await page.waitForTimeout(800);
+  expect(await wagonCount()).toBe(2);
+
+  // The world — and the wagon set with it — comes back unchanged on reload.
+  await page.reload();
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+  const restored = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => readonly unknown[]; train: () => string };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces().length, train: world.train() };
+  });
+  expect(restored.pieces).toBe(4);
+  expect(restored.train).toBe('diesel');
+  await page.waitForFunction(() => {
+    const scene = (window as unknown as { __tinyTracksScene?: SceneProbe }).__tinyTracksScene;
+    return scene?.wagonCount() === 2;
+  });
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('tabbed toybox walkthrough: place a critter and a station, then ride', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
