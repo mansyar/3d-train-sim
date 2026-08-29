@@ -101,6 +101,14 @@
 
 **Verification Report:** Automated — Biome passed across 58 files; strict TypeScript passed; 201 Vitest tests passed; production build passed; 13/13 Playwright tablet smoke tests passed (2026-08-30). Manual — user confirmed the final tablet/emulation behavior and performance expectations (2026-08-30).
 
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 3222315
+  - [x] Remove redundant per-frame emission-state updates.
+  - [x] Add explicit audio beat-clock and listener disposal.
+  - [x] Rerun Biome, TypeScript, Vitest, build, and Playwright.
+  - Notes: Removed the redundant per-frame `setEmitting` call; emission state now changes on ride transitions only. Added `AudioController.dispose()` to stop the beat clock and clear listeners, and invoked it during scene teardown. Added a disposal regression test. Verification: Biome passed, strict TypeScript passed, 202 Vitest tests passed, production build passed, and Playwright passed 13/13.
+
 ## Notes and Boundaries
 
 - No new dependency or texture asset.
