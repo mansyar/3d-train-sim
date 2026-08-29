@@ -7,7 +7,7 @@ manual tablet check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 1: Shadowed Sun & Tuned Light (lighting foundation)
 
-- [~] Task: Tune the key light and add fill lights in `src/scene/lights.ts`
+- [x] Task: Tune the key light and add fill lights in `src/scene/lights.ts` (b4b710f)
   - Acceptance criteria (non-logic — record & verify manually / via smoke):
     - Key "sun" directional light casts soft shadows; shadow camera frustum
       confined to the 16×16 grid play area (derived from core grid constants,
@@ -17,7 +17,15 @@ manual tablet check (`conductor/workflow.md`). One task in flight at a time.
       added (sky-tinted above, warm bounce below).
     - Teardown disposes all added lights.
   - Commit `feat(scene): Cast soft shadows from the key light`.
-- [ ] Task: Enable renderer shadow maps + neutral tone mapping in `src/scene/init-scene.ts`
+  - Notes: `lights.ts` now builds three lights — warm ambient (0xffeecf, 0.7),
+    a hemisphere fill (sky 0xbfe0ff above, warm bounce 0xffe2b0 below, 0.55),
+    and the shadowed "sun" directional (0xfff6e6, 1.15 at (24, 34, 16)).
+    Shadow frustum is derived from grid constants (`MEADOW_CELLS × CELL_SIZE`
+    = the buildable meadow) rather than hard-coded, mapSize 1024, ortho
+    near/far 8/110, bias −0.0002 + normalBias 0.1 against acne/peter-panning.
+    Teardown removes and disposes all three lights. Gates: biome ✅,
+    `tsc --noEmit` ✅, 193 unit tests ✅.
+- [~] Task: Enable renderer shadow maps + neutral tone mapping in `src/scene/init-scene.ts`
   - Acceptance criteria:
     - `shadowMap.enabled` with `PCFSoftShadowMap`; neutral tone mapping so
       bright toy surfaces don't clip.
