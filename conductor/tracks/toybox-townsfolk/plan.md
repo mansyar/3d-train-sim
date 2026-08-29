@@ -45,8 +45,23 @@
 
 - [x] Task: Download Kenney Fantasy Town Kit and Kenney Animal Pack (CC0) and record provenance/licenses
   - Notes: **Deviation (documented in spec.md Decisions):** the Kenney "Animal Pack" is 2D icons only (PNG/SVG, no 3D) — grounded replacement: **Quaternius Farm Animal Pack** (CC0, 7 animated animals; picking Sheep, Pig, Pug), fetched via Google Drive with its License.txt. Fantasy Town Kit 2.0 downloaded from kenney.nl (CC0, License.txt vendored). Kits: `public/assets/quaternius-farm/`, `public/assets/fantasy-town-kit/`.
-- [~] Task: Prep each new GLB in Blender: scale to meadow cell size, origin at base, orientation verified via viewport screenshots
-- [ ] Task: Vendor the prepped GLBs under `public/assets/` and wire the catalog URLs
+- [x] Task: Prep each new GLB in Blender: scale to meadow cell size, origin at base, orientation verified via viewport screenshots
+  - Notes: All six GLBs verified via headless Blender renders + vision analysis:
+    1–3 unit scale (1 unit ≈ 1 meadow cell), origin at base, front faces
+    toward +X (station/house/cottage) or left-facing (critters), no floating
+    parts or distortion. **Bug found & fixed:** the critter GLBs' materials
+    had `alphaMode: MASK` with `baseColorFactor` alpha = 0 — invisible under
+    three.js GLTFLoader's alphaTest. Restored alpha = 1 / OPAQUE via a JSON
+    chunk patch (BIN geometry untouched); re-rendered and re-verified.
+    Files: `public/assets/quaternius-farm/{pig,sheep,pug}.glb` (prep + alpha
+    fix), `public/assets/fantasy-town-kit/{station,house,cottage}.glb`
+    (prep verified). Commit `d01ea0b`.
+- [x] Task: Vendor the prepped GLBs under `public/assets/` and wire the catalog URLs
+  - Notes: Done in commit `f59784c` (kits vendored with License.txt files,
+    catalog URLs wired in `src/core/scenery.ts`, catalog/save tests updated)
+    and cleaned up in `05e1f45` (removed stray duplicate GLBs from the
+    assets root). Nine-toy catalog: nature (tree/bush/rock), town
+    (house/cottage/station), critters (sheep/pig/pug).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — Scene: Placement, Critter Life, Station Stop
