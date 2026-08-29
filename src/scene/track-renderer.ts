@@ -32,6 +32,7 @@ import type { WorldStore } from '../state/world';
 import { createCritterLife } from './critter-life';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
+import { disableShadows, enableCastShadows } from './shadows';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
@@ -284,6 +285,9 @@ export function startTrackRenderer(
     const template = templates.get(ghostType);
     if (!template) return; // Asset not loaded yet — retried on the next move.
     const model = template.clone(true);
+    // Ghosts never cast or receive shadows — they are previews, not toys —
+    // and clone(true) copies the shared template's casting flag.
+    disableShadows(model);
     // Clone materials per ghost so tint/dispose never touch the shared
     // template materials (three.js clones share material references).
     model.traverse((node) => {
@@ -417,6 +421,8 @@ export function startTrackRenderer(
         gltf.scene.position.set(-scale * ax, -scale * ay, -scale * az);
         const model = new Group();
         model.add(gltf.scene);
+        // Templates cast; every placed clone inherits the flag (shadows.ts).
+        enableCastShadows(model);
         templates.set(type, model);
         reconcile(); // Render items placed before the asset arrived.
       },
@@ -442,6 +448,8 @@ export function startTrackRenderer(
         gltf.scene.position.set(0, sceneryLift(kind), 0);
         const model = new Group();
         model.add(gltf.scene);
+        // Templates cast; every placed clone inherits the flag (shadows.ts).
+        enableCastShadows(model);
         templates.set(kind, model);
         reconcile();
       },
