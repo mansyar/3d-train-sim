@@ -25,7 +25,7 @@
   - Automated verification: Biome, `tsc --noEmit`, and the full Vitest suite (159 tests) pass; `scenery.ts` 100%, `world.ts` 97% coverage.
   - Manual verification: user confirmed 2026-08-29 — phase is catalog/state-only (new GLBs not yet vendored), app behavior unchanged.
 
-## Phase 2 — Save/Load Compatibility (TDD)
+## Phase 2 — Save/Load Compatibility (TDD) [checkpoint: a860120]
 
 - [x] Task: TDD — Red: extend save tests for new scenery kinds
   - [x] Assert round trips preserve placed town/critter items
@@ -36,7 +36,10 @@
   - Notes: `src/core/save.ts` already validated kinds against the widened catalog; the real change is tolerance — unknown scenery kinds now drop to the drawer while the rest of the world restores (pieces stay strict; duplicate-cell check runs on what remains). Commit `a860120`.
 - [x] Task: Verify >80% coverage for changed save/persistence logic
   - Notes: Coverage: `save.ts` 88.9% stmts / 97.7% lines; full suite 162 tests green; Biome + `tsc --noEmit` clean.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated verification: Biome, `tsc --noEmit`, and the full Vitest suite (162 tests) pass; `save.ts` 97.7% lines.
+  - Manual verification: user confirmed 2026-08-29 — save format is backward compatible; no user-visible change this phase.
+  - [checkpoint: a860120]
 
 ## Phase 3 — Assets: Blender Prep and Vendoring
 
