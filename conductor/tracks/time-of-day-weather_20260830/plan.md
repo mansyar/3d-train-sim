@@ -169,8 +169,14 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 ## Phase 4: E2E, gates & polish
 
-- [ ] Task: Smoke coverage — ambience runs ≥10 s with zero console errors; full
+- [x] Task: Smoke coverage — ambience runs ≥10 s with zero console errors; full
   `pnpm check` + Playwright green
+  `6d11561`
+
+  - **Notes:** Permanent e2e additions: the ambience long-run (10 s idle,
+    frames visibly changing, zero console errors), the tablet-FPS floor
+    (≥10 FPS in headless emulation), and the day-cycle console guard.
+    Final gates: `pnpm check` ✅, Playwright 47/47 ✅.
 - [x] Task: Manual tablet verification (day/night/weather on iPad/Android
   emulation, FPS spot-check)
   `6d11561`
