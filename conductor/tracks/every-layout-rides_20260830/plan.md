@@ -8,7 +8,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
 
 ## Phase 1: Multi-Component Pathing (core — TDD)
 
-- [ ] Task: Per-component path solving in `src/core/pathing.ts` (logic — TDD)
+- [x] Task: Per-component path solving in `src/core/pathing.ts` (logic — TDD) `0794f75`
 
   - **Expected behavior (unit tests first):**
     - `solveRidePaths(pieces)` returns one `TrainPath` per connected
@@ -20,6 +20,17 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - Crossing with an unridden side branch still yields one straight-through
       path (documented limitation, unchanged).
   - **Commit:** `feat(core): Solve a ride path per connected component`
+
+  - **Notes:**
+    - Refactored `pathing.ts` into reusable pieces: `buildGraph`
+      (connectivity), `collectComponents` (flood-fill), and
+      `walkComponent` (the unchanged deterministic walk). `solveRidePaths`
+      walks every component; `solvePath` is now `solveRidePaths(...)[0]` —
+      identical single-train behavior, now defined as "first of many".
+    - Paths are ordered by each component's smallest cell key; anchors are
+      unique (one piece per cell), so output never depends on array order.
+    - 7 new tests; suite 231 passing. Coverage: `pathing.ts` 98.24%
+      statements / 100% lines. Biome + `tsc --noEmit` clean.
 
 - [ ] Task: Ride-component selection with cap (logic — TDD)
 
