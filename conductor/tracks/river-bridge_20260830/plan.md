@@ -1,0 +1,36 @@
+# Plan: River & Bridge
+
+## Phase 1 — Core logic: river, bridge rules, migration (TDD)
+- [ ] Task: Create `src/core/river.ts` — hand-authored S-curve water-cell set
+  - Write failing tests first (Red): water set is a fixed cell set; `isWater(cell)` boundaries; the band is ~3 cells wide; banks leave ≥N contiguous build cells; provides an ordered drift path (sequence of water cells) for the duck
+  - Implement to green; no per-frame allocation (pure lookups)
+- [ ] Task: Bridge piece type + placement validity (TDD)
+  - Write failing tests first: `PIECE_TYPES` gains `'bridge'`; bridge placement valid only where all footprint cells are water with ends meeting land; other track/scenery rejected on water; existing layouts unaffected
+  - Implement to green (`pieces.ts`, validation used by placement + ghosts)
+- [ ] Task: Save migration — auto-bridge on load (TDD)
+  - Write failing tests first: a v-current save with straights/corners intersecting water cells loads with those pieces rendered as bridges; nothing dropped; non-intersecting pieces untouched; idempotent on second load
+  - Implement to green (`save.ts` migration, version bump)
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase 2 — Water & bridge visuals (scene wiring, criteria-verified)
+- [ ] Task: Water rendering — sky-reflecting, snow-freezing river surface
+  - Criteria: river meshes recolor via `sky-palette` across the day cycle; pales to ice as snow intensity rises; melts back; static under reduced motion; zero per-frame allocations (scratch pattern)
+- [ ] Task: Wooden trestle bridge model + rendering bridged pieces
+  - Criteria: plank deck, railings, stilt legs into the water (Kenney-kit aesthetic); train rides across at normal speed/height, water visible beneath; migrated pieces render identically
+- [ ] Task: Placement integration — ghost validity + drawer track tab
+  - Criteria: bridge toy appears in the track tab with icon; ghosts red over water for track/scenery; bridge ghost red on grass; valid water spans snap and commit
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase 3 — Life & sound (scene/audio wiring, criteria-verified)
+- [ ] Task: The duck — drift, bob, train-reactive wiggle
+  - Criteria: drifts the S-curve path, bobs gently; tail-wiggle when a riding train passes near (critter-life mood pipeline); paddles happily in rain; off-duty at night (bedtime gate); frozen surface = stands down
+- [ ] Task: River babble ambience
+  - Criteria: whisper-quiet synthesized babble; fades in only near the water; mute-respecting; suspends with hidden tab (ambience-audio pattern); lazy AudioContext
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase 4 — E2E, polish & docs
+- [ ] Task: Playwright e2e (fresh servers — verify ports 5199/5198 free first)
+  - Bridge placement rules (valid on water / invalid on grass) · pre-river world migration e2e · console-clean long-run with river active · no external requests
+- [ ] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact
+- [ ] Task: Update `product.md` roadmap (mark River & Bridge shipped; tunnels/elevation remain)
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
