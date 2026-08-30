@@ -34,6 +34,7 @@ import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
+import { createDuck } from './duck';
 import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
@@ -139,6 +140,8 @@ export function initScene(
   const ambience = createAmbienceAudio(audio);
   const fireflies = createFireflies(scene);
   disposables.push(fireflies.dispose);
+  const duck = createDuck(scene, cellToWorld);
+  disposables.push(duck.dispose);
 
   // Time of day + weather: pure clocks (driven per animation frame) recolor
   // the sky, ease the lights, drive particles and whiten the meadow. Painted
@@ -640,12 +643,18 @@ export function initScene(
       const star = primaryRig();
       const night = nightFactorAt(dayClock.fraction);
       const blend = weatherClock.blend;
-      const rainNow = blend
-        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t).rain
-        : intensityOf(weatherClock.weather).rain;
+      const weatherNow = blend
+        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t)
+        : intensityOf(weatherClock.weather);
       tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
-        rain: rainNow,
+        rain: weatherNow.rain,
         night,
+      });
+      // The duck drifts the S-curve and wiggles for passing trains; night is
+      // bedtime, and a frozen river (snow) parks it on the ice.
+      duck.update(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
+        night,
+        snow: weatherNow.snow,
       });
       updateCamera(dt);
     },

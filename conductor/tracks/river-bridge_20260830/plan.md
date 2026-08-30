@@ -101,7 +101,7 @@
     screenshot pass, per plan.
 
 ## Phase 3 — Life & sound (scene/audio wiring, criteria-verified)
-- [ ] Task: The duck — drift, bob, train-reactive wiggle
+- [~] Task: The duck — drift, bob, train-reactive wiggle
   - Criteria: drifts the S-curve path, bobs gently; tail-wiggle when a riding train passes near (critter-life mood pipeline); paddles happily in rain; off-duty at night (bedtime gate); frozen surface = stands down
 - [ ] Task: River babble ambience
   - Criteria: whisper-quiet synthesized babble; fades in only near the water; mute-respecting; suspends with hidden tab (ambience-audio pattern); lazy AudioContext
