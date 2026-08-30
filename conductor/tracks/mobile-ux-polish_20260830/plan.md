@@ -40,10 +40,13 @@ criteria and are verified via e2e + manual checks instead of unit tests.
   - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 (tablet + phone) incl. new "✕ chip deletes on tap" test both projects. Debugging note: the chip initially chased the drag pointer/cell and dodged taps — fixed by anchoring to the toy's home cell and clearing drag state before mutating so a trailing pointerup cannot cancel the delete.
   - Files: `src/scene/track-renderer.ts` (new `cellToScreen` projection + handle), `src/scene/init-scene.ts` (SceneHandle `cellToScreen`), `src/ui/app.ts` (delete chip element, placeChip, home-cell anchor, widened trash zone, setTrashHover, click/pointerdown delete), `src/main.ts` (wire cellToScreen), `src/style.css` (.delete-chip, .trash-slot.is-hovering pulse, reduced-motion), `e2e/smoke.spec.ts` (chip-delete test).
 
-## Phase 4 — Portrait camera framing (FR4)
+## Phase 4 — Portrait camera framing (FR4) [checkpoint: 8958fcb]
 
-- [ ] Task: Aspect-aware overview framing in `init-scene.ts` resize — full 16×16 meadow in view in tall viewports; landscape unchanged; ride/follow untouched
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Aspect-aware overview framing in `init-scene.ts` resize — full 16×16 meadow in view in tall viewports; landscape unchanged; ride/follow untouched
+  - Acceptance: in portrait the whole meadow stays framed with the same oblique angle; in landscape the existing overview is unchanged; ride follow and reduced-motion fixed view are unaffected.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 (tablet + phone). Debugging: two-phase fix — (1) pullback applied only in portrait (landscape untouched) and camera position applied immediately; (2) `cellToScreen` rejected meadow NDC z≈1 (meadow sits at the camera's far plane) — switched to a finite-coordinate check so the ✕ chip anchor and tests work on phones. Tests moved from blind 24px sweeps/ratios to exact `cellToScreen` targets.
+  - Files: `src/scene/init-scene.ts` (mutable overviewBase, frameOverview on resize, portrait-only pullback), `src/scene/track-renderer.ts` (cellToScreen finite check + camera matrix refresh), `e2e/smoke.spec.ts` (tap/delete/walkthrough use cellToScreen).
 
 ## Phase 5 — Production hygiene (FR5)
 
