@@ -13,9 +13,22 @@
     adjacent, not strictly 4-neighborhood — the duck glides diagonally).
     Coverage: 100% stmts/lines, 87.5% branch (uncovered branches are
     module-init defensive guards that cannot fire).
-- [ ] Task: Bridge piece type + placement validity (TDD)
+- [x] Task: Bridge piece type + placement validity (TDD) `62b17a0`
   - Write failing tests first: `PIECE_TYPES` gains `'bridge'`; bridge placement valid only where all footprint cells are water with ends meeting land; other track/scenery rejected on water; existing layouts unaffected
   - Implement to green (`pieces.ts`, validation used by placement + ghosts)
+
+  - **Notes:** `'bridge'` mirrors straight endpoints (`['north','south']` base) so
+    pathing/rides need zero changes. New pure `terrainErrorFor(type, cell)` in
+    `track-graph.ts` (bridge ⟺ water, everything else ⟺ land) consumed by an
+    optional third param on `validatePlacement` (terrain-blind without it) and
+    enforced authoritatively in `world.place/relocate` ('water' PlacementResult);
+    scenery land-only in `placeScenery/relocateScenery`. `river.ts` WATER set
+    made lazy — module-load eagerness would TDZ-crash under the new
+    `track-graph → river` import cycle. Catalog ripple: drawer `bridge: 'rails'`,
+    app labels/icon (trestle SVG), track-renderer placeholders (straight GLB +
+    anchor until Phase 2's trestle model). Fixtures updated: `fillWorld` skips
+    water; ride-test loops moved to dry cells (row 0 water = x 4–6). 290/290
+    green; tsc + biome clean; pieces.ts 100% / track-graph.ts 96% coverage.
 - [ ] Task: Save migration — auto-bridge on load (TDD)
   - Write failing tests first: a v-current save with straights/corners intersecting water cells loads with those pieces rendered as bridges; nothing dropped; non-intersecting pieces untouched; idempotent on second load
   - Implement to green (`save.ts` migration, version bump)
