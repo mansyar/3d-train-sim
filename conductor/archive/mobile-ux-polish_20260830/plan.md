@@ -75,3 +75,7 @@ criteria and are verified via e2e + manual checks instead of unit tests.
 - [x] Task: `biome check`, `tsc --noEmit`, vitest, full Playwright suite (tablet + phone) green
   - Acceptance: every gate passes on a clean run; the production build (`pnpm build`) also succeeds.
   - Verification (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 36/36 (tablet + phone) · `pnpm build` succeeded (precache 138 entries).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 8e968a0
