@@ -74,15 +74,56 @@ acceptance criteria + smoke tests per `workflow.md`.
 
 ## Phase 2 — Quality Levels & Scene Wiring (scene, acceptance criteria)
 
-- [ ] Task: Define level presets and implement `src/scene/quality-applier.ts`
+- [x] Task: Define level presets and implement `src/scene/quality-applier.ts` (50b6d22)
   - Acceptance: L0 reproduces today's look exactly; L1 clamps render scale
     + halves shadow map; L2 sets pixel ratio 1.0, shadows off, halves
     weather-particle spawn; transitions smooth
-- [ ] Task: Wire the probe into the init-scene frame loop and the visibility-controller pause hook
+  - Notes:
+    - Task: quality applier — implementation.
+    - `createQualityApplier` leans on each subsystem's own smoothing for
+      pop-free transitions: pixel-ratio changes only resample the same image
+      mid-frame (three r185 `setPixelRatio` → `setSize` is synchronous),
+      shadow-map size changes dispose the old map once and let the GPU
+      rebuild, shadow fade eases via `shadow.intensity` over 1 s before
+      `castShadow` flips off at L2, and the L2 weather halving rides the
+      particle emitter's existing opacity easing. L0 restores the boot-time
+      pixel ratio and shadow-map size exactly (`basePixelRatio`,
+      `baseShadowMapSize`).
+    - Fix: removed a dangling `invalidateCanvasLayer()` call (helper never
+      existed) that would have thrown on the first L1/L2 apply. Because the
+      rAF loop schedules the next frame only after `render()` returns, that
+      exception permanently froze the canvas — this was exactly the freeze
+      the unfinished forensics probe was chasing. Verified gone (see Phase 2
+      report).
+    - `lights.ts`: exported `SHADOW_MAP_SIZE` and exposed `sun` on the
+      meadow-lights handle so the applier can trim the shadow maps.
+- [x] Task: Wire the probe into the init-scene frame loop and the visibility-controller pause hook (50b6d22)
   - Acceptance: hidden tab freezes the probe; no per-frame allocations in the render path
-- [ ] Task: Add the `?perf=debug` overlay (fps + level)
+  - Notes:
+    - Task: probe + controller wiring.
+    - Frame loop samples the probe first (this frame's cost lands in the
+      probe), then feeds the controller a verdict and eases the applier —
+      probe, verdict scan, and controller stay allocation-free (ring buffer
+      + scalars only).
+    - `averageFps()` (a rolling-window scan) now runs only when the
+      `?perf=debug` overlay is mounted, so the production render path never
+      scans the window.
+    - `perfMonitor.setPaused` joins the existing visibility pause/resume —
+      a hidden tab freezes the probe so background throttling never reads as
+      device strain (spec FR1).
+    - Weather: the applier's `weatherScale` (1 or 0.5) scales the intensity
+      bed before the emitter's opacity easing — halves visible particle
+      density at L2 while snow accumulation stays full.
+- [x] Task: Add the `?perf=debug` overlay (fps + level) (50b6d22)
   - Acceptance: hidden without the param; visible, readable, non-interactive with it
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes:
+    - Task: debug overlay.
+    - `perf-debug-overlay.ts` mounts a single `.perf-debug` div only when the
+      URL carries `?perf=debug`; otherwise it returns null and nothing exists
+      in the DOM. Updates at most every 250 ms (readable, no flicker),
+      `pointer-events: none`, no animation, seeded once at boot so the
+      reduced-motion static frame still shows the HUD.
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Verification & Docs
 
