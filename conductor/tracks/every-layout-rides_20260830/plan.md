@@ -60,7 +60,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     chosen component; multi-train behavior lands in Phase 2.
   - **Checkpoint SHA:** `cd4a642` (last functional commit of Phase 1).
 
-- [ ] Task: Multi-ride controller in `src/state/ride.ts` (logic — TDD)
+- [~] Task: Multi-ride controller in `src/state/ride.ts` (logic — TDD)
 
   - **Expected behavior (unit tests first):**
     - Registry of rides keyed by component; `startAll()` starts one ride per
