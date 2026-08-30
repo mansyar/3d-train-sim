@@ -963,3 +963,94 @@ test('whistle toots puff steam at the chimney, then dissipate', async ({ page })
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
+
+test('two disjoint loops ride two trains and the 🎥 button cycles them', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+
+  // Two disjoint 2×2 corner loops, far apart, via the dev handle.
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    const loops = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 1, y: 1 },
+      { x: 0, y: 1 },
+      { x: 5, y: 5 },
+      { x: 6, y: 5 },
+      { x: 6, y: 6 },
+      { x: 5, y: 6 },
+    ];
+    const rotations = [90, 180, 270, 0];
+    loops.forEach(({ x, y }, i) => {
+      if (world.place('corner', { x, y }, rotations[i % 4] ?? 0) !== 'placed') {
+        throw new Error(`loop corner placement failed at ${x},${y}`);
+      }
+    });
+  });
+  await page.waitForTimeout(700);
+
+  // Before the ride starts (zero trains), the 🎥 button stays away.
+  await expect(page.locator('.film-toggle')).toBeHidden();
+
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+
+  // Two disjoint loops — two little trains out there riding.
+  await page.waitForFunction(() => {
+    const scene = (
+      window as unknown as { __tinyTracksScene?: { ridingTrainCount: () => number } }
+    ).__tinyTracksScene;
+    return scene?.ridingTrainCount() === 2;
+  });
+
+  // Two trains ride — the 🎥 button joins the rail next to 🎺.
+  await expect(page.locator('.film-toggle')).toBeVisible();
+
+  // Each tap cycles the chase camera: second train → overview → wrap to the
+  // train the ride started with.
+  const filmedAnchor = () =>
+    page.evaluate(() => {
+      const scene = (
+        window as unknown as { __tinyTracksScene?: { filmedAnchor: () => string | null } }
+      ).__tinyTracksScene;
+      if (!scene) throw new Error('dev scene handle missing');
+      return scene.filmedAnchor();
+    });
+  const starting = await filmedAnchor();
+  expect(starting).not.toBeNull();
+
+  await page.locator('.film-toggle').click();
+  const second = await filmedAnchor();
+  expect(second).not.toBeNull();
+  expect(second).not.toBe(starting);
+
+  await page.locator('.film-toggle').click();
+  expect(await filmedAnchor()).toBeNull(); // The overview.
+
+  await page.locator('.film-toggle').click();
+  expect(await filmedAnchor()).toBe(starting); // Wrapped around.
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});

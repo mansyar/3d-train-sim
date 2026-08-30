@@ -71,6 +71,10 @@ export interface SceneHandle {
   steamPuffCount(): number;
   /** The whistle's visual voice: a steam burst at the chimney (no-op before a train shows). */
   whistlePuff(): void;
+  /** Debug aid: how many trains are riding right now. */
+  ridingTrainCount(): number;
+  /** Debug aid: the ride anchor the camera films, or null for the overview. */
+  filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -532,6 +536,8 @@ export function initScene(
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),
     cycleFilmTarget: () => cycleFilmTarget(),
+    ridingTrainCount: () => rigs.size,
+    filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
       return () => {
