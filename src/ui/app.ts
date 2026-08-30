@@ -134,6 +134,8 @@ export interface AppOptions {
   stopRide(): void;
   /** Tell the scene the toddler is interacting (keeps the attract mode away). */
   notifyActivity(): void;
+  /** Steam burst at the locomotive chimney (whistle's visual voice). */
+  whistlePuff(): void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -478,7 +480,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('sound box missing from app frame');
   }
 
-  whistleToot.addEventListener('click', () => options.audio.whistle(options.world.train()));
+  whistleToot.addEventListener('click', () => {
+    options.audio.whistle(options.world.train());
+    options.whistlePuff(); // Steam is the whistle's visible voice.
+  });
 
   const refreshMute = () => {
     const muted = options.audio.isMuted();

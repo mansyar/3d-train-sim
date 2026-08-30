@@ -63,6 +63,8 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
+  /** The whistle's visual voice: a steam burst at the chimney (no-op before a train shows). */
+  whistlePuff(): void;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
@@ -282,6 +284,7 @@ export function initScene(
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => wagonSet.filter((wagon) => wagon !== null).length,
     steamPuffCount: () => visibleSteamPuffs,
+    whistlePuff: () => steamPuffs?.burst(),
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),

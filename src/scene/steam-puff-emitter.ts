@@ -22,6 +22,8 @@ const FALLBACK_OFFSETS: Record<TrainKind, readonly [number, number, number]> = {
 export interface SteamPuffEmitter {
   readonly group: Group;
   emit(): boolean;
+  /** A quick whistle-puff burst: several puffs fired on staggered ticks. */
+  burst(): void;
   update(dt: number): void;
   setEmitting(emitting: boolean): void;
   activeCount(): number;
@@ -61,6 +63,11 @@ export function createSteamPuffEmitter(
   const offset = FALLBACK_OFFSETS[train];
   const origin = new Object3D();
   const worldOrigin = new Object3D();
+  let pendingBursts = 0;
+  let burstAt = 0;
+  /** The whistle's visual voice: 3 puffs, one per frame, from the chimney. */
+  const BURST_PUFFS = 3;
+  const BURST_INTERVAL = 0.05;
   model.add(origin);
   group.add(worldOrigin);
 
@@ -76,9 +83,24 @@ export function createSteamPuffEmitter(
   return {
     group,
     emit,
+    burst() {
+      // Fire the first puff immediately and queue the rest — each update
+      // tick (60 fps) releases one more, so a rapid double-toot reads as a
+      // fuller cloud without exceeding the pool.
+      pendingBursts += BURST_PUFFS;
+      burstAt = 0;
+    },
     setEmitting: (emitting) => pool.setEmitting(emitting),
     activeCount: () => pool.activeCount(),
     update(dt) {
+      if (pendingBursts > 0) {
+        if (burstAt <= 0) {
+          if (emit()) pendingBursts -= 1;
+          burstAt = BURST_INTERVAL;
+        } else {
+          burstAt -= dt;
+        }
+      }
       pool.update(dt);
       for (let i = 0; i < meshes.length; i += 1) {
         const slot = pool.slot(i);

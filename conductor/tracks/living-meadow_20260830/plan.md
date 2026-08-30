@@ -69,7 +69,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
 ## Phase 2: Whistle Steam Burst
 
-- [ ] Task: Steam puff on whistle (scene wiring)
+- [x] Task: Steam puff on whistle (scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - Pressing the Whistle button emits a burst of 2–4 puffs at the

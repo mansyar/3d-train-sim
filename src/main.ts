@@ -48,6 +48,7 @@ if (root) {
     startRide: () => scene?.startRide() ?? false,
     stopRide: () => scene?.stopRide(),
     notifyActivity: () => scene?.notifyActivity(),
+    whistlePuff: () => scene?.whistlePuff(),
   });
   scene = initScene(canvas, world, audio);
 
