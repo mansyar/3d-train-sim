@@ -59,12 +59,24 @@ if (root) {
     cycleFilmTarget: () => scene?.cycleFilmTarget(),
     subscribeFilmCount: (listener) => {
       filmCountListeners.push(listener);
-      if (!scene) return () => {};
+      if (!scene) {
+        // Scene not bound yet — unsubscribe must still remove the listener,
+        // or it would be replayed into the scene at bind and live forever.
+        return () => {
+          const index = filmCountListeners.indexOf(listener);
+          if (index !== -1) filmCountListeners.splice(index, 1);
+        };
+      }
       return scene.subscribeFilmCount(listener);
     },
     subscribeRideMode: (listener) => {
       rideModeListeners.push(listener);
-      if (!scene) return () => {};
+      if (!scene) {
+        return () => {
+          const index = rideModeListeners.indexOf(listener);
+          if (index !== -1) rideModeListeners.splice(index, 1);
+        };
+      }
       return scene.subscribeRideMode(listener);
     },
   });

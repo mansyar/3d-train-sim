@@ -456,6 +456,7 @@ export function initScene(
     if (!template) return; // new kind's assets not ready — keep the current model
     rig.puffs.dispose();
     scene.remove(rig.puffs.group);
+    scene.remove(rig.model); // The old engine leaves the meadow — no ghosts.
     const model = template.clone(true);
     scene.add(model);
     rig.kind = kind;

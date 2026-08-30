@@ -260,3 +260,20 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     from where it sits (amendment `53d90d8`: ride assignment prefers the
     nearest spare so two trains never gather on one loop).
   - **Checkpoint SHA:** `53d90d8` (last functional commit of Phase 3).
+
+## Review Fixes (conductor-review)
+
+- [x] Task: Remove ghost locomotives on kind swap (MAJOR review finding)
+
+  - `swapRigKind` cloned the new engine but never removed the old model —
+    every 🚂 swap left a frozen locomotive standing on the meadow. The swap
+    now removes the old model before the new one takes its place.
+  - **Commit:** `fix(scene): Remove the old locomotive on kind swap`
+
+- [x] Task: Unsubscribe leaks for pre-bind listener queues (MINOR review finding)
+
+  - `main.ts`'s queued film-count / ride-mode listeners returned a no-op
+    unsubscribe before the scene bound, so an unsubscribed listener stayed
+    queued and was replayed into the scene forever. Unsubscribe now removes
+    the listener from the queue.
+  - **Commit:** shared with the fix above.
