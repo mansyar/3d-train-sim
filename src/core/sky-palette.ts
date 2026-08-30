@@ -46,7 +46,11 @@ function pack(r: number, g: number, b: number): number {
 function mixHex(a: number, b: number, t: number): number {
   const ca = channels(a);
   const cb = channels(b);
-  return pack(ca[0] + (cb[0] - ca[0]) * t, ca[1] + (cb[1] - ca[1]) * t, ca[2] + (cb[2] - ca[2]) * t);
+  return pack(
+    ca[0] + (cb[0] - ca[0]) * t,
+    ca[1] + (cb[1] - ca[1]) * t,
+    ca[2] + (cb[2] - ca[2]) * t,
+  );
 }
 
 /** Blend the phase keyframes (cyclically) into a sky gradient for a fraction. */
@@ -63,7 +67,10 @@ export function skyColorsAt(fraction: number): SkyColors {
     const end = i + 1 === KEYFRAMES.length ? next.at + 1 : next.at;
     if (t >= start && t < end) {
       const k = (t - start) / (end - start);
-      return { top: mixHex(current.top, next.top, k), horizon: mixHex(current.horizon, next.horizon, k) };
+      return {
+        top: mixHex(current.top, next.top, k),
+        horizon: mixHex(current.horizon, next.horizon, k),
+      };
     }
   }
   // Unreachable — the slices cover [0, 1) — but noUncheckedIndexedAccess
@@ -79,7 +86,19 @@ export function celestialAt(fraction: number): Celestial {
   const t = fraction - Math.floor(fraction);
   const sun = t < SUNSET ? Math.sin((Math.PI * (t - SUNRISE)) / (SUNSET - SUNRISE)) : 0;
   const nightSpan = 1 - SUNSET;
-  const moon =
-    t >= SUNSET ? Math.sin((Math.PI * (t - SUNSET)) / nightSpan) : 0;
+  const moon = t >= SUNSET ? Math.sin((Math.PI * (t - SUNSET)) / nightSpan) : 0;
   return { sun: Math.max(sun, 0), moon: Math.max(moon, 0) };
+}
+
+/** Night weight 0 (full day) to 1 (deep night) — drives lights and glows. */
+const DUSK_START = 0.55;
+const NIGHT_START = 0.75;
+const DAWN_END = 0.15;
+
+export function nightFactorAt(fraction: number): number {
+  const t = fraction - Math.floor(fraction);
+  if (t < DAWN_END) return 1 - t / DAWN_END; // Dawn: fade the stars out.
+  if (t < DUSK_START) return 0; // Full day.
+  if (t < NIGHT_START) return (t - DUSK_START) / (NIGHT_START - DUSK_START); // Dusk.
+  return 1; // Night plateau.
 }

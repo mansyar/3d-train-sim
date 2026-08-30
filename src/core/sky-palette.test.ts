@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { celestialAt, skyColorsAt } from './sky-palette';
+import { celestialAt, nightFactorAt, skyColorsAt } from './sky-palette';
 
 describe('skyColorsAt', () => {
   it('returns the exact keyframe palette at each phase center', () => {
@@ -32,8 +32,22 @@ describe('skyColorsAt', () => {
   });
 });
 
-describe('celestialAt', () => {
-  it('has the sun up only across dawn→dusk, peaking mid-day', () => {
+describe('nightFactorAt', () => {
+  it('is 0 through the day, 1 through the night, with dusk/dawn ramps', () => {
+    // Day: fully lit from mid-morning until dusk begins (0.55).
+    expect(nightFactorAt(0.3)).toBe(0);
+    expect(nightFactorAt(0.15)).toBe(0);
+    // Dusk ramp 0.55→0.75: halfway through dusk it is half night.
+    expect(nightFactorAt(0.65)).toBeCloseTo(0.5, 5);
+    expect(nightFactorAt(0.75)).toBe(1);
+    // Night plateau and the dawn ramp back down (0→0.15).
+    expect(nightFactorAt(0.86)).toBe(1);
+    expect(nightFactorAt(0.075)).toBeCloseTo(0.5, 5);
+    expect(nightFactorAt(0.2)).toBe(0);
+  });
+});
+
+describe('celestialAt', () => {  it('has the sun up only across dawn→dusk, peaking mid-day', () => {
     expect(celestialAt(0.86).sun).toBe(0); // Night: sun below the horizon.
     expect(celestialAt(0.36).sun).toBeCloseTo(1, 5); // Mid-arc: sun overhead.
     expect(celestialAt(0.06).sun).toBeCloseTo(Math.sin((Math.PI * 0.06) / 0.72), 5);
