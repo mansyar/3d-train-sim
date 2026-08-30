@@ -132,7 +132,16 @@
     exported), so ice stands the babble down with the duck. Respects the
     parent mute via `audio.subscribe`; suspends/closes with the tab
     lifecycle and `dispose()`. 309/309 (6 new), tsc + biome clean.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Verification:** Full `pnpm check` green — biome clean, tsc clean,
+    313/313 unit tests across 26 files (after the bridge pathing fix).
+    Duck drifts/bobs/wiggles, river renders (winding fix `280be87`), babble
+    wired. Two user-reported bugs found & fixed during verification: water
+    quads back-facing (culled — `280be87`) and bridges riding corner arcs
+    (`5c1080b`, now `segmentForStep` with 4 tests). Commits: `bdff693`,
+    `0437ed6`, `78b656d`, `5cc4055`, `a5b83ae`, `d371740`, `280be87`,
+    `5c1080b`. User-confirmed in browser: duck + river visible.
 
 ## Phase 4 — E2E, polish & docs
 - [x] Task: Water polish — shore gradient (TDD) `435de50`
