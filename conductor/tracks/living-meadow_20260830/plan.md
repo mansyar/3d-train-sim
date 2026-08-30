@@ -57,10 +57,16 @@ criteria + smoke + manual tablet check for scene/audio wiring
   `init-scene.ts` subscribes to the attract clock. Gates: biome ✅,
   `tsc --noEmit` ✅, Playwright smoke ✅.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-- Verify acceptance criteria manually (tablet + desktop) and via the
-  Playwright smoke suite; record results and checkpoint commit in the plan.
+  **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 214 unit
+  tests ✅, 13 Playwright smoke ✅ with zero console errors and zero external
+  requests (2026-08-30, single runs). Manual — pending user confirmation on
+  a tablet/desktop dev server: after ~25 s of no touch the overview camera
+  drifts slowly and a rare quiet critter chirp plays with a matching hop;
+  the first touch returns the view to normal; reduced motion disables the
+  drift; no chirps during a ride.
+  - Checkpoint: `5300cbb` (last functional commit).
 
 ## Phase 2: Whistle Steam Burst
 
