@@ -1,6 +1,7 @@
 import { baseEndpointsFor } from './pieces';
 import {
   boundaryKey,
+  type Cell,
   cellKey,
   type Edge,
   type EdgeKey,
@@ -67,9 +68,15 @@ function invariant<T>(value: T | undefined, message: string): T {
   return value;
 }
 
-export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
-  if (pieces.length === 0) return { steps: [], closed: false };
+/** Connectivity the walk needs: partner lookup plus cell/degree helpers. */
+interface TrackGraph {
+  cellOf(id: string): Cell;
+  endsOfPiece(id: string): End[];
+  partnerOf: Map<string, Map<EdgeKey, End>>;
+  degreeOf(id: string): number;
+}
 
+function buildGraph(pieces: readonly PlacedPiece[]): TrackGraph {
   const byId = new Map(pieces.map((p) => [p.id, p] as const));
   const cellOf = (id: string) => invariant(byId.get(id), `unknown piece ${id}`).cell;
   const endsByPiece = new Map(pieces.map((p) => [p.id, endsOf(p)] as const));
@@ -100,13 +107,19 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
     setPartner(b, a);
   }
 
-  const degreeOf = (id: string) => partnerOf.get(id)?.size ?? 0;
+  return {
+    cellOf,
+    endsOfPiece,
+    partnerOf,
+    degreeOf: (id: string) => partnerOf.get(id)?.size ?? 0,
+  };
+}
 
-  // Components are simple paths, cycles, or trees through crossings (a
-  // crossing joins up to four neighbours but routes straight through, so
-  // rides still walk one end-to-end pass). Collect them, then ride the one
-  // whose smallest cell comes first — a deterministic choice that never
-  // depends on array order.
+/** Flood-fill the pieces into connected components, in first-seen order. */
+function collectComponents(
+  pieces: readonly PlacedPiece[],
+  partnerOf: TrackGraph['partnerOf'],
+): string[][] {
   const visited = new Set<string>();
   const components: string[][] = [];
   for (const p of pieces) {
@@ -129,33 +142,34 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
     }
     components.push(ids);
   }
+  return components;
+}
 
-  const minCellOf = (ids: string[]) =>
-    ids.reduce((min, id) => {
-      const key = cellKey(cellOf(id));
-      return key < min ? key : min;
-    }, 'ffffffff');
+/** The component's smallest cell key — a stable anchor that ignores array order. */
+function minCellKeyOf(ids: readonly string[], cellOf: TrackGraph['cellOf']): string {
+  return ids.reduce((min, id) => {
+    const key = cellKey(cellOf(id));
+    return key < min ? key : min;
+  }, 'ffffffff');
+}
 
-  let chosen: string[] = [];
-  let chosenMin = '';
-  for (const component of components) {
-    const min = minCellOf(component);
-    if (chosen.length === 0 || min < chosenMin) {
-      chosen = component;
-      chosenMin = min;
-    }
-  }
-  if (chosen.length === 0) return { steps: [], closed: false };
+/**
+ * Walk one component exactly as always: start at a dead end (open layout) or
+ * the smallest cell entering through its lower-key end (cycle), then ride the
+ * deterministic bijection until the lap closes or an open end ends the pass.
+ */
+function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
+  const { cellOf, endsOfPiece, partnerOf, degreeOf } = graph;
 
   const byStartCell = (a: string, b: string) =>
     cellKey(cellOf(a)).localeCompare(cellKey(cellOf(b)));
 
   let startId: string;
   let entryEdge: Edge;
-  if (chosen.some((id) => degreeOf(id) < 2)) {
+  if (ids.some((id) => degreeOf(id) < 2)) {
     // Open path or lone piece: start at a dead end (degree ≤ 1), entering
     // through its open end, and ride inward.
-    const endpoints = chosen.filter((id) => degreeOf(id) <= 1).sort(byStartCell);
+    const endpoints = ids.filter((id) => degreeOf(id) <= 1).sort(byStartCell);
     startId = invariant(endpoints[0], 'path component without an endpoint');
     const openEnds = endsOfPiece(startId)
       .filter((end) => !partnerOf.get(startId)?.has(end.key))
@@ -163,7 +177,7 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
     entryEdge = invariant(openEnds[0], 'endpoint without an open end').edge;
   } else {
     // Cycle: start at the smallest cell, entering through its lower-key end.
-    const sorted = chosen.slice().sort(byStartCell);
+    const sorted = ids.slice().sort(byStartCell);
     startId = invariant(sorted[0], 'cycle component without pieces');
     const connected = endsOfPiece(startId)
       .filter((end) => partnerOf.get(startId)?.has(end.key))
@@ -209,4 +223,27 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
   }
 
   return { steps, closed };
+}
+
+/**
+ * One ride per connected track component: every loop and line a toddler builds
+ * gets its own train. Paths are ordered by each component's smallest cell key,
+ * so the result never depends on array order (a cell hosts one piece, so the
+ * anchor keys are unique across components).
+ */
+export function solveRidePaths(pieces: readonly PlacedPiece[]): TrainPath[] {
+  if (pieces.length === 0) return [];
+  const graph = buildGraph(pieces);
+  return collectComponents(pieces, graph.partnerOf)
+    .map((ids) => ({ ids, anchor: minCellKeyOf(ids, graph.cellOf) }))
+    .sort((a, b) => (a.anchor < b.anchor ? -1 : 1))
+    .map(({ ids }) => walkComponent(ids, graph));
+}
+
+/**
+ * The single chosen ride (the component anchored at the smallest cell) — the
+ * original one-train behaviour, now just the first of `solveRidePaths`.
+ */
+export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
+  return solveRidePaths(pieces)[0] ?? { steps: [], closed: false };
 }

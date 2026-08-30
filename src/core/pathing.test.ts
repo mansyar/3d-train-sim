@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { solvePath } from './pathing';
+import { solvePath, solveRidePaths } from './pathing';
 import { endpointsFor } from './pieces';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
 
@@ -346,5 +346,122 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
     // at the crossing's open south face (the ride layer shuttles back).
     expect(path.steps.map((s) => s.pieceId)).toEqual(['tip', 'spur', 'cx']);
     expect(path.steps[2]).toEqual({ pieceId: 'cx', from: 'north', to: 'south' });
+  });
+});
+
+describe('solveRidePaths — one path per connected component', () => {
+  /** Reuse the physical-connectivity checks: every hop lands on a real piece. */
+  function expectPathRides(pieces: readonly PlacedPiece[], path: ReturnType<typeof solvePath>) {
+    for (let i = 1; i < path.steps.length; i++) {
+      const prev = path.steps[i - 1];
+      const cur = path.steps[i];
+      if (!prev || !cur) throw new Error('step missing from traversal');
+      const prevPlaced = placedOf(pieces, prev.pieceId);
+      const curPlaced = placedOf(pieces, cur.pieceId);
+      expect(neighbourOf(prevPlaced.cell, prev.to)).toEqual(curPlaced.cell);
+      expect(neighbourOf(curPlaced.cell, cur.from)).toEqual(prevPlaced.cell);
+    }
+  }
+
+  const loopA = [
+    piece('a-nw', 'corner', 0, 0, 90),
+    piece('a-ne', 'corner', 1, 0, 180),
+    piece('a-se', 'corner', 1, 1, 270),
+    piece('a-sw', 'corner', 0, 1, 0),
+  ];
+  const loopB = [
+    piece('b-nw', 'corner', 5, 5, 90),
+    piece('b-ne', 'corner', 6, 5, 180),
+    piece('b-se', 'corner', 6, 6, 270),
+    piece('b-sw', 'corner', 5, 6, 0),
+  ];
+
+  it('returns [] for an empty meadow', () => {
+    expect(solveRidePaths([])).toEqual([]);
+  });
+
+  it('returns the same path as solvePath when the world is one component', () => {
+    const pieces = [
+      piece('nw', 'corner', 0, 0, 90),
+      piece('top-1', 'straight', 1, 0, 90),
+      piece('top-2', 'straight', 2, 0, 90),
+      piece('ne', 'corner', 3, 0, 180),
+      piece('se', 'corner', 3, 1, 270),
+      piece('bottom-2', 'straight', 2, 1, 90),
+      piece('bottom-1', 'straight', 1, 1, 90),
+      piece('sw', 'corner', 0, 1, 0),
+    ];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toEqual([solvePath(pieces)]);
+    expect(paths[0]?.closed).toBe(true);
+  });
+
+  it('yields two closed paths for two disjoint loops, in smallest-cell order', () => {
+    const pieces = [...loopB, ...loopA];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(2);
+    expect(paths.map((p) => p.closed)).toEqual([true, true]);
+    // A rides first (its smallest cell anchors the smaller key), B second —
+    // never array order: loopB was listed first.
+    expect(paths[0]?.steps.every((s) => s.pieceId.startsWith('a-'))).toBe(true);
+    expect(paths[1]?.steps.every((s) => s.pieceId.startsWith('b-'))).toBe(true);
+    for (const path of paths) expectPathRides(pieces, path);
+  });
+
+  it('is deterministic: input order never changes the returned paths', () => {
+    const pieces = [...loopB, ...loopA];
+    expect(solveRidePaths([...pieces].reverse())).toEqual(solveRidePaths(pieces));
+  });
+
+  it('pairs a closed loop with an open path when a second track is a dead-end line', () => {
+    const pieces = [
+      ...loopA,
+      piece('line-1', 'straight', 4, 0, 90),
+      piece('line-2', 'straight', 5, 0, 90),
+    ];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(2);
+    expect(paths.map((p) => p.closed)).toEqual([true, false]);
+    // The line rides from its west dead end eastward.
+    expect(paths[1]?.steps).toEqual([
+      { pieceId: 'line-1', from: 'west', to: 'east' },
+      { pieceId: 'line-2', from: 'west', to: 'east' },
+    ]);
+  });
+
+  it('gives a lone piece its own open shuttle path', () => {
+    const pieces = [...loopA, piece('lonely', 'corner', 6, 6, 0)];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(2);
+    expect(paths[1]?.steps).toEqual([{ pieceId: 'lonely', from: 'north', to: 'east' }]);
+    expect(paths[1]?.closed).toBe(false);
+  });
+
+  it('keeps a crossing with an unridden side branch as one straight-through path', () => {
+    // Documented limitation, unchanged: the crossing's north/south branch
+    // belongs to the same component, so the whole thing is one ride that
+    // passes straight through the crossing.
+    const pieces = [
+      piece('w', 'straight', 0, 0, 90),
+      piece('x', 'crossing', 1, 0, 0),
+      piece('e', 'straight', 2, 0, 90),
+      piece('n', 'straight', 1, -1, 0),
+      piece('s', 'straight', 1, 1, 0),
+    ];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(1);
+    expect(paths[0]?.closed).toBe(false);
+    expect(paths[0]?.steps.map((s) => s.pieceId)).toEqual(['w', 'x', 'e']);
+    expect(paths[0]?.steps[1]).toEqual({ pieceId: 'x', from: 'west', to: 'east' });
   });
 });
