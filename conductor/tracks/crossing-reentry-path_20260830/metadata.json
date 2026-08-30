@@ -2,7 +2,7 @@
   "id": "crossing-reentry-path_20260830",
   "title": "Crossing Re-Entry Pathing Bug",
   "type": "bug",
-  "status": "new",
+  "status": "done",
   "branch": "track/crossing-reentry-path",
   "created": "2026-08-30",
   "updated": "2026-08-30",

@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [crossing-reentry-path_20260830](tracks/crossing-reentry-path_20260830/index.md) | Crossing Re-Entry Pathing Bug | Bug | in progress |
+| [crossing-reentry-path_20260830](tracks/crossing-reentry-path_20260830/index.md) | Crossing Re-Entry Pathing Bug | Bug | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
