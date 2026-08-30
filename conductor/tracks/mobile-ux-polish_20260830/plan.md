@@ -29,12 +29,16 @@ criteria and are verified via e2e + manual checks instead of unit tests.
   - Verification Report (2026-08-30): biome clean · tsc clean · vitest 24/24 audio incl. new click-one-shot + click-muted · Playwright 32/32 (tablet + phone) incl. new "quick tap rotates 90°" test.
   - Notes: added click.ogg/mp3 (synthesized soft tick, CC0); howler-voice `click` voice (0.7 volume, under others); `AudioController.click()`; app.ts reworked: press-then-move lifts (12px threshold), release-without-move rotates placed toy in place via same-cell relocate, rotate-bounce feedback, knob removed, R key kept; CSS remove .rotate-knob, add .rotate-bounce + keyframes + reduced-motion. Files: `public/audio/click.*`, `public/audio/CREDITS.md`, `src/audio/howler-voice.ts`, `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`, `src/ui/app.ts`, `src/style.css`, `e2e/smoke.spec.ts`.
 
-## Phase 3 — Delete on the toy (FR3)
+## Phase 3 — Delete on the toy (FR3) [checkpoint: 2ff19c8]
 
-- [ ] Task: ✕ chip overlay travels with a lifted placed toy; tap deletes silently (consistent with trash)
-- [ ] Task: Trash bin grows/pulses while a lifted toy hovers over the rail; widened invisible drop zone
-- [ ] Task: Acceptance criteria recorded (chip visible while lifted, tap deletes, drag-to-trash still works)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: ✕ chip overlay travels with a lifted placed toy; tap deletes silently (consistent with trash)
+  - Acceptance: lifting a placed toy shows a ✕ chip beside it; tapping it bins the toy silently (no ding, no scolding); the chip stays a fixed target (anchored to the toy's home cell) so it cannot dodge the tap.
+- [x] Task: Trash bin grows/pulses while a lifted toy hovers over the rail; widened invisible drop zone
+  - Acceptance: dragging a toy near the bin grows/pulses it; a drop within the widened zone deletes; a drop on the rail away from the bin still wobble-returns; reduced-motion users get no pulse.
+- [x] Task: Acceptance criteria recorded (chip visible while lifted, tap deletes, drag-to-trash still works)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 (tablet + phone) incl. new "✕ chip deletes on tap" test both projects. Debugging note: the chip initially chased the drag pointer/cell and dodged taps — fixed by anchoring to the toy's home cell and clearing drag state before mutating so a trailing pointerup cannot cancel the delete.
+  - Files: `src/scene/track-renderer.ts` (new `cellToScreen` projection + handle), `src/scene/init-scene.ts` (SceneHandle `cellToScreen`), `src/ui/app.ts` (delete chip element, placeChip, home-cell anchor, widened trash zone, setTrashHover, click/pointerdown delete), `src/main.ts` (wire cellToScreen), `src/style.css` (.delete-chip, .trash-slot.is-hovering pulse, reduced-motion), `e2e/smoke.spec.ts` (chip-delete test).
 
 ## Phase 4 — Portrait camera framing (FR4)
 
