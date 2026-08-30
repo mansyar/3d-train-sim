@@ -50,9 +50,22 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     descriptor (`{from, to, t}` — null when settled) and fade-start events.
     Holds draw 30–45 s, fades 5–8 s; transitions are always soft lerp, never
     abrupt switches.
-- [ ] Task: Coverage check — ≥90% on both modules
+- [x] Task: Coverage check — ≥90% on both modules
   (`CI=true pnpm test -- --coverage`)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Notes:** 2026-08-30 — `day-clock.ts` 91.7% stmts / 100% branch /
+    95.2% lines; `weather-cycle.ts` 97.5% stmts / 90% branch / 100% lines.
+    Gate met for both.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+- **Automated:** 2026-08-30 — full `pnpm check` green after the
+  `noUncheckedIndexedAccess` hardening (`49baa21`): biome ✅, tsc ✅,
+  237/237 unit tests (13 new: day-clock 7, weather-cycle 6). Coverage gate
+  ≥90% met on both modules. Biome auto-fixed import order/format on the new
+  files (part of `49baa21`).
+- **Manual:** none yet — both modules are pure logic with no visual surface;
+  manual tablet verification of the rendered day/weather happens in Phase 4
+  per plan. Checkpoint commit: `49baa21`.
 
 ## Phase 2: Sky, lighting & weather rendering (scene — criteria-verified)
 
