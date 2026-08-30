@@ -69,7 +69,7 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 ## Phase 2: Sky, lighting & weather rendering (scene — criteria-verified)
 
-- [ ] Task: Sky dome + sun/moon arc — *criteria: sun visible by day, moon +
+- [~] Task: Sky dome + sun/moon arc — *criteria: sun visible by day, moon +
   deep-blue sky at night, discs arc smoothly*
 - [ ] Task: Lighting lerp + warm window/station glows at night — *criteria:
   night never near-black, glows fade in at dusk, out at dawn*
