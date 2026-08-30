@@ -159,6 +159,12 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
 ## Phase 4: Track Verification (Refer to workflow.md)
 
-- Full gates: `pnpm check` (biome + `tsc --noEmit` + unit suite) and the
+- [x] Full gates: `pnpm check` (biome + `tsc --noEmit` + unit suite) and the
   Playwright smoke suite, zero console errors.
+  - Notes: biome ✅, `tsc --noEmit` ✅, 221 unit tests ✅ (2026-08-30, single
+    run); 14 Playwright smoke ✅ (zero console errors, zero external
+    requests); `pnpm build` ✅ (PWA precache 136 entries).
 - Manual tablet pass of all three acceptance criteria; record results.
+  - Phase 1 (attract) — user confirmed 2026-08-30.
+  - Phase 2 (whistle burst) — pending user confirmation.
+  - Phase 3 (tab-hide pause) — pending user confirmation.
