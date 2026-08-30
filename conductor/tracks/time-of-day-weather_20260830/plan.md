@@ -196,3 +196,18 @@ audio wiring is verified by smoke tests and explicit manual criteria per
   (including the ambience long-run and tablet FPS tests).
 - **Manual:** automated emulation pass done (above); real-family-device
   iPad/Android pass deferred to the parent. Checkpoint commit: `6d11561`.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 5587f1f + 17867a8
+
+- **Findings:** 1 Medium — the ambience frame path allocated per frame
+  (skyColorsAt/celestialAt/lerpIntensity fresh objects + a blend spread in
+  weather-cycle.tick), contradicting the spec NFR "zero per-frame
+  allocations". Fixed with optional scratch-object out-params (TDD'd
+  no-arg APIs unchanged) and in-place blend mutation. 2 Low -
+  ambience-audio kept the noise graph rendering while suspended (now a real
+  context.suspend(), with a wasMuted guard so hide-while-muted sessions
+  wake correctly); tablet FPS floor test noted as conservative (kept).
+- **Notes:** tsc + biome + full pnpm check (253/253) and Playwright 41/41
+  re-run green after the fixes (2026-08-30). No behavior change.
