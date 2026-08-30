@@ -248,4 +248,15 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - Final run: 39/39 e2e (tablet, phone, prod) · 246/246 unit ·
       `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) `37c2983..53d90d8`
+
+  - **Automated gates:** `CI=true pnpm test` — 246/246 passing · Biome clean ·
+    `tsc --noEmit` clean · e2e 39/39 (tablet, phone, prod; fresh servers).
+  - **Manual verification (user-confirmed ✅):** two disjoint loops ride two
+    trains; 🎥 appears at ≥2 rides and cycles filmed train → next train →
+    overview → wrap; 🎺 puffs on the filmed train (nearest answers from the
+    overview, the parked opener before any ride); a stopped loop's train
+    eases out and parks, and ⏹ → ▶ resumes the train already on the loop
+    from where it sits (amendment `53d90d8`: ride assignment prefers the
+    nearest spare so two trains never gather on one loop).
+  - **Checkpoint SHA:** `53d90d8` (last functional commit of Phase 3).
