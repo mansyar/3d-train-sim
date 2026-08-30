@@ -5,7 +5,7 @@ Registry of active development tracks.
 | Track | Title | Type | Status |
 |---|---|---|---|
 | [time-of-day-weather_20260830](tracks/time-of-day-weather_20260830/index.md) | Time of Day & Weather | Feature | done |
-| [release-v0.3.0_20260830](tracks/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | new |
+| [release-v0.3.0_20260830](tracks/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | in progress |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
