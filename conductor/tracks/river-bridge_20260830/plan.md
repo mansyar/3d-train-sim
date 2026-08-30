@@ -116,8 +116,22 @@
     water, updated in the spin tick with weather from the same
     `lerpIntensity` blend that drives critters (snow extracted alongside
     rain). 303/303, tsc + biome clean.
-- [~] Task: River babble ambience
+- [x] Task: River babble ambience `5cc4055`
   - Criteria: whisper-quiet synthesized babble; fades in only near the water; mute-respecting; suspends with hidden tab (ambience-audio pattern); lazy AudioContext
+
+  - **Notes:** New `audio/river-babble.ts` mirroring the ambience-audio
+    lifecycle: lazy AudioContext on first gesture, shared 2 s noise loop
+    band-passed at 1 kHz into a watery gurgle, amplitude-modulated by two
+    detuned LFOs (9/14 Hz) so it babbles rather than hisses — whisper-quiet
+    at 0.05 max gain, no assets. Fade target comes from a new pure
+    `riverProximity(cell)` in `core/river.ts` (TDD'd, 6 tests): 1 on water +
+    immediate bank (king-move ≤ 1, matching the duck's diagonal glide),
+    halving each cell out to 0 by 3+. Wired in `init-scene.ts`'s ambience
+    paint — camera's cell via a scratch `proximityCell` (zero-alloc frame
+    path), frozen gate `snow ≥ 0.5` shared with the duck (`FROZEN_SNOW`
+    exported), so ice stands the babble down with the duck. Respects the
+    parent mute via `audio.subscribe`; suspends/closes with the tab
+    lifecycle and `dispose()`. 309/309 (6 new), tsc + biome clean.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E, polish & docs
