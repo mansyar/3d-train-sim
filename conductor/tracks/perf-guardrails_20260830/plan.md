@@ -3,7 +3,16 @@
 Feature track — `src/core` logic is TDD'd; scene wiring is verified via
 acceptance criteria + smoke tests per `workflow.md`.
 
-## Phase 1 — FPS Probe & Quality Controller (core, TDD)
+## Phase 1 — FPS Probe & Quality Controller (core, TDD) [checkpoint: 1acdd1f]
+
+### Verification Report — Phase 1
+- Automated: `pnpm test` → 283 tests across 24 files, all passing;
+  `pnpm exec vitest run src/core/perf-monitor.test.ts --coverage` → 94.25%
+  stmts / 90.47% branch / 98.7% lines on `perf-monitor.ts` (>80% target met);
+  `pnpm exec tsc --noEmit` clean; `pnpm exec biome check .` clean.
+- Manual verification: deferred — Phase 1 is pure `src/core` logic with no
+  user-facing surface; observable checks happen in Phase 2 (probe wiring,
+  `?perf=debug` overlay) and Phase 3 (heavy-scene degradation + recovery).
 
 - [x] Task: Write failing unit tests for the FPS probe (0bab32c)
   - [x] Ring buffer behavior: preallocated capacity, wraps without allocating
