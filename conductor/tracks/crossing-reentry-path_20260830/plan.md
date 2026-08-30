@@ -8,7 +8,7 @@ criteria + smoke + manual tablet check for scene wiring
 
 ## Phase 1: Reproduce, Fix, Verify
 
-- [ ] Task: Write failing regression tests for crossing re-entry (logic — TDD)
+- [~] Task: Write failing regression tests for crossing re-entry (logic — TDD)
 
 - **Expected behavior (unit tests first):**
   - Build a fully-closed self-crossing layout (every piece end connected; the
