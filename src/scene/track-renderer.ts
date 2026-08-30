@@ -106,8 +106,18 @@ export function cellToScreen(
   const { x, z } = cellToWorld(cell);
   const ndc = new Vector3(x, 0, z).project(camera);
   // The meadow sits near this camera's far plane, so its NDC z hovers around
-  // 1 — only a non-finite projection means the camera is not usable yet.
-  if (!Number.isFinite(ndc.x) || !Number.isFinite(ndc.y)) return null;
+  // 1 — only a non-finite projection, or a point outside the view frustum,
+  // means the cell is not usable on screen.
+  if (
+    !Number.isFinite(ndc.x) ||
+    !Number.isFinite(ndc.y) ||
+    ndc.x < -1.2 ||
+    ndc.x > 1.2 ||
+    ndc.y < -1.2 ||
+    ndc.y > 1.2
+  ) {
+    return null;
+  }
   return {
     x: ((ndc.x + 1) / 2) * canvas.clientWidth,
     y: ((1 - ndc.y) / 2) * canvas.clientHeight,

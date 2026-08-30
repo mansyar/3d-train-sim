@@ -241,19 +241,23 @@ export function initScene(
       camera.lookAt(OVERVIEW_LOOK);
       return;
     }
-    camera.position.copy(overviewBase);
-    camera.lookAt(OVERVIEW_LOOK);
-    camera.updateMatrixWorld();
     const half = GROUND_SIZE / 2;
-    let widestHalf = 0;
-    for (const x of [-half, half]) {
-      for (const z of [-half, half]) {
-        const p = new Vector3(x, 0, z).project(camera);
+    const corners = [-half, half].flatMap((x) => [-half, half].map((z) => ({ x, z })));
+    // Iterate camera distance until every projected corner fits inside 92% of
+    // the NDC half-width — a screen-space fit, robust to near/far asymmetry.
+    let scale = 1;
+    for (let i = 0; i < 8; i += 1) {
+      camera.position.copy(OVERVIEW_POSITION).multiplyScalar(scale);
+      camera.lookAt(OVERVIEW_LOOK);
+      camera.updateMatrixWorld();
+      let widestHalf = 0;
+      for (const corner of corners) {
+        const p = new Vector3(corner.x, 0, corner.z).project(camera);
         widestHalf = Math.max(widestHalf, Math.abs(p.x));
       }
+      if (widestHalf <= 0.92) break;
+      scale *= 1.03;
     }
-    // Only pull back when a corner would pass 92% of the half-width.
-    const scale = Math.max(1, widestHalf / 0.92);
     overviewBase.copy(OVERVIEW_POSITION).multiplyScalar(scale);
     camera.position.copy(overviewBase);
     camera.lookAt(OVERVIEW_LOOK);

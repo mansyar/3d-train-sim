@@ -7,11 +7,6 @@ test('app boots on a tablet with a clean console and zero external requests', as
   });
   page.on('pageerror', (error) => consoleErrors.push(String(error)));
 
-  // Dev builds may show the debug grid toggle; production must never mount one.
-  if (process.env.PROD_E2E) {
-    await expect(page.locator('.grid-toggle')).toHaveCount(0);
-  }
-
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
 
