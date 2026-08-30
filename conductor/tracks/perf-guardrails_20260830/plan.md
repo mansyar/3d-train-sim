@@ -21,10 +21,23 @@ acceptance criteria + smoke tests per `workflow.md`.
     - Why: spec requires a pure, zero-allocation probe; tests pin verdict
       thresholds and hidden-tab safety before any implementation exists.
     - Confirmed failing (`Cannot find module './perf-monitor'`).
-- [ ] Task: Write failing unit tests for the quality controller
-  - [ ] Sustained strain degrades L0→L1→L2; single-verdict dips do not
-  - [ ] Cooldown between level changes (no flapping)
-  - [ ] Recovery after sustained health is slower than degradation; never skips levels upward
+- [x] Task: Write failing unit tests for the quality controller (45e7fd1)
+  - [x] Sustained strain degrades L0→L1→L2; single-verdict dips do not
+  - [x] Cooldown between level changes (no flapping)
+  - [x] Recovery after sustained health is slower than degradation; never skips levels upward
+  - Notes:
+    - Task: Quality controller specs — Red phase.
+    - Extended `src/core/perf-monitor.test.ts` with a `createQualityController`
+      describe block: starts at L0, single strained dips ignored, 2 s sustained
+      strain degrades L0→L1→L2, health mid-streak resets strain progress,
+      4 s cooldown freezes changes after any level change, recovery needs 6 s
+      sustained health (slower than the 2 s degrade hold) and only ever moves
+      one level up, and `onLevelChange` fires exactly on real changes.
+    - Tests drive the controller with 0.1 s steps (frame-like updates) so the
+      cooldown-freeze semantics are exercised the way the frame loop will.
+    - Why: pin the toddler-gentle rules (no flapping, no jumps, slow recovery)
+      before implementation.
+    - Confirmed failing (`Cannot find module './perf-monitor'`).
 - [ ] Task: Implement `src/core/perf-monitor.ts` to green; run coverage, target >80%
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
