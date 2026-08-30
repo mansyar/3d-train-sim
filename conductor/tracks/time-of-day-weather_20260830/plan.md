@@ -81,8 +81,21 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     into `init-scene.ts`'s spin loop. Initial paint covers the reduced-motion
     static frame (mid-morning). Biome import fixes folded in; full
     `pnpm check` 242/242 ✅.
-- [~] Task: Lighting lerp + warm window/station glows at night — *criteria:
+- [x] Task: Lighting lerp + warm window/station glows at night — *criteria:
   night never near-black, glows fade in at dusk, out at dawn*
+  `5e9001d`
+
+  - **Notes:** `nightFactorAt()` added to the palette first (TDD, `b46937f`,
+    6/6 — day plateau, dusk ramp 0.55→0.75, night plateau, dawn ramp). Then
+    `lights.ts` grew a day/night preset lerp (`update(nightFactor)` —
+    ambient/hemisphere/sun color+intensity; night stays a readable deep-blue
+    twilight, sun dims to moonlight 0.25) with all colors hoisted — zero
+    per-frame allocation. New `window-glow.ts`: one additive radial-glow
+    sprite per building template (house/cottage/station), clones share the
+    material so one `setGlowNight` write per frame drives every placed
+    building. Wired into `init-scene.ts` (`paintAmbience` = sky + lights +
+    glows, also painted once for the reduced-motion static frame). Full
+    `pnpm check` 243/243 ✅.
 - [ ] Task: Cloud puffs + instanced rain/snow particles + reduced-motion —
   *criteria: budgets ≤600/≤400, zero per-frame allocations, drift hidden under
   reduced motion*

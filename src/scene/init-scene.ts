@@ -17,6 +17,7 @@ import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
+import { createWeatherClock, intensityOf, lerpIntensity } from '../core/weather-cycle';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
@@ -31,6 +32,7 @@ import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { type PickedItem, startTrackRenderer } from './track-renderer';
+import { createWeatherParticles } from './weather-particles';
 import { disposeWindowGlows, setGlowNight } from './window-glow';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
@@ -104,21 +106,32 @@ export function initScene(
   const disposables: Array<() => void> = [];
   const lights = createLights(scene);
   disposables.push(lights.dispose);
-  disposables.push(createGround(scene));
+  const ground = createGround(scene);
+  disposables.push(ground.dispose);
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
+  const weather = createWeatherParticles(scene);
+  disposables.push(weather.dispose);
 
-  // Time of day: a pure day clock (driven per animation frame) recolors the
-  // sky dome and eases the lights through dawn/noon/dusk/night. Painted once
-  // up front so the reduced-motion static frame still shows a lit
-  // mid-morning meadow.
+  // Time of day + weather: pure clocks (driven per animation frame) recolor
+  // the sky, ease the lights, drive particles and whiten the meadow. Painted
+  // once up front so the reduced-motion static frame still shows a lit
+  // mid-morning meadow (frozen ambience under reduced motion).
   const dayClock = createDayClock({ now: () => performance.now() });
+  const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
-  const paintAmbience = (): void => {
+  const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
     sky.update(fraction, skyColorsAt(fraction), celestialAt(fraction));
     const night = nightFactorAt(fraction);
     lights.update(night);
     setGlowNight(night);
+    // Weather intensity lerps across any active cross-fade.
+    const blend = weatherClock.blend;
+    const base = blend
+      ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t)
+      : intensityOf(weatherClock.weather);
+    weather.update(dt, base);
+    ground.setSnow(base.snow);
   };
   paintAmbience();
   disposables.push(sky.dispose);
@@ -324,7 +337,8 @@ export function initScene(
     () => spinTarget,
     (dt) => {
       dayClock.tick();
-      paintAmbience();
+      weatherClock.tick();
+      paintAmbience(dt);
       rideUpdate?.(dt);
       // Critters idle always and hop while the riding train passes close.
       // A parked train reports null — hops read as passing, not presence.
