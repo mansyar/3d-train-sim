@@ -1,6 +1,6 @@
 # Spec — Every Layout Rides
 
-**Track ID:** `every-layout-rides_20260830` · **Type:** Feature · **Status:** new
+**Track ID:** `every-layout-rides_20260830` · **Type:** Feature · **Status:** complete
 **Branch:** `track/every-layout-rides` · **Created:** 2026-08-30
 
 ## Problem
