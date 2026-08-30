@@ -62,11 +62,16 @@ criteria and are verified via e2e + manual checks instead of unit tests.
   - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 dev (toggle present) + production build served and asserted no `.grid-toggle`, rail intact. `pnpm build` green (font bundled, PWA regenerated).
   - Files: `conductor/tech-stack.md` (font row), `package.json`/`pnpm-lock.yaml` (@fontsource/baloo-2 ^5.3.0), `src/main.ts` (font import), `src/ui/app.ts` (toggle gated to DEV + guarded wiring), `index.html` (apple meta + touch icon), `e2e/smoke.spec.ts` (PROD_E2E toggle-absent guard).
 
-## Phase 6 — E2E gesture coverage (FR6.2)
+## Phase 6 — E2E gesture coverage (FR6.2) [checkpoint: bf81e55]
 
-- [ ] Task: Scripted touch test — place piece → tap rotates → lift-drag to ✕ chip/trash deletes; console-error and zero-external-request assertions
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Scripted touch test — place piece → tap rotates → lift-drag to ✕ chip/trash deletes; console-error and zero-external-request assertions
+  - Acceptance: (1) tap-rotate covered by the Phase 2 smoke test, (2) ✕-chip delete covered by the Phase 3 smoke test, (3) drag-to-trash covered by a new trash-drop smoke test, all with zero console errors; zero external requests asserted at boot.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 36/36 (18 tablet + 18 phone) — tap-rotate, ✕-chip delete, and drag-to-trash each pass on both projects.
+  - Files: `e2e/smoke.spec.ts` (drag-to-trash test using cellToScreen start + trash bin center drop).
 
-## Final gate
+## Final gate ✅
 
-- [ ] Task: `biome check`, `tsc --noEmit`, vitest, full Playwright suite (tablet + phone) green
+- [x] Task: `biome check`, `tsc --noEmit`, vitest, full Playwright suite (tablet + phone) green
+  - Acceptance: every gate passes on a clean run; the production build (`pnpm build`) also succeeds.
+  - Verification (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 36/36 (tablet + phone) · `pnpm build` succeeded (precache 138 entries).
