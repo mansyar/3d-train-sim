@@ -114,6 +114,12 @@ export function initScene(
   const unsubscribeAttract = attractClock.subscribe((event) => {
     if (event.kind === 'drift') attract.enterIdle();
     else if (event.kind === 'state' && event.state === 'active') attract.exitIdle();
+    else if (event.kind === 'chirp') {
+      // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
+      if (rides.mode() === 'riding') return;
+      audio.chirp(event.critter);
+      tracks.hopCritter(event.critter);
+    }
   });
   const attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
 

@@ -43,7 +43,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   start/stop in `init-scene.ts`. Gates: biome ✅, `tsc --noEmit` ✅, unit
   suite stays green, Playwright smoke ✅.
 
-- [ ] Task: Quiet meadow chirps + critter hop (audio/scene wiring)
+- [x] Task: Quiet meadow chirps + critter hop (audio/scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - On an `idle` chirp event, one critter sound plays at low volume
