@@ -22,6 +22,7 @@ import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
+import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
@@ -111,6 +112,8 @@ export function initScene(
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
   const weather = createWeatherParticles(scene);
   disposables.push(weather.dispose);
+  const fireflies = createFireflies(scene);
+  disposables.push(fireflies.dispose);
 
   // Time of day + weather: pure clocks (driven per animation frame) recolor
   // the sky, ease the lights, drive particles and whiten the meadow. Painted
@@ -132,6 +135,7 @@ export function initScene(
       : intensityOf(weatherClock.weather);
     weather.update(dt, base);
     ground.setSnow(base.snow);
+    fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
   };
   paintAmbience();
   disposables.push(sky.dispose);
@@ -160,6 +164,8 @@ export function initScene(
     else if (event.kind === 'chirp') {
       // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
       if (rides.mode() === 'riding') return;
+      // ...and the critters are asleep at night (fireflies take the shift).
+      if (nightFactorAt(dayClock.fraction) >= 0.6) return;
       audio.chirp(event.critter);
       tracks.hopCritter(event.critter);
     }
@@ -342,10 +348,16 @@ export function initScene(
       rideUpdate?.(dt);
       // Critters idle always and hop while the riding train passes close.
       // A parked train reports null — hops read as passing, not presence.
+      // Mood: rain shrinks their excitement radius, night is bedtime.
       const riding = rides.mode() === 'riding' && locomotive !== null;
       const trainX = riding && locomotive ? locomotive.position.x : null;
       const trainZ = riding && locomotive ? locomotive.position.z : null;
-      tracks.updateCritters(dt, trainX, trainZ);
+      const night = nightFactorAt(dayClock.fraction);
+      const blend = weatherClock.blend;
+      const rainNow = blend
+        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t).rain
+        : intensityOf(weatherClock.weather).rain;
+      tracks.updateCritters(dt, trainX, trainZ, { rain: rainNow, night });
       steamPuffs?.update(dt);
       visibleSteamPuffs = steamPuffs?.activeCount() ?? 0;
       updateCamera(dt);
