@@ -168,3 +168,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   - Phase 1 (attract) — user confirmed 2026-08-30.
   - Phase 2 (whistle burst) — user confirmed 2026-08-30.
   - Phase 3 (tab-hide pause) — user confirmed 2026-08-30.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions b6f1d8f
