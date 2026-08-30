@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createWeatherClock,
   intensityOf,
+  lerpIntensity,
   nextWeather,
   WEATHER_ORDER,
   type Weather,
@@ -52,6 +53,16 @@ describe('intensityOf', () => {
     expect(intensityOf('cloudy')).toEqual({ cloud: 0.7, rain: 0, snow: 0 });
     expect(intensityOf('rain')).toEqual({ cloud: 1, rain: 1, snow: 0 });
     expect(intensityOf('snow')).toEqual({ cloud: 0.6, rain: 0, snow: 1 });
+  });
+});
+
+describe('lerpIntensity', () => {
+  it('blends two intensity sets by t', () => {
+    const a = { cloud: 0.1, rain: 0, snow: 0 };
+    const b = { cloud: 1, rain: 1, snow: 0 };
+    expect(lerpIntensity(a, b, 0)).toEqual(a);
+    expect(lerpIntensity(a, b, 0.5)).toEqual({ cloud: 0.55, rain: 0.5, snow: 0 });
+    expect(lerpIntensity(a, b, 1)).toEqual(b);
   });
 });
 

@@ -47,6 +47,15 @@ export function intensityOf(weather: Weather): WeatherIntensity {
   return INTENSITY[weather];
 }
 
+/** Blend two intensity sets — drives soft weather cross-fades. */
+export function lerpIntensity(a: WeatherIntensity, b: WeatherIntensity, t: number): WeatherIntensity {
+  return {
+    rain: a.rain + (b.rain - a.rain) * t,
+    snow: a.snow + (b.snow - a.snow) * t,
+    cloud: a.cloud + (b.cloud - a.cloud) * t,
+  };
+}
+
 /** A cross-fade in progress: lerp scene state from `from` to `to` by `t`. */
 export interface WeatherBlend {
   from: Weather;
