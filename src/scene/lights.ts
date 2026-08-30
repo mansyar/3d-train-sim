@@ -1,5 +1,5 @@
 import type { Scene } from 'three';
-import { AmbientLight, DirectionalLight, HemisphereLight } from 'three';
+import { AmbientLight, Color, DirectionalLight, HemisphereLight } from 'three';
 import { MEADOW_CELLS } from '../core/track-graph';
 import { GROUND_SIZE } from './ground';
 
@@ -15,11 +15,38 @@ const SHADOW_MAP_SIZE = 1024;
 const SHADOW_BIAS = -0.0002;
 const SHADOW_NORMAL_BIAS = 0.1;
 
-/** Sunlit-playroom lighting: warm ambient, sky/warm-bounce fill, one shadowed sun. */
-export function createLights(scene: Scene): () => void {
-  const ambient = new AmbientLight(0xffeecf, 0.7);
-  const fill = new HemisphereLight(0xbfe0ff, 0xffe2b0, 0.55);
-  const sun = new DirectionalLight(0xfff6e6, 1.15);
+/** Sunlit-playroom lighting: warm ambient, sky/warm-bounce fill, one shadowed sun.
+ *  Lights lerp between day and night presets so the meadow dims into cozy
+ *  twilight (never near-black) and brightens again by mid-dawn. */
+const DAY = {
+  ambientColor: 0xffeecf,
+  ambientIntensity: 0.7,
+  fillSky: 0xbfe0ff,
+  fillGround: 0xffe2b0,
+  fillIntensity: 0.55,
+  sunColor: 0xfff6e6,
+  sunIntensity: 1.15,
+};
+const NIGHT = {
+  ambientColor: 0x8a9bc8,
+  ambientIntensity: 0.3,
+  fillSky: 0x2a3560,
+  fillGround: 0x1c2438,
+  fillIntensity: 0.28,
+  sunColor: 0xa8c0e8,
+  sunIntensity: 0.25,
+};
+
+export interface MeadowLights {
+  /** Blend toward the night presets; 0 = full day, 1 = deep night. */
+  update(nightFactor: number): void;
+  dispose(): void;
+}
+
+export function createLights(scene: Scene): MeadowLights {
+  const ambient = new AmbientLight(DAY.ambientColor, DAY.ambientIntensity);
+  const fill = new HemisphereLight(DAY.fillSky, DAY.fillGround, DAY.fillIntensity);
+  const sun = new DirectionalLight(DAY.sunColor, DAY.sunIntensity);
   sun.position.set(...SUN_POSITION);
   sun.castShadow = true;
   sun.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
@@ -33,10 +60,31 @@ export function createLights(scene: Scene): () => void {
   sun.shadow.bias = SHADOW_BIAS;
   sun.shadow.normalBias = SHADOW_NORMAL_BIAS;
   scene.add(ambient, fill, sun);
-  return () => {
-    scene.remove(ambient, fill, sun);
-    ambient.dispose();
-    fill.dispose();
-    sun.dispose();
+  // Preset colors hoisted for per-frame lerping — no per-frame allocation.
+  const ambientDay = new Color(DAY.ambientColor);
+  const ambientNight = new Color(NIGHT.ambientColor);
+  const fillSkyDay = new Color(DAY.fillSky);
+  const fillSkyNight = new Color(NIGHT.fillSky);
+  const fillGroundDay = new Color(DAY.fillGround);
+  const fillGroundNight = new Color(NIGHT.fillGround);
+  const sunDay = new Color(DAY.sunColor);
+  const sunNight = new Color(NIGHT.sunColor);
+  return {
+    update(nightFactor: number): void {
+      ambient.color.lerpColors(ambientDay, ambientNight, nightFactor);
+      ambient.intensity =
+        DAY.ambientIntensity + (NIGHT.ambientIntensity - DAY.ambientIntensity) * nightFactor;
+      fill.color.lerpColors(fillSkyDay, fillSkyNight, nightFactor);
+      fill.groundColor.lerpColors(fillGroundDay, fillGroundNight, nightFactor);
+      fill.intensity = DAY.fillIntensity + (NIGHT.fillIntensity - DAY.fillIntensity) * nightFactor;
+      sun.color.lerpColors(sunDay, sunNight, nightFactor);
+      sun.intensity = DAY.sunIntensity + (NIGHT.sunIntensity - DAY.sunIntensity) * nightFactor;
+    },
+    dispose() {
+      scene.remove(ambient, fill, sun);
+      ambient.dispose();
+      fill.dispose();
+      sun.dispose();
+    },
   };
 }

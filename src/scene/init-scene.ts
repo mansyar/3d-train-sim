@@ -12,7 +12,7 @@ import { bindRideAudio } from '../audio/ride-audio';
 import { createAttractClock } from '../core/attract-clock';
 import { createDayClock } from '../core/day-clock';
 import type { SceneryKind } from '../core/scenery';
-import { celestialAt, skyColorsAt } from '../core/sky-palette';
+import { celestialAt, nightFactorAt, skyColorsAt } from '../core/sky-palette';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
@@ -31,6 +31,7 @@ import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { type PickedItem, startTrackRenderer } from './track-renderer';
+import { disposeWindowGlows, setGlowNight } from './window-glow';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -101,19 +102,25 @@ export function initScene(
   camera.lookAt(OVERVIEW_LOOK);
 
   const disposables: Array<() => void> = [];
-  disposables.push(createLights(scene));
+  const lights = createLights(scene);
+  disposables.push(lights.dispose);
   disposables.push(createGround(scene));
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
 
   // Time of day: a pure day clock (driven per animation frame) recolors the
-  // sky dome through dawn/noon/dusk/night. Painted once up front so the
-  // reduced-motion static frame still shows a lit mid-morning meadow.
+  // sky dome and eases the lights through dawn/noon/dusk/night. Painted once
+  // up front so the reduced-motion static frame still shows a lit
+  // mid-morning meadow.
   const dayClock = createDayClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
-  const paintSky = (): void => {
-    sky.update(dayClock.fraction, skyColorsAt(dayClock.fraction), celestialAt(dayClock.fraction));
+  const paintAmbience = (): void => {
+    const fraction = dayClock.fraction;
+    sky.update(fraction, skyColorsAt(fraction), celestialAt(fraction));
+    const night = nightFactorAt(fraction);
+    lights.update(night);
+    setGlowNight(night);
   };
-  paintSky();
+  paintAmbience();
   disposables.push(sky.dispose);
 
   const crate = createPlaceholderCrate();
@@ -317,7 +324,7 @@ export function initScene(
     () => spinTarget,
     (dt) => {
       dayClock.tick();
-      paintSky();
+      paintAmbience();
       rideUpdate?.(dt);
       // Critters idle always and hop while the riding train passes close.
       // A parked train reports null — hops read as passing, not presence.
@@ -392,6 +399,7 @@ export function initScene(
       }
       wagonSet.length = 0;
       for (const dispose of disposables) dispose();
+      disposeWindowGlows();
       renderer.dispose();
     },
   };

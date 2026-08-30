@@ -33,6 +33,7 @@ import { createCritterLife } from './critter-life';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
 import { disableShadows, enableCastShadows } from './shadows';
+import { attachWindowGlow } from './window-glow';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
@@ -484,6 +485,8 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        // Buildings get a warm "windows lit" glow, driven by the night factor.
+        attachWindowGlow(model, kind);
         templates.set(kind, model);
         reconcile();
       },

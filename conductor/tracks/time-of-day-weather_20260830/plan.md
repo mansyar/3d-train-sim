@@ -81,7 +81,7 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     into `init-scene.ts`'s spin loop. Initial paint covers the reduced-motion
     static frame (mid-morning). Biome import fixes folded in; full
     `pnpm check` 242/242 ✅.
-- [ ] Task: Lighting lerp + warm window/station glows at night — *criteria:
+- [~] Task: Lighting lerp + warm window/station glows at night — *criteria:
   night never near-black, glows fade in at dusk, out at dawn*
 - [ ] Task: Cloud puffs + instanced rain/snow particles + reduced-motion —
   *criteria: budgets ≤600/≤400, zero per-frame allocations, drift hidden under
