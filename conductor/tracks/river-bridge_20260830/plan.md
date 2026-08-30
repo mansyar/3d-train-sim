@@ -135,7 +135,7 @@
 - [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E, polish & docs
-- [ ] Task: Water polish — shore gradient (TDD)
+- [x] Task: Water polish — shore gradient (TDD) `435de50`
   - Write failing tests first: `waterColorAt(sky, snow, depth)` — bank-adjacent
     cells (edge of the band) shade lighter than the river's spine at every
     sky/snow state; deep color unchanged from the existing palette; ice path
@@ -143,11 +143,26 @@
   - Implement to green: `river.ts` exposes each cell's depth (distance from
     the center line); `river-water.ts` writes per-vertex colors (one
     Float32Array, zero allocation, `needsUpdate` in the existing paint).
-- [ ] Task: Water polish — flow stripes
+
+  - **Notes:** `riverDepth(cell)`: 1 on the spine, 0 at the band edge, 0 dry.
+    Mesh depth is per-VERTEX — each grid corner averages its four cells
+    (×2 to restore the 0..1 range) — so bilinear interpolation shades a
+    smooth gradient instead of a checkerboard of flat cells (first attempt's
+    per-cell colors checked; caught by screenshot). Critical fix: vertex
+    color attributes are consumed as linear — palette hex needs the same
+    sRGB→linear conversion `material.color.setHex` applies, else the band
+    renders pale-washed. Verified in-browser (headless screenshots).
+- [x] Task: Water polish — flow stripes `435de50`
   - Criteria: soft highlight bands drift downstream with the duck's drift
     direction; zero per-frame allocation (one canvas texture, offset-only
     scroll); frozen river → stripes gone; reduced motion → static frame.
-  - Notes: procedural canvas texture (no downloaded assets, per the NFR).
+
+  - **Notes:** Procedural 8×64 canvas texture (one sinusoidal band per tile,
+    ~5.5% trough depth), `RepeatWrapping`, UVs in world units over one
+    period per cell so bands align across seams; scroll mutates
+    `texture.offset.y` only. Frozen (`FROZEN_SNOW`, shared with duck +
+    babble) drops the map (shader-swap on toggle); `dt = 0` holds the frame
+    still (reduced motion / one-time paint). No downloaded assets.
 - [ ] Task: Playwright e2e (fresh servers — verify ports 5199/5198 free first)
   - Bridge placement rules (valid on water / invalid on grass) · pre-river world migration e2e · console-clean long-run with river active · no external requests
 - [ ] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact
