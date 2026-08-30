@@ -73,8 +73,12 @@ interface Segment {
 }
 
 export interface RideMotion {
-  /** Begin (or re-begin) following the given ride state. */
-  begin(state: RideState): void;
+  /**
+   * Begin (or re-begin) following the given ride state. A train already on
+   * the rails rolls on from `startNear` — the path point nearest where it
+   * sits; without it the ride starts at the path's beginning.
+   */
+  begin(state: RideState, startNear?: { x: number; z: number }): void;
   /** Re-target a swapped locomotive model, snapping it to the train's pose. */
   setModel(next: Object3D): void;
   /** Advance the animation by dt seconds. Allocates nothing per frame. */
@@ -252,6 +256,21 @@ export function createRideMotion(
   /** The locomotive the motion poses — swapped in place on kind changes. */
   let activeModel = model;
 
+  /** The world point on `segment` at fraction `u` of its length. */
+  function segmentPoint(segment: Segment, u: number): { x: number; z: number } {
+    if (segment.kind === 'line') {
+      return {
+        x: segment.ax + (segment.bx - segment.ax) * u,
+        z: segment.az + (segment.bz - segment.az) * u,
+      };
+    }
+    const angle = segment.a0 + segment.sweep * u;
+    return {
+      x: segment.cx + Math.cos(angle) * segment.r,
+      z: segment.cz + Math.sin(angle) * segment.r,
+    };
+  }
+
   /** Write the pose for forward-path distance `d` into `target`. */
   function poseAt(d: number, target: Object3D = activeModel, faceTravel = true): void {
     const first = segments[0];
@@ -331,9 +350,32 @@ export function createRideMotion(
   }
 
   return {
-    /** Begins (or re-begins) following the given ride state. */
-    begin(state: RideState): void {
+    /**
+     * Begins (or re-begins) following the given ride state. A train already
+     * on the rails rolls on from `startNear` — the path point nearest where
+     * it sits; without it the ride starts at the path's beginning.
+     */
+    begin(state: RideState, startNear?: { x: number; z: number }): void {
       beginRide(state);
+      if (!startNear || total <= 0) return;
+      // Sample each segment for the path point nearest where the train sits,
+      // and roll on from there — a reused parked train never teleports.
+      let best = 0;
+      let bestDist = Infinity;
+      let travelled = 0;
+      for (const segment of segments) {
+        for (const u of [0, 0.25, 0.5, 0.75, 1]) {
+          const point = segmentPoint(segment, u);
+          const d = (point.x - startNear.x) ** 2 + (point.z - startNear.z) ** 2;
+          if (d < bestDist) {
+            bestDist = d;
+            best = Math.min(travelled + u * segment.length, total);
+          }
+        }
+        travelled += segment.length;
+      }
+      distance = best;
+      poseTrain(distance);
     },
 
     /** Re-targets a swapped locomotive; it snaps to the train's live pose. */

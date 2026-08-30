@@ -27,7 +27,7 @@ import { createPlaceholderCrate } from './placeholder-crate';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
-import { type PickedItem, startTrackRenderer } from './track-renderer';
+import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -153,6 +153,8 @@ export function initScene(
     motion: RideMotion;
     /** The ride state the motion last began with — a new state ⇒ re-begin. */
     begunWith: RideState | null;
+    /** One-shot: where a reused train sits, so it rolls on from there. */
+    startNear: { x: number; z: number } | null;
   }
 
   const rigs = new Map<string, TrainRig>(); // assigned, keyed by ride anchor
@@ -288,6 +290,7 @@ export function initScene(
       puffs,
       motion: null as unknown as RideMotion,
       begunWith: null,
+      startNear: null,
     };
     rig.motion = createRideMotion(
       model,
@@ -310,6 +313,39 @@ export function initScene(
     pausedRigs.delete(rig);
   };
 
+  /**
+   * The spare parked nearest this ride's track — a train already sitting on
+   * the loop simply rolls on from where it stopped, and the meadow never
+   * gathers two trains on one loop when a farther spare would do.
+   */
+  const nearestSpareTo = (ride: RideState): TrainRig | null => {
+    if (spares.length === 0) return null;
+    const piecesById = new Map(world.pieces().map((piece) => [piece.id, piece]));
+    let sumX = 0;
+    let sumZ = 0;
+    let count = 0;
+    for (const step of ride.path.steps) {
+      const piece = piecesById.get(step.pieceId);
+      if (!piece) continue;
+      const at = cellToWorld(piece.cell);
+      sumX += at.x;
+      sumZ += at.z;
+      count += 1;
+    }
+    let nearest: TrainRig | null = null;
+    let nearestDist = Infinity;
+    for (const spare of spares) {
+      const dx = spare.model.position.x - (count > 0 ? sumX / count : 0);
+      const dz = spare.model.position.z - (count > 0 ? sumZ / count : 0);
+      const d = dx * dx + dz * dz;
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearest = spare;
+      }
+    }
+    return nearest;
+  };
+
   /** Mirrors the active rides: one rig per ride, spares rest where they stopped. */
   const syncRigs = (ridesList: readonly RideState[]): void => {
     const wanted = new Set(ridesList.map((ride) => ride.anchor));
@@ -322,11 +358,18 @@ export function initScene(
     for (const ride of ridesList) {
       let rig = rigs.get(ride.anchor);
       if (!rig) {
-        // Reuse a parked train first — the meadow's initial train rolls onto
-        // the track instead of lingering at its resting spot.
-        const reused = spares.shift() ?? createRig();
-        if (!reused) continue;
-        rig = reused;
+        // Prefer a spare already parked on this ride's track — it rolls on
+        // from where it sits; otherwise build a fresh train.
+        const reused = nearestSpareTo(ride);
+        if (reused) {
+          spares.splice(spares.indexOf(reused), 1);
+          rig = reused;
+          rig.startNear = { x: rig.model.position.x, z: rig.model.position.z };
+        } else {
+          const built = createRig();
+          if (!built) continue;
+          rig = built;
+        }
         rigs.set(ride.anchor, rig);
       }
       rig.anchor = ride.anchor;
@@ -334,7 +377,8 @@ export function initScene(
       // ride keeps its exact state object, so its train never loses progress.
       if (rig.begunWith !== ride) {
         rig.begunWith = ride;
-        rig.motion.begin(ride);
+        rig.motion.begin(ride, rig.startNear ?? undefined);
+        rig.startNear = null;
       }
     }
     // Before the first ▶, keep one train parked at the meadow's heart — the
