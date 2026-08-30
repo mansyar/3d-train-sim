@@ -110,8 +110,9 @@ export function createRideMotion(
   let pendingStationId: string | null = null;
   /** Eases 0 (parked) ⇄ 1 (riding) so stops and starts stay gentle. */
   let speedScale = 0;
-  let unsubscribe: (() => void) | null = ride.subscribe((mode, state) => {
-    if (mode === 'riding' && state) beginRide(state);
+  let unsubscribe: (() => void) | null = ride.subscribe((mode, rides) => {
+    const primary = rides[0];
+    if (mode === 'riding' && primary) beginRide(primary);
     // Idle keeps the last pose — update() eases speedScale to 0 in place.
   });
 
