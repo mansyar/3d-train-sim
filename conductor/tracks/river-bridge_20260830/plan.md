@@ -63,8 +63,19 @@
     to `ground.setSnow` — reuses the already-computed `skyColors` scratch, so
     the frame path allocates nothing and reduced-motion keeps its static
     frame. Gates: 303/303, tsc + biome clean.
-- [~] Task: Wooden trestle bridge model + rendering bridged pieces
+- [x] Task: Wooden trestle bridge model + rendering bridged pieces `b6c8faf`
   - Criteria: plank deck, railings, stilt legs into the water (Kenney-kit aesthetic); train rides across at normal speed/height, water visible beneath; migrated pieces render identically
+
+  - **Notes:** Procedural kit-style trestle (no downloaded asset, per the asset
+    NFR): new `bridge-model.ts` — `createTrestleTemplate({cellSize, railTop,
+    width})` builds steel rails, plank deck, timber side railings on posts,
+    transverse bents, and 4 stilt legs reaching below the waterline. The
+    track renderer skips the bridge's placeholder GLB and builds the trestle
+    from the *measured* anchored straight template (`Box3` rail-top/width),
+    so trains cross bridges at exactly the height they ride everywhere else,
+    flush with neighbouring straights. Same template/clone/ghost pipeline ⇒
+    migrated v1 bridges render identically. 303/303, tsc + biome clean;
+    exact flushness confirmed visually in Phase 4's pass.
 - [ ] Task: Placement integration — ghost validity + drawer track tab
   - Criteria: bridge toy appears in the track tab with icon; ghosts red over water for track/scenery; bridge ghost red on grass; valid water spans snap and commit
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
