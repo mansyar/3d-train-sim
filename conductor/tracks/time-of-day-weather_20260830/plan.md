@@ -149,8 +149,16 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     AudioContext is created lazily on the first pointer gesture (autoplay
     unlock), respects the mute switch via `audio.subscribe`, follows the
     visibility suspend/resume lifecycle, and closes cleanly on dispose.
-- [ ] Task: Train headlight — emissive lamp + subtle forward spotlight at night
-  only
+- [x] Task: Train headlight — emissive lamp + subtle forward beam at night
+  `8163793`
+
+  - **Notes:** New `src/scene/headlight.ts` (criteria-verified): a toy-sized
+    warm emissive lens on the engine's nose plus a soft forward beam
+    (spotlight, 14-unit reach, wide penumbra), both faded by the night factor
+    and off by day. Attached per locomotive clone in `showTrain`; the model's
+    teardown reclaims geometry/materials. Caught a TDZ regression in e2e
+    (`paintAmbience` painted before the declaration) — fixed in `db031a3`;
+    suite back to 37/37 with zero console errors.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: E2E, gates & polish
