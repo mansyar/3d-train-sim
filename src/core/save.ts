@@ -61,10 +61,12 @@ export function serializeWorld(
 }
 
 export function deserializeWorld(value: unknown): WorldData {
-  if (!isRecord(value) || !SUPPORTED_VERSIONS.includes(value.version as number)) {
+  if (!isRecord(value)) return emptyWorld();
+  const version = value.version;
+  if (typeof version !== 'number' || !SUPPORTED_VERSIONS.includes(version)) {
     return emptyWorld();
   }
-  const legacy = value.version === 1;
+  const legacy = version === 1;
   if (!Array.isArray(value.pieces) || !Array.isArray(value.scenery)) return emptyWorld();
   if (value.pieces.length + value.scenery.length > MAX_PIECES) return emptyWorld();
 

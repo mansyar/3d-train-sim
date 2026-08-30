@@ -22,8 +22,8 @@ water now flows quietly renders as bridges. Nothing is ever lost.
 
 **Bridge piece**
 - **FR3 — Trestle bridge toy:** a new `bridge` piece type in the **track tab**
-  of the drawer. Water-only validity: its footprint must lie fully on water,
-  ends meeting land (ghost red on grass). Wooden-trestle look: plank deck,
+  of the drawer. Water-only validity: its footprint must lie fully on water
+  (spans may chain bridge-to-bridge across wide water; ghost red on grass). Wooden-trestle look: plank deck,
   side railings, stilt legs into the water — Kenney-kit aesthetic.
 - **FR4 — Riding over water:** trains cross bridges at normal speed and
   height — **no elevation, no new physics**; the kinematic path system is

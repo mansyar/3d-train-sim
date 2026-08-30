@@ -170,18 +170,14 @@ export function createRiverWater(scene: Scene): RiverWater {
   const sRGBToLinear = (c: number): number =>
     c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 
-  /** Paint every vertex for this sky/snow — in place. */
+  /** Paint every vertex for this sky/snow — in place, no allocation. */
   function repaint(sky: SkyColors, snow: number): void {
     for (const [i, depth] of vertexDepths.entries()) {
       const hex = waterColorAt(sky, snow, depth);
-      colors.set(
-        [
-          sRGBToLinear(((hex >> 16) & 0xff) / 255),
-          sRGBToLinear(((hex >> 8) & 0xff) / 255),
-          sRGBToLinear((hex & 0xff) / 255),
-        ],
-        i * 3,
-      );
+      const o = i * 3;
+      colors[o] = sRGBToLinear(((hex >> 16) & 0xff) / 255);
+      colors[o + 1] = sRGBToLinear(((hex >> 8) & 0xff) / 255);
+      colors[o + 2] = sRGBToLinear((hex & 0xff) / 255);
     }
     colorAttribute.needsUpdate = true;
   }
