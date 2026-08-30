@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [every-layout-rides_20260830](tracks/every-layout-rides_20260830/index.md) | Every Layout Rides | Feature | new |
+| [every-layout-rides_20260830](tracks/every-layout-rides_20260830/index.md) | Every Layout Rides | Feature | in progress |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
