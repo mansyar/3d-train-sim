@@ -575,3 +575,24 @@ body {
     animation: none;
   }
 }
+
+/* ---- Perf debug overlay (?perf=debug) ------------------------------------ */
+
+/* Invisible to toddlers — mounted only when the URL carries ?perf=debug.
+   Read-only telemetry for parents debugging a slow device: never intercepts
+   touches, never animates. */
+.perf-debug {
+  background: rgba(255, 252, 240, 0.85);
+  border: 2px solid var(--toy-brown);
+  border-radius: 10px;
+  color: var(--toy-brown);
+  font-family: monospace;
+  font-size: 14px;
+  left: calc(12px + env(safe-area-inset-left));
+  line-height: 1;
+  padding: 6px 10px;
+  pointer-events: none;
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  z-index: 40;
+}

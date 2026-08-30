@@ -22,6 +22,8 @@ export function startSpinLoop(
   getTarget: () => Object3D | null,
   /** Extra per-frame animation (e.g. ride motion). Runs after the spin, same frame. */
   onFrame?: (dt: number) => void,
+  /** Draws the frame. Defaults to a direct render; supplied by render-scale blit callers. */
+  renderFrame?: () => void,
 ): SpinLoop {
   // Product guideline: gentle motion — respect the OS reduced-motion setting
   // by rendering a single static frame instead of animating.
@@ -48,7 +50,8 @@ export function startSpinLoop(
       target.rotation.x = Math.sin((now / 1000) * NOD_SPEED) * NOD_AMPLITUDE;
     }
     onFrame?.(dt);
-    renderer.render(scene, camera);
+    if (renderFrame) renderFrame();
+    else renderer.render(scene, camera);
     rafId = requestAnimationFrame(tick);
   };
 

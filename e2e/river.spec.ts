@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 /**
  * River & bridge end-to-end: the water-only trestle, the v1→v2 save
@@ -26,11 +26,7 @@ const consoleAndRequests = (page: Page): { consoleErrors: string[]; requestUrls:
   return { consoleErrors, requestUrls };
 };
 
-const expectLocalAndClean = (
-  page: Page,
-  consoleErrors: string[],
-  requestUrls: string[],
-): void => {
+const expectLocalAndClean = (page: Page, consoleErrors: string[], requestUrls: string[]): void => {
   const origin = new URL(page.url()).origin;
   const external = requestUrls.filter((url) => new URL(url).origin !== origin);
   expect(external, `external requests: ${external.join(', ')}`).toEqual([]);

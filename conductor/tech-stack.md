@@ -52,7 +52,13 @@ src/
     snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
     pathing.ts     #   train path along track, speed, looping
     save.ts        #   serialize/deserialize world
+    perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring: renderer, cameras, environment, model loading
+    render-scale.ts#   offscreen downscale blit — the guardrails' render trims go
+                   #   through an offscreen target; the canvas drawing buffer
+                   #   never resizes after boot (resizing it mid-run freezes
+                   #   frame presentation in some compositors, e.g. headless
+                   #   Chromium — see perf-guardrails plan fix notes)
   ui/              # DOM overlay: toybox, play/stop/whistle, parent gate
   audio/           # Howler wrappers + sfx registry
   state/           # world piece store, ride controller (idle ⇄ riding)
@@ -87,13 +93,17 @@ git tag v1.2.3 && git push --tags
   1. Bump the version in `package.json` (`pnpm version patch|minor|major`
      bumps, commits, and creates the `v` tag in one step — or edit the
      version by hand and tag manually with `git tag vX.Y.Z`)
-  2. `pnpm check` locally (gates), changelog note in the track's `plan.md`
-  3. Merge the release track to `main`, then push: `git push origin main`
+  2. Update `CHANGELOG.md`: move the release's notes out of
+     `## [Unreleased]` into a new `## [X.Y.Z] — YYYY-MM-DD` section
+     (Keep a Changelog style, written for parents, not engineers) and
+     refresh the compare links at the bottom of the file
+  3. `pnpm check` locally (gates) plus the Playwright e2e suite
+  4. Merge the release track to `main`, then push: `git push origin main`
      followed by `git push origin vX.Y.Z` (pushing the tag triggers
      `release.yml`; pushing main alone never deploys)
-  4. Watch the Release workflow on GitHub Actions — gates, image build,
+  5. Watch the Release workflow on GitHub Actions — gates, image build,
      GHCR push, Coolify webhook
-  5. Verify production on a family device: load the domain cold, build a
+  6. Verify production on a family device: load the domain cold, build a
      loop, press play, hear the whistle
 - Image tags mirror the git tag without the `v` (`v1.2.3` → `1.2.3`), plus a
   moving `:latest`. Keep `package.json`'s `version` in sync with the tag.
