@@ -16,8 +16,14 @@ import { enableCastShadows } from './shadows';
 
 /** Gentle paddle speed in cells per second (a cell is ~3.75 world units). */
 const DRIFT_CELLS_PER_SECOND = 0.35;
+/**
+ * The kit renders at 1 unit ≈ 1 cell; this duck is authored small (body
+ * radius 0.28), so scale it up to a clearly visible ~2 world units — bigger
+ * than a bush, smaller than a sheep.
+ */
+const DUCK_SCALE = 2.5;
 /** The bob: a slow, small ride on the water's swell. */
-const BOB_AMPLITUDE = 0.03;
+const BOB_AMPLITUDE = 0.04;
 const BOB_PERIOD_SECONDS = 1.8;
 /** The train's passing excites the duck within ~1.5 cells (critter radius). */
 const WIGGLE_RADIUS = 1.5 * (GROUND_SIZE / MEADOW_CELLS);
@@ -88,6 +94,7 @@ export function createDuck(
   cellToWorld: (cell: Cell) => { x: number; z: number },
 ): Duck {
   const { model, tail } = buildDuckModel();
+  model.scale.setScalar(DUCK_SCALE);
   scene.add(model);
 
   // Waypoints along the S-curve, world-space, computed once at init.
@@ -101,13 +108,22 @@ export function createDuck(
   const bobPhase = Math.random() * Math.PI * 2;
 
   /** The duck's resting height: belly kissing the water surface (y ≈ 0.02). */
-  const baseY = 0.02 + 0.14;
+  const baseY = 0.02 + 0.28 * 0.75 * DUCK_SCALE;
+
+  // Spawn on the river's north end — even a bedtime/iced-in duck rests there,
+  // not at the world origin.
+  const first = path[0];
+  if (first) {
+    model.position.x = first.x;
+    model.position.z = first.z;
+    model.position.y = baseY;
+  }
 
   const stepDrift = (dt: number): void => {
     const from = path[segment];
     const to = path[segment + 1];
     if (!from || !to) return;
-    t += (dt * DRIFT_CELLS_PER_SECOND * direction) / (path.length - 1);
+    t += dt * DRIFT_CELLS_PER_SECOND * direction;
     if (t >= 1) {
       if (segment + 2 < path.length) {
         segment += 1;
