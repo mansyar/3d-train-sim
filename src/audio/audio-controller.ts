@@ -22,8 +22,6 @@ export interface SoundHandle {
   play: () => number;
   /** Halts the sound immediately. */
   stop: () => void;
-  /** Pauses the sound in place (resumable via play). */
-  pause: () => void;
   /** Glides the sound out gently (fade to silence, then settle). */
   fade: () => void;
   /** Nudges playback tempo/character without restarting. */
@@ -43,10 +41,8 @@ export interface AudioControllerOptions {
   startChugBeatClock?: () => void;
   /** Stops the visual rhythm clock when the chug ends. */
   stopChugBeatClock?: () => void;
-  /** Tab hidden: pause the chug and its beat clock (no sound in a hidden tab). */
+  /** Tab hidden: pause every live voice and the beat clock (no audio in a hidden tab). */
   suspend?: () => void;
-  /** Tab visible again: resume the chug if it was rolling. */
-  resume?: () => void;
 }
 
 export interface AudioController {
@@ -201,8 +197,11 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     suspend: () => {
       if (suspended) return;
       suspended = true;
+      // The controller owns the rhythm clock (it started it with the chug);
+      // the seam pauses every live voice (chug + any ringing one-shot), so a
+      // hidden tab is fully silent.
       stopChugBeatClock?.();
-      if (chugging && !muted) sound('chug').pause();
+      options.suspend?.();
       notify();
     },
 
@@ -211,7 +210,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       suspended = false;
       if (chugging) {
         startChugBeatClock?.();
-        speakIfDue(); // Plays the chug if it should be heard (respects mute).
+        speakIfDue(); // Resumes the paused chug (respects mute); one-shots are discarded.
       }
       notify();
     },

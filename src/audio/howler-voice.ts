@@ -61,7 +61,6 @@ export function createHowlerVoice(): AudioControllerOptions {
         return howl.play();
       },
       stop: () => howl.stop(),
-      pause: () => howl.pause(),
       fade: () => {
         howl.fade(howl.volume(), 0, FADE_MS);
         howl.once('fade', (id) => howl.stop(id)); // Stop only the faded voice.
@@ -88,10 +87,6 @@ export function createHowlerVoice(): AudioControllerOptions {
       // ringing) and stop the beat clock — no sound in a hidden tab.
       for (const howl of voices) howl.pause();
       stopChugBeatClock();
-    },
-    resume: () => {
-      for (const howl of voices) howl.play();
-      // The beat clock restarts when the controller resumes the chug.
     },
   };
 }

@@ -19,9 +19,6 @@ function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
     stop: vi.fn(() => {
       calls.push('stop');
     }),
-    pause: vi.fn(() => {
-      calls.push('pause');
-    }),
     fade: vi.fn(() => {
       calls.push('fade');
     }),
@@ -218,27 +215,44 @@ describe('createAudioController', () => {
     expect(handles.get('chug')?.calls).not.toContain('play');
   });
 
-  it('suspend pauses the chug and the beat clock; resume restores both', () => {
-    const { controller, handles, startBeatClock, stopBeatClock } = makeWired();
+  it('suspend silences every voice via the seam; resume replays only the chug', () => {
+    const suspendSeam = vi.fn();
+    const startBeatClock = vi.fn();
+    const stopBeatClock = vi.fn();
+    const controller = createAudioController({
+      createSound: () => fakeHandle(),
+      setGlobalMute: vi.fn(),
+      startChugBeatClock: startBeatClock,
+      stopChugBeatClock: stopBeatClock,
+      subscribeToChugBeat: () => () => undefined,
+      suspend: suspendSeam,
+    });
     controller.startChug();
 
     controller.suspend();
-    expect(handles.get('chug')?.calls).toContain('pause');
+    // The seam (Howler pause-all) is the silencing mechanism — no handle-level
+    // pause involved — and the beat clock stops with it.
+    expect(suspendSeam).toHaveBeenCalledOnce();
     expect(stopBeatClock).toHaveBeenCalledTimes(1);
     // Still "chugging" from the controller's point of view — the ride state
     // survives the tab being hidden.
     expect(controller.isChugging()).toBe(true);
 
     controller.resume();
-    expect(handles.get('chug')?.calls.filter((c) => c === 'play').length).toBe(2);
+    // The chug handle resumes (Howler resumes a paused sound on play()) and
+    // the beat clock restarts — one-shots are discarded, never replayed.
+    expect(controller.isChugging()).toBe(true);
     expect(startBeatClock).toHaveBeenCalledTimes(2);
   });
 
-  it('suspend while muted or not chugging is a safe no-op for the handle', () => {
-    const { controller, handles } = makeWired();
-    controller.suspend(); // Not chugging, not muted.
-    controller.resume();
-    expect(handles.get('chug')?.calls ?? []).toEqual([]);
+  it('suspend without a seam or chug is a safe no-op', () => {
+    const controller = createAudioController({
+      createSound: () => fakeHandle(),
+      setGlobalMute: vi.fn(),
+    });
+    controller.suspend(); // Not chugging.
+    controller.resume(); // Not suspended (nothing to resume).
+    expect(controller.isChugging()).toBe(false);
   });
 
   it('chirps play the critter one-shot for a passing train', () => {

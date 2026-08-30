@@ -124,7 +124,7 @@ export function initScene(
       tracks.hopCritter(event.critter);
     }
   });
-  const attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+  let attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
 
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
@@ -274,19 +274,23 @@ export function initScene(
     },
   );
 
-  // Tab hidden: stop rendering, quiet the chug, and pause the attract timers.
-  // Tab visible again: everything resumes on the next sync — one shared
-  // controller so a flurry of visibility events never double-fires.
+  // Tab hidden: stop rendering, quiet the chug (and any ringing one-shot),
+  // and pause the attract clock — no sound, no drift, no idle chirps in a
+  // hidden tab. Tab visible again: everything resumes on the next sync — one
+  // shared controller so a flurry of visibility events never double-fires.
   const visibility = createVisibilityController({
     isHidden: () => document.hidden,
     onPause: () => {
       spinLoop.suspend();
       audio.suspend();
+      clearInterval(attractTimer);
+      attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
     },
     onResume: () => {
       spinLoop.resume();
       audio.resume();
+      attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
   const onVisibility = () => visibility.sync();
