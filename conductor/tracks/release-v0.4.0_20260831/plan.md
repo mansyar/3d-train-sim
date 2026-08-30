@@ -5,13 +5,21 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 1 - Changelog, Version Bump & Registry Housekeeping
 
-- [ ] Task: Update `CHANGELOG.md` for v0.4.0
-  - [ ] Move notes from `## [Unreleased]` into a dated `## [0.4.0]` section
-  - [ ] Summarize River & Bridge (meadow river, seasonal ice, bridge pieces,
+- [x] Task: Update `CHANGELOG.md` for v0.4.0
+  - [x] Move notes from `## [Unreleased]` into a dated `## [0.4.0]` section
+  - [x] Summarize River & Bridge (meadow river, seasonal ice, bridge pieces,
         the duck, river babble ambience, save migration) and Performance
         Guardrails (FPS probe, adaptive quality tiers, `?perf=debug`
         overlay, water polish) — parent-readable wording
-  - [ ] Refresh compare links; keep an empty `## [Unreleased]`
+  - [x] Refresh compare links; keep an empty `## [Unreleased]`
+  - **Summary:** `## [0.4.0] — 2026-08-31` now carries parent-readable
+    bullets for the river (sky-shimmering water, shallows, drifting
+    highlights), trestle bridges, ice & thaw, the duck, river babble, and
+    the pre-river save migration ("your old worlds keep working"); the
+    existing perf-guardrail bullets (adaptive quality, `?perf=debug`)
+    moved under the dated section. Compare links refreshed
+    (`v0.3.0...v0.4.0`, `Unreleased: v0.4.0...HEAD`); `## [Unreleased]`
+    left empty for future work. *(commit 634f6fe)*
 - [ ] Task: Bump `package.json` version to `0.4.0`
 - [ ] Task: Archive the completed `release-v0.3.0_20260830` track
   - [ ] Move `conductor/tracks/release-v0.3.0_20260830/` to
