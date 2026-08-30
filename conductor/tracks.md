@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [release-v0.4.0_20260831](tracks/release-v0.4.0_20260831/index.md) | Release v0.4.0 | Chore | new |
 | [time-of-day-weather_20260830](archive/time-of-day-weather_20260830/index.md) | Time of Day & Weather | Feature | done |
 | [release-v0.3.0_20260830](tracks/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | done |
 
