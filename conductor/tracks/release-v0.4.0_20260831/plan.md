@@ -20,7 +20,9 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
     moved under the dated section. Compare links refreshed
     (`v0.3.0...v0.4.0`, `Unreleased: v0.4.0...HEAD`); `## [Unreleased]`
     left empty for future work. *(commit 634f6fe)*
-- [ ] Task: Bump `package.json` version to `0.4.0`
+- [x] Task: Bump `package.json` version to `0.4.0`
+  - **Summary:** `package.json` → `0.4.0`, in sync with the eventual
+    `v0.4.0` tag per the runbook rule. *(commit 402cf4c)*
 - [ ] Task: Archive the completed `release-v0.3.0_20260830` track
   - [ ] Move `conductor/tracks/release-v0.3.0_20260830/` to
         `conductor/archive/`
