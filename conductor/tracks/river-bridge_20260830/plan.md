@@ -1,9 +1,18 @@
 # Plan: River & Bridge
 
 ## Phase 1 — Core logic: river, bridge rules, migration (TDD)
-- [ ] Task: Create `src/core/river.ts` — hand-authored S-curve water-cell set
+- [x] Task: Create `src/core/river.ts` — hand-authored S-curve water-cell set `7cb8e68`
   - Write failing tests first (Red): water set is a fixed cell set; `isWater(cell)` boundaries; the band is ~3 cells wide; banks leave ≥N contiguous build cells; provides an ordered drift path (sequence of water cells) for the duck
   - Implement to green; no per-frame allocation (pure lookups)
+
+  - **Notes:** Center line `cx(y) = 8 − 3·cos(π·y/15)` — S-curve from column 5
+    to 11; amplitude 3 (not 4) chosen so both banks keep ≥3 contiguous build
+    cells in every row. Water = `cx−1 … cx+1` (3 cells/row, 18.75% of the
+    meadow). `isWater` O(1) via a module-load Set; `riverDriftPath` cached
+    once. 10 tests, Red→Green (one test refined: drift steps are king-move
+    adjacent, not strictly 4-neighborhood — the duck glides diagonally).
+    Coverage: 100% stmts/lines, 87.5% branch (uncovered branches are
+    module-init defensive guards that cannot fire).
 - [ ] Task: Bridge piece type + placement validity (TDD)
   - Write failing tests first: `PIECE_TYPES` gains `'bridge'`; bridge placement valid only where all footprint cells are water with ends meeting land; other track/scenery rejected on water; existing layouts unaffected
   - Implement to green (`pieces.ts`, validation used by placement + ghosts)
