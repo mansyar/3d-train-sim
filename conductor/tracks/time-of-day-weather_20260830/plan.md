@@ -127,8 +127,17 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 ## Phase 3: Life & sound (scene/audio glue — criteria-verified)
 
-- [ ] Task: Critters react — hop less in rain, off-duty at night; fireflies
+- [x] Task: Critters react - hop less in rain, off-duty at night; fireflies
   drift near track at night
+  `1450cba`
+
+  - **Notes:** `critter-life.ts` gained an optional `mood` ({rain, night}) on
+    `update`: rain shrinks the hop-excitement radius up to 70%, and above a
+    night factor of 0.6 the critters are off-duty (no hops, radius zero).
+    `init-scene.ts` computes mood from the pure clocks per frame and gates
+    attract-mode chirps at night too. New `fireflies.ts`: 24 additive glow
+    points on sine wander paths near the ground, opacity keyed to the night
+    factor, hidden in rain. Full `pnpm check` green (245/245).
 - [ ] Task: Ambience audio — rain patter + gentle wind fade with weather,
   mute-respecting
 - [ ] Task: Train headlight — emissive lamp + subtle forward spotlight at night
