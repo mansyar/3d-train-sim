@@ -157,13 +157,22 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
 
 ## Phase 3: Camera Cycling & Whistle (UI + scene + e2e)
 
-- [ ] Task: Chase-target selector (scene wiring)
+- [x] Task: Chase-target selector (scene wiring) `37c2983`
 
   - **Acceptance criteria (manual + smoke):** camera lerps toward the
     currently-filmed train; starting a second ride does NOT move the camera;
     when the filmed train stops, the target falls to the next riding train
     (or overview if none).
   - **Commit:** `feat(scene): Select chase target among riding trains`
+
+  - **Notes:**
+    - `FilmedTarget` ('train' by anchor | 'overview') is sticky: a running
+      ride keeps the camera even as more trains join; a filmed train that
+      stops hands the camera to the highest-ranked remaining ride, or eases
+      home to the overview when the last ride ends. `syncFilmed` runs on
+      every ride change; the 🎥 cycle button (task 2) will drive the same
+      state. Critters and whistle stay on the primary until their tasks.
+    - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: 🎥 camera-cycle button (UI wiring)
 
