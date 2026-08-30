@@ -244,9 +244,11 @@ export function initScene(
     for (const ride of ridesList) {
       let rig = rigs.get(ride.anchor);
       if (!rig) {
-        const built = createRig();
-        if (!built) continue;
-        rig = built;
+        // Reuse a parked train first — the meadow's initial train rolls onto
+        // the track instead of lingering at its resting spot.
+        const reused = spares.shift() ?? createRig();
+        if (!reused) continue;
+        rig = reused;
         rigs.set(ride.anchor, rig);
       }
       rig.anchor = ride.anchor;
