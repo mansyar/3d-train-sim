@@ -38,7 +38,29 @@ acceptance criteria + smoke tests per `workflow.md`.
     - Why: pin the toddler-gentle rules (no flapping, no jumps, slow recovery)
       before implementation.
     - Confirmed failing (`Cannot find module './perf-monitor'`).
-- [ ] Task: Implement `src/core/perf-monitor.ts` to green; run coverage, target >80%
+- [x] Task: Implement `src/core/perf-monitor.ts` to green; run coverage, target >80% (1acdd1f)
+  - Notes:
+    - Task: FPS probe + quality controller implementation — Green phase.
+    - `createPerfMonitor`: preallocated `Float64Array` ring buffer (deltas +
+      cumulative end-times, capacity 240 ≈ one 4 s window at 60 fps), zero
+      per-frame allocations; clamps deltas above `PERF_MAX_FRAME_DELTA`
+      (0.25 s) so stutters and the hidden-tab resume gap can't fake critical;
+      ignores samples entirely while paused; startup grace via
+      `PERF_MIN_SAMPLES` (30) before any non-healthy verdict;
+      `averageFps()` reports the live-window average for the debug HUD.
+      Thresholds: ≥55 fps healthy, ≥30 strained, else critical.
+    - `createQualityController`: 2 s sustained strain degrades one level,
+      6 s sustained health recovers one level (never skips upward), 4 s
+      cooldown freezes all accumulation after any change; `onLevelChange`
+      fires only on real changes. Large `dt` steps are sliced so cooldown
+      ordering holds regardless of frame pacing.
+    - Test feeder switched to a binary-exact 1/64 s step after a float-drift
+      bug where sixty summed 0.1 s steps landed just under the 6 s recovery
+      threshold.
+    - Coverage on `perf-monitor.ts`: 94.25% stmts / 90.47% branch / 98.7%
+      lines (target >80%). Full gates green: `tsc --noEmit`, `biome check`
+      (import sort auto-fixed), 283 unit tests across 24 files passing.
+- [~] Task: Implement `src/core/perf-monitor.ts` to green; run coverage, target >80%
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Quality Levels & Scene Wiring (scene, acceptance criteria)
