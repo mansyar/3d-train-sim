@@ -96,9 +96,9 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
   **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 214 unit
   tests ✅, 14 Playwright smoke ✅ (including the new whistle-burst spec —
-  zero console errors, zero external requests, 2026-08-30). Manual — pending
-  user confirmation: whistling on a dev server shows a visible steam burst at
-  the locomotive chimney that fades; a double-toot reads as a fuller cloud.
+  zero console errors, zero external requests, 2026-08-30). Manual — user
+  confirmed 2026-08-30: whistling on a dev server shows a visible steam burst
+  at the locomotive chimney that fades; a double-toot reads as a fuller cloud.
   - Checkpoint: `6a0f0f4` (last functional commit).
 
 ## Phase 3: Tab-Hide Pause
@@ -148,7 +148,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
   **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 221 unit
   tests ✅, 14 Playwright smoke ✅ (zero console errors, zero external
-  requests, 2026-08-30). Manual — pending user confirmation: switching tabs
+  requests, 2026-08-30). Manual — user confirmed 2026-08-30: switching tabs
   mid-ride pauses rendering and the chug; switching back resumes exactly
   where it was with no lingering audio while hidden; attract drift resets on
   return.
@@ -166,5 +166,5 @@ criteria + smoke + manual tablet check for scene/audio wiring
     requests); `pnpm build` ✅ (PWA precache 136 entries).
 - Manual tablet pass of all three acceptance criteria; record results.
   - Phase 1 (attract) — user confirmed 2026-08-30.
-  - Phase 2 (whistle burst) — pending user confirmation.
-  - Phase 3 (tab-hide pause) — pending user confirmation.
+  - Phase 2 (whistle burst) — user confirmed 2026-08-30.
+  - Phase 3 (tab-hide pause) — user confirmed 2026-08-30.
