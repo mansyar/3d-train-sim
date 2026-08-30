@@ -5,10 +5,22 @@ acceptance criteria + smoke tests per `workflow.md`.
 
 ## Phase 1 — FPS Probe & Quality Controller (core, TDD)
 
-- [ ] Task: Write failing unit tests for the FPS probe
-  - [ ] Ring buffer behavior: preallocated capacity, wraps without allocating
-  - [ ] Verdict thresholds: `healthy` / `strained` / `critical` over a ~4 s rolling window
-  - [ ] Hidden-tab pause: samples ignored while paused; resuming doesn't count the gap
+- [x] Task: Write failing unit tests for the FPS probe (0bab32c)
+  - [x] Ring buffer behavior: preallocated capacity, wraps without allocating
+  - [x] Verdict thresholds: `healthy` / `strained` / `critical` over a ~4 s rolling window
+  - [x] Hidden-tab pause: samples ignored while paused; resuming doesn't count the gap
+  - Notes:
+    - Task: FPS probe specs — Red phase.
+    - Added `src/core/perf-monitor.test.ts` covering: startup grace (healthy
+      before enough samples), 60 fps → healthy, 35 fps → strained, 20 fps →
+      critical, rolling-window eviction of stale history, ring-buffer wrap
+      with a small capacity, paused sampling fully ignored, resume-gap delta
+      not poisoning the next verdict, runaway-delta clamping, and constant
+      exposure (`PERF_SAMPLE_CAPACITY`, `PERF_HEALTHY_FPS`,
+      `PERF_STRAINED_FPS`, `PERF_WINDOW_SECONDS`).
+    - Why: spec requires a pure, zero-allocation probe; tests pin verdict
+      thresholds and hidden-tab safety before any implementation exists.
+    - Confirmed failing (`Cannot find module './perf-monitor'`).
 - [ ] Task: Write failing unit tests for the quality controller
   - [ ] Sustained strain degrades L0→L1→L2; single-verdict dips do not
   - [ ] Cooldown between level changes (no flapping)
