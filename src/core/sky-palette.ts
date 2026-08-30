@@ -53,8 +53,9 @@ function mixHex(a: number, b: number, t: number): number {
   );
 }
 
-/** Blend the phase keyframes (cyclically) into a sky gradient for a fraction. */
-export function skyColorsAt(fraction: number): SkyColors {
+/** Blend the phase keyframes (cyclically) into a sky gradient for a fraction.
+ *  Pass `out` to reuse an object in hot loops (the scene's frame path). */
+export function skyColorsAt(fraction: number, out?: SkyColors): SkyColors {
   const t = fraction - Math.floor(fraction);
   // Find the pair of neighboring keyframe centers this fraction sits between;
   // the wrap pair (night → dawn) is handled by comparing against +1.
@@ -67,27 +68,34 @@ export function skyColorsAt(fraction: number): SkyColors {
     const end = i + 1 === KEYFRAMES.length ? next.at + 1 : next.at;
     if (t >= start && t < end) {
       const k = (t - start) / (end - start);
-      return {
-        top: mixHex(current.top, next.top, k),
-        horizon: mixHex(current.horizon, next.horizon, k),
-      };
+      const result = out ?? { top: 0, horizon: 0 };
+      result.top = mixHex(current.top, next.top, k);
+      result.horizon = mixHex(current.horizon, next.horizon, k);
+      return result;
     }
   }
   // Unreachable — the slices cover [0, 1) — but noUncheckedIndexedAccess
   // cannot prove it, and the caller needs a color regardless.
-  return { top: KEYFRAMES[1]?.top ?? 0x87c5fb, horizon: KEYFRAMES[1]?.horizon ?? 0xe8f6ff };
+  const fallback = out ?? { top: 0, horizon: 0 };
+  fallback.top = KEYFRAMES[1]?.top ?? 0x87c5fb;
+  fallback.horizon = KEYFRAMES[1]?.horizon ?? 0xe8f6ff;
+  return fallback;
 }
 
 /** The sun owns dawn→dusk (fraction 0→0.72), the moon owns the night span. */
 const SUNRISE = 0;
 const SUNSET = 0.72;
 
-export function celestialAt(fraction: number): Celestial {
+/** Day/night weights for a fraction. Pass `out` in hot loops. */
+export function celestialAt(fraction: number, out?: Celestial): Celestial {
   const t = fraction - Math.floor(fraction);
   const sun = t < SUNSET ? Math.sin((Math.PI * (t - SUNRISE)) / (SUNSET - SUNRISE)) : 0;
   const nightSpan = 1 - SUNSET;
   const moon = t >= SUNSET ? Math.sin((Math.PI * (t - SUNSET)) / nightSpan) : 0;
-  return { sun: Math.max(sun, 0), moon: Math.max(moon, 0) };
+  const result = out ?? { sun: 0, moon: 0 };
+  result.sun = Math.max(sun, 0);
+  result.moon = Math.max(moon, 0);
+  return result;
 }
 
 /** Night weight 0 (full day) to 1 (deep night) — drives lights and glows. */

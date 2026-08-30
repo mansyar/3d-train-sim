@@ -13,12 +13,23 @@ import { bindRideAudio } from '../audio/ride-audio';
 import { createAttractClock } from '../core/attract-clock';
 import { createDayClock } from '../core/day-clock';
 import type { SceneryKind } from '../core/scenery';
-import { celestialAt, nightFactorAt, skyColorsAt } from '../core/sky-palette';
+import {
+  type Celestial,
+  celestialAt,
+  nightFactorAt,
+  type SkyColors,
+  skyColorsAt,
+} from '../core/sky-palette';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
-import { createWeatherClock, intensityOf, lerpIntensity } from '../core/weather-cycle';
+import {
+  createWeatherClock,
+  intensityOf,
+  lerpIntensity,
+  type WeatherIntensity,
+} from '../core/weather-cycle';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
@@ -126,9 +137,14 @@ export function initScene(
   const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
   let headlight: Headlight | null = null;
+  // Scratch objects for the frame path — the palette/intensity calls write
+  // into these instead of allocating (spec NFR: no per-frame allocation).
+  const skyColors: SkyColors = { top: 0, horizon: 0 };
+  const celestial: Celestial = { sun: 0, moon: 0 };
+  const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
   const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
-    sky.update(fraction, skyColorsAt(fraction), celestialAt(fraction));
+    sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
     const night = nightFactorAt(fraction);
     lights.update(night);
     setGlowNight(night);
@@ -136,7 +152,7 @@ export function initScene(
     // Weather intensity lerps across any active cross-fade.
     const blend = weatherClock.blend;
     const base = blend
-      ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t)
+      ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t, intensity)
       : intensityOf(weatherClock.weather);
     weather.update(dt, base);
     ground.setSnow(base.snow);

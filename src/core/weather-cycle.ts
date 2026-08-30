@@ -47,17 +47,19 @@ export function intensityOf(weather: Weather): WeatherIntensity {
   return INTENSITY[weather];
 }
 
-/** Blend two intensity sets — drives soft weather cross-fades. */
+/** Blend two intensity sets — drives soft weather cross-fades.
+ *  Pass `out` to reuse an object in hot loops (the scene's frame path). */
 export function lerpIntensity(
   a: WeatherIntensity,
   b: WeatherIntensity,
   t: number,
+  out?: WeatherIntensity,
 ): WeatherIntensity {
-  return {
-    rain: a.rain + (b.rain - a.rain) * t,
-    snow: a.snow + (b.snow - a.snow) * t,
-    cloud: a.cloud + (b.cloud - a.cloud) * t,
-  };
+  const result = out ?? { rain: 0, snow: 0, cloud: 0 };
+  result.rain = a.rain + (b.rain - a.rain) * t;
+  result.snow = a.snow + (b.snow - a.snow) * t;
+  result.cloud = a.cloud + (b.cloud - a.cloud) * t;
+  return result;
 }
 
 /** A cross-fade in progress: lerp scene state from `from` to `to` by `t`. */
@@ -124,7 +126,8 @@ export function createWeatherClock(options: {
         nextChangeAt = drawHoldEnd(now);
         return;
       }
-      blend = { ...blend, t: Math.max(t, 0) };
+      // Mutate in place — the frame path must not allocate (spec NFR).
+      blend.t = Math.max(t, 0);
     },
     subscribe(listener) {
       listeners.add(listener);
