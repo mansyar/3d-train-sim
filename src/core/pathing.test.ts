@@ -245,8 +245,7 @@ describe('solvePath — crossing (straight-through only)', () => {
 });
 
 describe('solvePath — crossing re-entry (loops through one crossing twice)', () => {
-  it('closes a fully-connected loop that passes the same crossing twice per lap', () => {
-    // A pretzel: the lap crosses `cx` north→south and later west→east. Every
+  it('closes a fully-connected loop that passes the same crossing twice per lap', () => {    // A pretzel: the lap crosses `cx` north→south and later west→east. Every
     // piece end is connected — a closed layout, so the ride must loop forever
     // (product rule: zero dead ends). The walk must re-enter the ridden
     // crossing instead of stopping at its edge.
@@ -303,21 +302,25 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
     expect(solvePath(pieces)).toEqual(path);
   });
 
+  // The spliced-crossing oval reused by both guard tests: a closed oval
+  // (12 pieces) whose only junction is the crossing `cx`, entered west.
+  const ovalPieces = [
+    piece('w', 'straight', 1, 2, 90), // east edge meets crossing west
+    piece('cx', 'crossing', 2, 2, 0),
+    piece('e', 'straight', 3, 2, 90), // west edge meets crossing east
+    piece('a0', 'corner', 0, 2, 90), // east+south
+    piece('s1', 'straight', 0, 3, 0), // north+south
+    piece('a1', 'corner', 0, 4, 0), // north+east
+    piece('s2', 'straight', 1, 4, 90), // east+west
+    piece('s3', 'straight', 2, 4, 90), // east+west
+    piece('s4', 'straight', 3, 4, 90), // east+west
+    piece('a2', 'corner', 4, 4, 270), // west+north
+    piece('s5', 'straight', 4, 3, 0), // north+south
+    piece('a3', 'corner', 4, 2, 180), // south+west
+  ];
+
   it('still closes when a crossing is spliced into a simple oval (one pass per lap)', () => {
-    const pieces = [
-      piece('w', 'straight', 1, 2, 90), // east edge meets crossing west
-      piece('cx', 'crossing', 2, 2, 0),
-      piece('e', 'straight', 3, 2, 90), // west edge meets crossing east
-      piece('a0', 'corner', 0, 2, 90), // east+south
-      piece('s1', 'straight', 0, 3, 0), // north+south
-      piece('a1', 'corner', 0, 4, 0), // north+east
-      piece('s2', 'straight', 1, 4, 90), // east+west
-      piece('s3', 'straight', 2, 4, 90), // east+west
-      piece('s4', 'straight', 3, 4, 90), // east+west
-      piece('a2', 'corner', 4, 4, 270), // west+north
-      piece('s5', 'straight', 4, 3, 0), // north+south
-      piece('a3', 'corner', 4, 2, 180), // south+west
-    ];
+    const pieces = ovalPieces;
 
     const path = solvePath(pieces);
 
@@ -330,20 +333,9 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
 
   it('shuttles a closed loop with a dangling spur through the crossing (open layout)', () => {
     const pieces = [
-      piece('w', 'straight', 1, 2, 90),
-      piece('cx', 'crossing', 2, 2, 0),
-      piece('e', 'straight', 3, 2, 90),
-      piece('a0', 'corner', 0, 2, 90),
-      piece('s1', 'straight', 0, 3, 0),
-      piece('a1', 'corner', 0, 4, 0),
-      piece('s2', 'straight', 1, 4, 90),
-      piece('s3', 'straight', 2, 4, 90),
-      piece('s4', 'straight', 3, 4, 90),
-      piece('a2', 'corner', 4, 4, 270),
-      piece('s5', 'straight', 4, 3, 0),
-      piece('a3', 'corner', 4, 2, 180),
+      ...ovalPieces,
       piece('spur', 'straight', 2, 1, 0), // south edge meets crossing north
-      piece('tip', 'straight', 2, 0, 0), // open north end — the dead end
+      piece('tip', 'straight', 2, 0, 0), // open north end - the dead end
     ];
 
     const path = solvePath(pieces);
