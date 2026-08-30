@@ -29,6 +29,24 @@ export function nextWeather(weather: Weather): Weather {
   return WEATHER_ORDER[next >= WEATHER_ORDER.length ? 0 : next] ?? weather;
 }
 
+/** Scene intensities a weather implies: falling rain, falling snow, cloud cover. */
+export interface WeatherIntensity {
+  rain: number;
+  snow: number;
+  cloud: number;
+}
+
+const INTENSITY: Record<Weather, WeatherIntensity> = {
+  clear: { rain: 0, snow: 0, cloud: 0.1 }, // A lone lazy cloud keeps the sky alive.
+  cloudy: { rain: 0, snow: 0, cloud: 0.7 },
+  rain: { rain: 1, snow: 0, cloud: 1 },
+  snow: { rain: 0, snow: 1, cloud: 0.6 },
+};
+
+export function intensityOf(weather: Weather): WeatherIntensity {
+  return INTENSITY[weather];
+}
+
 /** A cross-fade in progress: lerp scene state from `from` to `to` by `t`. */
 export interface WeatherBlend {
   from: Weather;

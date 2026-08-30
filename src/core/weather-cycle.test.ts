@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createWeatherClock, nextWeather, WEATHER_ORDER, type Weather } from './weather-cycle';
+import {
+  createWeatherClock,
+  intensityOf,
+  nextWeather,
+  WEATHER_ORDER,
+  type Weather,
+} from './weather-cycle';
 
 interface Harness {
   clock: ReturnType<typeof createWeatherClock>;
@@ -37,6 +43,15 @@ describe('nextWeather', () => {
     expect(nextWeather('cloudy')).toBe('rain');
     expect(nextWeather('rain')).toBe('snow');
     expect(nextWeather('snow')).toBe('clear');
+  });
+});
+
+describe('intensityOf', () => {
+  it('maps each weather to particle/cloud intensities for the scene', () => {
+    expect(intensityOf('clear')).toEqual({ cloud: 0.1, rain: 0, snow: 0 });
+    expect(intensityOf('cloudy')).toEqual({ cloud: 0.7, rain: 0, snow: 0 });
+    expect(intensityOf('rain')).toEqual({ cloud: 1, rain: 1, snow: 0 });
+    expect(intensityOf('snow')).toEqual({ cloud: 0.6, rain: 0, snow: 1 });
   });
 });
 
