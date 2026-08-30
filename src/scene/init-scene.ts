@@ -77,6 +77,10 @@ export interface SceneHandle {
   stopRide(): void;
   /** Notify the idle-attract clock of toddler activity (touch, press, drag). */
   notifyActivity(): void;
+  /** Each tap cycles the chase camera: filmed train → next train → overview. */
+  cycleFilmTarget(): void;
+  /** The number of riding trains, pushed on every ride change (🎥 visibility). */
+  subscribeFilmCount(listener: (count: number) => void): () => void;
 }
 
 export function initScene(
@@ -173,19 +177,45 @@ export function initScene(
    * Keeps the camera's chosen star sticky: a running ride keeps the camera
    * even as more trains join (a second ▶ never yanks the view), and a filmed
    * train that stops hands the camera to the next riding train — or eases
-   * home to the overview when the last ride ends.
+   * home to the overview when the last ride ends. An overview the kid chose
+   * with 🎥 stays put until the rides themselves end.
    */
+  let ridesWereActive = false;
   const syncFilmed = (ridesList: readonly RideState[]): void => {
+    const active = ridesList.length > 0;
     if (filmed.kind === 'train') {
       const anchor = filmed.anchor;
       if (ridesList.some((ride) => ride.anchor === anchor)) {
+        ridesWereActive = active;
         return; // Still filming a running train.
       }
+    } else if (ridesWereActive && active) {
+      ridesWereActive = active;
+      return; // The kid chose the overview mid-ride — keep it.
+    }
+    filmed = ridesList[0]
+      ? { kind: 'train', anchor: ridesList[0].anchor }
+      : { kind: 'overview' };
+    ridesWereActive = active;
+  };
+
+  /** Each 🎥 tap: filmed train → next train → overview → wrap. */
+  const cycleFilmTarget = (): void => {
+    const ridesList = rides.rides();
+    if (filmed.kind === 'train') {
+      const anchor = filmed.anchor;
+      const index = ridesList.findIndex((ride) => ride.anchor === anchor);
+      const next = ridesList[index + 1];
+      filmed = next ? { kind: 'train', anchor: next.anchor } : { kind: 'overview' };
+      return;
     }
     filmed = ridesList[0]
       ? { kind: 'train', anchor: ridesList[0].anchor }
       : { kind: 'overview' };
   };
+
+  /** The UI shows the 🎥 button only while two or more trains ride. */
+  const filmCountListeners = new Set<(count: number) => void>();
 
   /** This rig's live ride state — null while parked or between rides. */
   const rigState = (rig: TrainRig): RideState | null => {
@@ -335,6 +365,7 @@ export function initScene(
     syncFilmed(ridesList);
     syncRigs(ridesList);
     for (const rig of rigs.values()) rig.puffs.setEmitting(mode === 'riding');
+    for (const listener of filmCountListeners) listener(ridesList.length);
   });
 
   /** Swaps one rig's locomotive in place — rides keep rolling (spec R3). */
@@ -488,6 +519,13 @@ export function initScene(
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),
+    cycleFilmTarget: () => cycleFilmTarget(),
+    subscribeFilmCount(listener) {
+      filmCountListeners.add(listener);
+      return () => {
+        filmCountListeners.delete(listener);
+      };
+    },
     dispose(): void {
       disposed = true;
       spinLoop.stop();

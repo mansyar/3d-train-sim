@@ -130,6 +130,24 @@ body {
   transform: translateY(3px);
 }
 
+/* The 🎥 camera cycle — chunky like its rail siblings, present only while
+   two or more trains ride (the app frame toggles `hidden`). */
+.film-toggle {
+  background: var(--toy-orange);
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 34px;
+  min-height: 72px;
+  min-width: 72px;
+}
+
+.film-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
 .mute-toggle {
   background: var(--toy-cream);
   border: 4px solid var(--toy-brown);
@@ -536,6 +554,11 @@ body {
 
 /* Gentle motion only — reduced-motion users get instant, still feedback. */
 @media (prefers-reduced-motion: reduce) {
+  /* No chase to cycle — the 🎥 button never appears. */
+  .film-toggle {
+    display: none;
+  }
+
   .drop-ping,
   .wobble-return,
   .rotate-bounce {

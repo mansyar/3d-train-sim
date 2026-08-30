@@ -52,6 +52,12 @@ if (root) {
     stopRide: () => scene?.stopRide(),
     notifyActivity: () => scene?.notifyActivity(),
     whistlePuff: () => scene?.whistlePuff(),
+    cycleFilmTarget: () => scene?.cycleFilmTarget(),
+    subscribeFilmCount: (listener) => {
+      // The scene binds after mount; until then, zero trains ride.
+      if (!scene) return () => {};
+      return scene.subscribeFilmCount(listener);
+    },
   });
   scene = initScene(canvas, world, audio);
 
