@@ -94,6 +94,36 @@ export function cellToWorld(cell: Cell): { x: number; z: number } {
   };
 }
 
+/** Screen-space center of a meadow cell, or null when it is off-camera. */
+export function cellToScreen(
+  cell: Cell,
+  camera: PerspectiveCamera,
+  canvas: HTMLCanvasElement,
+): { x: number; y: number } | null {
+  // The projection depends on fresh camera matrices, which the render loop
+  // does not refresh when the camera is not a scene child — ask first.
+  camera.updateMatrixWorld();
+  const { x, z } = cellToWorld(cell);
+  const ndc = new Vector3(x, 0, z).project(camera);
+  // The meadow sits near this camera's far plane, so its NDC z hovers around
+  // 1 — only a non-finite projection, or a point outside the view frustum,
+  // means the cell is not usable on screen.
+  if (
+    !Number.isFinite(ndc.x) ||
+    !Number.isFinite(ndc.y) ||
+    ndc.x < -1.2 ||
+    ndc.x > 1.2 ||
+    ndc.y < -1.2 ||
+    ndc.y > 1.2
+  ) {
+    return null;
+  }
+  return {
+    x: ((ndc.x + 1) / 2) * canvas.clientWidth,
+    y: ((1 - ndc.y) / 2) * canvas.clientHeight,
+  };
+}
+
 /** A placed track piece or scenery toy found under the pointer, for
  * relocate/remove drags. The kind discriminator tells the UI which store
  * mutation to apply on drop. */
@@ -115,6 +145,8 @@ export interface TrackRenderer {
   endGhost(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
+  /** The screen-space center of a meadow cell, or null when off-camera. */
+  cellToScreen(cell: Cell): { x: number; y: number } | null;
   /** The placed meadow item whose cell is under a screen point, for relocate/return drags. */
   pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** Hide/show a placed clone (e.g. while its own drag ghost stands in). */
@@ -464,6 +496,7 @@ export function startTrackRenderer(
 
   return {
     cellFromPoint,
+    cellToScreen: (cell) => cellToScreen(cell, camera, canvas),
     updateCritters(dt, trainX, trainZ): void {
       if (disposed) return;
       critterLife.update(dt, trainX, trainZ);

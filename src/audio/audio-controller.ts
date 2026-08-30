@@ -62,6 +62,8 @@ export interface AudioController {
   whistle(train?: TrainKind): void;
   /** One happy blip for a successful drop. Silent while muted. */
   ding(): void;
+  /** One soft tick for a rotation step. Silent while muted. */
+  click(): void;
   /** One critter chirp for a passing train (a voice id from the catalog). Silent while muted. */
   chirp(voice: string): void;
   /** Observes state changes (mute or chug). Returns an unsubscribe fn. */
@@ -175,6 +177,11 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     ding: () => {
       if (muted) return;
       sound('ding').play();
+    },
+
+    click: () => {
+      if (muted) return;
+      sound('click').play();
     },
 
     chirp: (voice) => {

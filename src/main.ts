@@ -1,5 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 
+import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offline-safe.
+
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { deserializeWorld } from './core/save';
@@ -43,6 +45,7 @@ if (root) {
     moveGhost: (cell, rotation, valid) => scene?.moveGhost(cell, rotation, valid),
     endGhost: () => scene?.endGhost(),
     pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
+    cellToScreen: (cell) => scene?.cellToScreen(cell) ?? null,
     setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
     setGridVisible: (visible) => scene?.setGridVisible(visible),
     startRide: () => scene?.startRide() ?? false,

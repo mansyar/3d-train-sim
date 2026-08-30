@@ -19,7 +19,7 @@ import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
-import { createGround } from './ground';
+import { createGround, GROUND_SIZE } from './ground';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
@@ -32,9 +32,12 @@ import { type PickedItem, startTrackRenderer } from './track-renderer';
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
 
-/** Elevated oblique view framing the whole 60-unit meadow. */
+/** Elevated oblique view framing the whole 60-unit meadow in landscape. */
 const OVERVIEW_POSITION = new Vector3(0, 52, 44);
 const OVERVIEW_LOOK = new Vector3(0, 0, 0);
+/** The live overview home — stays at OVERVIEW_POSITION in landscape, pulls
+ * back in tall viewports so the square meadow still fits the frame. */
+const overviewBase = OVERVIEW_POSITION.clone();
 /** Chase offset over/behind the locomotive while riding (world-relative). */
 const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 /** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
@@ -50,6 +53,8 @@ export interface SceneHandle {
   dispose(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
+  /** The screen-space center of a meadow cell, or null when off-camera. */
+  cellToScreen(cell: Cell): { x: number; y: number } | null;
   /** In-scene ghost preview of the toy being dragged from the drawer. */
   beginGhost(kind: PieceType | SceneryKind): void;
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
@@ -89,7 +94,7 @@ export function initScene(
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(45, 1, 0.1, 200);
-  camera.position.copy(OVERVIEW_POSITION);
+  camera.position.copy(overviewBase);
   camera.lookAt(OVERVIEW_LOOK);
 
   const disposables: Array<() => void> = [];
@@ -109,7 +114,7 @@ export function initScene(
   // reduced motion (static frame, no RAF loop). Any toddler touch calls
   // notifyActivity() through the SceneHandle.
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const attract = createAttractCamera(OVERVIEW_POSITION, OVERVIEW_LOOK, { reducedMotion });
+  const attract = createAttractCamera(overviewBase, OVERVIEW_LOOK, { reducedMotion });
   const attractClock = createAttractClock(ATTRACT_IDLE_MS, {
     now: () => performance.now(),
     reducedMotion,
@@ -224,12 +229,47 @@ export function initScene(
     if (kind !== loadedTrain) showTrain(kind);
   });
 
+  // In tall viewports the square meadow's far corners slip out of frame. Pull
+  // the overview camera back along the same oblique line until the whole
+  // 60×60 meadow fits — landscape always keeps the classic framing untouched.
+  const frameOverview = () => {
+    if (canvas.clientWidth >= canvas.clientHeight) {
+      // Landscape: the original framing already fits — never move it.
+      if (overviewBase.equals(OVERVIEW_POSITION)) return;
+      overviewBase.copy(OVERVIEW_POSITION);
+      camera.position.copy(overviewBase);
+      camera.lookAt(OVERVIEW_LOOK);
+      return;
+    }
+    const half = GROUND_SIZE / 2;
+    const corners = [-half, half].flatMap((x) => [-half, half].map((z) => ({ x, z })));
+    // Iterate camera distance until every projected corner fits inside 92% of
+    // the NDC half-width — a screen-space fit, robust to near/far asymmetry.
+    let scale = 1;
+    for (let i = 0; i < 8; i += 1) {
+      camera.position.copy(OVERVIEW_POSITION).multiplyScalar(scale);
+      camera.lookAt(OVERVIEW_LOOK);
+      camera.updateMatrixWorld();
+      let widestHalf = 0;
+      for (const corner of corners) {
+        const p = new Vector3(corner.x, 0, corner.z).project(camera);
+        widestHalf = Math.max(widestHalf, Math.abs(p.x));
+      }
+      if (widestHalf <= 0.92) break;
+      scale *= 1.03;
+    }
+    overviewBase.copy(OVERVIEW_POSITION).multiplyScalar(scale);
+    camera.position.copy(overviewBase);
+    camera.lookAt(OVERVIEW_LOOK);
+  };
+
   const resize = () => {
     const width = canvas.clientWidth || window.innerWidth;
     const height = canvas.clientHeight || window.innerHeight;
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
+    frameOverview();
   };
   resize();
   window.addEventListener('resize', resize);
@@ -299,6 +339,7 @@ export function initScene(
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
     cellFromPoint: (clientX, clientY) => tracks.cellFromPoint(clientX, clientY),
+    cellToScreen: (cell) => tracks.cellToScreen(cell),
     beginGhost: (type) => tracks.beginGhost(type),
     moveGhost: (cell, rotation, valid) => tracks.moveGhost(cell, rotation, valid),
     endGhost: () => tracks.endGhost(),

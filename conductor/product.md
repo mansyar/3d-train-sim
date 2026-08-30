@@ -4,7 +4,7 @@
 A world where every toddler can build their own railway and watch it come alive — no rules, no reading, no failure. Just the pure joy of cause and effect: lay the track, press the button, and watch your train go.
 
 ## Product Description
-Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of three locomotives, then press ▶ to watch an autonomous train chug around their own creation — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads and Android tablets.
+Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of three locomotives, then press ▶ to watch an autonomous train chug around their own creation — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads, Android tablets, and phones.
 
 ## Target Users
 - **Primary:** Toddlers aged 2–4. Non-readers. Developing fine motor skills. Short attention spans reward instant, forgiving feedback.
@@ -54,7 +54,7 @@ Supporting guardrails:
 - Multi-train layouts
 
 ## Platform & Technical Requirements
-- **Devices:** iPads (Safari) + mid-spec Android tablets (Chrome). Touch-first; desktop browser support welcome but secondary.
+- **Devices:** iPads (Safari) + mid-spec Android tablets (Chrome) primary; phones (≥360px) supported as first-class. Touch-first; desktop browser support welcome but secondary.
 - **Stack:** TypeScript · Three.js (GLTFLoader) · Vite · vanilla DOM overlay UI · Howler.js · IndexedDB persistence · PWA (service worker) · Vitest (logic TDD) + Playwright (smoke tests).
 - **Assets:** Kenney Train Kit (CC0, glTF) — embedded in repo, no attribution required.
 - **Performance:** simple scenes, zero physics engine, kinematic train on splines.
