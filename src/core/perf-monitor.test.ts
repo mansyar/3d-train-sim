@@ -6,6 +6,7 @@ import {
   PERF_STRAINED_FPS,
   PERF_WINDOW_SECONDS,
   createPerfMonitor,
+  createQualityController,
 } from './perf-monitor';
 
 const FRAME_60FPS = 1 / 60;
@@ -104,5 +105,112 @@ describe('createPerfMonitor', () => {
     const monitor = createPerfMonitor();
     expect(monitor.capacity).toBe(PERF_SAMPLE_CAPACITY);
     expect(PERF_WINDOW_SECONDS).toBeGreaterThan(0);
+  });
+});
+
+describe('createQualityController', () => {
+  const STEP = 0.1;
+  function feedVerdict(
+    controller: ReturnType<typeof createQualityController>,
+    verdict: 'healthy' | 'strained' | 'critical',
+    seconds: number,
+  ) {
+    for (let elapsed = 0; elapsed < seconds - 1e-9; elapsed += STEP) {
+      controller.update(verdict, STEP);
+    }
+  }
+
+  function driveToStrainLevel2(controller: ReturnType<typeof createQualityController>) {
+    // 2s sustained strain -> L1, 4s cooldown, 2s more -> L2.
+    feedVerdict(controller, 'strained', 2);
+    feedVerdict(controller, 'strained', 4);
+    feedVerdict(controller, 'strained', 2);
+  }
+
+  it('starts at full quality (L0)', () => {
+    const controller = createQualityController();
+    expect(controller.level).toBe(0);
+  });
+
+  it('ignores single-verdict strain dips', () => {
+    const controller = createQualityController();
+
+    feedVerdict(controller, 'strained', 0.5);
+    feedVerdict(controller, 'healthy', 1);
+    feedVerdict(controller, 'strained', 0.5);
+    expect(controller.level).toBe(0);
+  });
+
+  it('degrades L0 -> L1 -> L2 only after sustained strain', () => {
+    const controller = createQualityController();
+
+    feedVerdict(controller, 'strained', 1.9);
+    expect(controller.level).toBe(0);
+    feedVerdict(controller, 'strained', 0.2);
+    expect(controller.level).toBe(1);
+
+    driveToStrainLevel2(controller);
+    expect(controller.level).toBe(2);
+  });
+
+  it('resets strain progress when health returns mid-streak', () => {
+    const controller = createQualityController();
+
+    feedVerdict(controller, 'strained', 1.9);
+    feedVerdict(controller, 'healthy', 0.1);
+    feedVerdict(controller, 'strained', 1.9);
+    expect(controller.level).toBe(0);
+  });
+
+  it('holds a cooldown after a level change so nothing flaps', () => {
+    const controller = createQualityController();
+
+    feedVerdict(controller, 'strained', 2);
+    expect(controller.level).toBe(1);
+
+    // Sustained strain straight through the cooldown window: no change.
+    feedVerdict(controller, 'strained', 4);
+    expect(controller.level).toBe(1);
+
+    // Only after the cooldown does the next sustained stretch apply.
+    feedVerdict(controller, 'strained', 2);
+    expect(controller.level).toBe(2);
+  });
+
+  it('recovers more slowly than it degrades, one level at a time', () => {
+    const controller = createQualityController();
+    driveToStrainLevel2(controller);
+    expect(controller.level).toBe(2);
+
+    // Recovery hold is longer than the 2s degradation hold.
+    feedVerdict(controller, 'healthy', 2);
+    expect(controller.level).toBe(2);
+    feedVerdict(controller, 'healthy', 2);
+    expect(controller.level).toBe(2);
+
+    feedVerdict(controller, 'healthy', 2);
+    expect(controller.level).toBe(1);
+    expect(controller.level).not.toBe(0);
+
+    // Cooldown after the L1 change, then the recovery hold again.
+    feedVerdict(controller, 'healthy', 4);
+    expect(controller.level).toBe(1);
+    feedVerdict(controller, 'healthy', 6);
+    expect(controller.level).toBe(0);
+  });
+
+  it('emits a callback only when the level actually changes', () => {
+    const levels: number[] = [];
+    const controller = createQualityController({
+      onLevelChange: (level) => levels.push(level),
+    });
+
+    feedVerdict(controller, 'strained', 2);
+    feedVerdict(controller, 'strained', 0.5);
+    feedVerdict(controller, 'healthy', 0.5);
+    expect(levels).toEqual([1]);
+
+    feedVerdict(controller, 'strained', 6);
+    expect(levels).toEqual([1, 2]);
   });
 });
