@@ -46,7 +46,10 @@ export function createRiverWater(scene: Scene): RiverWater {
     positions.set([x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1], i * 12);
     normals.set([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], i * 12);
     const vertex = i * 4;
-    indices.set([vertex, vertex + 1, vertex + 2, vertex, vertex + 2, vertex + 3], i * 6);
+    // Winding matters: with the default FrontSide culling, (0,1,2)/(0,2,3)
+    // would face *down* (normal (0,−s²,0)) and be culled from the overview
+    // camera — reversed here so the surface faces up.
+    indices.set([vertex, vertex + 2, vertex + 1, vertex, vertex + 3, vertex + 2], i * 6);
   }
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(positions, 3));
