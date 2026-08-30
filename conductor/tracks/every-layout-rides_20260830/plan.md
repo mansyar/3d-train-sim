@@ -208,11 +208,27 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       No-op before any train rides (unchanged).
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: E2E smoke coverage
+- [x] Task: E2E smoke coverage `558f827`
 
   - Extend `e2e/smoke.spec.ts`: build two disjoint loops via dev handles →
     assert two trains ride; 🎥 appears and cycles targets; assert zero
     console errors and zero external requests.
   - **Commit:** `test(e2e): Cover multi-train ride and camera cycle`
+
+  - **Notes:**
+    - New tablet smoke test: two disjoint loops → `ridingTrainCount() === 2`
+      while riding; 🎥 appears only with ≥2 rides; each tap cycles filmed
+      anchor → second train → overview (null) → wrap; zero console errors,
+      zero external requests.
+    - Scene gained two debug probes matching the wagon/puff pattern:
+      `ridingTrainCount()` and `filmedAnchor()`.
+    - Found and fixed a real wiring bug the test flushed out: `main.ts`
+      registered film-count listeners before the scene existed, so they
+      silently attached to nothing — listeners now queue and replay into
+      the scene once it binds.
+    - Note for future runs: `playwright.config.ts` reuses running servers
+      outside CI; a stale dev server served old modules and failed the test
+      once. `CI=true` (fresh servers) is the reliable way to run e2e here.
+    - Tablet run: 1 passed (fresh servers).
 
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
