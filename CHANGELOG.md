@@ -9,6 +9,18 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+
+- **The train table now looks after itself on slower tablets.** If a busy
+  scene (lots of track, weather, and trains at once) makes the ride choppy,
+  the app quietly turns down a few of the heaviest visual extras — softer
+  shadow detail, a slightly softer picture, half the rain or snowflakes —
+  so play stays smooth. Nothing pops or flashes: changes fade in gently,
+  and everything returns to full quality once the table calms down.
+- **A hidden check-up screen for grown-ups.** Adding `?perf=debug` to the
+  web address shows a tiny frame-rate + quality readout in the corner for
+  debugging a slow device. Without it, nothing is visible to little ones.
+
 ## [0.3.0] — 2026-08-30
 
 ### Added

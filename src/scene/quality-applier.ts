@@ -1,9 +1,9 @@
-import type { DirectionalLight, WebGLRenderer } from 'three';
+import type { DirectionalLight } from 'three';
 import type { QualityLevel } from '../core/perf-monitor';
 
-/** L1 clamps the render resolution to this pixel ratio (from up to 2). */
+/** L1 clamps the effective render pixel ratio to this (from up to 2). */
 export const QUALITY_L1_MAX_PIXEL_RATIO = 1.5;
-/** L2 pins the render resolution to exactly 1.0. */
+/** L2 pins the effective render pixel ratio to exactly 1.0. */
 export const QUALITY_L2_PIXEL_RATIO = 1;
 /** L2 halves the weather particle intensity (opacity-eased, so it fades). */
 export const QUALITY_L2_WEATHER_SCALE = 0.5;
@@ -11,7 +11,6 @@ export const QUALITY_L2_WEATHER_SCALE = 0.5;
 export const QUALITY_SHADOW_FADE_SECONDS = 1;
 
 export interface QualityApplierOptions {
-  renderer: WebGLRenderer;
   /** The shadow-casting sun whose shadow maps the levels trim. */
   shadowLight: DirectionalLight;
   /** The pixel ratio the app booted with (L0 must reproduce it exactly). */
@@ -25,6 +24,8 @@ export interface QualityApplier {
   apply(level: QualityLevel): void;
   /** Per-frame tick easing the shadow fade (no-op once settled). */
   update(dtSeconds: number): void;
+  /** Fraction of the canvas buffer to render at: 1 at L0, trimmed at L1/L2. */
+  readonly renderScale: number;
   /** Multiplier for weather particle intensity: 1, or 0.5 at L2. */
   readonly weatherScale: number;
   /** The currently applied level (debug overlay + tests). */
@@ -32,14 +33,16 @@ export interface QualityApplier {
 }
 
 /**
- * Applies a quality level to the live renderer, sun shadows, and weather
- * bed. Transitions lean on each subsystem's own smoothing — pixel ratio
- * changes only resample the same image, weather scaling rides the particle
- * system's opacity easing, and shadows fade via `shadow.intensity` before
- * `castShadow` flips off — so a level change never reads as a pop.
+ * Applies a quality level to the live sun shadows, weather bed, and the
+ * renderer's effective resolution. Transitions lean on each subsystem's own
+ * smoothing — render-scale changes only resample the same image through the
+ * offscreen blit (see render-scale.ts: the canvas drawing buffer never
+ * resizes after boot), weather scaling rides the particle system's opacity
+ * easing, and shadows fade via `shadow.intensity` before `castShadow` flips
+ * off — so a level change never reads as a pop.
  */
 export function createQualityApplier(options: QualityApplierOptions): QualityApplier {
-  const { renderer, shadowLight } = options;
+  const { shadowLight } = options;
   const fadePerSecond = 1 / QUALITY_SHADOW_FADE_SECONDS;
   let level: QualityLevel = 0;
   let appliedLevel: QualityLevel = 0;
@@ -60,19 +63,15 @@ export function createQualityApplier(options: QualityApplierOptions): QualityApp
       if (next === appliedLevel) return;
       appliedLevel = next;
       if (next === 0) {
-        renderer.setPixelRatio(options.basePixelRatio);
         setShadowMapSize(options.baseShadowMapSize);
         // Shadows return immediately (fading in) — flipping castShadow on
         // with strength 0 keeps the comeback soft.
         shadowLight.castShadow = true;
       } else if (next === 1) {
-        renderer.setPixelRatio(Math.min(options.basePixelRatio, QUALITY_L1_MAX_PIXEL_RATIO));
         setShadowMapSize(options.baseShadowMapSize / 2);
         shadowLight.castShadow = true;
-      } else {
-        renderer.setPixelRatio(QUALITY_L2_PIXEL_RATIO);
-        // castShadow flips off only after the fade completes (update()).
       }
+      // L2: castShadow flips off only after the fade completes (update()).
     },
 
     update(dtSeconds) {
@@ -86,6 +85,17 @@ export function createQualityApplier(options: QualityApplierOptions): QualityApp
       shadowLight.shadow.intensity = shadowStrength;
       // Only after the shadow has fully faded does the cast cost go away.
       if (level === 2 && shadowStrength === 0) shadowLight.castShadow = false;
+    },
+
+    get renderScale() {
+      if (level === 0) return 1;
+      const ratio =
+        level === 1
+          ? Math.min(options.basePixelRatio, QUALITY_L1_MAX_PIXEL_RATIO)
+          : QUALITY_L2_PIXEL_RATIO;
+      // Never upscale: on a DPR-1 display the clamp is already the boot
+      // ratio, so the level trims nothing here (shadows/weather still do).
+      return Math.min(1, ratio / options.basePixelRatio);
     },
 
     get weatherScale() {

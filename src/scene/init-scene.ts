@@ -44,6 +44,7 @@ import { loadWagon } from './load-wagons';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
+import { createRenderScale } from './render-scale';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
@@ -148,11 +149,12 @@ export function initScene(
   // trace is the ?perf=debug overlay for parents debugging a slow device.
   const perfMonitor = createPerfMonitor();
   const qualityApplier = createQualityApplier({
-    renderer,
     shadowLight: lights.sun,
     basePixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
     baseShadowMapSize: SHADOW_MAP_SIZE,
   });
+  const renderScale = createRenderScale(renderer);
+  disposables.push(renderScale.dispose);
   const qualityController = createQualityController({
     onLevelChange: (level) => qualityApplier.apply(level),
   });
@@ -650,8 +652,6 @@ export function initScene(
     camera,
     () => spinTarget,
     (dt) => {
-      // Guardrails first: this frame's cost lands in the probe before the
-      // controller re-weighs the quality level.
       perfMonitor.sample(dt);
       qualityController.update(perfMonitor.verdict(), dt);
       qualityApplier.update(dt);
@@ -684,6 +684,9 @@ export function initScene(
       });
       updateCamera(dt);
     },
+    // Render-scale trims go through the offscreen blit — the canvas drawing
+    // buffer never resizes, so the compositor keeps presenting frames.
+    () => renderScale.render(scene, camera, qualityApplier.renderScale),
   );
 
   // Tab hidden: stop rendering, quiet the chug (and any ringing one-shot),
