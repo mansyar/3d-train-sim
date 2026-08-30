@@ -159,7 +159,13 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     teardown reclaims geometry/materials. Caught a TDZ regression in e2e
     (`paintAmbience` painted before the declaration) — fixed in `db031a3`;
     suite back to 37/37 with zero console errors.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+- **Automated:** 2026-08-30 — full `pnpm check` 245/245 ✅ and Playwright
+  smoke 37/37 ✅ after the TDZ fix (`db031a3`). One regression caught and
+  fixed within the phase (headlight painted before declaration).
+- **Manual:** dev-server visual pass deferred to the Phase 4 tablet check,
+  per plan. Checkpoint commit: `db031a3`.
 
 ## Phase 4: E2E, gates & polish
 
