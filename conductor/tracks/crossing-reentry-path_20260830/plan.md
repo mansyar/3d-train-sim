@@ -38,7 +38,7 @@ criteria + smoke + manual tablet check for scene wiring
 - **Notes:** `src/core/pathing.ts` only; crossing straight-through routing
   unchanged. Green after fix.
 
-- [~] Task: Coverage + gates
+- [x] Task: Coverage + gates
 
 - Coverage >80% on new logic (existing pathing coverage extended); run
   `pnpm check` (biome + `tsc --noEmit` + vitest) and the Playwright smoke
@@ -46,8 +46,13 @@ criteria + smoke + manual tablet check for scene wiring
 - **Commit:** `chore` only if test additions were needed; otherwise record in
   the phase verification report.
 - **Notes:** Full suite green, smoke green, zero console errors.
+- **Notes:** `pnpm check` ✅ (biome + `tsc --noEmit` + 225 unit tests across 21
+  files, 2026-08-30), pathing.ts coverage 97.4% stmts / 89.6% branch / 100%
+  lines ✅, Playwright smoke 14/14 ✅ with zero console errors. Biome
+  formatting auto-fix applied and committed (`56aa365`). Temporary debug
+  scratch test removed.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 - **Acceptance criteria (manual tablet check):**
   - Dev server + touch emulation: build a closed loop that passes the same
@@ -55,5 +60,18 @@ criteria + smoke + manual tablet check for scene wiring
     at the crossing midpoint and never shuttles back.
   - Re-checks: simple oval loops; open line shuttles at dead ends; figure-8
     rides one lobe.
-- **Verification Report:** (filled after automated + manual confirmation;
-  checkpoint SHA recorded per workflow protocol.)
+- **Verification Report:** Automated — `pnpm check` ✅ (biome +
+  `tsc --noEmit` + 225 unit tests, 2026-08-30), pathing.ts coverage 97.4% ✅,
+  Playwright smoke 14/14 ✅ (zero console errors, zero external requests).
+  **Manual verification pending — awaiting user confirmation.**
+  - Checkpoint: `56aa365` (last functional commit).
+
+Manual Verification Steps:
+1. Start the dev server: `pnpm dev`
+2. Open on a tablet (or browser touch emulation) at the shown URL
+3. Build a closed loop whose only junction is one crossing, laid out so the
+   lap passes through the crossing twice (e.g. a pretzel/figure-8 shape)
+4. Press ▶ and confirm: the train loops forever — it never stops mid-crossing
+   and never shuttles back out the way it came
+5. Re-checks: a simple oval still loops; an open line still pauses at its
+   dead ends and shuttles back; a loop with a dangling spur still shuttles
