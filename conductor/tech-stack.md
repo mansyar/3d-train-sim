@@ -52,7 +52,13 @@ src/
     snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
     pathing.ts     #   train path along track, speed, looping
     save.ts        #   serialize/deserialize world
+    perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring: renderer, cameras, environment, model loading
+    render-scale.ts#   offscreen downscale blit — the guardrails' render trims go
+                   #   through an offscreen target; the canvas drawing buffer
+                   #   never resizes after boot (resizing it mid-run freezes
+                   #   frame presentation in some compositors, e.g. headless
+                   #   Chromium — see perf-guardrails plan fix notes)
   ui/              # DOM overlay: toybox, play/stop/whistle, parent gate
   audio/           # Howler wrappers + sfx registry
   state/           # world piece store, ride controller (idle ⇄ riding)

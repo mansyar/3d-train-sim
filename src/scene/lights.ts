@@ -10,8 +10,8 @@ const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
  * to the buildable meadow (MEADOW_CELLS × CELL_SIZE) so all 1024 texels land
  * on the play area, and the bias pair keeps chunky kit geometry free of
  * shadow acne without visibly detaching shadows (peter-panning). */
+export const SHADOW_MAP_SIZE = 1024;
 const SUN_POSITION = [24, 34, 16] as const;
-const SHADOW_MAP_SIZE = 1024;
 const SHADOW_BIAS = -0.0002;
 const SHADOW_NORMAL_BIAS = 0.1;
 
@@ -40,6 +40,8 @@ const NIGHT = {
 export interface MeadowLights {
   /** Blend toward the night presets; 0 = full day, 1 = deep night. */
   update(nightFactor: number): void;
+  /** The shadowed sun — the quality applier trims its shadow maps. */
+  readonly sun: DirectionalLight;
   dispose(): void;
 }
 
@@ -79,6 +81,9 @@ export function createLights(scene: Scene): MeadowLights {
       fill.intensity = DAY.fillIntensity + (NIGHT.fillIntensity - DAY.fillIntensity) * nightFactor;
       sun.color.lerpColors(sunDay, sunNight, nightFactor);
       sun.intensity = DAY.sunIntensity + (NIGHT.sunIntensity - DAY.sunIntensity) * nightFactor;
+    },
+    get sun() {
+      return sun;
     },
     dispose() {
       scene.remove(ambient, fill, sun);
