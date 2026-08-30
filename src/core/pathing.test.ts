@@ -245,7 +245,8 @@ describe('solvePath — crossing (straight-through only)', () => {
 });
 
 describe('solvePath — crossing re-entry (loops through one crossing twice)', () => {
-  it('closes a fully-connected loop that passes the same crossing twice per lap', () => {    // A pretzel: the lap crosses `cx` north→south and later west→east. Every
+  it('closes a fully-connected loop that passes the same crossing twice per lap', () => {
+    // A pretzel: the lap crosses `cx` north→south and later west→east. Every
     // piece end is connected — a closed layout, so the ride must loop forever
     // (product rule: zero dead ends). The walk must re-enter the ridden
     // crossing instead of stopping at its edge.
