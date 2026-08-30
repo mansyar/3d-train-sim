@@ -1,7 +1,14 @@
 import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
+import { isWater } from '../core/river';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
-import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
+import {
+  type Cell,
+  MAX_PIECES,
+  type PieceType,
+  type Rotation,
+  terrainErrorFor,
+} from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
@@ -17,6 +24,7 @@ const PIECE_LABELS: Record<PieceType, string> = {
   straight: 'Straight track piece',
   corner: 'Corner track piece',
   crossing: 'Crossing track piece',
+  bridge: 'Bridge track piece',
 };
 
 /** Emoji stand-ins until the toys get their GLB thumbnails. */
@@ -72,6 +80,22 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
       <line x1="8" y1="24" x2="40" y2="24"
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+  // The trestle: a plank deck on stilt legs reaching down into the water.
+  bridge: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <line x1="10" y1="22" x2="10" y2="42"
+            stroke="var(--toy-brown)" stroke-width="4" stroke-linecap="round"/>
+      <line x1="24" y1="22" x2="24" y2="44"
+            stroke="var(--toy-brown)" stroke-width="4" stroke-linecap="round"/>
+      <line x1="38" y1="22" x2="38" y2="42"
+            stroke="var(--toy-brown)" stroke-width="4" stroke-linecap="round"/>
+      <rect x="2" y="16" width="44" height="8" rx="3"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="4" y1="17.5" x2="44" y2="17.5"
+            stroke="var(--toy-steel)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="4" y1="22.5" x2="44" y2="22.5"
+            stroke="var(--toy-steel)" stroke-width="2.5" stroke-linecap="round"/>
     </svg>`,
 };
 
@@ -295,7 +319,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   });
 
   // Track pieces and scenery share the meadow: a cell holds at most one toy.
-  const canPlaceAt = (cell: Cell): boolean => {
+  // The river is part of the deal — land toys sit on the banks, the bridge
+  // spans water — and the ghost tints exactly as the drop will commit.
+  const canPlaceAt = (cell: Cell, kind: PieceType | SceneryKind): boolean => {
     for (const piece of options.world.pieces()) {
       if (piece.id === drag?.pickedId) continue; // The dragged toy frees its own cell.
       if (piece.cell.x === cell.x && piece.cell.y === cell.y) return false;
@@ -304,7 +330,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (toy.id === drag?.pickedId) continue;
       if (toy.cell.x === cell.x && toy.cell.y === cell.y) return false;
     }
-    return true;
+    return isPieceKind(kind) ? terrainErrorFor(kind, cell) === null : !isWater(cell);
   };
 
   const stepRotation = () => {
@@ -340,7 +366,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     // A long, slow drag still counts as activity — the meadow stays awake.
     options.notifyActivity();
     const cell = options.cellFromPoint(clientX, clientY);
-    const placeable = cell !== null && canPlaceAt(cell);
+    const placeable = cell !== null && canPlaceAt(cell, drag.kind);
     drag.cell = cell;
     options.moveGhost(cell, drag.rotation, placeable);
   };

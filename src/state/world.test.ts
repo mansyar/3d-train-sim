@@ -1,15 +1,31 @@
 import { describe, expect, it, vi } from 'vitest';
+import { isWater } from '../core/river';
 import { MAX_PIECES } from '../core/track-graph';
 import { createWorldStore } from './world';
 
 const ORIGIN = { x: 0, y: 0 };
 const NEXT_CELL = { x: 1, y: 0 };
 
+/** A water and a land cell on the river's mid row (the river crosses every row). */
+const MID_ROW = 8;
+const WATER_CELL = [...Array(16).keys()].map((x) => ({ x, y: MID_ROW })).find((c) => isWater(c));
+const LAND_CELL = [...Array(16).keys()].map((x) => ({ x, y: MID_ROW })).find((c) => !isWater(c));
+
+function cellOr(cell: { x: number; y: number } | undefined, fallback: { x: number; y: number }) {
+  return cell ?? fallback;
+}
+
 function fillWorld(store: ReturnType<typeof createWorldStore>, count: number) {
-  for (let i = 0; i < count; i++) {
-    const result = store.place('straight', { x: i % 16, y: Math.floor(i / 16) }, 0);
-    if (result !== 'placed') throw new Error(`fixture failed at ${i}: ${result}`);
+  let filled = 0;
+  for (let y = 0; y < 16 && filled < count; y += 1) {
+    for (let x = 0; x < 16 && filled < count; x += 1) {
+      if (isWater({ x, y })) continue; // the riverbed stays bare in fixtures
+      const result = store.place('straight', { x, y }, 0);
+      if (result !== 'placed') throw new Error(`fixture failed at ${x},${y}: ${result}`);
+      filled += 1;
+    }
   }
+  if (filled < count) throw new Error(`fixture ran out of dry land at ${filled}/${count}`);
 }
 
 describe('world store', () => {
@@ -347,5 +363,60 @@ describe('world reset', () => {
     store.reset();
 
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('river water rules', () => {
+  it('rejects ordinary track pieces on river water', () => {
+    const store = createWorldStore();
+    expect(store.place('straight', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.place('corner', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.place('crossing', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.pieces()).toHaveLength(0);
+  });
+
+  it('accepts a bridge on water — the one piece that spans the river', () => {
+    const store = createWorldStore();
+    expect(store.place('bridge', cellOr(WATER_CELL, { x: 8, y: 8 }), 90)).toBe('placed');
+    expect(store.pieces()[0]?.type).toBe('bridge');
+  });
+
+  it('rejects a bridge on dry land — the trestle is a water-only toy', () => {
+    const store = createWorldStore();
+    expect(store.place('bridge', cellOr(LAND_CELL, { x: 0, y: 8 }), 0)).toBe('water');
+    expect(store.pieces()).toHaveLength(0);
+  });
+
+  it('refuses relocating a land piece into the water', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const id = store.pieces()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+    expect(store.relocate(id, cellOr(WATER_CELL, { x: 8, y: 8 }), 90)).toBe('water');
+    expect(store.pieces()[0]?.cell).toEqual(ORIGIN);
+  });
+
+  it('refuses relocating a bridge off the water onto land', () => {
+    const store = createWorldStore();
+    expect(store.place('bridge', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('placed');
+    const id = store.pieces()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+    expect(store.relocate(id, cellOr(LAND_CELL, { x: 0, y: 8 }), 90)).toBe('water');
+    expect(store.pieces()[0]?.cell).toEqual(cellOr(WATER_CELL, { x: 8, y: 8 }));
+  });
+
+  it('refuses scenery on the water — toys stay on the banks', () => {
+    const store = createWorldStore();
+    expect(store.placeScenery('tree', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.scenery()).toHaveLength(0);
+  });
+
+  it('keeps the meadow playable: an all-land loop still rides', () => {
+    const store = createWorldStore();
+    store.place('corner', { x: 0, y: 0 }, 90);
+    store.place('corner', { x: 1, y: 0 }, 180);
+    store.place('corner', { x: 1, y: 1 }, 270);
+    store.place('corner', { x: 0, y: 1 }, 0);
+    expect(store.pieces()).toHaveLength(4);
   });
 });

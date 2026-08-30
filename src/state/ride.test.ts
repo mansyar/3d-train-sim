@@ -53,17 +53,18 @@ describe('createRideController', () => {
   it('soft-stops only the ride whose component an edit touches', () => {
     const world = createWorldStore();
     // Loop A on the left, an open line on the right — two components.
+    // (Cells chosen on dry land: row 0's river water sits at x 4–6.)
     world.place('corner', { x: 0, y: 0 }, 90);
     world.place('corner', { x: 1, y: 0 }, 180);
     world.place('corner', { x: 1, y: 1 }, 270);
     world.place('corner', { x: 0, y: 1 }, 0);
-    world.place('straight', { x: 4, y: 0 }, 90);
-    world.place('straight', { x: 5, y: 0 }, 90);
+    world.place('straight', { x: 8, y: 0 }, 90);
+    world.place('straight', { x: 9, y: 0 }, 90);
     const ride = createRideController(world);
     ride.startAll();
     expect(ride.rides()).toHaveLength(2);
 
-    world.place('straight', { x: 6, y: 0 }, 90); // extends the line only
+    world.place('straight', { x: 10, y: 0 }, 90); // extends the line only
 
     expect(ride.rides()).toHaveLength(1);
     expect(ride.rides()[0]?.anchor).toBe('0,0');
@@ -199,7 +200,7 @@ describe('multi-ride — one ride per track component', () => {
   function twoLoopsWorld(): ReturnType<typeof createWorldStore> {
     const world = createWorldStore();
     loopAt(world, 0, 0);
-    loopAt(world, 5, 5);
+    loopAt(world, 10, 5); // dry land: rows 5–6 water sits at x 6–8
     return world;
   }
 
@@ -211,7 +212,7 @@ describe('multi-ride — one ride per track component', () => {
 
     expect(ride.mode()).toBe('riding');
     expect(ride.rides()).toHaveLength(2);
-    expect(ride.rides().map((r) => r.anchor)).toEqual(['0,0', '5,5']);
+    expect(ride.rides().map((r) => r.anchor)).toEqual(['0,0', '10,5']);
     expect(ride.rides().every((r) => r.path.closed)).toBe(true);
   });
 
@@ -249,12 +250,13 @@ describe('multi-ride — one ride per track component', () => {
 
   it('caps concurrent rides at 4; beyond-cap components stay idle', () => {
     const world = createWorldStore();
-    for (const ox of [0, 2, 4, 6, 8]) loopAt(world, ox, 0);
+    for (const ox of [0, 2, 8, 10, 12]) loopAt(world, ox, 0);
     const ride = createRideController(world);
 
     expect(ride.startAll()).toBe(true);
 
     expect(ride.rides()).toHaveLength(4);
+    // Five equal-size loops, cap of four: the tie-break leaves (8,0) idle.
     expect(ride.rides().map((r) => r.anchor)).not.toContain('8,0');
   });
 
@@ -269,7 +271,7 @@ describe('multi-ride — one ride per track component', () => {
     world.remove(victim.id);
 
     expect(ride.rides()).toHaveLength(1);
-    expect(ride.rides()[0]?.anchor).toBe('5,5');
+    expect(ride.rides()[0]?.anchor).toBe('10,5');
     expect(ride.mode()).toBe('riding');
   });
 

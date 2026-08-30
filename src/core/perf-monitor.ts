@@ -59,8 +59,10 @@ export function createPerfMonitor(options: PerfMonitorOptions = {}): PerfMonitor
     windowScan.valid = 0;
     windowScan.total = 0;
     for (let i = 0; i < stored; i += 1) {
-      const end = ends[i]!;
-      const delta = deltas[i]!;
+      // Unset ring slots are 0 — same read the !-assertion guaranteed, minus
+      // the assertion (unset ends can never pass the cutoff anyway).
+      const end = ends[i] ?? 0;
+      const delta = deltas[i] ?? 0;
       if (end > cutoff) {
         windowScan.valid += 1;
         windowScan.total += delta;

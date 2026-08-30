@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { isWater } from './river';
 import {
   deserializePreferences,
   deserializeWorld,
@@ -20,7 +21,7 @@ describe('world snapshots', () => {
   it('serializes a JSON-safe, versioned snapshot with the selected train', () => {
     const snapshot = serializeWorld(pieces, scenery, 'diesel');
 
-    expect(snapshot).toEqual({ version: 1, pieces, scenery, train: 'diesel' });
+    expect(snapshot).toEqual({ version: 2, pieces, scenery, train: 'diesel' });
     expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 
@@ -48,7 +49,7 @@ describe('world snapshots', () => {
 
   it('rejects malformed and unknown-version snapshots safely', () => {
     expect(deserializeWorld(null)).toEqual({ pieces: [], scenery: [], train: 'steam' });
-    expect(deserializeWorld({ version: 2, pieces, scenery })).toEqual({
+    expect(deserializeWorld({ version: 3, pieces, scenery })).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
@@ -159,7 +160,7 @@ describe('world snapshots', () => {
       cell: { x: index % 16, y: Math.floor(index / 16) },
       rotation: 0 as const,
     }));
-    const snapshot: WorldSnapshot = { version: 1, pieces: fullPieces, scenery: [] };
+    const snapshot: WorldSnapshot = { version: 2, pieces: fullPieces, scenery: [] };
 
     expect(deserializeWorld(snapshot)).toEqual({ pieces: [], scenery: [], train: 'steam' });
   });
@@ -170,7 +171,7 @@ describe('device preferences', () => {
     const snapshot = serializeWorld(pieces, [], 'steam', true);
 
     expect(snapshot).toEqual({
-      version: 1,
+      version: 2,
       pieces,
       scenery: [],
       train: 'steam',
@@ -181,7 +182,7 @@ describe('device preferences', () => {
 
   it('omits preferences when sound is on', () => {
     expect(serializeWorld(pieces, scenery, 'steam')).toEqual({
-      version: 1,
+      version: 2,
       pieces,
       scenery,
       train: 'steam',
@@ -217,5 +218,69 @@ describe('device preferences', () => {
         muted: false,
       });
     }
+  });
+});
+
+describe('river migration — v1 snapshots load as v2 bridges', () => {
+  // The river crosses every row; row 8's water spans x 7–9, so x 0 is bank.
+  const water = [...Array(16).keys()].map((x) => ({ x, y: 8 })).find((c) => isWater(c));
+  const land = [...Array(16).keys()].map((x) => ({ x, y: 8 })).find((c) => !isWater(c));
+  const wet = water ?? { x: 8, y: 8 };
+  const dry = land ?? { x: 0, y: 8 };
+
+  const v1 = {
+    version: 1 as const,
+    pieces: [
+      { id: 'piece-1', type: 'straight', cell: wet, rotation: 90 },
+      { id: 'piece-2', type: 'corner', cell: { x: wet.x, y: 7 }, rotation: 0 },
+      { id: 'piece-3', type: 'straight', cell: dry, rotation: 180 },
+    ],
+    scenery: [{ id: 'scenery-1', kind: 'tree', cell: { x: wet.x, y: 9 }, rotation: 0 }],
+    train: 'diesel' as const,
+  };
+
+  it('rewrites water-crossing straights and corners as bridges, keeping identity', () => {
+    const world = deserializeWorld(v1);
+
+    expect(world.pieces).toHaveLength(3);
+    expect(world.pieces[0]).toEqual({ id: 'piece-1', type: 'bridge', cell: wet, rotation: 90 });
+    expect(world.pieces[1]).toEqual({
+      id: 'piece-2',
+      type: 'bridge',
+      cell: { x: wet.x, y: 7 },
+      rotation: 0,
+    });
+    // Dry-land track is untouched by the migration.
+    expect(world.pieces[2]).toEqual({ id: 'piece-3', type: 'straight', cell: dry, rotation: 180 });
+    expect(world.train).toBe('diesel');
+  });
+
+  it('never drops a toy: scenery standing where water now flows restores as-is', () => {
+    const world = deserializeWorld(v1);
+    expect(world.scenery).toEqual(v1.scenery);
+  });
+
+  it('round-trips v2 snapshots — bridges persist as bridges', () => {
+    const first = deserializeWorld(v1);
+    const v2 = serializeWorld(first.pieces, first.scenery, first.train);
+    expect(v2.version).toBe(2);
+    expect(deserializeWorld(v2)).toEqual(first);
+  });
+
+  it('is idempotent: migrating twice changes nothing', () => {
+    const once = deserializeWorld(v1);
+    const twice = deserializeWorld({
+      version: 1 as const,
+      pieces: once.pieces,
+      scenery: once.scenery,
+      train: once.train,
+    });
+    expect(twice).toEqual(once);
+  });
+
+  it('still refuses broken v1 snapshots — migration never weakens validation', () => {
+    expect(
+      deserializeWorld({ version: 1, pieces: [{ id: 'x', type: 'nope' }], scenery: [] }),
+    ).toEqual({ pieces: [], scenery: [], train: 'steam' });
   });
 });

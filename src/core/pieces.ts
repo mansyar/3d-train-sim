@@ -1,5 +1,5 @@
-/** The V1 track-piece set. More shapes arrive with later tracks. */
-export const PIECE_TYPES = ['straight', 'corner', 'crossing'] as const;
+/** The piece catalog. The bridge spans the river; more shapes arrive later. */
+export const PIECE_TYPES = ['straight', 'corner', 'crossing', 'bridge'] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
 
@@ -30,6 +30,9 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   straight: ['north', 'south'],
   corner: ['north', 'east'],
   crossing: ['north', 'east', 'south', 'west'],
+  // The bridge rides exactly like the straight it mirrors — trains cross at
+  // normal speed and height; only its terrain rule differs.
+  bridge: ['north', 'south'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

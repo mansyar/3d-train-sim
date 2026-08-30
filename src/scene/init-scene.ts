@@ -10,9 +10,11 @@ import {
 import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import { createDayClock } from '../core/day-clock';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
+import { riverProximity } from '../core/river';
 import type { SceneryKind } from '../core/scenery';
 import {
   type Celestial,
@@ -21,7 +23,7 @@ import {
   type SkyColors,
   skyColorsAt,
 } from '../core/sky-palette';
-import type { Cell, PieceType, Rotation } from '../core/track-graph';
+import { type Cell, MEADOW_CELLS, type PieceType, type Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
@@ -35,6 +37,7 @@ import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
+import { createDuck, FROZEN_SNOW } from './duck';
 import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
@@ -46,6 +49,7 @@ import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
+import { createRiverWater } from './river-water';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
@@ -140,8 +144,11 @@ export function initScene(
   const weather = createWeatherParticles(scene);
   disposables.push(weather.dispose);
   const ambience = createAmbienceAudio(audio);
+  const babble = createRiverBabble(audio);
   const fireflies = createFireflies(scene);
   disposables.push(fireflies.dispose);
+  const duck = createDuck(scene, cellToWorld);
+  disposables.push(duck.dispose);
 
   // Performance guardrails: a per-frame FPS probe feeds a quality controller
   // that trims the heaviest effects when frame rate sags (render scale,
@@ -171,6 +178,7 @@ export function initScene(
   const dayClock = createDayClock({ now: () => performance.now() });
   const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
+  const water = createRiverWater(scene);
   /** One night beam per little train — parked spares included. */
   const headlights: Headlight[] = [];
   // Scratch objects for the frame path — the palette/intensity calls write
@@ -180,6 +188,10 @@ export function initScene(
   const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
   /** Quality-scaled copy of the weather bed fed to the particle emitter. */
   const scaledWeather: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
+  /** Scratch cell for the river-proximity lookup (zero-alloc frame path). */
+  const proximityCell: Cell = { x: 0, y: 0 };
+  /** World units per meadow cell — matches the track renderer's grid. */
+  const cellSize = GROUND_SIZE / MEADOW_CELLS;
   const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
     sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
@@ -200,11 +212,18 @@ export function initScene(
     scaledWeather.cloud = base.cloud * weatherScale;
     weather.update(dt, scaledWeather);
     ground.setSnow(base.snow);
+    water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
+    // River babble whispers near the water; a frozen river stands the babble
+    // down with the duck (same snow gate).
+    proximityCell.x = Math.floor((camera.position.x + GROUND_SIZE / 2) / cellSize);
+    proximityCell.y = Math.floor((camera.position.z + GROUND_SIZE / 2) / cellSize);
+    babble.update(base.snow >= FROZEN_SNOW ? 0 : riverProximity(proximityCell));
     fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
   };
   paintAmbience();
   disposables.push(sky.dispose);
+  disposables.push(water.dispose);
 
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
@@ -675,12 +694,18 @@ export function initScene(
       const star = primaryRig();
       const night = nightFactorAt(dayClock.fraction);
       const blend = weatherClock.blend;
-      const rainNow = blend
-        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t).rain
-        : intensityOf(weatherClock.weather).rain;
+      const weatherNow = blend
+        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t)
+        : intensityOf(weatherClock.weather);
       tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
-        rain: rainNow,
+        rain: weatherNow.rain,
         night,
+      });
+      // The duck drifts the S-curve and wiggles for passing trains; night is
+      // bedtime, and a frozen river (snow) parks it on the ice.
+      duck.update(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
+        night,
+        snow: weatherNow.snow,
       });
       updateCamera(dt);
     },
@@ -699,6 +724,7 @@ export function initScene(
       spinLoop.suspend();
       audio.suspend();
       ambience.suspend();
+      babble.suspend();
       perfMonitor.setPaused(true); // Hidden tab ≠ device strain (spec FR1).
       clearInterval(attractTimer);
       attractTimer = 0;
@@ -708,6 +734,7 @@ export function initScene(
       spinLoop.resume();
       audio.resume();
       ambience.resume();
+      babble.resume();
       perfMonitor.setPaused(false);
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
@@ -780,6 +807,7 @@ export function initScene(
       wagonTemplates.length = 0;
       for (const dispose of disposables) dispose();
       ambience.dispose();
+      babble.dispose();
       disposeWindowGlows();
       renderer.dispose();
     },

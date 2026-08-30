@@ -1,7 +1,8 @@
 import type { Object3D } from 'three';
+import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
-import { type Cell, MEADOW_CELLS, neighbourOf } from '../core/track-graph';
+import { type Cell, MEADOW_CELLS, neighbourOf, type PlacedPiece } from '../core/track-graph';
 import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
@@ -86,6 +87,67 @@ export interface RideMotion {
   dispose(): void;
 }
 
+/** The world midpoint of `cell`'s `edge` — where one leg of the ride starts/ends. */
+function edgeMidpoint(cell: Cell, edge: Edge): { x: number; z: number } {
+  const a = cellToWorld(cell);
+  const b = cellToWorld(neighbourOf(cell, edge));
+  return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
+}
+
+/**
+ * The world path one ride step takes through its piece: either a straight run
+ * or a quarter-arc pivoting on the cell centre (matching how the corner
+ * models are anchored). Pure — built once per ride start, never per frame.
+ */
+export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
+  const entry = edgeMidpoint(piece.cell, step.from);
+  const exit = edgeMidpoint(piece.cell, step.to);
+  if (piece.type === 'corner') {
+    // The corner model's arc pivots on the cell corner shared by its two
+    // open edges; its ends sit on the edge midpoints, tangent-
+    // perpendicular to each edge (collinear with the straights' rails).
+    const a = cellToWorld(piece.cell);
+    const half = CELL_SIZE / 2;
+    const center = {
+      x: a.x + (step.from === 'east' || step.to === 'east' ? half : -half),
+      z: a.z + (step.from === 'south' || step.to === 'south' ? half : -half),
+    };
+    const a0 = Math.atan2(entry.z - center.z, entry.x - center.x);
+    const a1 = Math.atan2(exit.z - center.z, exit.x - center.x);
+    let sweep = a1 - a0;
+    while (sweep > Math.PI) sweep -= 2 * Math.PI;
+    while (sweep < -Math.PI) sweep += 2 * Math.PI;
+    return {
+      kind: 'arc',
+      ax: entry.x,
+      az: entry.z,
+      bx: exit.x,
+      bz: exit.z,
+      cx: center.x,
+      cz: center.z,
+      r: CELL_SIZE / 2,
+      a0,
+      sweep,
+      length: Math.abs(sweep) * (CELL_SIZE / 2),
+    };
+  }
+  // Straights, crossings, and bridges ride a line through the cell — the
+  // bridge mirrors exactly the straight it spans (see pieces.ts).
+  return {
+    kind: 'line',
+    ax: entry.x,
+    az: entry.z,
+    bx: exit.x,
+    bz: exit.z,
+    cx: 0,
+    cz: 0,
+    r: 0,
+    a0: 0,
+    sweep: 0,
+    length: Math.hypot(exit.x - entry.x, exit.z - entry.z),
+  };
+}
+
 /**
  * Makes one locomotive follow one solved path: closed loops cycle forever,
  * open layouts ride to the dead end, pause a beat, and shuttle back. Mid-ride
@@ -129,12 +191,6 @@ export function createRideMotion(
     onPausedChange?.(next);
   };
 
-  function edgeMidpoint(cell: { x: number; y: number }, edge: Edge): { x: number; z: number } {
-    const a = cellToWorld(cell);
-    const b = cellToWorld(neighbourOf(cell, edge));
-    return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
-  }
-
   function beginRide(state: RideState): void {
     const byId = new Map(world.pieces().map((piece) => [piece.id, piece]));
     segments = [];
@@ -143,53 +199,7 @@ export function createRideMotion(
       const piece = byId.get(step.pieceId);
       if (!piece) continue; // Stale step — re-solves on the next start.
       cells.push(piece.cell);
-      const entry = edgeMidpoint(piece.cell, step.from);
-      const exit = edgeMidpoint(piece.cell, step.to);
-      // Straights and crossings ride a line through the cell; only corners
-      // pivot on a quarter-arc.
-      if (piece.type === 'straight' || piece.type === 'crossing') {
-        segments.push({
-          kind: 'line',
-          ax: entry.x,
-          az: entry.z,
-          bx: exit.x,
-          bz: exit.z,
-          cx: 0,
-          cz: 0,
-          r: 0,
-          a0: 0,
-          sweep: 0,
-          length: Math.hypot(exit.x - entry.x, exit.z - entry.z),
-        });
-      } else {
-        // The corner model's arc pivots on the cell corner shared by its two
-        // open edges; its ends sit on the edge midpoints, tangent-
-        // perpendicular to each edge (collinear with the straights' rails).
-        const a = cellToWorld(piece.cell);
-        const half = CELL_SIZE / 2;
-        const center = {
-          x: a.x + (step.from === 'east' || step.to === 'east' ? half : -half),
-          z: a.z + (step.from === 'south' || step.to === 'south' ? half : -half),
-        };
-        const a0 = Math.atan2(entry.z - center.z, entry.x - center.x);
-        const a1 = Math.atan2(exit.z - center.z, exit.x - center.x);
-        let sweep = a1 - a0;
-        while (sweep > Math.PI) sweep -= 2 * Math.PI;
-        while (sweep < -Math.PI) sweep += 2 * Math.PI;
-        segments.push({
-          kind: 'arc',
-          ax: entry.x,
-          az: entry.z,
-          bx: exit.x,
-          bz: exit.z,
-          cx: center.x,
-          cz: center.z,
-          r: CELL_SIZE / 2,
-          a0,
-          sweep,
-          length: Math.abs(sweep) * (CELL_SIZE / 2),
-        });
-      }
+      segments.push(segmentForStep(piece, step));
     }
     total = 0;
     for (const segment of segments) total += segment.length;

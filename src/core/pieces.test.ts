@@ -11,12 +11,22 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the V1 piece set: straight, corner, and crossing', () => {
-    expect([...PIECE_TYPES].sort()).toEqual(['corner', 'crossing', 'straight']);
+  it('offers exactly the piece set: straight, corner, crossing, and bridge', () => {
+    expect([...PIECE_TYPES].sort()).toEqual(['bridge', 'corner', 'crossing', 'straight']);
   });
 
   it('gives every piece a 1-cell footprint', () => {
     expect(FOOTPRINT_CELLS).toBe(1);
+  });
+});
+
+describe('bridge piece geometry', () => {
+  it('joins opposite edges exactly like a straight — trains ride across unchanged', () => {
+    expect(endpointsFor('bridge', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('bridge', 90)).toEqual(['east', 'west']);
+    // Symmetric under 180°, same as the straight it mirrors.
+    expect(endpointsFor('bridge', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('bridge', 270)).toEqual(['east', 'west']);
   });
 });
 

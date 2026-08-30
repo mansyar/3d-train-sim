@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { isWater } from './river';
 import {
+  type Cell,
   connectionsFor,
   endpointEdgesFor,
   inBounds,
@@ -50,6 +52,36 @@ describe('validatePlacement', () => {
       piece(`p${i}`, 'straight', i % MEADOW_CELLS, Math.floor(i / MEADOW_CELLS), 0),
     );
     expect(validatePlacement(pieces, { x: 15, y: 15 })).toBe('capacity');
+  });
+});
+
+describe('validatePlacement terrain rules (piece type given)', () => {
+  const row = MEADOW_CELLS >> 1; // A row the river always crosses.
+  const water = [...Array(MEADOW_CELLS).keys()].map((x) => ({ x, y: row })).find((c) => isWater(c));
+  const land = [...Array(MEADOW_CELLS).keys()].map((x) => ({ x, y: row })).find((c) => !isWater(c));
+
+  it('rejects track pieces on river water', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'straight')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'corner')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'crossing')).toBe('water');
+  });
+
+  it('accepts a bridge on water — the one piece that spans the river', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bridge')).toBeNull();
+  });
+
+  it('rejects a bridge on dry land — water-only toy', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bridge')).toBe('water');
+  });
+
+  it('keeps the older rule order: bounds and occupancy win over terrain', () => {
+    expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
+    const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];
+    expect(validatePlacement(pieces, (water ?? { x: 8, y: 8 }) as Cell, 'bridge')).toBe('occupied');
+  });
+
+  it('stays terrain-blind without a piece type (older callers unchanged)', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell)).toBeNull();
   });
 });
 
