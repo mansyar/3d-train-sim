@@ -1,6 +1,6 @@
 # Track: Mobile UX Polish
 
-**ID:** `mobile-ux-polish_20260830` · **Type:** Feature · **Status:** new
+**ID:** `mobile-ux-polish_20260830` · **Type:** Feature · **Status:** archived
 
 - [Specification](spec.md) — small-screen shell, tap-to-rotate, delete-on-toy, portrait framing, production hygiene
 - [Implementation Plan](plan.md) — phased task list with checkpoints
