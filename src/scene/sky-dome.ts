@@ -64,6 +64,9 @@ export function createSkyDome(scene: Scene): SkyDome {
     fog: false,
   });
   const dome = new Mesh(geometry, material);
+  // The dome's radius dwarfs the meadow and every camera lives inside it, but
+  // an all-inside sphere can trip the frustum check on edge cameras — skip it.
+  dome.frustumCulled = false;
   scene.add(dome);
 
   const sunGeometry = new SphereGeometry(4.5, 16, 12);
