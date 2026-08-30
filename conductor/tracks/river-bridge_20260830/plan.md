@@ -132,7 +132,7 @@
     exported), so ice stands the babble down with the duck. Respects the
     parent mute via `audio.subscribe`; suspends/closes with the tab
     lifecycle and `dispose()`. 309/309 (6 new), tsc + biome clean.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E, polish & docs
 - [ ] Task: Playwright e2e (fresh servers — verify ports 5199/5198 free first)
