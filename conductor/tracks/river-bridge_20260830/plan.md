@@ -42,7 +42,13 @@
     dropped). Idempotent by construction; broken v1 still → emptyWorld.
     Persistence tests bumped to v2 literals. 295/295 green; tsc + biome
     clean; save.ts 98% stmts / 100% funcs.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Verification:** Full `pnpm check` green — biome clean, tsc clean,
+    295/295 unit tests across 24 files. Core logic TDD'd: river.ts (10
+    tests, 100% stmts), bridge/terrain rules (validatePlacement +
+    terrainErrorFor, track-graph 96%), v1→v2 save migration (save.ts 98%).
+    Commits: `7cb8e68`, `62b17a0`, `c500c4a`.
 
 ## Phase 2 — Water & bridge visuals (scene wiring, criteria-verified)
 - [ ] Task: Water rendering — sky-reflecting, snow-freezing river surface
