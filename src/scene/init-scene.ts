@@ -25,6 +25,7 @@ import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
 import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
+import { attachHeadlight, type Headlight } from './headlight';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
@@ -130,6 +131,7 @@ export function initScene(
     const night = nightFactorAt(fraction);
     lights.update(night);
     setGlowNight(night);
+    headlight?.update(night);
     // Weather intensity lerps across any active cross-fade.
     const blend = weatherClock.blend;
     const base = blend
@@ -191,6 +193,7 @@ export function initScene(
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
   let visibleSteamPuffs = 0;
+  let headlight: Headlight | null = null;
   const showTrain = (kind: TrainKind): void => {
     const template = locomotiveTemplates.get(kind);
     if (!template) return;
@@ -203,6 +206,7 @@ export function initScene(
     scene.add(model);
     locomotive = model;
     loadedTrain = kind;
+    headlight = attachHeadlight(model);
     steamPuffs?.dispose();
     if (steamPuffs) scene.remove(steamPuffs.group);
     steamPuffs = createSteamPuffEmitter(model, camera, kind);

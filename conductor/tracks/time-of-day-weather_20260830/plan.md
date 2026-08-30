@@ -138,8 +138,17 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     attract-mode chirps at night too. New `fireflies.ts`: 24 additive glow
     points on sine wander paths near the ground, opacity keyed to the night
     factor, hidden in rain. Full `pnpm check` green (245/245).
-- [ ] Task: Ambience audio — rain patter + gentle wind fade with weather,
+- [x] Task: Ambience audio - rain patter + gentle wind fade with weather,
   mute-respecting
+  `d2688be`
+
+  - **Notes:** No rain/wind assets existed — `src/audio/ambience-audio.ts`
+    synthesizes them: one looping white-noise buffer shaped into rain
+    (lowpass 1400 Hz) and wind (bandpass 420 Hz with slow LFO-free breathing
+    via intensity targets), `setTargetAtTime` ramps so fades never click.
+    AudioContext is created lazily on the first pointer gesture (autoplay
+    unlock), respects the mute switch via `audio.subscribe`, follows the
+    visibility suspend/resume lifecycle, and closes cleanly on dispose.
 - [ ] Task: Train headlight — emissive lamp + subtle forward spotlight at night
   only
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
