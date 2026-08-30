@@ -1,9 +1,10 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of active development tracks. No tracks are currently in progress.
+Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [living-meadow_20260830](tracks/living-meadow_20260830/index.md) | Living Meadow | Feature | new |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
