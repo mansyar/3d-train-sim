@@ -644,11 +644,27 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
     // Let the scene sync and the drop-ping animation finish.
     await page.waitForTimeout(600);
   };
-  await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', 640, 380);
+  // Drop targets are viewport-relative fractions so the same walkthrough runs
+  // on the tablet and phone projects (both emulated in this suite).
+  const dropPoint = async (xRatio: number, yRatio: number) => {
+    const viewport = page.viewportSize();
+    if (!viewport) throw new Error('no viewport size');
+    return {
+      x: Math.round(viewport.width * xRatio),
+      y: Math.round(viewport.height * yRatio),
+    };
+  };
+  const meadow = await dropPoint(0.45, 0.34);
+  await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', meadow.x, meadow.y);
 
   // Back to Town, drag the station onto a second meadow spot.
   await page.click('.drawer-tab[data-tab="town"]');
-  await dragFrom('.drawer-panel[data-panel="town"] [data-scenery="station"]', 500, 300);
+  const stationSpot = await dropPoint(0.3, 0.42);
+  await dragFrom(
+    '.drawer-panel[data-panel="town"] [data-scenery="station"]',
+    stationSpot.x,
+    stationSpot.y,
+  );
 
   // Both toys really placed — a failed drop wobble-returns and would not count.
   const toys = await page.evaluate(() => {

@@ -43,11 +43,14 @@ body {
   background: color-mix(in srgb, var(--toy-cream) 88%, transparent);
   bottom: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   left: 0;
   padding: 12px;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
   position: absolute;
   right: 0;
 }
@@ -152,11 +155,12 @@ body {
 .toy-drawer {
   backdrop-filter: blur(4px);
   background: rgba(255, 248, 231, 0.92);
-  bottom: 112px;
+  bottom: calc(112px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 10px;
   left: 50%;
+  max-width: calc(100vw - 24px);
   padding: 12px;
   position: absolute;
   transform: translateX(-50%);
@@ -262,11 +266,13 @@ body {
 .train-drawer {
   backdrop-filter: blur(4px);
   background: rgba(255, 248, 231, 0.92);
-  bottom: 112px;
+  bottom: calc(112px + env(safe-area-inset-bottom));
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   left: 50%;
+  max-width: calc(100vw - 24px);
   padding: 12px;
   position: absolute;
   transform: translateX(-50%);
@@ -329,8 +335,8 @@ body {
   min-width: 44px;
   opacity: 0.55;
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: calc(12px + env(safe-area-inset-right));
+  top: calc(12px + env(safe-area-inset-top));
   z-index: 30;
 }
 
@@ -417,13 +423,13 @@ body {
   cursor: pointer;
   font-size: 30px;
   line-height: 1;
+  left: calc(12px + env(safe-area-inset-left));
   min-height: 64px;
   min-width: 64px;
   opacity: 0.5;
   overflow: hidden;
   position: absolute;
-  left: 12px;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   touch-action: none;
   z-index: 30;
 }
@@ -460,6 +466,23 @@ body {
   }
   50% {
     transform: scale(1.08);
+  }
+}
+
+/* ---- Narrow screens (phones ≥360px): the rail wraps, drawers clear it ---- */
+@media (max-width: 540px) {
+  .toybox-rail {
+    gap: 12px;
+  }
+
+  /* The rail wraps to two rows here; lift the drawers above the rail band
+     so their slot rows are never hidden behind it. */
+  .toy-drawer {
+    bottom: calc(220px + env(safe-area-inset-bottom));
+  }
+
+  .train-drawer {
+    bottom: calc(200px + env(safe-area-inset-bottom));
   }
 }
 

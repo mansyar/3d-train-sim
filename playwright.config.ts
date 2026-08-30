@@ -3,8 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   reporter: 'list',
-  // Touch-emulated tablet viewport (product is tablet-first).
-  projects: [{ name: 'tablet', use: { ...devices['iPad Mini'] } }],
+  // Tablet-first with a phone project: the small-screen shell is first-class
+  // at ≥360px, so both form factors are smoke-tested here.
+  projects: [
+    { name: 'tablet', use: { ...devices['iPad Mini'] } },
+    { name: 'phone', use: { ...devices['iPhone 13'] } },
+  ],
   use: {
     baseURL: 'http://localhost:5199',
   },
