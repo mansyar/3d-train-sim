@@ -356,25 +356,19 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
   });
   void placed;
 
-  // Find any screen point that maps to the placed cell, then tap the toy there.
+  // Find the cell's screen center via the scene, then tap the toy there.
   const tapPoint = await page.evaluate(() => {
     const sceneHandle = (
       window as unknown as {
         __tinyTracksScene?: {
-          cellFromPoint: (x: number, y: number) => { x: number; y: number } | null;
+          cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
         };
       }
     ).__tinyTracksScene;
     if (!sceneHandle) throw new Error('dev scene handle missing');
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    for (let y = 0; y < height; y += 24) {
-      for (let x = 0; x < width; x += 24) {
-        const cell = sceneHandle.cellFromPoint(x, y);
-        if (cell?.x === 8 && cell?.y === 8) return { x, y };
-      }
-    }
-    throw new Error('cell (8,8) not visible on screen');
+    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
+    if (!point) throw new Error('cell (8,8) not visible on screen');
+    return point;
   });
 
   await page.mouse.click(tapPoint.x, tapPoint.y);
@@ -417,18 +411,14 @@ test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ pa
     const sceneHandle = (
       window as unknown as {
         __tinyTracksScene?: {
-          cellFromPoint: (x: number, y: number) => { x: number; y: number } | null;
+          cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
         };
       }
     ).__tinyTracksScene;
     if (!sceneHandle) throw new Error('dev scene handle missing');
-    for (let y = 0; y < window.innerHeight; y += 24) {
-      for (let x = 0; x < window.innerWidth; x += 24) {
-        const cell = sceneHandle.cellFromPoint(x, y);
-        if (cell?.x === 8 && cell?.y === 8) return { x, y };
-      }
-    }
-    throw new Error('cell (8,8) not visible on screen');
+    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
+    if (!point) throw new Error('cell (8,8) not visible on screen');
+    return point;
   });
 
   // Press on the toy, then move just past the lift threshold — the toy lifts
@@ -769,22 +759,28 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
     // Let the scene sync and the drop-ping animation finish.
     await page.waitForTimeout(600);
   };
-  // Drop targets are viewport-relative fractions so the same walkthrough runs
-  // on the tablet and phone projects (both emulated in this suite).
-  const dropPoint = async (xRatio: number, yRatio: number) => {
-    const viewport = page.viewportSize();
-    if (!viewport) throw new Error('no viewport size');
-    return {
-      x: Math.round(viewport.width * xRatio),
-      y: Math.round(viewport.height * yRatio),
-    };
-  };
-  const meadow = await dropPoint(0.45, 0.34);
+  // Drop targets are exact meadow cells via the scene — the same walkthrough
+  // runs on the tablet and phone projects regardless of camera framing.
+  const cellSpot = (cell: { x: number; y: number }) =>
+    page.evaluate((c) => {
+      const sceneHandle = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
+          };
+        }
+      ).__tinyTracksScene;
+      if (!sceneHandle) throw new Error('dev scene handle missing');
+      const point = sceneHandle.cellToScreen(c);
+      if (!point) throw new Error(`cell (${c.x},${c.y}) not visible on screen`);
+      return point;
+    }, cell);
+  const meadow = await cellSpot({ x: 2, y: 2 });
   await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', meadow.x, meadow.y);
 
   // Back to Town, drag the station onto a second meadow spot.
   await page.click('.drawer-tab[data-tab="town"]');
-  const stationSpot = await dropPoint(0.3, 0.42);
+  const stationSpot = await cellSpot({ x: 13, y: 13 });
   await dragFrom(
     '.drawer-panel[data-panel="town"] [data-scenery="station"]',
     stationSpot.x,

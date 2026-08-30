@@ -100,9 +100,14 @@ export function cellToScreen(
   camera: PerspectiveCamera,
   canvas: HTMLCanvasElement,
 ): { x: number; y: number } | null {
+  // The projection depends on fresh camera matrices, which the render loop
+  // does not refresh when the camera is not a scene child — ask first.
+  camera.updateMatrixWorld();
   const { x, z } = cellToWorld(cell);
   const ndc = new Vector3(x, 0, z).project(camera);
-  if (ndc.z > 1 || ndc.z < -1) return null;
+  // The meadow sits near this camera's far plane, so its NDC z hovers around
+  // 1 — only a non-finite projection means the camera is not usable yet.
+  if (!Number.isFinite(ndc.x) || !Number.isFinite(ndc.y)) return null;
   return {
     x: ((ndc.x + 1) / 2) * canvas.clientWidth,
     y: ((1 - ndc.y) / 2) * canvas.clientHeight,
