@@ -96,7 +96,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       path start — the smooth in-place swap is task 3).
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: Train-kind swap applies to all trains (scene wiring)
+- [~] Task: Train-kind swap applies to all trains (scene wiring)
 
   - **Acceptance criteria (manual + smoke):** choosing a different
     locomotive in the 🚂 drawer swaps every train's model mid-ride; rides

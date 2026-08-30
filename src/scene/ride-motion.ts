@@ -75,6 +75,8 @@ interface Segment {
 export interface RideMotion {
   /** Begin (or re-begin) following the given ride state. */
   begin(state: RideState): void;
+  /** Re-target a swapped locomotive model, snapping it to the train's pose. */
+  setModel(next: Object3D): void;
   /** Advance the animation by dt seconds. Allocates nothing per frame. */
   update(dt: number): void;
   dispose(): void;
@@ -247,8 +249,11 @@ export function createRideMotion(
     for (let i = 0; i < stops.length; i++) armed.add(i);
   }
 
+  /** The locomotive the motion poses — swapped in place on kind changes. */
+  let activeModel = model;
+
   /** Write the pose for forward-path distance `d` into `target`. */
-  function poseAt(d: number, target: Object3D = model, faceTravel = true): void {
+  function poseAt(d: number, target: Object3D = activeModel, faceTravel = true): void {
     const first = segments[0];
     if (!first) return;
     // Coupled wagons can hang past a short path's ends. The overhang runs
@@ -329,6 +334,12 @@ export function createRideMotion(
     /** Begins (or re-begins) following the given ride state. */
     begin(state: RideState): void {
       beginRide(state);
+    },
+
+    /** Re-targets a swapped locomotive; it snaps to the train's live pose. */
+    setModel(next: Object3D): void {
+      activeModel = next;
+      if (total > 0) poseTrain(distance);
     },
 
     update(dt: number) {

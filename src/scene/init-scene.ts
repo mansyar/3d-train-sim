@@ -135,6 +135,8 @@ export function initScene(
   interface TrainRig {
     /** The ride anchor this rig serves ('' while resting between rides). */
     anchor: string;
+    /** The locomotive kind this rig's model was built from. */
+    kind: TrainKind;
     model: Object3D;
     wagons: Object3D[];
     puffs: SteamPuffEmitter;
@@ -202,6 +204,7 @@ export function initScene(
     // template owns those GPU resources and disposes them during teardown.
     const rig: TrainRig = {
       anchor: '',
+      kind,
       model,
       wagons,
       puffs,
@@ -270,7 +273,11 @@ export function initScene(
           return;
         }
         locomotiveTemplates.set(kind, model);
-        if (kind === world.train()) syncRigs(rides.rides());
+        if (kind === world.train()) {
+          // Late-arriving assets complete any swap that was still waiting.
+          for (const rig of [...rigs.values(), ...spares]) swapRigKind(rig, kind);
+          syncRigs(rides.rides());
+        }
       })
       .catch(() => {
         // Kit asset unavailable — the crate remains as the fallback placeholder.
@@ -301,19 +308,30 @@ export function initScene(
     for (const rig of rigs.values()) rig.puffs.setEmitting(mode === 'riding');
   });
 
+  /** Swaps one rig's locomotive in place — rides keep rolling (spec R3). */
+  const swapRigKind = (rig: TrainRig, kind: TrainKind): void => {
+    if (rig.kind === kind) return;
+    const template = locomotiveTemplates.get(kind);
+    if (!template) return; // new kind's assets not ready — keep the current model
+    rig.puffs.dispose();
+    scene.remove(rig.puffs.group);
+    const model = template.clone(true);
+    scene.add(model);
+    rig.kind = kind;
+    rig.model = model;
+    rig.puffs = createSteamPuffEmitter(model, camera, kind);
+    scene.add(rig.puffs.group);
+    rig.puffs.setEmitting(rides.mode() === 'riding');
+    // The motion re-poses the new engine (and its wagons) exactly where the
+    // old one stood — same path distance, same direction, no restart.
+    rig.motion.setModel(model);
+  };
+
   const unsubscribeTrain = world.subscribe(() => {
     const kind = world.train();
     if (kind === loadedTrain) return;
     loadedTrain = kind;
-    // Rebuild every train for the new kind; rides re-begin from their start
-    // (an in-place mid-ride swap lands with the camera-cycling work).
-    for (const rig of [...rigs.values(), ...spares]) {
-      rig.motion.dispose();
-      disposeRigVisuals(rig);
-    }
-    rigs.clear();
-    spares.length = 0;
-    syncRigs(rides.rides());
+    for (const rig of [...rigs.values(), ...spares]) swapRigKind(rig, kind);
   });
 
   // In tall viewports the square meadow's far corners slip out of frame. Pull
