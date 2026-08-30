@@ -53,7 +53,7 @@ describe('autosave subscription', () => {
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     store.subscribe(() =>
       save({
-        version: 1,
+        version: 2,
         train: store.train(),
         pieces: [...store.pieces()],
         scenery: [...store.scenery()],
@@ -109,7 +109,7 @@ describe('mute preference', () => {
     const audio = makeAudio();
 
     restoreMutePreference(
-      { version: 1, pieces: [], scenery: [], preferences: { muted: true } },
+      { version: 2, pieces: [], scenery: [], preferences: { muted: true } },
       audio,
     );
     expect(audio.setMuted).toHaveBeenCalledTimes(1);
@@ -134,7 +134,7 @@ describe('mute preference', () => {
     audio.emit();
     expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0]?.[0]).toMatchObject({
-      version: 1,
+      version: 2,
       train: 'steam',
       pieces: [{ type: 'straight', cell: ORIGIN }],
       scenery: [],
@@ -197,7 +197,7 @@ describe('indexeddb storage', () => {
 
   it('loads the stored world snapshot', async () => {
     const db = makeDb();
-    const stored: WorldSnapshot = { version: 1, pieces: [], scenery: [] };
+    const stored: WorldSnapshot = { version: 2, pieces: [], scenery: [] };
     db.get.mockResolvedValue(stored);
     openDBMock.mockResolvedValue(db as never);
 
@@ -217,7 +217,7 @@ describe('indexeddb storage', () => {
     const db = makeDb();
     openDBMock.mockResolvedValue(db as never);
     const snapshot: WorldSnapshot = {
-      version: 1,
+      version: 2,
       pieces: [],
       scenery: [],
       preferences: { muted: true },

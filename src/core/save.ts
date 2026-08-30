@@ -1,4 +1,5 @@
 import { PIECE_TYPES } from './pieces';
+import { isWater } from './river';
 import { type PlacedScenery, SCENERY_KINDS, type SceneryKind } from './scenery';
 import {
   MAX_PIECES,
@@ -9,7 +10,10 @@ import {
 } from './track-graph';
 import { TRAIN_KINDS, type TrainKind } from './trains';
 
-const SNAPSHOT_VERSION = 1;
+const SNAPSHOT_VERSION = 2;
+
+/** Snapshot versions this build understands: the current one plus pre-river v1. */
+const SUPPORTED_VERSIONS: readonly number[] = [1, 2];
 
 export interface DevicePreferences {
   muted: boolean;
@@ -57,13 +61,18 @@ export function serializeWorld(
 }
 
 export function deserializeWorld(value: unknown): WorldData {
-  if (!isRecord(value) || value.version !== SNAPSHOT_VERSION) return emptyWorld();
+  if (!isRecord(value) || !SUPPORTED_VERSIONS.includes(value.version as number)) {
+    return emptyWorld();
+  }
+  const legacy = value.version === 1;
   if (!Array.isArray(value.pieces) || !Array.isArray(value.scenery)) return emptyWorld();
   if (value.pieces.length + value.scenery.length > MAX_PIECES) return emptyWorld();
 
   const parsedPieces = value.pieces.map(parsePiece);
   if (parsedPieces.some((piece) => piece === null)) return emptyWorld();
-  const validPieces = parsedPieces as PlacedPiece[];
+  const validPieces = legacy
+    ? (parsedPieces as PlacedPiece[]).map(migratePieceToV2)
+    : (parsedPieces as PlacedPiece[]);
 
   // Unknown scenery kinds (e.g. from a newer version) drop back to the
   // drawer; everything else restores exactly as it was. A lost toy is a
@@ -90,6 +99,19 @@ export function deserializePreferences(value: unknown): DevicePreferences {
   const preferences = value.preferences;
   if (!isRecord(preferences)) return { muted: false };
   return typeof preferences.muted === 'boolean' ? { muted: preferences.muted } : { muted: false };
+}
+
+/**
+ * v1 → v2 migration: the river arrived after v1, so any straight or corner
+ * standing where water now flows re-renders as a trestle bridge — same id,
+ * cell, and rotation, nothing dropped. The kid's built world survives the
+ * new terrain; the bridge simply appears where the track crossed.
+ */
+function migratePieceToV2(piece: PlacedPiece): PlacedPiece {
+  if ((piece.type === 'straight' || piece.type === 'corner') && isWater(piece.cell)) {
+    return { ...piece, type: 'bridge' };
+  }
+  return piece;
 }
 
 function parsePiece(value: unknown): PlacedPiece | null {
