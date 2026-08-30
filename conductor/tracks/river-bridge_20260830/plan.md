@@ -29,9 +29,19 @@
     anchor until Phase 2's trestle model). Fixtures updated: `fillWorld` skips
     water; ride-test loops moved to dry cells (row 0 water = x 4–6). 290/290
     green; tsc + biome clean; pieces.ts 100% / track-graph.ts 96% coverage.
-- [ ] Task: Save migration — auto-bridge on load (TDD)
+- [x] Task: Save migration — auto-bridge on load (TDD) `c500c4a`
   - Write failing tests first: a v-current save with straights/corners intersecting water cells loads with those pieces rendered as bridges; nothing dropped; non-intersecting pieces untouched; idempotent on second load
   - Implement to green (`save.ts` migration, version bump)
+
+  - **Notes:** `SNAPSHOT_VERSION` bumped 1 → 2; `deserializeWorld` now accepts
+    BOTH versions — v1 pieces get `migratePieceToV2` (straight/corner on a
+    water cell → `'bridge'`, id/cell/rotation preserved), v2 loads pass
+    through. Critical: the old code *discarded* unknown versions, so
+    accepting v1 is what keeps FR9's "zero world data lost" promise.
+    Scenery on water restores as-is (out of migration scope — nothing
+    dropped). Idempotent by construction; broken v1 still → emptyWorld.
+    Persistence tests bumped to v2 literals. 295/295 green; tsc + biome
+    clean; save.ts 98% stmts / 100% funcs.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Water & bridge visuals (scene wiring, criteria-verified)
