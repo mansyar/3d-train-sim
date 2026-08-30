@@ -52,6 +52,11 @@ jobs:
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
 
+      # The `prod` e2e project serves the static build via `vite preview`,
+      # so dist/ must exist before the suite boots its web servers.
+      - name: Build for prod e2e project
+        run: pnpm build
+
       - name: E2E smoke (tablet profile)
         run: pnpm exec playwright test
 
