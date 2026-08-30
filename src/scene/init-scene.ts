@@ -42,6 +42,7 @@ import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
+import { createRiverWater } from './river-water';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
@@ -146,6 +147,7 @@ export function initScene(
   const dayClock = createDayClock({ now: () => performance.now() });
   const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
+  const water = createRiverWater(scene);
   /** One night beam per little train — parked spares included. */
   const headlights: Headlight[] = [];
   // Scratch objects for the frame path — the palette/intensity calls write
@@ -167,11 +169,13 @@ export function initScene(
       : intensityOf(weatherClock.weather);
     weather.update(dt, base);
     ground.setSnow(base.snow);
+    water.update(skyColors, base.snow); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
   };
   paintAmbience();
   disposables.push(sky.dispose);
+  disposables.push(water.dispose);
 
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);

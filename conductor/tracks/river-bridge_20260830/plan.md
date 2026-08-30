@@ -51,7 +51,7 @@
     Commits: `7cb8e68`, `62b17a0`, `c500c4a`.
 
 ## Phase 2 — Water & bridge visuals (scene wiring, criteria-verified)
-- [ ] Task: Water rendering — sky-reflecting, snow-freezing river surface
+- [~] Task: Water rendering — sky-reflecting, snow-freezing river surface
   - Criteria: river meshes recolor via `sky-palette` across the day cycle; pales to ice as snow intensity rises; melts back; static under reduced motion; zero per-frame allocations (scratch pattern)
 - [ ] Task: Wooden trestle bridge model + rendering bridged pieces
   - Criteria: plank deck, railings, stilt legs into the water (Kenney-kit aesthetic); train rides across at normal speed/height, water visible beneath; migrated pieces render identically

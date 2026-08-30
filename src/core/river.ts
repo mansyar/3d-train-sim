@@ -44,6 +44,24 @@ export function isWater(cell: Cell): boolean {
   return waterSet().has(`${cell.x},${cell.y}`);
 }
 
+/**
+ * Every water cell, in row order — the river's footprint on the meadow grid.
+ * Computed once and cached; callers may hold the reference.
+ */
+let waterCells: Cell[] | null = null;
+
+export function riverWaterCells(): Cell[] {
+  if (!waterCells) {
+    waterCells = [];
+    for (let y = 0; y < MEADOW_CELLS; y += 1) {
+      for (let x = 0; x < MEADOW_CELLS; x += 1) {
+        if (waterSet().has(`${x},${y}`)) waterCells.push({ x, y });
+      }
+    }
+  }
+  return waterCells;
+}
+
 let driftPath: Cell[] | null = null;
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isWater, riverDriftPath } from './river';
+import { isWater, riverDriftPath, riverWaterCells } from './river';
 import { type Cell, MEADOW_CELLS } from './track-graph';
 
 const allCells = (): Cell[] => {
@@ -92,6 +92,26 @@ describe('river drift path', () => {
 
   it('is stable across calls (cached, not recomputed)', () => {
     expect(riverDriftPath()).toBe(path);
+  });
+});
+
+describe('river water cells', () => {
+  it('lists exactly the cells isWater marks, in row order', () => {
+    const cells = riverWaterCells();
+    expect(cells.length).toBeGreaterThan(0);
+    for (const cell of cells) expect(isWater(cell)).toBe(true);
+    // Row order: y never decreases, and x increases within each row.
+    for (let i = 1; i < cells.length; i += 1) {
+      const a = cells[i - 1];
+      const b = cells[i];
+      if (!a || !b) {
+        expect.unreachable('cell gap');
+        continue;
+      }
+      expect(b.y).toBeGreaterThanOrEqual(a.y);
+      if (b.y === a.y) expect(b.x).toBeGreaterThan(a.x);
+    }
+    expect(riverWaterCells()).toBe(cells); // cached, not recomputed
   });
 });
 
