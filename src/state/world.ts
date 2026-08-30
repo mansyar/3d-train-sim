@@ -1,3 +1,4 @@
+import { isWater } from '../core/river';
 import type { WorldData } from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
 import {
@@ -7,11 +8,18 @@ import {
   type PieceType,
   type PlacedPiece,
   type Rotation,
+  terrainErrorFor,
 } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 
 /** Outcome of a world mutation the kid UI can show gently (dim, wobble, snap). */
-export type PlacementResult = 'placed' | 'not-found' | 'out-of-bounds' | 'occupied' | 'capacity';
+export type PlacementResult =
+  | 'placed'
+  | 'not-found'
+  | 'out-of-bounds'
+  | 'occupied'
+  | 'capacity'
+  | 'water';
 
 export type WorldListener = (pieces: readonly PlacedPiece[]) => void;
 
@@ -88,6 +96,7 @@ export function createWorldStore(): WorldStore {
     place(type, cell, rotation) {
       if (!inBounds(cell)) return 'out-of-bounds';
       if (holderOf(cell)) return 'occupied';
+      if (terrainErrorFor(type, cell)) return 'water';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
       placed.push({ id: `piece-${nextId++}`, type, cell: { ...cell }, rotation });
       notify();
@@ -100,6 +109,7 @@ export function createWorldStore(): WorldStore {
       if (!inBounds(cell)) return 'out-of-bounds';
       const holder = holderOf(cell);
       if (holder && holder !== piece) return 'occupied';
+      if (terrainErrorFor(piece.type, cell)) return 'water';
       piece.cell = { x: cell.x, y: cell.y };
       piece.rotation = rotation;
       notify();
@@ -119,6 +129,8 @@ export function createWorldStore(): WorldStore {
     placeScenery(kind, cell, rotation) {
       if (!inBounds(cell)) return 'out-of-bounds';
       if (holderOf(cell)) return 'occupied';
+      // Scenery is a land toy — the riverbed is no place for a tree.
+      if (isWater(cell)) return 'water';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
       scenery.push({ id: `scenery-${nextId++}`, kind, cell: { ...cell }, rotation });
       notify();
@@ -131,6 +143,7 @@ export function createWorldStore(): WorldStore {
       if (!inBounds(cell)) return 'out-of-bounds';
       const holder = holderOf(cell);
       if (holder && holder !== item) return 'occupied';
+      if (isWater(cell)) return 'water';
       item.cell = { x: cell.x, y: cell.y };
       item.rotation = rotation;
       notify();

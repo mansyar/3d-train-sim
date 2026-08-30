@@ -46,6 +46,8 @@ const BASE_YAW: Record<PieceType, number> = {
   corner: -Math.PI / 2,
   // 4-fold symmetric: every yaw looks identical, so rotation is a no-op.
   crossing: 0,
+  // Placeholder until the trestle model lands (Phase 2): rides like a straight.
+  bridge: 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -79,12 +81,17 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // model-space point as the straight's rail midpoint: x=0, underside y=−1,
   // mid-length z=2 — the cell centre the graph pivots rides around.
   crossing: [0, -1, 2],
+  // Placeholder until the trestle model lands (Phase 2): same anchor as the
+  // straight it mirrors.
+  bridge: [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
   straight: '/assets/train-kit/railroad-straight.glb',
   corner: '/assets/train-kit/railroad-corner-small.glb',
   crossing: '/assets/train-kit/railroad-crossing.glb',
+  // Placeholder until the trestle model lands (Phase 2).
+  bridge: '/assets/train-kit/railroad-straight.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */

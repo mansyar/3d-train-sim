@@ -1,4 +1,5 @@
 import { baseEndpointsFor, type PieceType, type Rotation } from './pieces';
+import { isWater } from './river';
 
 /** Buildable meadow extent in cells (16×16). */
 export const MEADOW_CELLS = 16;
@@ -23,7 +24,7 @@ export interface PlacedPiece {
 }
 
 /** Why a placement is blocked. The kid UI dims and gently returns; no errors. */
-export type PlacementError = 'out-of-bounds' | 'occupied' | 'capacity';
+export type PlacementError = 'out-of-bounds' | 'occupied' | 'capacity' | 'water';
 
 /** The boundary between two adjacent cells, keyed `cellA|cellB` (sorted). */
 export type EdgeKey = string;
@@ -52,18 +53,32 @@ export function inBounds(cell: Cell): boolean {
 }
 
 /**
+ * The terrain rule: river water is an obstacle for every toy except the
+ * bridge, which is a water-only toy. Returns `'water'` when `type` and
+ * `cell` disagree about dry land, `null` when the terrain fits.
+ */
+export function terrainErrorFor(type: PieceType, cell: Cell): 'water' | null {
+  const wet = isWater(cell);
+  if (type === 'bridge') return wet ? null : 'water';
+  return wet ? 'water' : null;
+}
+
+/**
  * Why `cell` cannot host a piece, or `null` when it can. Order matters:
- * bounds, then occupancy, then the piece cap — the drawer reads this to dim
- * itself rather than to complain.
+ * bounds, then occupancy, then terrain, then the piece cap — the drawer
+ * reads this to dim itself rather than to complain. The piece type is
+ * optional; older terrain-blind callers keep the original rule set.
  */
 export function validatePlacement(
   pieces: readonly PlacedPiece[],
   cell: Cell,
+  type?: PieceType,
 ): PlacementError | null {
   if (!inBounds(cell)) return 'out-of-bounds';
   if (pieces.some((p) => p.cell.x === cell.x && p.cell.y === cell.y)) {
     return 'occupied';
   }
+  if (type && terrainErrorFor(type, cell)) return 'water';
   if (pieces.length >= MAX_PIECES) return 'capacity';
   return null;
 }

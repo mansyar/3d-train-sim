@@ -6,7 +6,9 @@ import { type Cell, MEADOW_CELLS } from './track-graph';
  * `cx(y) = 8 − 3·cos(π·y/15)` — drifting from column 5 at the north edge to
  * column 11 at the south, which keeps at least 3 contiguous build cells on
  * *both* banks in every row (amplitude 4 would squeeze the east bank to 2).
- * Pure data: the set is computed once at module load; every lookup is O(1).
+ * Pure data: the set is built lazily on first lookup (module-load eagerness
+ * would trip over the `track-graph → river → track-graph` cycle) — every
+ * lookup stays O(1).
  */
 
 /** Center column of the river at row `y` (0..15). */
@@ -18,12 +20,20 @@ function centerX(y: number): number {
 /** Half-width of the band: water spans cx−1 … cx+1 (3 cells per row). */
 const BAND = 1;
 
-const WATER = new Set<string>();
-for (let y = 0; y < MEADOW_CELLS; y += 1) {
-  const cx = centerX(y);
-  for (let x = cx - BAND; x <= cx + BAND; x += 1) {
-    if (x >= 0 && x < MEADOW_CELLS) WATER.add(`${x},${y}`);
+let water: Set<string> | null = null;
+
+/** The water-cell set, built on first lookup (see the module doc on cycles). */
+function waterSet(): Set<string> {
+  if (!water) {
+    water = new Set<string>();
+    for (let y = 0; y < MEADOW_CELLS; y += 1) {
+      const cx = centerX(y);
+      for (let x = cx - BAND; x <= cx + BAND; x += 1) {
+        if (x >= 0 && x < MEADOW_CELLS) water.add(`${x},${y}`);
+      }
+    }
   }
+  return water;
 }
 
 /** Is this meadow cell river water? Out-of-bounds cells are always dry. */
@@ -31,7 +41,7 @@ export function isWater(cell: Cell): boolean {
   if (cell.x < 0 || cell.x >= MEADOW_CELLS || cell.y < 0 || cell.y >= MEADOW_CELLS) {
     return false;
   }
-  return WATER.has(`${cell.x},${cell.y}`);
+  return waterSet().has(`${cell.x},${cell.y}`);
 }
 
 let driftPath: Cell[] | null = null;
