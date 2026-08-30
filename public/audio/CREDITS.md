@@ -8,6 +8,7 @@ CC-BY 4.0 and credited to its author here. Everyone is credited anyway with than
 |---|---|---|---|
 | `chug-loop.ogg/.mp3` | [BigSoundBank — Steam engine, foley #1](https://bigsoundbank.com/steam-engine-foley-1-s3310.html) | Joseph SARDIN & Axeline T. | CC0 1.0 |
 | `whistle.ogg/.mp3` | [BigSoundBank — Train whistle, foley #6](https://bigsoundbank.com/train-whistle-foley-6-s3320.html) | Joseph SARDIN & Axeline T. | CC0 1.0 |
+| `click.ogg/.mp3` | Synthesized in-repo (soft tick, rotation feedback) | Tiny Tracks | CC0 1.0 |
 | `ding.ogg/.mp3` | [Kenney — Interface Sounds](https://kenney.nl/assets/interface-sounds) | Kenney (kenney.nl) | CC0 1.0 |
 | `baa-sheep.ogg/.mp3` | [Wikimedia Commons — Sheep bleat.ogg](https://commons.wikimedia.org/wiki/File:Sheep_bleat.ogg) | Eviatar Bach (Maan Farms, Abbotsford BC) | CC0 1.0 |
 | `oink-pig.ogg/.mp3` | [Freesound — pig05.ogg](https://freesound.org/people/Erdie/sounds/44274/) | Erdie | CC-BY 4.0 |

@@ -43,11 +43,14 @@ body {
   background: color-mix(in srgb, var(--toy-cream) 88%, transparent);
   bottom: 0;
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   left: 0;
   padding: 12px;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
   position: absolute;
   right: 0;
 }
@@ -152,11 +155,12 @@ body {
 .toy-drawer {
   backdrop-filter: blur(4px);
   background: rgba(255, 248, 231, 0.92);
-  bottom: 112px;
+  bottom: calc(112px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: 10px;
   left: 50%;
+  max-width: calc(100vw - 24px);
   padding: 12px;
   position: absolute;
   transform: translateX(-50%);
@@ -262,11 +266,13 @@ body {
 .train-drawer {
   backdrop-filter: blur(4px);
   background: rgba(255, 248, 231, 0.92);
-  bottom: 112px;
+  bottom: calc(112px + env(safe-area-inset-bottom));
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   justify-content: center;
   left: 50%;
+  max-width: calc(100vw - 24px);
   padding: 12px;
   position: absolute;
   transform: translateX(-50%);
@@ -295,25 +301,6 @@ body {
   transform: translateY(-3px);
 }
 
-/* ---- Drag ghost --------------------------------------------------------- */
-
-.rotate-knob {
-  background: var(--toy-green);
-  border: 4px solid var(--toy-brown);
-  border-radius: 50%;
-  bottom: 196px;
-  box-shadow: 0 4px 0 var(--toy-brown);
-  cursor: pointer;
-  font-size: 34px;
-  left: 50%;
-  min-height: 72px;
-  min-width: 72px;
-  position: absolute;
-  touch-action: none;
-  transform: translateX(-50%);
-  z-index: 40;
-}
-
 /* ---- Grid toggle (debug) ------------------------------------------------- */
 
 .grid-toggle {
@@ -329,8 +316,8 @@ body {
   min-width: 44px;
   opacity: 0.55;
   position: absolute;
-  right: 12px;
-  top: 12px;
+  right: calc(12px + env(safe-area-inset-right));
+  top: calc(12px + env(safe-area-inset-top));
   z-index: 30;
 }
 
@@ -374,6 +361,62 @@ body {
   z-index: 20;
 }
 
+/* A 90° rotation lands with a small celebratory pop at the toy. */
+.rotate-bounce {
+  animation: rotate-bounce 0.3s ease-out forwards;
+  background: var(--toy-green);
+  border-radius: 50%;
+  height: 48px;
+  left: 0;
+  opacity: 0.85;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  width: 48px;
+  z-index: 20;
+}
+
+/* ---- Delete on the toy ---------------------------------------------------- */
+
+/* The ✕ chip floats beside a lifted placed toy; tapping it bins the toy. */
+.delete-chip {
+  align-items: center;
+  background: #e63946;
+  border: 4px solid var(--toy-brown);
+  border-radius: 50%;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  color: var(--toy-cream);
+  display: flex;
+  font-size: 32px;
+  justify-content: center;
+  line-height: 1;
+  min-height: 64px;
+  min-width: 64px;
+  padding: 0;
+  position: fixed;
+  touch-action: none;
+  z-index: 45;
+}
+
+.delete-chip[hidden] {
+  display: none;
+}
+
+/* While a lifted toy aims at the bin, it grows and pulses its invitation. */
+.trash-slot.is-hovering {
+  animation: trash-pulse 0.5s ease-in-out infinite alternate;
+  transform: scale(1.15);
+}
+
+@keyframes trash-pulse {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1.22);
+  }
+}
+
 @keyframes drop-ping {
   from {
     opacity: 0.9;
@@ -406,6 +449,17 @@ body {
   }
 }
 
+@keyframes rotate-bounce {
+  from {
+    opacity: 0.85;
+    scale: 0.5;
+  }
+  to {
+    opacity: 0;
+    scale: 1.7;
+  }
+}
+
 /* ---- Parent gate (corner, hold-then-confirm) ----------------------------- */
 
 .parent-gate {
@@ -417,13 +471,13 @@ body {
   cursor: pointer;
   font-size: 30px;
   line-height: 1;
+  left: calc(12px + env(safe-area-inset-left));
   min-height: 64px;
   min-width: 64px;
   opacity: 0.5;
   overflow: hidden;
   position: absolute;
-  left: 12px;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   touch-action: none;
   z-index: 30;
 }
@@ -463,12 +517,35 @@ body {
   }
 }
 
+/* ---- Narrow screens (phones ≥360px): the rail wraps, drawers clear it ---- */
+@media (max-width: 540px) {
+  .toybox-rail {
+    gap: 12px;
+  }
+
+  /* The rail wraps to two rows here; lift the drawers above the rail band
+     so their slot rows are never hidden behind it. */
+  .toy-drawer {
+    bottom: calc(220px + env(safe-area-inset-bottom));
+  }
+
+  .train-drawer {
+    bottom: calc(200px + env(safe-area-inset-bottom));
+  }
+}
+
 /* Gentle motion only — reduced-motion users get instant, still feedback. */
 @media (prefers-reduced-motion: reduce) {
   .drop-ping,
-  .wobble-return {
+  .wobble-return,
+  .rotate-bounce {
     animation: none;
     display: none;
+  }
+
+  /* The bin may still grow, but it never pulses. */
+  .trash-slot.is-hovering {
+    animation: none;
   }
 
   .parent-gate.is-confirm {

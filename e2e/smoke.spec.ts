@@ -332,6 +332,183 @@ test('the sound choice survives a reload through local autosave', async ({ page 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  // Deterministically place a straight piece at a known cell.
+  const placed = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 8, y: 8 }, 0);
+  });
+  void placed;
+
+  // Find the cell's screen center via the scene, then tap the toy there.
+  const tapPoint = await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!sceneHandle) throw new Error('dev scene handle missing');
+    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
+    if (!point) throw new Error('cell (8,8) not visible on screen');
+    return point;
+  });
+
+  await page.mouse.click(tapPoint.x, tapPoint.y);
+  await page.waitForTimeout(400);
+
+  const rotated = await page.evaluate(() => {
+    const world = (
+      window as unknown as { __tinyTracksWorld?: { pieces: () => { rotation: number }[] } }
+    ).__tinyTracksWorld;
+    return world?.pieces()[0]?.rotation;
+  });
+  expect(rotated).toBe(90);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 8, y: 8 }, 0);
+  });
+
+  const toyPoint = await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!sceneHandle) throw new Error('dev scene handle missing');
+    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
+    if (!point) throw new Error('cell (8,8) not visible on screen');
+    return point;
+  });
+
+  // Press on the toy, then move just past the lift threshold — the toy lifts
+  // as a ghost and the ✕ chip appears beside it.
+  await page.mouse.move(toyPoint.x, toyPoint.y);
+  await page.mouse.down();
+  await page.mouse.move(toyPoint.x + 20, toyPoint.y + 20, { steps: 4 });
+  await expect(page.locator('.delete-chip')).toBeVisible();
+
+  // Tapping the chip deletes the toy (silently — no ding).
+  await page.locator('.delete-chip').click();
+  await page.waitForTimeout(400);
+
+  const count = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => unknown[]; scenery: () => unknown[] };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces().length, scenery: world.scenery().length };
+  });
+  expect(count.pieces).toBe(0);
+  expect(count.scenery).toBe(0);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('drag-to-trash still deletes a lifted toy over the rail', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 6, y: 8 }, 0);
+  });
+
+  // Drag the toy straight down into the trash bin on the rail.
+  const start = await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!sceneHandle) throw new Error('dev scene handle missing');
+    const point = sceneHandle.cellToScreen({ x: 6, y: 8 });
+    if (!point) throw new Error('cell (6,8) not visible on screen');
+    return point;
+  });
+  const trash = await page.locator('.trash-slot').boundingBox();
+  if (!trash) throw new Error('trash slot not visible');
+
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  // Lift over the threshold, then travel to the trash bin's center.
+  await page.mouse.move(start.x + 16, start.y + 16, { steps: 3 });
+  await page.mouse.move(trash.x + trash.width / 2, trash.y + trash.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+
+  const count = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => unknown[]; scenery: () => unknown[] };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces().length, scenery: world.scenery().length };
+  });
+  expect(count.pieces).toBe(0);
+  expect(count.scenery).toBe(0);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
@@ -644,11 +821,33 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
     // Let the scene sync and the drop-ping animation finish.
     await page.waitForTimeout(600);
   };
-  await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', 640, 380);
+  // Drop targets are exact meadow cells via the scene — the same walkthrough
+  // runs on the tablet and phone projects regardless of camera framing.
+  const cellSpot = (cell: { x: number; y: number }) =>
+    page.evaluate((c) => {
+      const sceneHandle = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cellToScreen: (cell: { x: number; y: number }) => { x: number; y: number } | null;
+          };
+        }
+      ).__tinyTracksScene;
+      if (!sceneHandle) throw new Error('dev scene handle missing');
+      const point = sceneHandle.cellToScreen(c);
+      if (!point) throw new Error(`cell (${c.x},${c.y}) not visible on screen`);
+      return point;
+    }, cell);
+  const meadow = await cellSpot({ x: 2, y: 2 });
+  await dragFrom('.drawer-panel[data-panel="critter"] [data-scenery="sheep"]', meadow.x, meadow.y);
 
   // Back to Town, drag the station onto a second meadow spot.
   await page.click('.drawer-tab[data-tab="town"]');
-  await dragFrom('.drawer-panel[data-panel="town"] [data-scenery="station"]', 500, 300);
+  const stationSpot = await cellSpot({ x: 13, y: 13 });
+  await dragFrom(
+    '.drawer-panel[data-panel="town"] [data-scenery="station"]',
+    stationSpot.x,
+    stationSpot.y,
+  );
 
   // Both toys really placed — a failed drop wobble-returns and would not count.
   const toys = await page.evaluate(() => {
