@@ -201,9 +201,7 @@ export function initScene(
       ridesWereActive = active;
       return; // The kid chose the overview mid-ride — keep it.
     }
-    filmed = ridesList[0]
-      ? { kind: 'train', anchor: ridesList[0].anchor }
-      : { kind: 'overview' };
+    filmed = ridesList[0] ? { kind: 'train', anchor: ridesList[0].anchor } : { kind: 'overview' };
     ridesWereActive = active;
   };
 
@@ -217,9 +215,7 @@ export function initScene(
       filmed = next ? { kind: 'train', anchor: next.anchor } : { kind: 'overview' };
       return;
     }
-    filmed = ridesList[0]
-      ? { kind: 'train', anchor: ridesList[0].anchor }
-      : { kind: 'overview' };
+    filmed = ridesList[0] ? { kind: 'train', anchor: ridesList[0].anchor } : { kind: 'overview' };
   };
 
   /** The UI shows the 🎥 button only while two or more trains ride. */

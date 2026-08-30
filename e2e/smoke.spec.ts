@@ -1016,9 +1016,8 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
 
   // Two disjoint loops — two little trains out there riding.
   await page.waitForFunction(() => {
-    const scene = (
-      window as unknown as { __tinyTracksScene?: { ridingTrainCount: () => number } }
-    ).__tinyTracksScene;
+    const scene = (window as unknown as { __tinyTracksScene?: { ridingTrainCount: () => number } })
+      .__tinyTracksScene;
     return scene?.ridingTrainCount() === 2;
   });
 
