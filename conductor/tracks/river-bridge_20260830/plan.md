@@ -101,8 +101,21 @@
     screenshot pass, per plan.
 
 ## Phase 3 — Life & sound (scene/audio wiring, criteria-verified)
-- [~] Task: The duck — drift, bob, train-reactive wiggle
+- [x] Task: The duck — drift, bob, train-reactive wiggle `bdff693`
   - Criteria: drifts the S-curve path, bobs gently; tail-wiggle when a riding train passes near (critter-life mood pipeline); paddles happily in rain; off-duty at night (bedtime gate); frozen surface = stands down
+
+  - **Notes:** New `scene/duck.ts` — a kit-style duck gliding the cached
+    `riverDriftPath()` waypoints (disjoint 0.35 cells/s, ping-pong at path
+    ends, heading from segment direction), sine bob suspended entirely while
+    the river is frozen (snow ≥ 0.5: duck stands on the ice instead). Tail
+    wiggle reuses the critter-life mood pipeline shape: 0.9 s wiggle with 3 s
+    cooldown, triggered by a riding train within 1.5 cells (star position,
+    same source as critter scatter). Rain never gates drift/wiggle (happy
+    paddling); night ≥ 0.6 is bedtime, same as critters. `dispose()` via
+    `disposeObject(model)`; wired in `init-scene.ts` — duck born beside the
+    water, updated in the spin tick with weather from the same
+    `lerpIntensity` blend that drives critters (snow extracted alongside
+    rain). 303/303, tsc + biome clean.
 - [ ] Task: River babble ambience
   - Criteria: whisper-quiet synthesized babble; fades in only near the water; mute-respecting; suspends with hidden tab (ambience-audio pattern); lazy AudioContext
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
