@@ -194,11 +194,19 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       late-bound (the scene binds after the app mounts).
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: Whistle targets the filmed train (audio/scene wiring)
+- [x] Task: Whistle targets the filmed train (audio/scene wiring) `85bfa5c`
 
   - **Acceptance criteria (manual + smoke):** 🎺 whistles + puffs on the
     filmed train; filming the overview → nearest train answers.
   - **Commit:** `feat(audio): Whistle the filmed train`
+
+  - **Notes:**
+    - `whistlePuff` bursts steam on the filmed rig; filming the overview,
+      the riding train nearest to the meadow's heart (the overview camera's
+      look-at point) answers. The toot sound itself stays the selected
+      kind's one-shot; the per-train voice is the steam at its chimney.
+      No-op before any train rides (unchanged).
+    - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: E2E smoke coverage
 
