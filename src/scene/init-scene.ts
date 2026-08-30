@@ -41,11 +41,7 @@ import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
-import {
-  createRideMotion,
-  parkFollowersBehind,
-  type RideMotion,
-} from './ride-motion';
+import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
@@ -643,12 +639,10 @@ export function initScene(
       const rainNow = blend
         ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t).rain
         : intensityOf(weatherClock.weather).rain;
-      tracks.updateCritters(
-        dt,
-        star?.model.position.x ?? null,
-        star?.model.position.z ?? null,
-        { rain: rainNow, night },
-      );
+      tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
+        rain: rainNow,
+        night,
+      });
       updateCamera(dt);
     },
   );
