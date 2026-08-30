@@ -48,13 +48,19 @@ criteria and are verified via e2e + manual checks instead of unit tests.
   - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 (tablet + phone). Debugging: two-phase fix — (1) pullback applied only in portrait (landscape untouched) and camera position applied immediately; (2) `cellToScreen` rejected meadow NDC z≈1 (meadow sits at the camera's far plane) — switched to a finite-coordinate check so the ✕ chip anchor and tests work on phones. Tests moved from blind 24px sweeps/ratios to exact `cellToScreen` targets.
   - Files: `src/scene/init-scene.ts` (mutable overviewBase, frameOverview on resize, portrait-only pullback), `src/scene/track-renderer.ts` (cellToScreen finite check + camera matrix refresh), `e2e/smoke.spec.ts` (tap/delete/walkthrough use cellToScreen).
 
-## Phase 5 — Production hygiene (FR5)
+## Phase 5 — Production hygiene (FR5) [checkpoint: 6841097]
 
-- [ ] Task: Document `@fontsource/baloo-2` in `tech-stack.md` (before implementation)
-- [ ] Task: Add `@fontsource/baloo-2`, import in `main.ts`, keep fallback stack
-- [ ] Task: Gate the debug grid toggle to `import.meta.env.DEV`
-- [ ] Task: iOS PWA meta (`apple-mobile-web-app-capable`, `apple-touch-icon`, status bar style)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Document `@fontsource/baloo-2` in `tech-stack.md` (before implementation)
+  - Acceptance: tech-stack.md lists @fontsource/baloo-2 as the bundled kid-font source (no runtime font download).
+- [x] Task: Add `@fontsource/baloo-2`, import in `main.ts`, keep fallback stack
+  - Acceptance: the app bundles Baloo 2 (offline-safe) and renders the playful font; fallback stack stays for the rare non-loaded case.
+- [x] Task: Gate the debug grid toggle to `import.meta.env.DEV`
+  - Acceptance: production builds mount no `#` grid toggle; dev builds and e2e still see it.
+- [x] Task: iOS PWA meta (`apple-mobile-web-app-capable`, `apple-touch-icon`, status bar style)
+  - Acceptance: an iOS Add-to-Home-Screen installs as standalone with a proper icon and themed status bar.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 34/34 dev (toggle present) + production build served and asserted no `.grid-toggle`, rail intact. `pnpm build` green (font bundled, PWA regenerated).
+  - Files: `conductor/tech-stack.md` (font row), `package.json`/`pnpm-lock.yaml` (@fontsource/baloo-2 ^5.3.0), `src/main.ts` (font import), `src/ui/app.ts` (toggle gated to DEV + guarded wiring), `index.html` (apple meta + touch icon), `e2e/smoke.spec.ts` (PROD_E2E toggle-absent guard).
 
 ## Phase 6 — E2E gesture coverage (FR6.2)
 
