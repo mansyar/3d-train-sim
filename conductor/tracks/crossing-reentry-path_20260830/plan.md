@@ -6,7 +6,7 @@ Workflow: TDD for logic-bearing code (`src/core`, `src/state`), acceptance
 criteria + smoke + manual tablet check for scene wiring
 (`conductor/workflow.md`). One task in flight at a time.
 
-## Phase 1: Reproduce, Fix, Verify
+## Phase 1: Reproduce, Fix, Verify [checkpoint: 119a5c7]
 
 - [x] Task: Write failing regression tests for crossing re-entry (logic — TDD)
 
@@ -63,8 +63,8 @@ criteria + smoke + manual tablet check for scene wiring
 - **Verification Report:** Automated — `pnpm check` ✅ (biome +
   `tsc --noEmit` + 225 unit tests, 2026-08-30), pathing.ts coverage 97.4% ✅,
   Playwright smoke 14/14 ✅ (zero console errors, zero external requests).
-  **Manual verification pending — awaiting user confirmation.**
-  - Checkpoint: `56aa365` (last functional commit).
+  Manual - user confirmed 2026-08-30 ("yes").
+  - Checkpoint: `119a5c7` (last functional commit).
 
 Manual Verification Steps:
 1. Start the dev server: `pnpm dev`
