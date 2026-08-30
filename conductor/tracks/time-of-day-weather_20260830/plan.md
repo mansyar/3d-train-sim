@@ -96,12 +96,34 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     building. Wired into `init-scene.ts` (`paintAmbience` = sky + lights +
     glows, also painted once for the reduced-motion static frame). Full
     `pnpm check` 243/243 ✅.
-- [ ] Task: Cloud puffs + instanced rain/snow particles + reduced-motion —
+- [x] Task: Cloud puffs + instanced rain/snow particles + reduced-motion —
   *criteria: budgets ≤600/≤400, zero per-frame allocations, drift hidden under
   reduced motion*
-- [ ] Task: Ground whitening while snowing, melting back — *criteria: meadow
-  lerps white, track pieces unchanged*
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  `2d33e45`
+
+  - **Notes:** `weather-particles.ts` — 600 rain / 400 snow points in fixed
+    Float32 pools with in-place updates (wrap at the storm-box floor, snow
+    sway via sine phase), plus 6 drifting cloud puff sprites; opacity follows
+    lerped intensities (`e595e39` + `66cc9b3` TDD'd the intensity map and
+    `lerpIntensity`, 8/8). Reduced motion: the spin loop renders a single
+    static frame, so all drift is inherently frozen and the initial paint
+    shows a clear mid-morning sky. Full `pnpm check` 245/245 ✅.
+- [x] Task: Ground whitening while snowing, melting back — *criteria: meadow
+  lerps white, track pieces unchanged* (folded into `2d33e45`)
+
+  - **Notes:** `ground.ts` now returns a handle with `setSnow(amount)` —
+    material color lerps grass `0x8fce8f` → settled-snow `0xf0f5ee` from the
+    lerped weather `snow` intensity; track pieces are separate meshes and
+    keep their colors. Driven per frame from `paintAmbience`; melts back as
+    the weather drifts away from snow.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+- **Automated:** 2026-08-30 — full `pnpm check` 245/245 ✅ (biome, tsc, unit)
+  and Playwright smoke 37/37 ✅ with zero console errors. Coverage on new
+  core logic: sky-palette 6/6, weather-cycle 8/8 tests.
+- **Manual:** user confirmed the checkpoint on 2026-08-30 (dev-server visual
+  pass deferred to the Phase 4 tablet check, per plan). Checkpoint commit:
+  `2d33e45`.
 
 ## Phase 3: Life & sound (scene/audio glue — criteria-verified)
 
