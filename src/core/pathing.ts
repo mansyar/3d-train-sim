@@ -172,7 +172,6 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
   }
 
   const steps: PathStep[] = [];
-  const ridden = new Set<string>();
   let curId = startId;
   let curEntry: Edge = entryEdge;
   let closed = false;
@@ -193,14 +192,18 @@ export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
         : `piece ${curId} has no ${OPPOSITE_EDGE[curEntry]} end`,
     );
     steps.push({ pieceId: curId, from: curEntry, to: exitEnd.edge });
-    ridden.add(curId);
 
     const partner = partnerOf.get(curId)?.get(exitEnd.key);
     if (!partner) break; // open end — the ride finished this pass
-    if (ridden.has(partner.pieceId)) {
-      closed = partner.pieceId === startId && partner.edge === entryEdge;
-      break; // back where we started — the loop is closed
+    if (partner.pieceId === startId && partner.edge === entryEdge) {
+      closed = true; // back at the exact start state — the lap is complete
+      break;
     }
+    // Re-entering an already-ridden piece through another edge is a legal
+    // continuation (a crossing passed twice in one lap), never a closure.
+    // Termination is guaranteed: the (piece, entry-edge) routing is a
+    // deterministic bijection, so the walk either lands on the start state
+    // (closed layout) or runs off an open end.
     curId = partner.pieceId;
     curEntry = partner.edge;
   }

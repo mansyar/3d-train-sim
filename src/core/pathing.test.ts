@@ -243,3 +243,108 @@ describe('solvePath — crossing (straight-through only)', () => {
     expect(path.steps).toEqual([{ pieceId: 'x', from: 'west', to: 'east' }]);
   });
 });
+
+describe('solvePath — crossing re-entry (loops through one crossing twice)', () => {
+  it('closes a fully-connected loop that passes the same crossing twice per lap', () => {
+    // A pretzel: the lap crosses `cx` north→south and later west→east. Every
+    // piece end is connected — a closed layout, so the ride must loop forever
+    // (product rule: zero dead ends). The walk must re-enter the ridden
+    // crossing instead of stopping at its edge.
+    const pieces = [
+      piece('a', 'corner', 0, 1, 90), // east+south
+      piece('b', 'straight', 1, 1, 90), // east+west
+      piece('n', 'corner', 2, 1, 180), // south+west
+      piece('cx', 'crossing', 2, 2, 0),
+      piece('s23', 'corner', 2, 3, 270), // west+north
+      piece('e13', 'corner', 1, 3, 0), // north+east
+      piece('w', 'corner', 1, 2, 90), // east+south
+      piece('e', 'straight', 3, 2, 90), // east+west
+      piece('c42', 'corner', 4, 2, 180), // south+west
+      piece('s43', 'straight', 4, 3, 0), // north+south
+      piece('c44', 'corner', 4, 4, 270), // west+north
+      piece('s34', 'straight', 3, 4, 90), // east+west
+      piece('s24', 'straight', 2, 4, 90), // east+west
+      piece('s14', 'straight', 1, 4, 90), // east+west
+      piece('c04', 'corner', 0, 4, 0), // north+east
+      piece('s03', 'straight', 0, 3, 0), // north+south
+      piece('s02', 'straight', 0, 2, 0), // north+south
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(true);
+    // The full lap: 17 pieces with the crossing ridden twice.
+    expect(path.steps).toHaveLength(18);
+    expect(path.steps.filter((s) => s.pieceId === 'cx')).toEqual([
+      { pieceId: 'cx', from: 'north', to: 'south' },
+      { pieceId: 'cx', from: 'west', to: 'east' },
+    ]);
+
+    // Consecutive steps are physically connected, and the lap wraps: the
+    // last exit lands back on the first piece's entry cell.
+    for (let i = 1; i < path.steps.length; i++) {
+      const prev = path.steps[i - 1];
+      const cur = path.steps[i];
+      if (!prev || !cur) throw new Error('step missing from traversal');
+      const prevPlaced = placedOf(pieces, prev.pieceId);
+      const curPlaced = placedOf(pieces, cur.pieceId);
+      expect(neighbourOf(prevPlaced.cell, prev.to)).toEqual(curPlaced.cell);
+      expect(neighbourOf(curPlaced.cell, cur.from)).toEqual(prevPlaced.cell);
+    }
+    const first = path.steps[0];
+    const last = path.steps[path.steps.length - 1];
+    if (!first || !last) throw new Error('loop traversal incomplete');
+    const firstPlaced = placedOf(pieces, first.pieceId);
+    const lastPlaced = placedOf(pieces, last.pieceId);
+    expect(neighbourOf(lastPlaced.cell, last.to)).toEqual(firstPlaced.cell);
+    expect(neighbourOf(firstPlaced.cell, first.from)).toEqual(lastPlaced.cell);
+
+    // Deterministic: same layout, same lap.
+    expect(solvePath(pieces)).toEqual(path);
+  });
+
+  // The spliced-crossing oval reused by both guard tests: a closed oval
+  // (12 pieces) whose only junction is the crossing `cx`, entered west.
+  const ovalPieces = [
+    piece('w', 'straight', 1, 2, 90), // east edge meets crossing west
+    piece('cx', 'crossing', 2, 2, 0),
+    piece('e', 'straight', 3, 2, 90), // west edge meets crossing east
+    piece('a0', 'corner', 0, 2, 90), // east+south
+    piece('s1', 'straight', 0, 3, 0), // north+south
+    piece('a1', 'corner', 0, 4, 0), // north+east
+    piece('s2', 'straight', 1, 4, 90), // east+west
+    piece('s3', 'straight', 2, 4, 90), // east+west
+    piece('s4', 'straight', 3, 4, 90), // east+west
+    piece('a2', 'corner', 4, 4, 270), // west+north
+    piece('s5', 'straight', 4, 3, 0), // north+south
+    piece('a3', 'corner', 4, 2, 180), // south+west
+  ];
+
+  it('still closes when a crossing is spliced into a simple oval (one pass per lap)', () => {
+    const pieces = ovalPieces;
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(true);
+    expect(path.steps).toHaveLength(12);
+    expect(path.steps.filter((s) => s.pieceId === 'cx')).toEqual([
+      { pieceId: 'cx', from: 'west', to: 'east' },
+    ]);
+  });
+
+  it('shuttles a closed loop with a dangling spur through the crossing (open layout)', () => {
+    const pieces = [
+      ...ovalPieces,
+      piece('spur', 'straight', 2, 1, 0), // south edge meets crossing north
+      piece('tip', 'straight', 2, 0, 0), // open north end - the dead end
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    // Starts at the spur's dead end, rides through the crossing, and stops
+    // at the crossing's open south face (the ride layer shuttles back).
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['tip', 'spur', 'cx']);
+    expect(path.steps[2]).toEqual({ pieceId: 'cx', from: 'north', to: 'south' });
+  });
+});
