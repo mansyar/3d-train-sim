@@ -72,7 +72,25 @@ acceptance criteria + smoke tests per `workflow.md`.
 - [~] Task: Implement `src/core/perf-monitor.ts` to green; run coverage, target >80%
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 — Quality Levels & Scene Wiring (scene, acceptance criteria)
+## Phase 2 — Quality Levels & Scene Wiring (scene, acceptance criteria) [checkpoint: 50b6d22]
+
+### Verification Report — Phase 2
+- Automated: `pnpm exec tsc --noEmit` clean; `pnpm exec biome check .` clean;
+  `pnpm test` → 283 tests across 24 files, all passing.
+- Browser verification (Playwright, 2026-08-30):
+  - No `?perf=debug` → 0 `.perf-debug` elements in the DOM; with the param →
+    overlay visible, readable (fps + Q level), non-interactive.
+  - Frozen-canvas regression fixed: removed a dangling `invalidateCanvasLayer()`
+    call that threw on the first L1/L2 apply; because the rAF loop schedules
+    the next frame only after `render()`, the exception froze the canvas
+    permanently. Ride + degrade runs now show zero console/page errors.
+  - Headless sustained critical: 1536px Q0 → 1152px Q1 → 768px Q2; fps
+    recovered as load eased.
+  - Heavy scene (track run + 40 trees + riding train) under CDP CPU
+    throttling 6×: Q0 → Q1 after ~6 s; unthrottled → Q0 restored exactly
+    10 s later (4 s cooldown + 6 s health, matching the TDD'd constants).
+- Manual verification: user confirmed the plan (2026-08-30); tablet
+  spot-check deferred to Phase 3 manual pass.
 
 - [x] Task: Define level presets and implement `src/scene/quality-applier.ts` (50b6d22)
   - Acceptance: L0 reproduces today's look exactly; L1 clamps render scale
@@ -123,7 +141,8 @@ acceptance criteria + smoke tests per `workflow.md`.
       in the DOM. Updates at most every 250 ms (readable, no flicker),
       `pointer-events: none`, no animation, seeded once at boot so the
       reduced-motion static frame still shows the HUD.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: report above; checkpoint `50b6d22`; user confirmed 2026-08-30.
 
 ## Phase 3 — Verification & Docs
 
