@@ -155,10 +155,36 @@ export function initScene(
   let visibleSteamPuffs = 0;
   let loadedTrain: TrainKind | null = null;
 
-  /** The rig serving the primary (largest) active ride — the camera's star. */
+  /** What the chase camera films: one riding train, or the whole meadow. */
+  type FilmedTarget = { kind: 'train'; anchor: string } | { kind: 'overview' };
+  let filmed: FilmedTarget = { kind: 'overview' };
+
+  /** The rig serving the primary (largest) active ride. */
   const primaryRig = (): TrainRig | null => {
     const primary = rides.rides()[0];
     return primary ? (rigs.get(primary.anchor) ?? null) : null;
+  };
+
+  /** The rig the camera is currently filming, or null for the overview. */
+  const filmedRig = (): TrainRig | null =>
+    filmed.kind === 'train' ? (rigs.get(filmed.anchor) ?? null) : null;
+
+  /**
+   * Keeps the camera's chosen star sticky: a running ride keeps the camera
+   * even as more trains join (a second ▶ never yanks the view), and a filmed
+   * train that stops hands the camera to the next riding train — or eases
+   * home to the overview when the last ride ends.
+   */
+  const syncFilmed = (ridesList: readonly RideState[]): void => {
+    if (filmed.kind === 'train') {
+      const anchor = filmed.anchor;
+      if (ridesList.some((ride) => ride.anchor === anchor)) {
+        return; // Still filming a running train.
+      }
+    }
+    filmed = ridesList[0]
+      ? { kind: 'train', anchor: ridesList[0].anchor }
+      : { kind: 'overview' };
   };
 
   /** This rig's live ride state — null while parked or between rides. */
@@ -306,6 +332,7 @@ export function initScene(
     for (const rig of rigs.values()) rig.puffs.emit();
   });
   const unsubscribeRides = rides.subscribe((mode, ridesList) => {
+    syncFilmed(ridesList);
     syncRigs(ridesList);
     for (const rig of rigs.values()) rig.puffs.setEmitting(mode === 'riding');
   });
@@ -389,7 +416,7 @@ export function initScene(
   const desiredLook = new Vector3();
   const updateCamera = (dt: number): void => {
     if (reducedMotion) return;
-    const star = primaryRig();
+    const star = filmedRig();
     if (star) {
       desiredPosition.copy(star.model.position).add(FOLLOW_OFFSET);
       desiredLook.copy(star.model.position);
