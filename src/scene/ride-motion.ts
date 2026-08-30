@@ -2,7 +2,7 @@ import type { Object3D } from 'three';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf } from '../core/track-graph';
-import type { RideController, RideState } from '../state/ride';
+import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
 import { cellToWorld } from './track-renderer';
@@ -73,21 +73,25 @@ interface Segment {
 }
 
 export interface RideMotion {
+  /** Begin (or re-begin) following the given ride state. */
+  begin(state: RideState): void;
   /** Advance the animation by dt seconds. Allocates nothing per frame. */
   update(dt: number): void;
   dispose(): void;
 }
 
 /**
- * Makes the locomotive follow the solved path: closed loops cycle forever,
+ * Makes one locomotive follow one solved path: closed loops cycle forever,
  * open layouts ride to the dead end, pause a beat, and shuttle back. Mid-ride
  * edits ease the train to a gentle standstill right where it is — a toy left
- * on the track, never an error.
+ * on the track, never an error. One motion serves one train; multi-train
+ * spawning lives in the scene layer, which drives `begin` per ride.
  */
 export function createRideMotion(
   model: Object3D,
   world: WorldStore,
-  ride: RideController,
+  /** This train's live ride state — null while parked or between rides. */
+  getState: () => RideState | null,
   onPausedChange?: (paused: boolean) => void,
   onStationStop?: (stationId: string) => void,
   followers: readonly Object3D[] = [],
@@ -110,11 +114,6 @@ export function createRideMotion(
   let pendingStationId: string | null = null;
   /** Eases 0 (parked) ⇄ 1 (riding) so stops and starts stay gentle. */
   let speedScale = 0;
-  let unsubscribe: (() => void) | null = ride.subscribe((mode, rides) => {
-    const primary = rides[0];
-    if (mode === 'riding' && primary) beginRide(primary);
-    // Idle keeps the last pose — update() eases speedScale to 0 in place.
-  });
 
   /** Reports dead-end pauses upward so the chug softens with the motion. */
   let paused = false;
@@ -327,10 +326,16 @@ export function createRideMotion(
   }
 
   return {
+    /** Begins (or re-begins) following the given ride state. */
+    begin(state: RideState): void {
+      beginRide(state);
+    },
+
     update(dt: number) {
       if (total <= 0) return;
       const stopping = stationStopTimer > 0;
-      const targetScale = ride.mode() === 'riding' && !stopping ? 1 : 0;
+      const active = getState() !== null;
+      const targetScale = active && !stopping ? 1 : 0;
       if (speedScale !== targetScale) {
         const step = dt / STOP_EASE_SECONDS;
         const gap = targetScale - speedScale;
@@ -359,7 +364,7 @@ export function createRideMotion(
           brakeTarget = null;
           pendingStationId = null;
           poseTrain(distance);
-          if (ride.mode() === 'riding') {
+          if (getState() !== null) {
             stationStopTimer = STATION_STOP_SECONDS;
             if (stationId) onStationStop?.(stationId); // Ding-ding from rest.
           }
@@ -383,7 +388,7 @@ export function createRideMotion(
       distance += travelDirection * RIDE_SPEED * speedScale * dt;
       if (travelDirection === 1) {
         if (distance >= total) {
-          if (ride.mode() === 'riding' && ride.ride()?.path.closed) {
+          if (getState()?.path.closed) {
             // Closed loops finish the lap, then roll on from the top.
             if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
             distance %= total;
@@ -413,8 +418,6 @@ export function createRideMotion(
 
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
-      unsubscribe?.();
-      unsubscribe = null;
       segments = [];
       total = 0;
       stops = [];
