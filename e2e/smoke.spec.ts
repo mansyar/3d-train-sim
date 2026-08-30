@@ -726,8 +726,8 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
   await page.waitForTimeout(2500);
   expect(await wagonCount()).toBe(2);
 
-  // Switching trains mid-ride eases the ride to a stop; the same wagon set
-  // re-attaches behind the new engine — never a third wagon, never none.
+  // Switching trains mid-ride keeps every train rolling (spec R3): the new
+  // engine takes over in place — no restart, same wagons still coupled.
   await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -737,7 +737,7 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
     if (!world) throw new Error('dev world handle missing');
     if (!world.selectTrain('diesel')) throw new Error('train selection failed');
   });
-  await expect(page.locator('.ride-toggle')).not.toHaveClass(/is-riding/);
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
   await page.waitForTimeout(800);
   expect(await wagonCount()).toBe(2);
 

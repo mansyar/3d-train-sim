@@ -35,9 +35,10 @@ if (root) {
     watchMutePersistence(audio, world);
   });
   let scene: SceneHandle | null = null;
-  // The scene binds after the app mounts — queue film-count listeners until
-  // then, so the 🎥 button hears every ride change from the very first one.
+  // The scene binds after the app mounts — queue subscription listeners until
+  // then, so the UI hears every ride change from the very first one.
   const filmCountListeners: ((count: number) => void)[] = [];
+  const rideModeListeners: ((riding: boolean) => void)[] = [];
   const canvas = mountApp(root, {
     isReady: () => !restoring,
     world,
@@ -61,10 +62,16 @@ if (root) {
       if (!scene) return () => {};
       return scene.subscribeFilmCount(listener);
     },
+    subscribeRideMode: (listener) => {
+      rideModeListeners.push(listener);
+      if (!scene) return () => {};
+      return scene.subscribeRideMode(listener);
+    },
   });
   scene = initScene(canvas, world, audio);
   // Replay the queued listeners into the freshly bound scene.
   for (const listener of filmCountListeners) scene.subscribeFilmCount(listener);
+  for (const listener of rideModeListeners) scene.subscribeRideMode(listener);
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly and
   // probe the live scene (e.g. the cargo wagon count).

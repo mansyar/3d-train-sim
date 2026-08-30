@@ -85,6 +85,8 @@ export interface SceneHandle {
   cycleFilmTarget(): void;
   /** The number of riding trains, pushed on every ride change (🎥 visibility). */
   subscribeFilmCount(listener: (count: number) => void): () => void;
+  /** Whether any train is riding, pushed on every ride change (▶/⏹ face). */
+  subscribeRideMode(listener: (riding: boolean) => void): () => void;
 }
 
 export function initScene(
@@ -156,7 +158,7 @@ export function initScene(
   const rigs = new Map<string, TrainRig>(); // assigned, keyed by ride anchor
   const spares: TrainRig[] = []; // built rigs resting between rides
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
-  const wagonTemplates: Object3D[] = []; // loaded once, cloned per rig
+  const wagonTemplates: (Object3D | null)[] = []; // by slot index, cloned per rig
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
@@ -221,10 +223,24 @@ export function initScene(
   /** The UI shows the 🎥 button only while two or more trains ride. */
   const filmCountListeners = new Set<(count: number) => void>();
 
+  /** The UI's ▶/⏹ face follows the real ride state (scoped edits keep riding). */
+  const rideModeListeners = new Set<(riding: boolean) => void>();
+
   /** This rig's live ride state — null while parked or between rides. */
   const rigState = (rig: TrainRig): RideState | null => {
     if (!rig.anchor) return null;
     return rides.rides().find((ride) => ride.anchor === rig.anchor) ?? null;
+  };
+
+  /** The train nearest the meadow's heart (where the overview camera looks). */
+  const nearestRig = (candidates: Iterable<TrainRig>): TrainRig | null => {
+    let nearest: TrainRig | null = null;
+    for (const rig of candidates) {
+      if (!nearest || rig.model.position.lengthSq() < nearest.model.position.lengthSq()) {
+        nearest = rig;
+      }
+    }
+    return nearest;
   };
 
   /** The one shared chug softens only when every riding train is paused. */
@@ -250,11 +266,13 @@ export function initScene(
     if (!template) return null; // assets not ready — ride on without visuals
     const model = template.clone(true);
     scene.add(model);
-    const wagons = wagonTemplates.map((wagon) => {
-      const clone = wagon.clone(true);
-      scene.add(clone);
-      return clone;
-    });
+    const wagons = wagonTemplates
+      .filter((wagon): wagon is Object3D => wagon !== null)
+      .map((wagon) => {
+        const clone = wagon.clone(true);
+        scene.add(clone);
+        return clone;
+      });
     const puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(puffs.group);
     parkFollowersBehind(model, wagons);
@@ -346,14 +364,28 @@ export function initScene(
       });
   }
 
-  for (const slot of wagonSlots()) {
+  for (const [index, slot] of wagonSlots().entries()) {
     loadWagon(slot)
       .then((wagon) => {
         if (disposed) {
           disposeObject(wagon);
           return;
         }
-        wagonTemplates.push(wagon); // Cloned per rig, in pulling order.
+        wagonTemplates[index] = wagon; // Slot order — pulling order preserved.
+        // Rigs built before the wagons arrived (the parked opener train) get
+        // their cargo now; a riding train's wagons re-pose on the next tick.
+        for (const rig of [...rigs.values(), ...spares]) {
+          if (rig.wagons.length >= wagonSlots().length) continue;
+          for (const old of rig.wagons) scene.remove(old);
+          rig.wagons.length = 0;
+          for (const template of wagonTemplates) {
+            if (!template) continue;
+            const clone = template.clone(true);
+            scene.add(clone);
+            rig.wagons.push(clone);
+          }
+          if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
+        }
         syncRigs(rides.rides());
       })
       .catch(() => {
@@ -370,6 +402,7 @@ export function initScene(
     syncRigs(ridesList);
     for (const rig of rigs.values()) rig.puffs.setEmitting(mode === 'riding');
     for (const listener of filmCountListeners) listener(ridesList.length);
+    for (const listener of rideModeListeners) listener(mode === 'riding');
   });
 
   /** Swaps one rig's locomotive in place — rides keep rolling (spec R3). */
@@ -471,7 +504,9 @@ export function initScene(
     () => spinTarget,
     (dt) => {
       visibleSteamPuffs = 0;
-      for (const rig of rigs.values()) {
+      // Every little train ticks — parked spares too, so a pre-ride whistle
+      // burst still puffs from the meadow's resting train.
+      for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.update(dt);
         rig.puffs.update(dt);
         visibleSteamPuffs += rig.puffs.activeCount();
@@ -520,16 +555,9 @@ export function initScene(
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     steamPuffCount: () => visibleSteamPuffs,
     whistlePuff: () => {
-      // The filmed train answers; from the overview, the nearest train does
-      // (nearest to the meadow's heart, where the overview camera looks).
-      const target =
-        filmedRig() ??
-        [...rigs.values()].reduce<TrainRig | null>((nearest, rig) => {
-          if (!nearest) return rig;
-          return rig.model.position.lengthSq() < nearest.model.position.lengthSq()
-            ? rig
-            : nearest;
-        }, null);
+      // The filmed train answers; from the overview the nearest riding train
+      // does; before any ride, the parked opener train answers.
+      const target = filmedRig() ?? nearestRig(rigs.values()) ?? nearestRig(spares);
       target?.puffs.burst();
     },
     startRide: () => rides.start(),
@@ -542,6 +570,12 @@ export function initScene(
       filmCountListeners.add(listener);
       return () => {
         filmCountListeners.delete(listener);
+      };
+    },
+    subscribeRideMode(listener) {
+      rideModeListeners.add(listener);
+      return () => {
+        rideModeListeners.delete(listener);
       };
     },
     dispose(): void {
@@ -566,7 +600,9 @@ export function initScene(
       spares.length = 0;
       for (const model of locomotiveTemplates.values()) disposeObject(model);
       locomotiveTemplates.clear();
-      for (const wagon of wagonTemplates) disposeObject(wagon);
+      for (const wagon of wagonTemplates) {
+        if (wagon) disposeObject(wagon);
+      }
       wagonTemplates.length = 0;
       for (const dispose of disposables) dispose();
       renderer.dispose();
