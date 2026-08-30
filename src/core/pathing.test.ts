@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { solvePath, solveRidePaths } from './pathing';
+import { solvePath, solveRidePaths, type RideComponent, selectRideComponents } from './pathing';
 import { endpointsFor } from './pieces';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
 
@@ -463,5 +463,80 @@ describe('solveRidePaths — one path per connected component', () => {
     expect(paths[0]?.closed).toBe(false);
     expect(paths[0]?.steps.map((s) => s.pieceId)).toEqual(['w', 'x', 'e']);
     expect(paths[0]?.steps[1]).toEqual({ pieceId: 'x', from: 'west', to: 'east' });
+  });
+});
+
+describe('selectRideComponents — rank and cap concurrent rides', () => {
+  const component = (id: string, size: number, anchor: string): RideComponent => ({
+    pieceIds: Array.from({ length: size }, (_, i) => `${id}-${i}`),
+    path: { steps: [], closed: false },
+    anchor,
+  });
+
+  it('returns [] for an empty meadow', () => {
+    expect(selectRideComponents([])).toEqual([]);
+  });
+
+  it('selects all components when there are at most cap of them', () => {
+    const components = [component('a', 3, '0,0'), component('b', 5, '4,0'), component('c', 1, '7,7')];
+
+    expect(selectRideComponents(components)).toEqual([
+      component('b', 5, '4,0'),
+      component('a', 3, '0,0'),
+      component('c', 1, '7,7'),
+    ]);
+  });
+
+  it('ranks by most pieces first, cell-key tiebreak for equal sizes', () => {
+    const components = [
+      component('tie-small', 4, '9,9'),
+      component('big', 8, '5,5'),
+      component('tie-small-anchor', 4, '0,0'),
+      component('tiny', 2, '1,1'),
+    ];
+
+    const selected = selectRideComponents(components);
+
+    expect(selected.map((c) => c.anchor)).toEqual(['5,5', '0,0', '9,9', '1,1']);
+  });
+
+  it('caps concurrent rides at 4 by default, keeping the top-ranked', () => {
+    const components = [
+      component('one', 1, '0,0'),
+      component('two', 2, '1,0'),
+      component('three', 3, '2,0'),
+      component('four', 4, '3,0'),
+      component('five', 5, '4,0'),
+      component('six', 6, '5,0'),
+    ];
+
+    const selected = selectRideComponents(components);
+
+    expect(selected).toHaveLength(4);
+    expect(selected.map((c) => c.anchor)).toEqual(['5,0', '4,0', '3,0', '2,0']);
+  });
+
+  it('honours an explicit cap', () => {
+    const components = [component('a', 1, '0,0'), component('b', 2, '1,0'), component('c', 3, '2,0')];
+
+    expect(selectRideComponents(components, 2).map((c) => c.anchor)).toEqual(['2,0', '1,0']);
+  });
+
+  it('is deterministic under any input order', () => {
+    const components = [
+      component('a', 3, '0,0'),
+      component('b', 5, '4,0'),
+      component('c', 5, '2,0'),
+      component('d', 2, '7,7'),
+    ];
+
+    const selected = selectRideComponents(components);
+    for (const shuffled of [
+      [...components].reverse(),
+      [...components.slice(2), ...components.slice(0, 2)],
+      [...components].sort((a, b) => b.anchor.localeCompare(a.anchor)),
+    ]) {
+      expect(selectRideComponents(shuffled)).toEqual(selected);
+    }
   });
 });

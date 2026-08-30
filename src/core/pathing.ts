@@ -26,6 +26,38 @@ export interface TrainPath {
   closed: boolean;
 }
 
+/** One connected track component, ready to ride. */
+export interface RideComponent {
+  /** Every piece id in the component, each exactly once. */
+  pieceIds: readonly string[];
+  /** The component's ride path (its deterministic walk). */
+  path: TrainPath;
+  /** Smallest cell key in the component — a stable, unique anchor. */
+  anchor: string;
+}
+
+/**
+ * The rides that get a train: ranked most pieces first (a bigger layout is the
+ * kid's centre of attention), cell-key tiebreak for equal sizes, then capped —
+ * beyond-cap components stay static scenery, never a failure. Deterministic
+ * under any input order.
+ */
+export function selectRideComponents(
+  components: readonly RideComponent[],
+  cap = 4,
+): RideComponent[] {
+  return components
+    .map((component, index) => ({ component, index }))
+    .sort(
+      (a, b) =>
+        b.component.pieceIds.length - a.component.pieceIds.length ||
+        (a.component.anchor < b.component.anchor ? -1 : 1) ||
+        a.index - b.index,
+    )
+    .slice(0, cap)
+    .map(({ component }) => component);
+}
+
 /** Next compass edge clockwise — how endpoint labels advance with yaw. */
 const NEXT_EDGE: Record<Edge, Edge> = {
   north: 'east',
@@ -227,17 +259,31 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
 
 /**
  * One ride per connected track component: every loop and line a toddler builds
- * gets its own train. Paths are ordered by each component's smallest cell key,
- * so the result never depends on array order (a cell hosts one piece, so the
- * anchor keys are unique across components).
+ * gets its own train. Components are ordered by each one's smallest cell key
+ * (the anchor), so the result never depends on array order — a cell hosts one
+ * piece, so anchor keys are unique across components.
  */
-export function solveRidePaths(pieces: readonly PlacedPiece[]): TrainPath[] {
+export function rideComponentsOf(pieces: readonly PlacedPiece[]): RideComponent[] {
   if (pieces.length === 0) return [];
   const graph = buildGraph(pieces);
   return collectComponents(pieces, graph.partnerOf)
-    .map((ids) => ({ ids, anchor: minCellKeyOf(ids, graph.cellOf) }))
+    .map((ids) => ({
+      pieceIds: ids,
+      anchor: minCellKeyOf(ids, graph.cellOf),
+    }))
     .sort((a, b) => (a.anchor < b.anchor ? -1 : 1))
-    .map(({ ids }) => walkComponent(ids, graph));
+    .map(({ pieceIds, anchor }) => ({
+      pieceIds,
+      anchor,
+      path: walkComponent(pieceIds, graph),
+    }));
+}
+
+/**
+ * One ride path per connected track component, in anchor order.
+ */
+export function solveRidePaths(pieces: readonly PlacedPiece[]): TrainPath[] {
+  return rideComponentsOf(pieces).map((component) => component.path);
 }
 
 /**
@@ -247,3 +293,4 @@ export function solveRidePaths(pieces: readonly PlacedPiece[]): TrainPath[] {
 export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
   return solveRidePaths(pieces)[0] ?? { steps: [], closed: false };
 }
+
