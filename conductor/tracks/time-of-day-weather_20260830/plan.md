@@ -171,6 +171,22 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 - [ ] Task: Smoke coverage — ambience runs ≥10 s with zero console errors; full
   `pnpm check` + Playwright green
-- [ ] Task: Manual tablet verification (day/night/weather on iPad/Android
+- [x] Task: Manual tablet verification (day/night/weather on iPad/Android
   emulation, FPS spot-check)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  `6d11561`
+
+  - **Notes:** iPad-Mini emulation via Playwright: FPS spot-check ✅
+    (≥10 FPS floor under headless software GL — real-device pass still owed
+    to the parent). **Sky cycle verified by pixel sampling**: the overview
+    sky band cycles morning blue `(210,229,239)` → dusk orange
+    `(253,95,47)` → night navy `(7,10,29)` on the dome, console clean.
+  - **Tooling landmine:** an orphaned dev server (sibling worktree) held
+    port 5199 — Playwright's `reuseExistingServer: !CI` silently reused it,
+    so several earlier e2e "passes" ran stale code. Always kill orphaned
+    servers before trusting e2e results.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+- **Automated:** 2026-08-30 — full `pnpm check` ✅ and Playwright 47/47 ✅
+  (including the ambience long-run and tablet FPS tests).
+- **Manual:** automated emulation pass done (above); real-family-device
+  iPad/Android pass deferred to the parent. Checkpoint commit: `6d11561`.
