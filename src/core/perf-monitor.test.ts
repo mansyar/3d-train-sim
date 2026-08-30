@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createPerfMonitor,
+  createQualityController,
   PERF_HEALTHY_FPS,
   PERF_SAMPLE_CAPACITY,
   PERF_STRAINED_FPS,
   PERF_WINDOW_SECONDS,
-  createPerfMonitor,
-  createQualityController,
 } from './perf-monitor';
 
 const FRAME_60FPS = 1 / 60;
@@ -109,7 +109,9 @@ describe('createPerfMonitor', () => {
 });
 
 describe('createQualityController', () => {
-  const STEP = 0.1;
+  // Binary-exact step (2^-6 s): frame-like updates whose repeated sums hit
+  // the 2s/4s/6s timing thresholds exactly instead of drifting under them.
+  const STEP = 1 / 64;
   function feedVerdict(
     controller: ReturnType<typeof createQualityController>,
     verdict: 'healthy' | 'strained' | 'critical',
@@ -182,7 +184,12 @@ describe('createQualityController', () => {
     driveToStrainLevel2(controller);
     expect(controller.level).toBe(2);
 
-    // Recovery hold is longer than the 2s degradation hold.
+    // Recovery hold is longer than the 2s degradation hold, and the
+    // post-change cooldown freezes progress for its first 4s.
+    feedVerdict(controller, 'healthy', 2);
+    expect(controller.level).toBe(2);
+    feedVerdict(controller, 'healthy', 2);
+    expect(controller.level).toBe(2);
     feedVerdict(controller, 'healthy', 2);
     expect(controller.level).toBe(2);
     feedVerdict(controller, 'healthy', 2);
