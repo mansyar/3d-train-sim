@@ -17,8 +17,15 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     Files: `src/core/day-clock.ts`, `src/core/day-clock.test.ts`.
     Why: deterministic pure clock lets the scene lerp sky/light from
     `phase`+`fraction` with zero DOM/timer coupling (attract-clock precedent).
-- [ ] Task: Implement `day-clock.ts` (Green) — pure elapsed-seconds → phase +
+- [x] Task: Implement `day-clock.ts` (Green) — pure elapsed-seconds → phase +
   sun-position mapping (`src/core/`, `attract-clock.ts` precedent)
+  `6c3b56b`
+
+  - **Notes:** Implemented in the same atomic red→green commit as the failing
+    suite; 7/7 passing on first run. Public surface: `DAY_LENGTH_MS` (150 s),
+    `DayPhase`, `phaseAtFraction()` (wraps out-of-range fractions), and
+    `createDayClock({ now })` exposing `phase`, `fraction` (0..1, drives the
+    sun/moon arc) and a `phase`-change subscription.
 - [ ] Task: Write failing tests for `weather-cycle.ts` (Red) — clear→cloudy→rain
   →snow drift, 5–8 s cross-fade ramps, 30–45 s hold times, reduced-motion flag
   exposure
