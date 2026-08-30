@@ -50,7 +50,8 @@ Supporting guardrails:
 - ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
 - ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons (colors/other variants still roadmap)
 - Track switches and branches
-- Bridges, tunnels, elevation
+- ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it). Tunnels and elevation remain roadmap.
+- Tunnels, elevation
 - Time of day and weather
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
 

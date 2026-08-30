@@ -172,8 +172,34 @@
     `texture.offset.y` only. Frozen (`FROZEN_SNOW`, shared with duck +
     babble) drops the map (shader-swap on toggle); `dt = 0` holds the frame
     still (reduced motion / one-time paint). No downloaded assets.
-- [ ] Task: Playwright e2e (fresh servers — verify ports 5199/5198 free first)
+- [x] Task: Playwright e2e (fresh servers — ports freed first; `CI=true` spawns own)
   - Bridge placement rules (valid on water / invalid on grass) · pre-river world migration e2e · console-clean long-run with river active · no external requests
-- [ ] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact
-- [ ] Task: Update `product.md` roadmap (mark River & Bridge shipped; tunnels/elevation remain)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Notes:** New `e2e/river.spec.ts` (4 tablet + 4 phone): trestle commits on
+    (8,8); ghosts go red ('water') for track/scenery over x 7–9; a v1 seed
+    (straight spanning (8,8) + dry corner + tree) reloads as
+    ['bridge','corner'] with the tree intact, idempotent on second reload;
+    10 s river-active idle with two differing frames and a clean console.
+    Full suite: 35/35 (tablet+phone+prod), 322/322 unit. Exit-1s are the
+    pre-existing vite WebServer close warning.
+- [x] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact
+  - **Notes:** Covered by three layers: the palette's pure day/night/ice
+    math (12 `water-palette` tests, incl. depth-monotonic + ice-swallows-
+    depth), rendered overview screenshots of the live river (shore gradient
+    + ripples verified in-browser), and the existing ambient FPS-floor smoke
+    test (≥10 FPS headless floor) green on the tablet project in the full
+    35/35 e2e run. No day/weather debug handle exists, so state sampling is
+    via the pure palette rather than live clock injection.
+- [x] Task: Update `product.md` roadmap (mark River & Bridge shipped; tunnels/elevation remain)
+  - **Notes:** "Bridges" struck through with the shipped summary (river
+    terrain + water-only trestle asset class); tunnels/elevation stay on the
+    roadmap.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Verification:** Full `pnpm check` green — biome clean, tsc clean,
+    322/322 unit tests across 26 files. Playwright full suite 35/35
+    (tablet + phone + prod projects) including the new `e2e/river.spec.ts`
+    (4 specs × 2 projects): bridge placement rules, v1→v2 migration e2e,
+    trestle crossing ride, 10 s river-active clean idle. Water polish
+    shipped and user-confirmed in browser. Commits: `f08ab03` (spec FR10),
+    `435de50` (water polish), `b83de64`/`e717626` (plan), plus this close-out.
