@@ -1,7 +1,14 @@
 import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
+import { isWater } from '../core/river';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
-import { type Cell, MAX_PIECES, type PieceType, type Rotation } from '../core/track-graph';
+import {
+  type Cell,
+  MAX_PIECES,
+  type PieceType,
+  type Rotation,
+  terrainErrorFor,
+} from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
@@ -312,7 +319,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   });
 
   // Track pieces and scenery share the meadow: a cell holds at most one toy.
-  const canPlaceAt = (cell: Cell): boolean => {
+  // The river is part of the deal — land toys sit on the banks, the bridge
+  // spans water — and the ghost tints exactly as the drop will commit.
+  const canPlaceAt = (cell: Cell, kind: PieceType | SceneryKind): boolean => {
     for (const piece of options.world.pieces()) {
       if (piece.id === drag?.pickedId) continue; // The dragged toy frees its own cell.
       if (piece.cell.x === cell.x && piece.cell.y === cell.y) return false;
@@ -321,7 +330,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (toy.id === drag?.pickedId) continue;
       if (toy.cell.x === cell.x && toy.cell.y === cell.y) return false;
     }
-    return true;
+    return isPieceKind(kind) ? terrainErrorFor(kind, cell) === null : !isWater(cell);
   };
 
   const stepRotation = () => {
@@ -357,7 +366,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     // A long, slow drag still counts as activity — the meadow stays awake.
     options.notifyActivity();
     const cell = options.cellFromPoint(clientX, clientY);
-    const placeable = cell !== null && canPlaceAt(cell);
+    const placeable = cell !== null && canPlaceAt(cell, drag.kind);
     drag.cell = cell;
     options.moveGhost(cell, drag.rotation, placeable);
   };
