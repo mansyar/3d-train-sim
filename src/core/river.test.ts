@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isWater, riverDriftPath, riverWaterCells } from './river';
+import { isWater, riverDriftPath, riverProximity, riverWaterCells } from './river';
 import { type Cell, MEADOW_CELLS } from './track-graph';
 
 const allCells = (): Cell[] => {
@@ -119,5 +119,43 @@ describe('water cells inventory', () => {
   it('keeps the river a modest share of the meadow (≤ 40%)', () => {
     const wet = allCells().filter((c) => isWater(c)).length;
     expect(wet / (MEADOW_CELLS * MEADOW_CELLS)).toBeLessThanOrEqual(0.4);
+  });
+});
+
+describe('river proximity (babble fade)', () => {
+  // Row 8's center column is 8, so water spans x 7–9 there (hand-derived from
+  // cx(y) = round(8 − 3·cos(π·y/15))): the assertions pin the fade mapping,
+  // not the implementation's own distance scan.
+  it('is full (1) on the water', () => {
+    expect(riverProximity({ x: 8, y: 8 })).toBe(1);
+    expect(riverProximity({ x: 7, y: 8 })).toBe(1);
+    expect(riverProximity({ x: 9, y: 8 })).toBe(1);
+  });
+
+  it('is full (1) on the immediate bank (king-move distance 1)', () => {
+    expect(riverProximity({ x: 6, y: 8 })).toBe(1);
+    expect(riverProximity({ x: 10, y: 8 })).toBe(1);
+  });
+
+  it('half (0.5) two cells from the nearest water', () => {
+    expect(riverProximity({ x: 5, y: 8 })).toBe(0.5);
+  });
+
+  it('silent (0) three or more cells from the water', () => {
+    expect(riverProximity({ x: 3, y: 8 })).toBe(0);
+    expect(riverProximity({ x: 2, y: 8 })).toBe(0);
+    expect(riverProximity({ x: 0, y: 0 })).toBe(0);
+  });
+
+  it('is silent outside the meadow bounds', () => {
+    expect(riverProximity({ x: -1, y: 8 })).toBe(0);
+  });
+
+  it('stays in [0, 1] across the whole grid', () => {
+    for (const cell of allCells()) {
+      const p = riverProximity(cell);
+      expect(p, `${cell.x},${cell.y}`).toBeGreaterThanOrEqual(0);
+      expect(p, `${cell.x},${cell.y}`).toBeLessThanOrEqual(1);
+    }
   });
 });

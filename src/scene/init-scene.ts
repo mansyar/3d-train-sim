@@ -10,8 +10,10 @@ import {
 import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import { createDayClock } from '../core/day-clock';
+import { riverProximity } from '../core/river';
 import type { SceneryKind } from '../core/scenery';
 import {
   type Celestial,
@@ -20,7 +22,7 @@ import {
   type SkyColors,
   skyColorsAt,
 } from '../core/sky-palette';
-import type { Cell, PieceType, Rotation } from '../core/track-graph';
+import { type Cell, MEADOW_CELLS, type PieceType, type Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
@@ -34,7 +36,7 @@ import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
-import { createDuck } from './duck';
+import { createDuck, FROZEN_SNOW } from './duck';
 import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
@@ -138,6 +140,7 @@ export function initScene(
   const weather = createWeatherParticles(scene);
   disposables.push(weather.dispose);
   const ambience = createAmbienceAudio(audio);
+  const babble = createRiverBabble(audio);
   const fireflies = createFireflies(scene);
   disposables.push(fireflies.dispose);
   const duck = createDuck(scene, cellToWorld);
@@ -158,6 +161,10 @@ export function initScene(
   const skyColors: SkyColors = { top: 0, horizon: 0 };
   const celestial: Celestial = { sun: 0, moon: 0 };
   const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
+  /** Scratch cell for the river-proximity lookup (zero-alloc frame path). */
+  const proximityCell: Cell = { x: 0, y: 0 };
+  /** World units per meadow cell — matches the track renderer's grid. */
+  const cellSize = GROUND_SIZE / MEADOW_CELLS;
   const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
     sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
@@ -174,6 +181,11 @@ export function initScene(
     ground.setSnow(base.snow);
     water.update(skyColors, base.snow); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
+    // River babble whispers near the water; a frozen river stands the babble
+    // down with the duck (same snow gate).
+    proximityCell.x = Math.floor((camera.position.x + GROUND_SIZE / 2) / cellSize);
+    proximityCell.y = Math.floor((camera.position.z + GROUND_SIZE / 2) / cellSize);
+    babble.update(base.snow >= FROZEN_SNOW ? 0 : riverProximity(proximityCell));
     fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
   };
   paintAmbience();
@@ -670,6 +682,7 @@ export function initScene(
       spinLoop.suspend();
       audio.suspend();
       ambience.suspend();
+      babble.suspend();
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -678,6 +691,7 @@ export function initScene(
       spinLoop.resume();
       audio.resume();
       ambience.resume();
+      babble.resume();
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
@@ -749,6 +763,7 @@ export function initScene(
       wagonTemplates.length = 0;
       for (const dispose of disposables) dispose();
       ambience.dispose();
+      babble.dispose();
       disposeWindowGlows();
       renderer.dispose();
     },

@@ -29,6 +29,8 @@ const BEDTIME_NIGHT = 0.6;
 /** At this settled-snow the surface is ice: the duck stands down. */
 const FROZEN_SNOW = 0.5;
 
+export { FROZEN_SNOW };
+
 export interface DuckMood {
   /** 0..1 — night is bedtime: no drifting, no wiggles. */
   night: number;

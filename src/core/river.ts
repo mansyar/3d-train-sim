@@ -79,3 +79,22 @@ export function riverDriftPath(): Cell[] {
   }
   return driftPath;
 }
+
+/**
+ * How close a cell is to the river, 0 (silent) … 1 (full babble). Full on
+ * the water and the immediate bank (king-move distance ≤ 1 — the duck glides
+ * diagonally, so the babble hears the same way), fading to 0 by 3 cells out.
+ * A scan of the cached water cells: ~45 comparisons, zero allocation — safe
+ * for the per-frame fade the babble bed runs on.
+ */
+export function riverProximity(cell: Cell): number {
+  let nearest = 3;
+  for (const water of riverWaterCells()) {
+    const dist = Math.max(Math.abs(cell.x - water.x), Math.abs(cell.y - water.y));
+    if (dist < nearest) {
+      nearest = dist;
+      if (nearest === 0) break;
+    }
+  }
+  return Math.min(1, Math.max(0, 1 - (nearest - 1) / 2));
+}

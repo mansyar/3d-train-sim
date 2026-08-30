@@ -116,7 +116,7 @@
     water, updated in the spin tick with weather from the same
     `lerpIntensity` blend that drives critters (snow extracted alongside
     rain). 303/303, tsc + biome clean.
-- [ ] Task: River babble ambience
+- [~] Task: River babble ambience
   - Criteria: whisper-quiet synthesized babble; fades in only near the water; mute-respecting; suspends with hidden tab (ambience-audio pattern); lazy AudioContext
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
