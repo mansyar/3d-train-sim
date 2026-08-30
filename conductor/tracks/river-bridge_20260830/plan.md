@@ -135,6 +135,19 @@
 - [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E, polish & docs
+- [ ] Task: Water polish — shore gradient (TDD)
+  - Write failing tests first: `waterColorAt(sky, snow, depth)` — bank-adjacent
+    cells (edge of the band) shade lighter than the river's spine at every
+    sky/snow state; deep color unchanged from the existing palette; ice path
+    unaffected by depth.
+  - Implement to green: `river.ts` exposes each cell's depth (distance from
+    the center line); `river-water.ts` writes per-vertex colors (one
+    Float32Array, zero allocation, `needsUpdate` in the existing paint).
+- [ ] Task: Water polish — flow stripes
+  - Criteria: soft highlight bands drift downstream with the duck's drift
+    direction; zero per-frame allocation (one canvas texture, offset-only
+    scroll); frozen river → stripes gone; reduced motion → static frame.
+  - Notes: procedural canvas texture (no downloaded assets, per the NFR).
 - [ ] Task: Playwright e2e (fresh servers — verify ports 5199/5198 free first)
   - Bridge placement rules (valid on water / invalid on grass) · pre-river world migration e2e · console-clean long-run with river active · no external requests
 - [ ] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact

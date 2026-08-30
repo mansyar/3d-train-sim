@@ -38,6 +38,13 @@ water now flows quietly renders as bridges. Nothing is ever lost.
 - **FR7 — River babble:** a whisper-quiet synthesized babble bed that fades in
   only near the water — lazy AudioContext, mute-respecting, suspended with the
   tab hidden (same pattern as `ambience-audio.ts`).
+- **FR10 — Water polish:** the river reads as water, not a blue sticker.
+  **Shore gradient:** water cells near the banks shade lighter (shallow), the
+  river's spine shades deeper — pure palette math driven by each cell's
+  distance from the river's center line. **Flow stripes:** soft highlight
+  bands drift slowly downstream (with the duck's north→south drift),
+  allocation-free per frame; stripes freeze when the river ices over and hold
+  still under reduced motion.
 
 **Duck**
 - **FR8 — River companion:** one little yellow duck drifts slowly along the
@@ -69,7 +76,9 @@ water now flows quietly renders as bridges. Nothing is ever lost.
 2. A bridge drags, snaps, and is valid only spanning water; a train rides
    across it smoothly with water visible below.
 3. Water hue follows the day cycle; at night it glows dark navy; under snow
-   it ices over and the duck/babble stand down.
+   it ices over and the duck/babble stand down. The surface reads as water:
+   shallows shade lighter toward the banks, and highlight bands drift slowly
+   downstream (frozen when iced, still under reduced motion).
 4. A pre-river autosave loads with all pieces intact; water-crossing track
    renders as trestle bridges.
 5. Duck drifts, bobs, wiggles for passing trains, sleeps at night, paddles in
