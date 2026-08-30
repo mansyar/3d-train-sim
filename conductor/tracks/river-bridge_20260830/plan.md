@@ -51,8 +51,18 @@
     Commits: `7cb8e68`, `62b17a0`, `c500c4a`.
 
 ## Phase 2 — Water & bridge visuals (scene wiring, criteria-verified)
-- [~] Task: Water rendering — sky-reflecting, snow-freezing river surface
+- [x] Task: Water rendering — sky-reflecting, snow-freezing river surface `71971bb`
   - Criteria: river meshes recolor via `sky-palette` across the day cycle; pales to ice as snow intensity rises; melts back; static under reduced motion; zero per-frame allocations (scratch pattern)
+
+  - **Notes:** New pure `water-palette.ts` (TDD, 7 tests) — `waterColorAt(sky, snow)`
+    mirrors the sky gradient (horizon-biased) into a toy-water body blue, then
+    lerps to ice by clamped snow (0.92 bias so a whisper of water stays under
+    the frost). Scene `river-water.ts`: one merged BufferGeometry (a quad per
+    water cell from the new cached `riverWaterCells()`, river.ts 11 tests),
+    cell-aligned at y = 0.02, `receiveShadow`. Wired into `paintAmbience` next
+    to `ground.setSnow` — reuses the already-computed `skyColors` scratch, so
+    the frame path allocates nothing and reduced-motion keeps its static
+    frame. Gates: 303/303, tsc + biome clean.
 - [ ] Task: Wooden trestle bridge model + rendering bridged pieces
   - Criteria: plank deck, railings, stilt legs into the water (Kenney-kit aesthetic); train rides across at normal speed/height, water visible beneath; migrated pieces render identically
 - [ ] Task: Placement integration — ghost validity + drawer track tab
