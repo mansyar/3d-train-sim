@@ -61,11 +61,10 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
   **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 214 unit
   tests ✅, 13 Playwright smoke ✅ with zero console errors and zero external
-  requests (2026-08-30, single runs). Manual — pending user confirmation on
-  a tablet/desktop dev server: after ~25 s of no touch the overview camera
-  drifts slowly and a rare quiet critter chirp plays with a matching hop;
-  the first touch returns the view to normal; reduced motion disables the
-  drift; no chirps during a ride.
+  requests (2026-08-30, single runs). Manual — user confirmed 2026-08-30:
+  after ~25 s of no touch the overview camera drifts slowly and a rare quiet
+  critter chirp plays with a matching hop; the first touch returns the view
+  to normal; reduced motion disables the drift; no chirps during a ride.
   - Checkpoint: `5300cbb` (last functional commit).
 
 ## Phase 2: Whistle Steam Burst
