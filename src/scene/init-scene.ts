@@ -12,6 +12,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import { createAttractClock } from '../core/attract-clock';
 import { createDayClock } from '../core/day-clock';
+import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
 import type { SceneryKind } from '../core/scenery';
 import {
   type Celestial,
@@ -37,10 +38,12 @@ import { disposeObject } from './dispose-object';
 import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
-import { createLights } from './lights';
+import { createLights, SHADOW_MAP_SIZE } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
+import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
+import { createQualityApplier } from './quality-applier';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
@@ -139,6 +142,26 @@ export function initScene(
   const fireflies = createFireflies(scene);
   disposables.push(fireflies.dispose);
 
+  // Performance guardrails: a per-frame FPS probe feeds a quality controller
+  // that trims the heaviest effects when frame rate sags (render scale,
+  // shadow maps, weather particles). Invisible to the toddler; the only
+  // trace is the ?perf=debug overlay for parents debugging a slow device.
+  const perfMonitor = createPerfMonitor();
+  const qualityApplier = createQualityApplier({
+    renderer,
+    shadowLight: lights.sun,
+    basePixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
+    baseShadowMapSize: SHADOW_MAP_SIZE,
+  });
+  const qualityController = createQualityController({
+    onLevelChange: (level) => qualityApplier.apply(level),
+  });
+  const perfDebug = mountPerfDebugOverlay();
+  disposables.push(() => perfDebug?.dispose());
+  // First paint: reduced-motion users get one static frame, so seed the HUD
+  // now (reads honest "—" until the first sample) instead of leaving '…'.
+  perfDebug?.update(perfMonitor.averageFps(), qualityController.level);
+
   // Time of day + weather: pure clocks (driven per animation frame) recolor
   // the sky, ease the lights, drive particles and whiten the meadow. Painted
   // once up front so the reduced-motion static frame still shows a lit
@@ -153,6 +176,8 @@ export function initScene(
   const skyColors: SkyColors = { top: 0, horizon: 0 };
   const celestial: Celestial = { sun: 0, moon: 0 };
   const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
+  /** Quality-scaled copy of the weather bed fed to the particle emitter. */
+  const scaledWeather: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
   const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
     sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
@@ -165,7 +190,13 @@ export function initScene(
     const base = blend
       ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t, intensity)
       : intensityOf(weatherClock.weather);
-    weather.update(dt, base);
+    // The guardrail's L2 halves the particle bed; the emitter's opacity
+    // easing makes the trim fade in, and snow accumulation stays full.
+    const weatherScale = qualityApplier.weatherScale;
+    scaledWeather.rain = base.rain * weatherScale;
+    scaledWeather.snow = base.snow * weatherScale;
+    scaledWeather.cloud = base.cloud * weatherScale;
+    weather.update(dt, scaledWeather);
     ground.setSnow(base.snow);
     ambience.update(base); // Rain patter + wind follow the weather bed.
     fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
@@ -619,6 +650,14 @@ export function initScene(
     camera,
     () => spinTarget,
     (dt) => {
+      // Guardrails first: this frame's cost lands in the probe before the
+      // controller re-weighs the quality level.
+      perfMonitor.sample(dt);
+      qualityController.update(perfMonitor.verdict(), dt);
+      qualityApplier.update(dt);
+      // The HUD is the only consumer of the window average — skip the scan
+      // when the overlay isn't mounted.
+      if (perfDebug) perfDebug.update(perfMonitor.averageFps(), qualityController.level);
       dayClock.tick();
       weatherClock.tick();
       paintAmbience(dt);
@@ -657,6 +696,7 @@ export function initScene(
       spinLoop.suspend();
       audio.suspend();
       ambience.suspend();
+      perfMonitor.setPaused(true); // Hidden tab ≠ device strain (spec FR1).
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -665,6 +705,7 @@ export function initScene(
       spinLoop.resume();
       audio.resume();
       ambience.resume();
+      perfMonitor.setPaused(false);
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
