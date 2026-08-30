@@ -1,9 +1,10 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of active development tracks. No tracks are currently in progress.
+Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [every-layout-rides_20260830](tracks/every-layout-rides_20260830/index.md) | Every Layout Rides | Feature | new |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
