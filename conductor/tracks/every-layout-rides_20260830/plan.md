@@ -174,13 +174,25 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       state. Critters and whistle stay on the primary until their tasks.
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: 🎥 camera-cycle button (UI wiring)
+- [x] Task: 🎥 camera-cycle button (UI wiring) `cfbe2e7`
 
   - **Acceptance criteria (manual + smoke):** button joins the toolbar next
     to 🎺 (≥64px, high contrast), visible only while ≥2 rides run; each tap
     cycles filmed train → next train → overview → wrap; hidden under
     reduced motion; instant press feedback (scale-bounce + click).
   - **Commit:** `feat(ui): Add camera-cycle button for multi-train rides`
+
+  - **Notes:**
+    - Scene: `cycleFilmTarget()` cycles filmed train → next train (ride
+      order) → overview → wrap; `subscribeFilmCount` pushes the active ride
+      count to the UI on every ride change.
+    - `syncFilmed` now keeps an overview the kid chose with 🎥 sticky across
+      later ride starts (only an idle→riding transition re-takes a train).
+    - UI: 🎥 joins the rail next to 🎺 (72px, toy-orange, press bounce,
+      `audio.click()`), `hidden` while <2 rides ride, and
+      `display: none` under `prefers-reduced-motion`. `main.ts` wires both
+      late-bound (the scene binds after the app mounts).
+    - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: Whistle targets the filmed train (audio/scene wiring)
 
