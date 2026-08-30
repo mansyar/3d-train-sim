@@ -103,7 +103,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
 ## Phase 3: Tab-Hide Pause
 
-- [ ] Task: Visibility pause controller (logic — TDD)
+- [x] Task: Visibility pause controller (logic — TDD)
 
 - **Expected behavior (unit tests first):**
   - `createVisibilityController({ isHidden, onChange })` maps document
