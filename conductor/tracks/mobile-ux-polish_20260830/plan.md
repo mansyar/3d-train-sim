@@ -4,14 +4,17 @@ Execution roadmap for the approved spec. All work is DOM/scene/glue or
 config (non-logic per workflow.md), so tasks carry recorded acceptance
 criteria and are verified via e2e + manual checks instead of unit tests.
 
-## Phase 1 — Small-screen shell (FR1, FR6.1)
+## Phase 1 — Small-screen shell (FR1, FR6.1) [checkpoint: e05cfc7]
 
-- [ ] Task: Add `viewport-fit=cover` to the viewport meta tag
-- [ ] Task: Rail wraps to two rows below ~520px keeping ≥64px targets; safe-area insets top/left/right (parent gate, grid anchor)
-- [ ] Task: Toybox + train drawers fit ≥360px without clipping (panel centering, tab strip guard)
-- [ ] Task: Acceptance criteria recorded (rail wraps, no horizontal clipping at ≥360px)
-- [ ] Task: E2E — add phone viewport project (iPhone-size, touch) + no-horizontal-overflow assertions
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Add `viewport-fit=cover` to the viewport meta tag
+- [x] Task: Rail wraps to two rows below ~520px keeping ≥64px targets; safe-area insets top/left/right (parent gate, grid anchor)
+- [x] Task: Toybox + train drawers fit ≥360px without clipping (panel centering, tab strip guard)
+- [x] Task: Acceptance criteria recorded (rail wraps, no horizontal clipping at ≥360px)
+  - Acceptance: at viewport widths from 360px up, (1) every interactive target stays fully within the viewport horizontally, (2) the rail and drawers never cause horizontal scrolling, (3) the rail wraps to a second row on narrow screens with targets still ≥64px, (4) notched devices keep the rail, parent gate, and grid toggle clear of unsafe areas.
+- [x] Task: E2E — add phone viewport project (iPhone-size, touch) + no-horizontal-overflow assertions
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 30/30 (tablet + phone). Manual check confirmed by user: rail wraps without clipping at 390px, drawers sit above the rail, no horizontal scroll; tablet still one row. Fix discovered during phase: smoke-spec drop coordinates were tablet-hard-coded, off-viewport on phone — made viewport-relative so the same walkthrough runs on both projects.
+  - Notes: `viewport-fit=cover` added; rail `flex-wrap` + side/top/bottom safe-area insets; drawers get `max-width` + train drawer wraps, lifted above the wrapped rail on ≤540px; corner controls use safe-area insets; Playwright gained a `phone` project (iPhone 13) and `e2e/phone-shell.spec.ts` asserts no horizontal clipping at ≥360px. Files: `index.html`, `src/style.css`, `playwright.config.ts`, `e2e/phone-shell.spec.ts` (new), `e2e/smoke.spec.ts`.
 
 ## Phase 2 — Tap-to-rotate + click sound (FR2)
 
