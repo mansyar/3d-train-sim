@@ -153,10 +153,10 @@ test('track and scenery survive a reload through local autosave', async ({ page 
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    if (world.place('straight', { x: 7, y: 7 }, 0) !== 'placed') {
+    if (world.place('straight', { x: 2, y: 7 }, 0) !== 'placed') {
       throw new Error('track placement failed');
     }
-    if (world.placeScenery('tree', { x: 8, y: 7 }, 90) !== 'placed') {
+    if (world.placeScenery('tree', { x: 3, y: 7 }, 90) !== 'placed') {
       throw new Error('scenery placement failed');
     }
   });
@@ -232,8 +232,8 @@ test('pressing play rides the train along the placed track', async ({ page }) =>
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    world.place('straight', { x: 7, y: 7 }, 0);
-    world.place('straight', { x: 7, y: 8 }, 0);
+    world.place('straight', { x: 2, y: 7 }, 0);
+    world.place('straight', { x: 2, y: 8 }, 0);
   });
   await page.waitForTimeout(800);
 
@@ -279,11 +279,11 @@ test('riding a loop with a station stops at it and rolls on cleanly', async ({ p
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    world.place('corner', { x: 7, y: 7 }, 90);
-    world.place('corner', { x: 8, y: 7 }, 180);
-    world.place('corner', { x: 8, y: 8 }, 270);
-    world.place('corner', { x: 7, y: 8 }, 0);
-    if (world.placeScenery('station', { x: 9, y: 7 }, 0) !== 'placed') {
+    world.place('corner', { x: 1, y: 7 }, 90);
+    world.place('corner', { x: 2, y: 7 }, 180);
+    world.place('corner', { x: 2, y: 8 }, 270);
+    world.place('corner', { x: 1, y: 8 }, 0);
+    if (world.placeScenery('station', { x: 3, y: 7 }, 0) !== 'placed') {
       throw new Error('station placement failed');
     }
   });
@@ -416,7 +416,7 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    world.place('straight', { x: 8, y: 8 }, 0);
+    world.place('straight', { x: 2, y: 8 }, 0);
   });
   void placed;
 
@@ -430,8 +430,8 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
       }
     ).__tinyTracksScene;
     if (!sceneHandle) throw new Error('dev scene handle missing');
-    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
-    if (!point) throw new Error('cell (8,8) not visible on screen');
+    const point = sceneHandle.cellToScreen({ x: 2, y: 8 });
+    if (!point) throw new Error('cell (2,8) not visible on screen');
     return point;
   });
 
@@ -468,7 +468,7 @@ test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ pa
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    world.place('straight', { x: 8, y: 8 }, 0);
+    world.place('straight', { x: 2, y: 8 }, 0);
   });
 
   const toyPoint = await page.evaluate(() => {
@@ -480,8 +480,8 @@ test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ pa
       }
     ).__tinyTracksScene;
     if (!sceneHandle) throw new Error('dev scene handle missing');
-    const point = sceneHandle.cellToScreen({ x: 8, y: 8 });
-    if (!point) throw new Error('cell (8,8) not visible on screen');
+    const point = sceneHandle.cellToScreen({ x: 2, y: 8 });
+    if (!point) throw new Error('cell (2,8) not visible on screen');
     return point;
   });
 
@@ -597,7 +597,7 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
       }
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
-    world.place('straight', { x: 7, y: 7 }, 0);
+    world.place('straight', { x: 2, y: 7 }, 0);
     world.selectTrain('diesel');
   });
   await page.waitForTimeout(400);
@@ -690,10 +690,10 @@ test('steam puffs emit during rides, stop cleanly, and cover the fleet', async (
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
     const corners = [
-      [{ x: 7, y: 7 }, 90],
-      [{ x: 8, y: 7 }, 180],
-      [{ x: 8, y: 8 }, 270],
-      [{ x: 7, y: 8 }, 0],
+      [{ x: 1, y: 7 }, 90],
+      [{ x: 2, y: 7 }, 180],
+      [{ x: 2, y: 8 }, 270],
+      [{ x: 1, y: 8 }, 0],
     ] as const;
     for (const [cell, rotation] of corners) world.place('corner', cell, rotation);
   });
@@ -766,10 +766,10 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
     const corners = [
-      { cell: { x: 7, y: 7 }, rotation: 90 },
-      { cell: { x: 8, y: 7 }, rotation: 180 },
-      { cell: { x: 8, y: 8 }, rotation: 270 },
-      { cell: { x: 7, y: 8 }, rotation: 0 },
+      { cell: { x: 1, y: 7 }, rotation: 90 },
+      { cell: { x: 2, y: 7 }, rotation: 180 },
+      { cell: { x: 2, y: 8 }, rotation: 270 },
+      { cell: { x: 1, y: 8 }, rotation: 0 },
     ];
     for (const { cell, rotation } of corners) {
       if (world.place('corner', cell, rotation) !== 'placed') {
@@ -995,10 +995,10 @@ test('whistle toots puff steam at the chimney, then dissipate', async ({ page })
     ).__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
     const corners = [
-      [{ x: 7, y: 7 }, 90],
-      [{ x: 8, y: 7 }, 180],
-      [{ x: 8, y: 8 }, 270],
-      [{ x: 7, y: 8 }, 0],
+      [{ x: 1, y: 7 }, 90],
+      [{ x: 2, y: 7 }, 180],
+      [{ x: 2, y: 8 }, 270],
+      [{ x: 1, y: 8 }, 0],
     ] as const;
     for (const [cell, rotation] of corners) world.place('corner', cell, rotation);
   });
@@ -1058,10 +1058,10 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
       { x: 1, y: 0 },
       { x: 1, y: 1 },
       { x: 0, y: 1 },
-      { x: 5, y: 5 },
-      { x: 6, y: 5 },
-      { x: 6, y: 6 },
-      { x: 5, y: 6 },
+      { x: 9, y: 5 },
+      { x: 10, y: 5 },
+      { x: 10, y: 6 },
+      { x: 9, y: 6 },
     ];
     const rotations = [90, 180, 270, 0];
     loops.forEach(({ x, y }, i) => {
