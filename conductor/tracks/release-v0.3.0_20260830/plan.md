@@ -24,7 +24,12 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
     out of `## [Unreleased]` into a dated `## [X.Y.Z]` section, refresh
     compare links); gates step covers pnpm check + Playwright e2e; steps
     renumbered 1–6.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Verified `CHANGELOG.md` carries v0.1.0, v0.2.0, and
+    v0.3.0 entries plus `[Unreleased]` and compare links; `package.json`
+    version is `0.3.0`; runbook includes the changelog step; all Phase 1
+    work committed on the release branch; no `v0.3.0` tag exists yet
+    (correct — tagging happens in Phase 3).
 
 ## Phase 2 — Local Pre-Tag Verification
 
