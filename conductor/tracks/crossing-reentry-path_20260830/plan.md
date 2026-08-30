@@ -75,3 +75,13 @@ Manual Verification Steps:
    and never shuttles back out the way it came
 5. Re-checks: a simple oval still loops; an open line still pauses at its
    dead ends and shuttles back; a loop with a dangling spur still shuttles
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions `fa3fa16`
+
+- **Findings:** 1 Low — the 12-piece oval fixture was duplicated across the
+  two guard tests. Extracted a shared `ovalPieces` const (comments kept);
+  spur test spreads it and appends `spur`/`tip`. Net −8 lines.
+- **Notes:** pathing suite 16/16 ✅, biome ✅, `tsc --noEmit` ✅
+  (2026-08-30, post-fix runs). No behavior change — test refactor only.
