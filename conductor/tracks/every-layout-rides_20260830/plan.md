@@ -71,13 +71,30 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       stay idle; ⏹ stops all rides.
   - **Commit:** `feat(state): Run one ride per track component`
 
-- [ ] Task: Spawn and render multiple trains (scene wiring)
+- [x] Task: Spawn and render multiple trains (scene wiring) `380adc6`
 
   - **Acceptance criteria (manual + smoke):** one locomotive + wagons +
     steam emitter per riding component, pooled/reused across ▶ presses;
     ▶ with two loops visibly launches two trains; no per-frame allocations;
     60 FPS holds with 4 trains in the tablet viewport.
   - **Commit:** `feat(scene): Spawn a train per riding component`
+
+  - **Notes:**
+    - `ride-motion.ts` now serves one train per motion: `createRideMotion`
+      takes a state getter (`getState: () => RideState | null`) and a public
+      `begin(state)`; the internal controller subscription is gone.
+    - `init-scene.ts` keeps a rig pool (`rigs` keyed by ride anchor + spare
+      rigs). A ride-subscription sync builds one rig (locomotive clone +
+      per-rig wagon clones + per-rig steam emitter) per riding component,
+      re-begins only when the ride's state object changed (running trains
+      keep progress), and parks freed rigs where they stopped. Wagons are
+      loaded once as templates and cloned per rig; the chug softens only
+      when every riding train is paused.
+    - Camera, critter proximity, whistle puffs, and puff counts follow the
+      primary (largest) active ride; the chug beat emits puffs on all
+      riding trains. Train-kind changes rebuild all rigs (rides restart at
+      path start — the smooth in-place swap is task 3).
+    - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: Train-kind swap applies to all trains (scene wiring)
 
