@@ -22,6 +22,8 @@ export interface SoundHandle {
   play: () => number;
   /** Halts the sound immediately. */
   stop: () => void;
+  /** Pauses the sound in place (resumable via play). */
+  pause: () => void;
   /** Glides the sound out gently (fade to silence, then settle). */
   fade: () => void;
   /** Nudges playback tempo/character without restarting. */
@@ -41,6 +43,10 @@ export interface AudioControllerOptions {
   startChugBeatClock?: () => void;
   /** Stops the visual rhythm clock when the chug ends. */
   stopChugBeatClock?: () => void;
+  /** Tab hidden: pause the chug and its beat clock (no sound in a hidden tab). */
+  suspend?: () => void;
+  /** Tab visible again: resume the chug if it was rolling. */
+  resume?: () => void;
 }
 
 export interface AudioController {
@@ -66,6 +72,10 @@ export interface AudioController {
   subscribe(listener: () => void): () => void;
   /** Observes chug beats while the chug is active. Returns an unsubscribe fn. */
   onChugBeat(listener: () => void): () => void;
+  /** Tab hidden: pause the chug and its beat clock (no sound in a hidden tab). */
+  suspend(): void;
+  /** Tab visible again: resume the chug if it was rolling. */
+  resume(): void;
   /** Releases rhythm listeners and any injected clock resources. */
   dispose(): void;
 }
@@ -84,6 +94,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   let muted = false;
   let chugging = false;
   let softened = false;
+  let suspended = false;
 
   function sound(name: string): SoundHandle {
     let handle = sounds.get(name);
@@ -185,6 +196,24 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       return () => {
         beatListeners.delete(listener);
       };
+    },
+
+    suspend: () => {
+      if (suspended) return;
+      suspended = true;
+      stopChugBeatClock?.();
+      if (chugging && !muted) sound('chug').pause();
+      notify();
+    },
+
+    resume: () => {
+      if (!suspended) return;
+      suspended = false;
+      if (chugging) {
+        startChugBeatClock?.();
+        speakIfDue(); // Plays the chug if it should be heard (respects mute).
+      }
+      notify();
     },
 
     dispose: () => {

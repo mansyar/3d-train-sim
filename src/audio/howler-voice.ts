@@ -27,6 +27,8 @@ const CHUG_BEAT_MS = 500;
 export function createHowlerVoice(): AudioControllerOptions {
   let chugBeatListener: (() => void) | null = null;
   let chugBeatTimer: ReturnType<typeof setInterval> | null = null;
+  /** Every Howl we created, so suspend/resume never touches foreign audio. */
+  const voices = new Set<Howl>();
 
   function startChugBeatClock(): void {
     if (chugBeatTimer !== null) return;
@@ -50,6 +52,7 @@ export function createHowlerVoice(): AudioControllerOptions {
       volume: sound.volume,
       preload: true,
     });
+    voices.add(howl);
     return {
       play: () => {
         // A faded chug holds its breath at volume zero — breathe before
@@ -58,6 +61,7 @@ export function createHowlerVoice(): AudioControllerOptions {
         return howl.play();
       },
       stop: () => howl.stop(),
+      pause: () => howl.pause(),
       fade: () => {
         howl.fade(howl.volume(), 0, FADE_MS);
         howl.once('fade', (id) => howl.stop(id)); // Stop only the faded voice.
@@ -79,5 +83,15 @@ export function createHowlerVoice(): AudioControllerOptions {
     },
     startChugBeatClock,
     stopChugBeatClock,
+    suspend: () => {
+      // Pause every live voice (the looping chug + any one-shot still
+      // ringing) and stop the beat clock — no sound in a hidden tab.
+      for (const howl of voices) howl.pause();
+      stopChugBeatClock();
+    },
+    resume: () => {
+      for (const howl of voices) howl.play();
+      // The beat clock restarts when the controller resumes the chug.
+    },
   };
 }

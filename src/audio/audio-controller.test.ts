@@ -19,6 +19,9 @@ function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
     stop: vi.fn(() => {
       calls.push('stop');
     }),
+    pause: vi.fn(() => {
+      calls.push('pause');
+    }),
     fade: vi.fn(() => {
       calls.push('fade');
     }),
@@ -213,6 +216,29 @@ describe('createAudioController', () => {
     controller.setMuted(false);
 
     expect(handles.get('chug')?.calls).not.toContain('play');
+  });
+
+  it('suspend pauses the chug and the beat clock; resume restores both', () => {
+    const { controller, handles, startBeatClock, stopBeatClock } = makeWired();
+    controller.startChug();
+
+    controller.suspend();
+    expect(handles.get('chug')?.calls).toContain('pause');
+    expect(stopBeatClock).toHaveBeenCalledTimes(1);
+    // Still "chugging" from the controller's point of view — the ride state
+    // survives the tab being hidden.
+    expect(controller.isChugging()).toBe(true);
+
+    controller.resume();
+    expect(handles.get('chug')?.calls.filter((c) => c === 'play').length).toBe(2);
+    expect(startBeatClock).toHaveBeenCalledTimes(2);
+  });
+
+  it('suspend while muted or not chugging is a safe no-op for the handle', () => {
+    const { controller, handles } = makeWired();
+    controller.suspend(); // Not chugging, not muted.
+    controller.resume();
+    expect(handles.get('chug')?.calls ?? []).toEqual([]);
   });
 
   it('chirps play the critter one-shot for a passing train', () => {
