@@ -32,7 +32,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - 7 new tests; suite 231 passing. Coverage: `pathing.ts` 98.24%
       statements / 100% lines. Biome + `tsc --noEmit` clean.
 
-- [ ] Task: Ride-component selection with cap (logic — TDD)
+- [x] Task: Ride-component selection with cap (logic — TDD) `cd4a642`
 
   - **Expected behavior (unit tests first):**
     - `selectRideComponents(components, cap = 4)` ranks components (most
@@ -40,6 +40,15 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - Deterministic under any input order; ≤ cap components → all selected;
       zero → `[]`.
   - **Commit:** `feat(core): Rank components and cap concurrent rides`
+
+  - **Notes:**
+    - Introduced `RideComponent` (`pieceIds`, `path`, `anchor`) — piece
+      membership for scoped mid-ride edits, the ride path, and the unique
+      smallest-cell anchor for deterministic ranking. `rideComponentsOf`
+      builds components; `solveRidePaths` now maps its paths.
+    - Ranking: most pieces first, anchor (cell-key) tiebreak; default cap 4.
+    - 6 new tests; suite 237 passing. Coverage: `pathing.ts` 98.33%
+      statements / 100% lines. Biome + `tsc --noEmit` clean.
 
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
