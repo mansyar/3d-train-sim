@@ -60,7 +60,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     chosen component; multi-train behavior lands in Phase 2.
   - **Checkpoint SHA:** `cd4a642` (last functional commit of Phase 1).
 
-- [~] Task: Multi-ride controller in `src/state/ride.ts` (logic — TDD)
+- [x] Task: Multi-ride controller in `src/state/ride.ts` (logic — TDD) `6e12dc5`
 
   - **Expected behavior (unit tests first):**
     - Registry of rides keyed by component; `startAll()` starts one ride per
@@ -70,6 +70,18 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - ▶ re-press re-solves and starts missing rides; beyond-cap components
       stay idle; ⏹ stops all rides.
   - **Commit:** `feat(state): Run one ride per track component`
+
+  - **Notes:**
+    - `RideState` now carries the component's `anchor` and `pieceIds`; the
+      registry is keyed by anchor, ranked most pieces first.
+    - Edits are scoped by diffing pieces: a ride soft-stops only when an
+      edited piece is in its component or its component's membership
+      changed; scenery placement and train-kind switches never stop rides
+      (R3, R4). `start()`/`stop()` remain as ▶/⏹ aliases of
+      `startAll()`/`stopAll()` for the scene.
+    - 10 new tests; suite 246 passing. Coverage: `ride.ts` 100% statements.
+      `ride-motion.ts` + `ride-audio.test.ts` adapted to the new listener
+      signature (`b533b1d`).
 
 - [x] Task: Spawn and render multiple trains (scene wiring) `380adc6`
 
@@ -96,19 +108,40 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       path start — the smooth in-place swap is task 3).
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [~] Task: Train-kind swap applies to all trains (scene wiring)
+- [x] Task: Train-kind swap applies to all trains (scene wiring) `5fab1af`
 
   - **Acceptance criteria (manual + smoke):** choosing a different
     locomotive in the 🚂 drawer swaps every train's model mid-ride; rides
     continue smoothly; save format unchanged.
   - **Commit:** `feat(scene): Swap all locomotives on train-kind change`
 
-- [ ] Task: Shared chug audio (audio wiring)
+  - **Notes:**
+    - `RideMotion.setModel(next)` re-targets the swapped locomotive and
+      re-poses it (wagons included) at the train's live path distance — no
+      restart, no progress loss.
+    - `swapRigKind` replaces each rig's model + steam emitter in place
+      (wagons are shared across kinds and stay put); rigs remember their
+      `kind`, and late-arriving assets complete any swap that was still
+      waiting. Save format untouched.
+    - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
+
+- [x] Task: Shared chug audio (audio wiring) `6e12dc5`+`380adc6`
 
   - **Acceptance criteria (manual + smoke):** exactly one chug loop while
     any train rides; it stops only when the last ride ends; whistles and
     station dings fire per-train; mute silences everything instantly.
   - **Commit:** `feat(audio): Share one chug loop across trains`
+
+  - **Notes:**
+    - Already satisfied by the multi-ride architecture — no new code:
+      `bindRideAudio` keys the single chug loop to `ride.mode()`, which is
+      `riding` while ≥1 ride is active and `idle` only when the last ride
+      ends (task 1). Station dings fire per rig (`onStationDing` per rig's
+      motion, task 2); the whistle one-shot fires per 🎺 press (filmed-train
+      targeting lands in Phase 3). The shared chug softens only when EVERY
+      riding train is paused (`pausedRigs` aggregation, task 2). Mute is
+      instant and total via the audio controller's `setGlobalMute`.
+    - Gates re-verified: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
