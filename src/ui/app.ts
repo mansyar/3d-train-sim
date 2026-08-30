@@ -138,6 +138,12 @@ export interface AppOptions {
   notifyActivity(): void;
   /** Steam burst at the locomotive chimney (whistle's visual voice). */
   whistlePuff(): void;
+  /** Each tap cycles the chase camera: filmed train → next train → overview. */
+  cycleFilmTarget(): void;
+  /** The number of riding trains, pushed on every ride change (🎥 visibility). */
+  subscribeFilmCount(listener: (count: number) => void): () => void;
+  /** Whether any train is riding, pushed on every ride change (▶/⏹ face). */
+  subscribeRideMode(listener: (riding: boolean) => void): () => void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -158,6 +164,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <button class="toy-slot" type="button" aria-label="Train collection"
               aria-expanded="false" data-drawer="trains">🚂</button>
       <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
+      <button class="film-toggle" type="button" aria-label="Switch the camera between trains" hidden>🎥</button>
       <button class="ride-toggle" type="button"
               aria-label="Ride the train">${RIDE_ICONS.play}</button>
       <button class="mute-toggle" type="button" aria-pressed="false"
@@ -597,22 +604,22 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     rideToggle.setAttribute('aria-label', riding ? 'Stop the train' : 'Ride the train');
   };
 
-  rideToggle.addEventListener('click', () => {
-    if (options.isReady && !options.isReady()) return;
-    if (riding) {
-      options.stopRide();
-      riding = false;
-    } else {
-      riding = options.startRide();
-    }
+  // The ▶/⏹ face follows the real ride state pushed by the scene: scoped
+  // mid-ride edits and 🚂 kind switches keep trains rolling, so a world
+  // change alone never flips the button.
+  options.subscribeRideMode((isRiding) => {
+    riding = isRiding;
     refreshRide();
   });
 
-  // Any world edit gently stops the ride — the button follows.
-  options.world.subscribe(() => {
-    riding = false;
-    refreshRide();
+  rideToggle.addEventListener('click', () => {
+    if (options.isReady && !options.isReady()) return;
+    if (riding) options.stopRide();
+    else options.startRide();
   });
+
+  // Any world edit refreshes the empty-meadow dim.
+  options.world.subscribe(() => refreshRide());
   refreshRide();
 
   // ---- Sound box: a big toot anytime, and a parent-friendly mute ---------
@@ -625,6 +632,21 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   whistleToot.addEventListener('click', () => {
     options.audio.whistle(options.world.train());
     options.whistlePuff(); // Steam is the whistle's visible voice.
+  });
+
+  // ---- 🎥 camera cycle: joins the rail while two or more trains ride -----
+  // Each tap glides the chase camera to the next train, then the overview,
+  // then wraps; hidden under reduced motion (no chase to cycle).
+  const filmToggle = root.querySelector<HTMLButtonElement>('.film-toggle');
+  if (!filmToggle) {
+    throw new Error('film toggle missing from app frame');
+  }
+  filmToggle.addEventListener('click', () => {
+    options.audio.click();
+    options.cycleFilmTarget();
+  });
+  options.subscribeFilmCount((count) => {
+    filmToggle.hidden = count < 2;
   });
 
   const refreshMute = () => {

@@ -1,6 +1,6 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of active development tracks. No tracks are currently in progress.
+Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
@@ -12,4 +12,5 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `release-pipeline`, `chugging-cargo`, `autosave-world-restore`,
 `playful-train-fleet`, `train-audio-personalities`, `toybox-townsfolk`,
 `steam-puffs_20260830`, `soft-shadows-light-tuning`, `living-meadow_20260830`,
-`mobile-ux-polish_20260830`, `crossing-reentry-path_20260830`.
+`mobile-ux-polish_20260830`, `crossing-reentry-path_20260830`,
+`every-layout-rides_20260830`.

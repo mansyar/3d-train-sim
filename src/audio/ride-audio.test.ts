@@ -63,7 +63,10 @@ describe('bindRideAudio', () => {
     bindRideAudio(ride, audio);
 
     ride.start();
-    world.place('straight', { x: 2, y: 0 }, 0);
+    // Removing a piece breaks the loop — its ride softly stops.
+    const [first] = world.pieces();
+    if (!first) throw new Error('loop world should hold pieces');
+    world.remove(first.id);
 
     expect(ride.mode()).toBe('idle');
     expect(audio.commands).toEqual(['startChug', 'stopChug']);

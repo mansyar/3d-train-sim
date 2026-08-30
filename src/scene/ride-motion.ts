@@ -2,7 +2,7 @@ import type { Object3D } from 'three';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf } from '../core/track-graph';
-import type { RideController, RideState } from '../state/ride';
+import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
 import { cellToWorld } from './track-renderer';
@@ -73,21 +73,31 @@ interface Segment {
 }
 
 export interface RideMotion {
+  /**
+   * Begin (or re-begin) following the given ride state. A train already on
+   * the rails rolls on from `startNear` — the path point nearest where it
+   * sits; without it the ride starts at the path's beginning.
+   */
+  begin(state: RideState, startNear?: { x: number; z: number }): void;
+  /** Re-target a swapped locomotive model, snapping it to the train's pose. */
+  setModel(next: Object3D): void;
   /** Advance the animation by dt seconds. Allocates nothing per frame. */
   update(dt: number): void;
   dispose(): void;
 }
 
 /**
- * Makes the locomotive follow the solved path: closed loops cycle forever,
+ * Makes one locomotive follow one solved path: closed loops cycle forever,
  * open layouts ride to the dead end, pause a beat, and shuttle back. Mid-ride
  * edits ease the train to a gentle standstill right where it is — a toy left
- * on the track, never an error.
+ * on the track, never an error. One motion serves one train; multi-train
+ * spawning lives in the scene layer, which drives `begin` per ride.
  */
 export function createRideMotion(
   model: Object3D,
   world: WorldStore,
-  ride: RideController,
+  /** This train's live ride state — null while parked or between rides. */
+  getState: () => RideState | null,
   onPausedChange?: (paused: boolean) => void,
   onStationStop?: (stationId: string) => void,
   followers: readonly Object3D[] = [],
@@ -110,10 +120,6 @@ export function createRideMotion(
   let pendingStationId: string | null = null;
   /** Eases 0 (parked) ⇄ 1 (riding) so stops and starts stay gentle. */
   let speedScale = 0;
-  let unsubscribe: (() => void) | null = ride.subscribe((mode, state) => {
-    if (mode === 'riding' && state) beginRide(state);
-    // Idle keeps the last pose — update() eases speedScale to 0 in place.
-  });
 
   /** Reports dead-end pauses upward so the chug softens with the motion. */
   let paused = false;
@@ -247,8 +253,26 @@ export function createRideMotion(
     for (let i = 0; i < stops.length; i++) armed.add(i);
   }
 
+  /** The locomotive the motion poses — swapped in place on kind changes. */
+  let activeModel = model;
+
+  /** The world point on `segment` at fraction `u` of its length. */
+  function segmentPoint(segment: Segment, u: number): { x: number; z: number } {
+    if (segment.kind === 'line') {
+      return {
+        x: segment.ax + (segment.bx - segment.ax) * u,
+        z: segment.az + (segment.bz - segment.az) * u,
+      };
+    }
+    const angle = segment.a0 + segment.sweep * u;
+    return {
+      x: segment.cx + Math.cos(angle) * segment.r,
+      z: segment.cz + Math.sin(angle) * segment.r,
+    };
+  }
+
   /** Write the pose for forward-path distance `d` into `target`. */
-  function poseAt(d: number, target: Object3D = model, faceTravel = true): void {
+  function poseAt(d: number, target: Object3D = activeModel, faceTravel = true): void {
     const first = segments[0];
     if (!first) return;
     // Coupled wagons can hang past a short path's ends. The overhang runs
@@ -326,10 +350,45 @@ export function createRideMotion(
   }
 
   return {
+    /**
+     * Begins (or re-begins) following the given ride state. A train already
+     * on the rails rolls on from `startNear` — the path point nearest where
+     * it sits; without it the ride starts at the path's beginning.
+     */
+    begin(state: RideState, startNear?: { x: number; z: number }): void {
+      beginRide(state);
+      if (!startNear || total <= 0) return;
+      // Sample each segment for the path point nearest where the train sits,
+      // and roll on from there — a reused parked train never teleports.
+      let best = 0;
+      let bestDist = Infinity;
+      let travelled = 0;
+      for (const segment of segments) {
+        for (const u of [0, 0.25, 0.5, 0.75, 1]) {
+          const point = segmentPoint(segment, u);
+          const d = (point.x - startNear.x) ** 2 + (point.z - startNear.z) ** 2;
+          if (d < bestDist) {
+            bestDist = d;
+            best = Math.min(travelled + u * segment.length, total);
+          }
+        }
+        travelled += segment.length;
+      }
+      distance = best;
+      poseTrain(distance);
+    },
+
+    /** Re-targets a swapped locomotive; it snaps to the train's live pose. */
+    setModel(next: Object3D): void {
+      activeModel = next;
+      if (total > 0) poseTrain(distance);
+    },
+
     update(dt: number) {
       if (total <= 0) return;
       const stopping = stationStopTimer > 0;
-      const targetScale = ride.mode() === 'riding' && !stopping ? 1 : 0;
+      const active = getState() !== null;
+      const targetScale = active && !stopping ? 1 : 0;
       if (speedScale !== targetScale) {
         const step = dt / STOP_EASE_SECONDS;
         const gap = targetScale - speedScale;
@@ -358,7 +417,7 @@ export function createRideMotion(
           brakeTarget = null;
           pendingStationId = null;
           poseTrain(distance);
-          if (ride.mode() === 'riding') {
+          if (getState() !== null) {
             stationStopTimer = STATION_STOP_SECONDS;
             if (stationId) onStationStop?.(stationId); // Ding-ding from rest.
           }
@@ -382,7 +441,7 @@ export function createRideMotion(
       distance += travelDirection * RIDE_SPEED * speedScale * dt;
       if (travelDirection === 1) {
         if (distance >= total) {
-          if (ride.mode() === 'riding' && ride.ride()?.path.closed) {
+          if (getState()?.path.closed) {
             // Closed loops finish the lap, then roll on from the top.
             if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
             distance %= total;
@@ -412,8 +471,6 @@ export function createRideMotion(
 
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
-      unsubscribe?.();
-      unsubscribe = null;
       segments = [];
       total = 0;
       stops = [];
