@@ -1,4 +1,5 @@
 import {
+  Box3,
   BufferGeometry,
   Color,
   Group,
@@ -29,6 +30,7 @@ import {
 } from '../core/scenery';
 import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
+import { createTrestleTemplate } from './bridge-model';
 import { type CritterMood, createCritterLife } from './critter-life';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
@@ -453,6 +455,7 @@ export function startTrackRenderer(
   }
 
   for (const type of PIECE_TYPES) {
+    if (type === 'bridge') continue; // The trestle is procedural — built from the measured straight below.
     loader.load(
       PIECE_URLS[type],
       (gltf) => {
@@ -471,6 +474,20 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        if (type === 'straight') {
+          // The trestle rides at the straight's measured rail height and
+          // matches its track width — trains cross bridges exactly as high
+          // and flush as they cross every other piece.
+          const measured = new Box3().setFromObject(model);
+          templates.set(
+            'bridge',
+            createTrestleTemplate({
+              cellSize: CELL_SIZE,
+              railTop: Math.max(measured.max.y, 0.08),
+              width: Math.max((measured.max.x - measured.min.x) * 0.9, 0.5),
+            }),
+          );
+        }
         templates.set(type, model);
         reconcile(); // Render items placed before the asset arrived.
       },

@@ -63,7 +63,7 @@
     to `ground.setSnow` — reuses the already-computed `skyColors` scratch, so
     the frame path allocates nothing and reduced-motion keeps its static
     frame. Gates: 303/303, tsc + biome clean.
-- [ ] Task: Wooden trestle bridge model + rendering bridged pieces
+- [~] Task: Wooden trestle bridge model + rendering bridged pieces
   - Criteria: plank deck, railings, stilt legs into the water (Kenney-kit aesthetic); train rides across at normal speed/height, water visible beneath; migrated pieces render identically
 - [ ] Task: Placement integration — ghost validity + drawer track tab
   - Criteria: bridge toy appears in the track tab with icon; ghosts red over water for track/scenery; bridge ghost red on grass; valid water spans snap and commit
