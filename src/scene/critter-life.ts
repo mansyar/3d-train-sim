@@ -38,6 +38,8 @@ export interface CritterLife {
   track(model: Object3D, id: string, voice?: string): void;
   /** Stop animating (the model leaves the scene or the renderer tears down). */
   forget(id: string): void;
+  /** Trigger one hop on the first tracked critter with this voice (idle chirp). */
+  hopByVoice(voice: string): void;
   /** Advance idle sway and hops by dt seconds. Allocates nothing per frame. */
   update(dt: number, trainX: number | null, trainZ: number | null): void;
   dispose(): void;
@@ -72,6 +74,17 @@ export function createCritterLife(onChirp: (voice: string) => void): CritterLife
 
     forget(id) {
       critters.delete(id);
+    },
+
+    hopByVoice(voice) {
+      for (const critter of critters.values()) {
+        if (critter.voice !== voice) continue;
+        // Same gate as a train-passing hop: not already airborne, off cooldown.
+        if (critter.hopStart >= 0 || elapsed < critter.cooldownUntil) continue;
+        critter.hopStart = elapsed;
+        critter.cooldownUntil = elapsed + HOP_COOLDOWN_SECONDS;
+        return; // One critter per chirp.
+      }
     },
 
     update(dt, trainX, trainZ) {

@@ -215,6 +215,46 @@ describe('createAudioController', () => {
     expect(handles.get('chug')?.calls).not.toContain('play');
   });
 
+  it('suspend silences every voice via the seam; resume replays only the chug', () => {
+    const suspendSeam = vi.fn();
+    const startBeatClock = vi.fn();
+    const stopBeatClock = vi.fn();
+    const controller = createAudioController({
+      createSound: () => fakeHandle(),
+      setGlobalMute: vi.fn(),
+      startChugBeatClock: startBeatClock,
+      stopChugBeatClock: stopBeatClock,
+      subscribeToChugBeat: () => () => undefined,
+      suspend: suspendSeam,
+    });
+    controller.startChug();
+
+    controller.suspend();
+    // The seam (Howler pause-all) is the silencing mechanism — no handle-level
+    // pause involved — and the beat clock stops with it.
+    expect(suspendSeam).toHaveBeenCalledOnce();
+    expect(stopBeatClock).toHaveBeenCalledTimes(1);
+    // Still "chugging" from the controller's point of view — the ride state
+    // survives the tab being hidden.
+    expect(controller.isChugging()).toBe(true);
+
+    controller.resume();
+    // The chug handle resumes (Howler resumes a paused sound on play()) and
+    // the beat clock restarts — one-shots are discarded, never replayed.
+    expect(controller.isChugging()).toBe(true);
+    expect(startBeatClock).toHaveBeenCalledTimes(2);
+  });
+
+  it('suspend without a seam or chug is a safe no-op', () => {
+    const controller = createAudioController({
+      createSound: () => fakeHandle(),
+      setGlobalMute: vi.fn(),
+    });
+    controller.suspend(); // Not chugging.
+    controller.resume(); // Not suspended (nothing to resume).
+    expect(controller.isChugging()).toBe(false);
+  });
+
   it('chirps play the critter one-shot for a passing train', () => {
     const { controller, handles, created } = makeWired();
     controller.chirp('oink-pig');

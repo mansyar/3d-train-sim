@@ -41,6 +41,8 @@ export interface AudioControllerOptions {
   startChugBeatClock?: () => void;
   /** Stops the visual rhythm clock when the chug ends. */
   stopChugBeatClock?: () => void;
+  /** Tab hidden: pause every live voice and the beat clock (no audio in a hidden tab). */
+  suspend?: () => void;
 }
 
 export interface AudioController {
@@ -66,6 +68,10 @@ export interface AudioController {
   subscribe(listener: () => void): () => void;
   /** Observes chug beats while the chug is active. Returns an unsubscribe fn. */
   onChugBeat(listener: () => void): () => void;
+  /** Tab hidden: pause the chug and its beat clock (no sound in a hidden tab). */
+  suspend(): void;
+  /** Tab visible again: resume the chug if it was rolling. */
+  resume(): void;
   /** Releases rhythm listeners and any injected clock resources. */
   dispose(): void;
 }
@@ -84,6 +90,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   let muted = false;
   let chugging = false;
   let softened = false;
+  let suspended = false;
 
   function sound(name: string): SoundHandle {
     let handle = sounds.get(name);
@@ -185,6 +192,27 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       return () => {
         beatListeners.delete(listener);
       };
+    },
+
+    suspend: () => {
+      if (suspended) return;
+      suspended = true;
+      // The controller owns the rhythm clock (it started it with the chug);
+      // the seam pauses every live voice (chug + any ringing one-shot), so a
+      // hidden tab is fully silent.
+      stopChugBeatClock?.();
+      options.suspend?.();
+      notify();
+    },
+
+    resume: () => {
+      if (!suspended) return;
+      suspended = false;
+      if (chugging) {
+        startChugBeatClock?.();
+        speakIfDue(); // Resumes the paused chug (respects mute); one-shots are discarded.
+      }
+      notify();
     },
 
     dispose: () => {

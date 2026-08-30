@@ -9,12 +9,15 @@ import {
 } from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createAttractClock } from '../core/attract-clock';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
+import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
+import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
 import { createGround } from './ground';
 import { createLights } from './lights';
@@ -38,6 +41,10 @@ const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 const CAMERA_EASE = 2.5;
 /** The breath between the two dings of a station welcome. */
 const STATION_DING_GAP_MS = 350;
+/** Inactivity before the meadow comes alive with a slow camera drift. */
+const ATTRACT_IDLE_MS = 25_000;
+/** How often the attract clock re-checks its timers (cheap, timer-driven). */
+const ATTRACT_TICK_MS = 250;
 
 export interface SceneHandle {
   dispose(): void;
@@ -57,10 +64,14 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
+  /** The whistle's visual voice: a steam burst at the chimney (no-op before a train shows). */
+  whistlePuff(): void;
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
   stopRide(): void;
+  /** Notify the idle-attract clock of toddler activity (touch, press, drag). */
+  notifyActivity(): void;
 }
 
 export function initScene(
@@ -91,6 +102,30 @@ export function initScene(
   const rides = createRideController(world);
   // Motion and sound stay married: ride starts → chug starts, always.
   const rideAudio = bindRideAudio(rides, audio);
+
+  // Attract life: after a quiet 25 s the meadow stirs — a slow camera drift
+  // (this phase) and, later in the track, quiet critter chirps. The clock is
+  // pure logic driven by a cheap interval, so it stays alive even under
+  // reduced motion (static frame, no RAF loop). Any toddler touch calls
+  // notifyActivity() through the SceneHandle.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const attract = createAttractCamera(OVERVIEW_POSITION, OVERVIEW_LOOK, { reducedMotion });
+  const attractClock = createAttractClock(ATTRACT_IDLE_MS, {
+    now: () => performance.now(),
+    reducedMotion,
+  });
+  const unsubscribeAttract = attractClock.subscribe((event) => {
+    if (event.kind === 'drift') attract.enterIdle();
+    else if (event.kind === 'state' && event.state === 'active') attract.exitIdle();
+    else if (event.kind === 'chirp') {
+      // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
+      if (rides.mode() === 'riding') return;
+      audio.chirp(event.critter);
+      tracks.hopCritter(event.critter);
+    }
+  });
+  let attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
   let steamPuffs: SteamPuffEmitter | null = null;
@@ -199,9 +234,9 @@ export function initScene(
   resize();
   window.addEventListener('resize', resize);
 
-  // The camera glides after the train while riding and eases home on stop.
-  // Reduced-motion users keep the fixed overview — no chase, no drift.
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The camera glides after the train while riding, eases home on stop, and
+  // wanders slowly while the meadow sits idle. Reduced-motion users keep the
+  // fixed overview — no chase, no drift.
   const camLook = OVERVIEW_LOOK.clone();
   const desiredPosition = new Vector3();
   const desiredLook = new Vector3();
@@ -212,8 +247,7 @@ export function initScene(
       desiredPosition.copy(locomotive.position).add(FOLLOW_OFFSET);
       desiredLook.copy(locomotive.position);
     } else {
-      desiredPosition.copy(OVERVIEW_POSITION);
-      desiredLook.copy(OVERVIEW_LOOK);
+      attract.update(dt, desiredPosition, desiredLook);
     }
     const ease = 1 - Math.exp(-CAMERA_EASE * dt);
     camera.position.lerp(desiredPosition, ease);
@@ -221,7 +255,7 @@ export function initScene(
     camera.lookAt(camLook);
   };
 
-  const stopSpin = startSpinLoop(
+  const spinLoop = startSpinLoop(
     renderer,
     scene,
     camera,
@@ -240,6 +274,28 @@ export function initScene(
     },
   );
 
+  // Tab hidden: stop rendering, quiet the chug (and any ringing one-shot),
+  // and pause the attract clock — no sound, no drift, no idle chirps in a
+  // hidden tab. Tab visible again: everything resumes on the next sync — one
+  // shared controller so a flurry of visibility events never double-fires.
+  const visibility = createVisibilityController({
+    isHidden: () => document.hidden,
+    onPause: () => {
+      spinLoop.suspend();
+      audio.suspend();
+      clearInterval(attractTimer);
+      attractTimer = 0;
+      attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
+    },
+    onResume: () => {
+      spinLoop.resume();
+      audio.resume();
+      attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+    },
+  });
+  const onVisibility = () => visibility.sync();
+  document.addEventListener('visibilitychange', onVisibility);
+
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
     cellFromPoint: (clientX, clientY) => tracks.cellFromPoint(clientX, clientY),
@@ -251,11 +307,16 @@ export function initScene(
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => wagonSet.filter((wagon) => wagon !== null).length,
     steamPuffCount: () => visibleSteamPuffs,
+    whistlePuff: () => steamPuffs?.burst(),
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
+    notifyActivity: () => attractClock.notifyActivity(),
     dispose(): void {
       disposed = true;
-      stopSpin();
+      spinLoop.stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearInterval(attractTimer);
+      unsubscribeAttract();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeBeat();

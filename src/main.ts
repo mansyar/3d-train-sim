@@ -47,6 +47,8 @@ if (root) {
     setGridVisible: (visible) => scene?.setGridVisible(visible),
     startRide: () => scene?.startRide() ?? false,
     stopRide: () => scene?.stopRide(),
+    notifyActivity: () => scene?.notifyActivity(),
+    whistlePuff: () => scene?.whistlePuff(),
   });
   scene = initScene(canvas, world, audio);
 

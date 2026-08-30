@@ -105,6 +105,8 @@ export interface TrackRenderer {
   dispose(): void;
   /** Advance critter idle sway/hops; the train position triggers hops. */
   updateCritters(dt: number, trainX: number | null, trainZ: number | null): void;
+  /** Trigger a hop on the critter with this voice (idle chirp dance). */
+  hopCritter(voice: string): void;
   /** Begin a drag preview: the real model follows the pointer, grid-snapped. */
   beginGhost(kind: PieceType | SceneryKind): void;
   /** Snap the ghost to a cell (null hides it off-meadow); tint by validity. */
@@ -465,6 +467,10 @@ export function startTrackRenderer(
     updateCritters(dt, trainX, trainZ): void {
       if (disposed) return;
       critterLife.update(dt, trainX, trainZ);
+    },
+    hopCritter(voice): void {
+      if (disposed) return;
+      critterLife.hopByVoice(voice);
     },
     beginGhost,
     moveGhost,
