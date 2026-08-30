@@ -53,4 +53,41 @@ describe('water-palette', () => {
     const sky = skyColorsAt(0.33);
     expect(waterColorAt(sky, 0.4)).toBe(waterColorAt(sky, 0.4));
   });
+
+  it('omitting depth reads as the deep spine — the original palette unchanged', () => {
+    const sky = skyColorsAt(0.525);
+    expect(waterColorAt(sky, 0)).toBe(waterColorAt(sky, 0, 1));
+  });
+
+  it('shades shallows lighter near the banks — bank-edge water reads pale', () => {
+    const sky = skyColorsAt(0.525);
+    const deep = waterColorAt(sky, 0, 1);
+    const shallow = waterColorAt(sky, 0, 0);
+    const luminance = (hex: number): number =>
+      0.299 * ((hex >> 16) & 0xff) + 0.587 * ((hex >> 8) & 0xff) + 0.114 * (hex & 0xff);
+    expect(luminance(shallow)).toBeGreaterThan(luminance(deep));
+  });
+
+  it('shades depth monotonically — mid-depth sits between spine and bank edge', () => {
+    const sky = skyColorsAt(0.525);
+    const luminance = (hex: number): number =>
+      0.299 * ((hex >> 16) & 0xff) + 0.587 * ((hex >> 8) & 0xff) + 0.114 * (hex & 0xff);
+    expect(luminance(waterColorAt(sky, 0, 0.5))).toBeGreaterThan(
+      luminance(waterColorAt(sky, 0, 1)),
+    );
+    expect(luminance(waterColorAt(sky, 0, 0.5))).toBeLessThan(luminance(waterColorAt(sky, 0, 0)));
+  });
+
+  it('ices over regardless of depth — frozen shallows read as ice, not water', () => {
+    const sky = skyColorsAt(0.525);
+    const frozenDeep = waterColorAt(sky, 1, 1);
+    const frozenShallow = waterColorAt(sky, 1, 0);
+    expect(frozenShallow).toBe(frozenDeep);
+  });
+
+  it('clamps out-of-range depth — a misread cell never breaks the palette', () => {
+    const sky = skyColorsAt(0.525);
+    expect(waterColorAt(sky, 0, -2)).toBe(waterColorAt(sky, 0, 0));
+    expect(waterColorAt(sky, 0, 7)).toBe(waterColorAt(sky, 0, 1));
+  });
 });

@@ -179,7 +179,7 @@ export function initScene(
       : intensityOf(weatherClock.weather);
     weather.update(dt, base);
     ground.setSnow(base.snow);
-    water.update(skyColors, base.snow); // The river mirrors the sky and ices over.
+    water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     // River babble whispers near the water; a frozen river stands the babble
     // down with the duck (same snow gate).

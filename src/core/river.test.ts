@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isWater, riverDriftPath, riverProximity, riverWaterCells } from './river';
+import { isWater, riverDepth, riverDriftPath, riverProximity, riverWaterCells } from './river';
 import { type Cell, MEADOW_CELLS } from './track-graph';
 
 const allCells = (): Cell[] => {
@@ -119,6 +119,33 @@ describe('water cells inventory', () => {
   it('keeps the river a modest share of the meadow (≤ 40%)', () => {
     const wet = allCells().filter((c) => isWater(c)).length;
     expect(wet / (MEADOW_CELLS * MEADOW_CELLS)).toBeLessThanOrEqual(0.4);
+  });
+});
+
+describe('river depth (shore gradient)', () => {
+  // Row 8's center column is 8 (hand-derived — see the proximity notes).
+  it('reads deepest (1) on the river spine — the center-line cells', () => {
+    for (const cell of riverDriftPath()) {
+      expect(riverDepth(cell), `${cell.x},${cell.y}`).toBe(1);
+    }
+  });
+
+  it('reads shallow (0) on the band edge cells — water touching the bank', () => {
+    expect(riverDepth({ x: 7, y: 8 })).toBe(0);
+    expect(riverDepth({ x: 9, y: 8 })).toBe(0);
+  });
+
+  it('is dry (0) off the water — depth is only meaningful on water', () => {
+    expect(riverDepth({ x: 5, y: 8 })).toBe(0);
+    expect(riverDepth({ x: -1, y: 8 })).toBe(0);
+  });
+
+  it('stays in [0, 1] across the whole grid', () => {
+    for (const cell of allCells()) {
+      const d = riverDepth(cell);
+      expect(d, `${cell.x},${cell.y}`).toBeGreaterThanOrEqual(0);
+      expect(d, `${cell.x},${cell.y}`).toBeLessThanOrEqual(1);
+    }
   });
 });
 

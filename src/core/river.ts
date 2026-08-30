@@ -81,6 +81,16 @@ export function riverDriftPath(): Cell[] {
 }
 
 /**
+ * How deep the water is at a cell, 0 (bank-edge shallows) … 1 (the river's
+ * spine) — the shore gradient's depth input. Dry (non-water) cells read 0.
+ * O(1): one subtraction against the hand-authored center line.
+ */
+export function riverDepth(cell: Cell): number {
+  if (!isWater(cell)) return 0;
+  return 1 - Math.abs(cell.x - centerX(cell.y)) / BAND;
+}
+
+/**
  * How close a cell is to the river, 0 (silent) … 1 (full babble). Full on
  * the water and the immediate bank (king-move distance ≤ 1 — the duck glides
  * diagonally, so the babble hears the same way), fading to 0 by 3 cells out.
