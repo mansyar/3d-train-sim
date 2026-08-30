@@ -92,11 +92,15 @@ export function createAmbienceAudio(audio: AudioController): AmbienceAudio {
     );
     rainGain.gain.setTargetAtTime(target.rain * RAIN_MAX_GAIN, now, 0.8);
     windGain.gain.setTargetAtTime(wind * WIND_MAX_GAIN, now, 1.2);
-    master.gain.setTargetAtTime(muted || suspended ? 0 : 1, now, 0.2);
+    master.gain.setTargetAtTime(muted ? 0 : 1, now, 0.2);
   }
 
   const unsubscribeMute = audio.subscribe(() => {
+    const wasMuted = muted;
     muted = audio.isMuted();
+    // Unmuting while the tab is visible must wake a suspended context —
+    // otherwise a hide-while-muted session stays silent forever.
+    if (wasMuted && !muted && !suspended) void context?.resume().catch(() => undefined);
     applyTargets();
   });
 
@@ -108,10 +112,13 @@ export function createAmbienceAudio(audio: AudioController): AmbienceAudio {
     },
     suspend() {
       suspended = true;
-      applyTargets();
+      // A truly suspended context stops rendering the noise graph — not just
+      // a silent master (hidden tabs shouldn't burn cycles on weather).
+      void context?.suspend().catch(() => undefined);
     },
     resume() {
       suspended = false;
+      if (!muted) void context?.resume().catch(() => undefined);
       applyTargets();
     },
     dispose() {
