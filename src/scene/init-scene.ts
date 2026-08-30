@@ -9,12 +9,14 @@ import {
 } from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createAttractClock } from '../core/attract-clock';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { wagonSlots } from '../core/wagons';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
+import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
 import { createGround } from './ground';
 import { createLights } from './lights';
@@ -38,6 +40,10 @@ const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 const CAMERA_EASE = 2.5;
 /** The breath between the two dings of a station welcome. */
 const STATION_DING_GAP_MS = 350;
+/** Inactivity before the meadow comes alive with a slow camera drift. */
+const ATTRACT_IDLE_MS = 25_000;
+/** How often the attract clock re-checks its timers (cheap, timer-driven). */
+const ATTRACT_TICK_MS = 250;
 
 export interface SceneHandle {
   dispose(): void;
@@ -61,6 +67,8 @@ export interface SceneHandle {
   startRide(): boolean;
   /** Gently stop the ride. */
   stopRide(): void;
+  /** Notify the idle-attract clock of toddler activity (touch, press, drag). */
+  notifyActivity(): void;
 }
 
 export function initScene(
@@ -91,6 +99,24 @@ export function initScene(
   const rides = createRideController(world);
   // Motion and sound stay married: ride starts → chug starts, always.
   const rideAudio = bindRideAudio(rides, audio);
+
+  // Attract life: after a quiet 25 s the meadow stirs — a slow camera drift
+  // (this phase) and, later in the track, quiet critter chirps. The clock is
+  // pure logic driven by a cheap interval, so it stays alive even under
+  // reduced motion (static frame, no RAF loop). Any toddler touch calls
+  // notifyActivity() through the SceneHandle.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const attract = createAttractCamera(OVERVIEW_POSITION, OVERVIEW_LOOK, { reducedMotion });
+  const attractClock = createAttractClock(ATTRACT_IDLE_MS, {
+    now: () => performance.now(),
+    reducedMotion,
+  });
+  const unsubscribeAttract = attractClock.subscribe((event) => {
+    if (event.kind === 'drift') attract.enterIdle();
+    else if (event.kind === 'state' && event.state === 'active') attract.exitIdle();
+  });
+  const attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+
   let rideUpdate: ((dt: number) => void) | null = null;
   let locomotive: Object3D | null = null;
   let steamPuffs: SteamPuffEmitter | null = null;
@@ -199,9 +225,9 @@ export function initScene(
   resize();
   window.addEventListener('resize', resize);
 
-  // The camera glides after the train while riding and eases home on stop.
-  // Reduced-motion users keep the fixed overview — no chase, no drift.
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The camera glides after the train while riding, eases home on stop, and
+  // wanders slowly while the meadow sits idle. Reduced-motion users keep the
+  // fixed overview — no chase, no drift.
   const camLook = OVERVIEW_LOOK.clone();
   const desiredPosition = new Vector3();
   const desiredLook = new Vector3();
@@ -212,8 +238,7 @@ export function initScene(
       desiredPosition.copy(locomotive.position).add(FOLLOW_OFFSET);
       desiredLook.copy(locomotive.position);
     } else {
-      desiredPosition.copy(OVERVIEW_POSITION);
-      desiredLook.copy(OVERVIEW_LOOK);
+      attract.update(dt, desiredPosition, desiredLook);
     }
     const ease = 1 - Math.exp(-CAMERA_EASE * dt);
     camera.position.lerp(desiredPosition, ease);
@@ -253,9 +278,12 @@ export function initScene(
     steamPuffCount: () => visibleSteamPuffs,
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
+    notifyActivity: () => attractClock.notifyActivity(),
     dispose(): void {
       disposed = true;
       stopSpin();
+      clearInterval(attractTimer);
+      unsubscribeAttract();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeBeat();

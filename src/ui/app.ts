@@ -132,6 +132,8 @@ export interface AppOptions {
   startRide(): boolean;
   /** Gently stop the ride. */
   stopRide(): void;
+  /** Tell the scene the toddler is interacting (keeps the attract mode away). */
+  notifyActivity(): void;
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
@@ -291,6 +293,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const moveDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
+    // A long, slow drag still counts as activity — the meadow stays awake.
+    options.notifyActivity();
     const cell = options.cellFromPoint(clientX, clientY);
     const placeable = cell !== null && canPlaceAt(cell);
     options.moveGhost(cell, drag.rotation, placeable);
@@ -572,6 +576,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     options.world.reset();
     options.audio.ding();
   });
+
+  // Any press anywhere is toddler activity: it dismisses the attract drift
+  // instantly and keeps the idle clock at arm's length.
+  window.addEventListener('pointerdown', () => options.notifyActivity());
 
   // A tap anywhere outside the armed gate dismisses it silently.
   window.addEventListener('pointerdown', (event) => {

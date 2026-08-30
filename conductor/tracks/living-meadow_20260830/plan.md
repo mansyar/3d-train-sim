@@ -25,7 +25,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   audio layers subscribe to its transitions and events. Gates: biome ✅,
   `tsc --noEmit` ✅, new unit tests green.
 
-- [ ] Task: Attract camera drift (scene wiring)
+- [x] Task: Attract camera drift (scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - After the clock reports `idle`, the overview camera eases into a very
