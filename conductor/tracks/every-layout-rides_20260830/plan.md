@@ -143,7 +143,17 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       instant and total via the audio controller's `setGlobalMute`.
     - Gates re-verified: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) `6e12dc5..8d704c3`
+
+  - **Automated gates:** `CI=true pnpm test` — 246/246 passing · Biome clean ·
+    `tsc --noEmit` clean · coverage: `ride.ts` 100% statements.
+  - **Manual verification (user-confirmed ✅):** user built two disjoint
+    loops in the running app — two trains ride, one per loop, each with
+    its own wagons and steam; the initial parked train rolls onto the
+    track instead of lingering (fix `8d704c3`: ride assignment reuses
+    parked spares first); 🚂 kind swaps replace every train's model in
+    place mid-ride without restarts.
+  - **Checkpoint SHA:** `8d704c3` (last functional commit of Phase 2).
 
 ## Phase 3: Camera Cycling & Whistle (UI + scene + e2e)
 
