@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [perf-guardrails_20260830](tracks/perf-guardrails_20260830/index.md) | Performance Guardrails | Feature | in progress |
+| [perf-guardrails_20260830](tracks/perf-guardrails_20260830/index.md) | Performance Guardrails | Feature | done |
 | [time-of-day-weather_20260830](tracks/time-of-day-weather_20260830/index.md) | Time of Day & Weather | Feature | done |
 | [release-v0.3.0_20260830](tracks/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | done |
 

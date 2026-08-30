@@ -178,7 +178,20 @@ acceptance criteria + smoke tests per `workflow.md`.
     - `CHANGELOG.md`: parent-readable `[Unreleased]` entry — the table
       looks after itself on slower tablets (gentle quality trims, no pops),
       plus the hidden `?perf=debug` check-up for grown-ups.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes:
+    - Task: Phase 3 verification & checkpoint.
+    - Automated: `pnpm check` green; Playwright 43/43 (tablet + phone +
+      prod). Degrade/recover verified programmatically (headed real-GPU run:
+      Q0 → Q1 under 6× throttle, Q0 restored 10 s after easing — the exact
+      4 s cooldown + 6 s health constants; headless: constant canvas buffer
+      across Q0→Q1→Q2, zero errors).
+    - Manual verification: user confirmed the Phase 2 plan (2026-08-30);
+      real-tablet spot-check offered at handoff (the headed-GPU browser run
+      is the strongest available proxy on this machine).
+    - Docs synced: `tech-stack.md` folder notes + `CHANGELOG.md`
+      `[Unreleased]`; no product-definition or guidelines changes needed —
+      the guardrails are invisible to toddlers by design.
 
 ## Fix Notes — headless-Chromium compositor freeze
 The first guardrails commit crashed on a dangling `invalidateCanvasLayer`
