@@ -85,14 +85,21 @@ criteria + smoke + manual tablet check for scene/audio wiring
   already owns the pool — extend, don't duplicate. Gates: biome ✅,
   `tsc --noEmit` ✅, Playwright smoke ✅.
 
-- [ ] Task: E2E coverage for whistle burst
+- [x] Task: E2E coverage for whistle burst
 
 - Extend `e2e/smoke.spec.ts` (or the steam-puff lifecycle spec) to press the
   Whistle button and assert a puff appears (dev handles expose the live
   scene). Assert zero console errors.
 - **Commit:** `test(e2e): Cover whistle steam burst`
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 214 unit
+  tests ✅, 14 Playwright smoke ✅ (including the new whistle-burst spec —
+  zero console errors, zero external requests, 2026-08-30). Manual — pending
+  user confirmation: whistling on a dev server shows a visible steam burst at
+  the locomotive chimney that fades; a double-toot reads as a fuller cloud.
+  - Checkpoint: `6a0f0f4` (last functional commit).
 
 ## Phase 3: Tab-Hide Pause
 
