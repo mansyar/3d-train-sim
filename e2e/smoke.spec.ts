@@ -332,6 +332,65 @@ test('the sound choice survives a reload through local autosave', async ({ page 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  // Deterministically place a straight piece at a known cell.
+  const placed = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 8, y: 8 }, 0);
+  });
+  void placed;
+
+  // Find any screen point that maps to the placed cell, then tap the toy there.
+  const tapPoint = await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          cellFromPoint: (x: number, y: number) => { x: number; y: number } | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!sceneHandle) throw new Error('dev scene handle missing');
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    for (let y = 0; y < height; y += 24) {
+      for (let x = 0; x < width; x += 24) {
+        const cell = sceneHandle.cellFromPoint(x, y);
+        if (cell?.x === 8 && cell?.y === 8) return { x, y };
+      }
+    }
+    throw new Error('cell (8,8) not visible on screen');
+  });
+
+  await page.mouse.click(tapPoint.x, tapPoint.y);
+  await page.waitForTimeout(400);
+
+  const rotated = await page.evaluate(() => {
+    const world = (
+      window as unknown as { __tinyTracksWorld?: { pieces: () => { rotation: number }[] } }
+    ).__tinyTracksWorld;
+    return world?.pieces()[0]?.rotation;
+  });
+  expect(rotated).toBe(90);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

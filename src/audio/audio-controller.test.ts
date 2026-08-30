@@ -158,10 +158,12 @@ describe('createAudioController', () => {
     const { controller, handles } = makeWired();
     controller.whistle();
     controller.ding();
+    controller.click();
 
     handles.get('whistle')?.finish();
     expect(handles.get('whistle')?.calls).toEqual(['rate:1', 'onEnd', 'play', 'rate:1']);
     expect(handles.get('ding')?.calls).toEqual(['play']);
+    expect(handles.get('click')?.calls).toEqual(['play']);
   });
 
   it('plays each train whistle at its profile rate and resets to baseline', () => {
@@ -188,8 +190,9 @@ describe('createAudioController', () => {
     controller.startChug();
     controller.whistle();
     controller.ding();
+    controller.click();
 
-    for (const name of ['chug', 'whistle', 'ding']) {
+    for (const name of ['chug', 'whistle', 'ding', 'click']) {
       expect(handles.get(name)?.calls ?? []).not.toContain('play');
     }
     expect(controller.isChugging()).toBe(true);

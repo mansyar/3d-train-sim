@@ -145,7 +145,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <div class="drawer-tabs" role="tablist" aria-label="Toy groups">${tabStrip}</div>
       ${tabPanels}
     </div>
-    <button class="rotate-knob" type="button" aria-label="Rotate piece" hidden>⟳</button>
     <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
             aria-pressed="false">#</button>
     <button class="parent-gate" type="button"
@@ -190,8 +189,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     trainDrawer.append(button);
   }
   root.append(trainDrawer);
-  const rotateKnob = root.querySelector<HTMLButtonElement>('.rotate-knob');
-  if (!drawer || !toysSlot || !trainSlot || !rotateKnob) {
+  if (!drawer || !toysSlot || !trainSlot) {
     throw new Error('toybox chrome missing from app frame');
   }
 
@@ -266,13 +264,19 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   let drag: { kind: PieceType | SceneryKind; rotation: Rotation; pickedId: string | null } | null =
     null;
   let lastPointer = { x: -1000, y: -1000 };
+  /** Fingers stray past the "rotate tap" limit before they may drag/trash. */
+  const TAP_DRAG_PX = 12;
+  // A just-pressed placed toy, awaiting either a tap (rotate in place) or
+  // enough movement to become a relocate drag. null when idle.
+  let pressed: { picked: PickedItem; startX: number; startY: number } | null = null;
 
-  // Pressing a placed toy lifts it as a ghost (relocate / trash drags).
-  // A plain tap releases on the same cell — relocate is a no-op snap-back.
+  // Pressing a placed toy does NOT lift it yet: a release without movement is
+  // a rotate tap, and only movement past TAP_DRAG_PX turns the press into a
+  // lift-drag (relocate or trash). Light taps no longer lift pieces.
   canvas.addEventListener('pointerdown', (event) => {
-    if (drag || (options.isReady && !options.isReady())) return;
+    if (drag || pressed || (options.isReady && !options.isReady())) return;
     const picked = options.pickPiece(event.clientX, event.clientY);
-    if (picked) beginPlacedDrag(picked);
+    if (picked) pressed = { picked, startX: event.clientX, startY: event.clientY };
   });
 
   // Track pieces and scenery share the meadow: a cell holds at most one toy.
@@ -293,6 +297,29 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     drag.rotation = ((drag.rotation + 90) % 360) as Rotation;
   };
 
+  const rotateBounce = (clientX: number, clientY: number) => {
+    const bounce = document.createElement('div');
+    bounce.className = 'rotate-bounce';
+    bounce.style.translate = `${clientX - 24}px ${clientY - 24}px`;
+    root.append(bounce);
+    bounce.addEventListener('animationend', () => bounce.remove());
+  };
+
+  // A tap on a placed toy turns it 90° in place — same cell, next yaw. The
+  // renderer reconciles from the store, so the mesh follows; the click is the
+  // rotation's voice and the bounce its visible pop.
+  const rotatePlacedToy = (picked: PickedItem, clientX: number, clientY: number) => {
+    const rotation = ((picked.rotation + 90) % 360) as Rotation;
+    const placed =
+      picked.kind === 'piece'
+        ? options.world.relocate(picked.id, picked.cell, rotation)
+        : options.world.relocateScenery(picked.id, picked.cell, rotation);
+    if (placed !== 'placed') return; // Same-cell self-slot — should always land.
+    options.audio.click();
+    options.notifyActivity();
+    rotateBounce(clientX, clientY);
+  };
+
   const moveDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
     // A long, slow drag still counts as activity — the meadow stays awake.
@@ -306,7 +333,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     if (options.isReady && !options.isReady()) return;
     drag = { kind, rotation: 0, pickedId: null };
     options.beginGhost(kind);
-    rotateKnob.removeAttribute('hidden');
   };
 
   const beginPlacedDrag = (picked: PickedItem) => {
@@ -314,7 +340,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     drag = { kind, rotation: picked.rotation, pickedId: picked.id };
     options.setPieceVisible(picked.id, false); // The ghost stands in until the drop.
     options.beginGhost(kind);
-    rotateKnob.removeAttribute('hidden');
   };
 
   const ping = (clientX: number, clientY: number) => {
@@ -372,21 +397,36 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     }
     options.endGhost();
     drag = null;
-    rotateKnob.setAttribute('hidden', '');
   };
-
-  // Releases over the rotate knob are a rotation tap, never a drop.
-  const isKnob = (event: Event): boolean =>
-    event.target instanceof Element && event.target.closest('.rotate-knob') !== null;
 
   window.addEventListener('pointermove', (event) => {
     lastPointer = { x: event.clientX, y: event.clientY };
-    if (drag) moveDrag(event.clientX, event.clientY);
+    if (drag) {
+      moveDrag(event.clientX, event.clientY);
+      return;
+    }
+    // A press that wanders past the tap limit becomes a relocate/trash drag.
+    if (!pressed) return;
+    const distance = Math.hypot(event.clientX - pressed.startX, event.clientY - pressed.startY);
+    if (distance > TAP_DRAG_PX) {
+      const { picked } = pressed;
+      pressed = null;
+      beginPlacedDrag(picked);
+      moveDrag(event.clientX, event.clientY);
+    }
   });
   window.addEventListener('pointerup', (event) => {
-    if (drag && !isKnob(event)) endDrag(event.clientX, event.clientY);
+    if (pressed) {
+      // Released where it started: a rotate tap on the placed toy.
+      const { picked } = pressed;
+      pressed = null;
+      rotatePlacedToy(picked, event.clientX, event.clientY);
+      return;
+    }
+    if (drag) endDrag(event.clientX, event.clientY);
   });
   window.addEventListener('pointercancel', () => {
+    pressed = null;
     if (drag) endDrag(-1000, -1000);
   });
   window.addEventListener('keydown', (event) => {
@@ -404,14 +444,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       beginDrag(kind as PieceType | SceneryKind);
     });
   }
-
-  rotateKnob.addEventListener('pointerdown', (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-    if (!drag) return;
-    stepRotation();
-    moveDrag(lastPointer.x, lastPointer.y);
-  });
 
   // ---- Grid toggle (debug): reveal the snap cells pieces land on ----------
   const gridToggle = root.querySelector<HTMLButtonElement>('.grid-toggle');
