@@ -48,7 +48,11 @@ export function intensityOf(weather: Weather): WeatherIntensity {
 }
 
 /** Blend two intensity sets — drives soft weather cross-fades. */
-export function lerpIntensity(a: WeatherIntensity, b: WeatherIntensity, t: number): WeatherIntensity {
+export function lerpIntensity(
+  a: WeatherIntensity,
+  b: WeatherIntensity,
+  t: number,
+): WeatherIntensity {
   return {
     rain: a.rain + (b.rain - a.rain) * t,
     snow: a.snow + (b.snow - a.snow) * t,

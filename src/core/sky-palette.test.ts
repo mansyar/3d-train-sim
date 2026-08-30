@@ -47,7 +47,8 @@ describe('nightFactorAt', () => {
   });
 });
 
-describe('celestialAt', () => {  it('has the sun up only across dawn→dusk, peaking mid-day', () => {
+describe('celestialAt', () => {
+  it('has the sun up only across dawn→dusk, peaking mid-day', () => {
     expect(celestialAt(0.86).sun).toBe(0); // Night: sun below the horizon.
     expect(celestialAt(0.36).sun).toBeCloseTo(1, 5); // Mid-arc: sun overhead.
     expect(celestialAt(0.06).sun).toBeCloseTo(Math.sin((Math.PI * 0.06) / 0.72), 5);
