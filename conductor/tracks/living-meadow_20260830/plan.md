@@ -8,7 +8,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
 ## Phase 1: Idle Attract Mode
 
-- [~] Task: Idle/attract state machine in `src/core/` (logic — TDD)
+- [x] Task: Idle/attract state machine in `src/core/` (logic — TDD)
 
 - **Expected behavior (unit tests first):**
   - `createAttractClock(thresholdMs, { now, random })` starts in `active`;
