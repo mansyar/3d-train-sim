@@ -293,4 +293,3 @@ export function solveRidePaths(pieces: readonly PlacedPiece[]): TrainPath[] {
 export function solvePath(pieces: readonly PlacedPiece[]): TrainPath {
   return solveRidePaths(pieces)[0] ?? { steps: [], closed: false };
 }
-

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { solvePath, solveRidePaths, type RideComponent, selectRideComponents } from './pathing';
+import { type RideComponent, selectRideComponents, solvePath, solveRidePaths } from './pathing';
 import { endpointsFor } from './pieces';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
 
@@ -478,7 +478,11 @@ describe('selectRideComponents — rank and cap concurrent rides', () => {
   });
 
   it('selects all components when there are at most cap of them', () => {
-    const components = [component('a', 3, '0,0'), component('b', 5, '4,0'), component('c', 1, '7,7')];
+    const components = [
+      component('a', 3, '0,0'),
+      component('b', 5, '4,0'),
+      component('c', 1, '7,7'),
+    ];
 
     expect(selectRideComponents(components)).toEqual([
       component('b', 5, '4,0'),
@@ -517,7 +521,11 @@ describe('selectRideComponents — rank and cap concurrent rides', () => {
   });
 
   it('honours an explicit cap', () => {
-    const components = [component('a', 1, '0,0'), component('b', 2, '1,0'), component('c', 3, '2,0')];
+    const components = [
+      component('a', 1, '0,0'),
+      component('b', 2, '1,0'),
+      component('c', 3, '2,0'),
+    ];
 
     expect(selectRideComponents(components, 2).map((c) => c.anchor)).toEqual(['2,0', '1,0']);
   });
