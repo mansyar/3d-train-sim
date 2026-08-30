@@ -51,20 +51,22 @@ export function createPerfMonitor(options: PerfMonitorOptions = {}): PerfMonitor
   let clock = 0;
   let paused = false;
 
+  // Shared scratch result — the probe is called every frame, and the
+  // zero-per-frame-allocation rule covers even this small object.
+  const windowScan = { valid: 0, total: 0 };
   function scanWindow(): { valid: number; total: number } {
     const cutoff = clock - PERF_WINDOW_SECONDS;
-    let valid = 0;
-    let total = 0;
+    windowScan.valid = 0;
+    windowScan.total = 0;
     for (let i = 0; i < stored; i += 1) {
-      const end = ends[i];
-      const delta = deltas[i];
-      if (end === undefined || delta === undefined) continue;
+      const end = ends[i]!;
+      const delta = deltas[i]!;
       if (end > cutoff) {
-        valid += 1;
-        total += delta;
+        windowScan.valid += 1;
+        windowScan.total += delta;
       }
     }
-    return { valid, total };
+    return windowScan;
   }
 
   return {
