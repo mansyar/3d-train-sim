@@ -26,10 +26,30 @@ audio wiring is verified by smoke tests and explicit manual criteria per
     `DayPhase`, `phaseAtFraction()` (wraps out-of-range fractions), and
     `createDayClock({ now })` exposing `phase`, `fraction` (0..1, drives the
     sun/moon arc) and a `phase`-change subscription.
-- [ ] Task: Write failing tests for `weather-cycle.ts` (Red) — clear→cloudy→rain
+- [x] Task: Write failing tests for `weather-cycle.ts` (Red) — clear→cloudy→rain
   →snow drift, 5–8 s cross-fade ramps, 30–45 s hold times, reduced-motion flag
   exposure
-- [ ] Task: Implement `weather-cycle.ts` (Green)
+  `921396e`
+
+  - **Notes:** Red confirmed (module missing). 6/6 green after implement —
+    drift order + wrap, min-hold fade start with a single emit, mid-fade
+    blend progress → settle, full-range ramp (random 0.5 → 6.5 s fade),
+    whole-order walk with wrap. One test correction during green: the wrap
+    test jumped a full hold+fade in a single tick; stepped it like real
+    frames instead (the machine settles a due fade on the next tick).
+    Files: `src/core/weather-cycle.ts`, `src/core/weather-cycle.test.ts`.
+  - **Deviation:** no `reducedMotion` flag in the core machine — reduced
+    motion governs *particle* rendering only (scene layer); weather itself
+    still drifts per spec R5/acceptance criteria.
+- [x] Task: Implement `weather-cycle.ts` (Green)
+  `921396e`
+
+  - **Notes:** Same atomic red→green commit as the suite. Public surface:
+    `Weather`, `WEATHER_ORDER`, `nextWeather()`, `WeatherBlend` and
+    `createWeatherClock({ now, random })` exposing `weather`, a `blend`
+    descriptor (`{from, to, t}` — null when settled) and fade-start events.
+    Holds draw 30–45 s, fades 5–8 s; transitions are always soft lerp, never
+    abrupt switches.
 - [ ] Task: Coverage check — ≥90% on both modules
   (`CI=true pnpm test -- --coverage`)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
