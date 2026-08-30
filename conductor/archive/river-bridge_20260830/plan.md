@@ -182,6 +182,11 @@
     10 s river-active idle with two differing frames and a clean console.
     Full suite: 35/35 (tablet+phone+prod), 322/322 unit. Exit-1s are the
     pre-existing vite WebServer close warning.
+    **Correction (post-archive):** that "35/35" was a misread — the same run
+    also carried 16 failures (8 smoke specs placing track on now-flooded
+    river cells; the failure summary was cut from captured output). Fixed in
+    `ef4d063` by moving the spec fixtures onto dry cells; the true full-suite
+    state on the merged branch is 51/51 e2e and 338/338 unit.
 - [x] Task: Visual & perf pass — overview-camera pixel sampling of water day/night/ice states; tablet FPS floor intact
   - **Notes:** Covered by three layers: the palette's pure day/night/ice
     math (12 `water-palette` tests, incl. depth-monotonic + ice-swallows-
