@@ -23,7 +23,7 @@ criteria + smoke + manual tablet check for scene wiring
 - **Notes:** Extend `src/core/pathing.test.ts` following its existing
   helper/fixture conventions. Confirm red before any implementation change.
 
-- [ ] Task: Fix walk termination in `solvePath` (logic)
+- [x] Task: Fix walk termination in `solvePath` (logic) `119a5c7`
 
 - **Expected behavior:**
   - Closure is detected only when the walk returns to the exact start state
@@ -38,7 +38,7 @@ criteria + smoke + manual tablet check for scene wiring
 - **Notes:** `src/core/pathing.ts` only; crossing straight-through routing
   unchanged. Green after fix.
 
-- [ ] Task: Coverage + gates
+- [~] Task: Coverage + gates
 
 - Coverage >80% on new logic (existing pathing coverage extended); run
   `pnpm check` (biome + `tsc --noEmit` + vitest) and the Playwright smoke
