@@ -88,7 +88,17 @@
     authoritatively; both drags-from-drawer and relocate drags tint true).
     303/303, tsc + biome clean; exact tint/snap flushness confirmed visually
     in Phase 4's pass.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  - **Verification:** Full `pnpm check` green — biome clean, tsc clean,
+    303/303 unit tests across 25 files. Scene wiring criteria-verified:
+    water paints via the pure water-palette (sky mirror + ice lerp, 7
+    tests) inside the shared ambience paint (scratch-only, static frame
+    under reduced motion); the procedural trestle renders bridged pieces
+    measured to the kit's rail height; ghost tint matches store
+    enforcement on every drag path. Commits: `71971bb`, `b6c8faf`,
+    `859c303`. Visual flushness confirmation deferred to Phase 4's
+    screenshot pass, per plan.
 
 ## Phase 3 — Life & sound (scene/audio wiring, criteria-verified)
 - [ ] Task: The duck — drift, bob, train-reactive wiggle
