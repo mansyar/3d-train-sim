@@ -69,8 +69,18 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 ## Phase 2: Sky, lighting & weather rendering (scene — criteria-verified)
 
-- [~] Task: Sky dome + sun/moon arc — *criteria: sun visible by day, moon +
+- [x] Task: Sky dome + sun/moon arc — *criteria: sun visible by day, moon +
   deep-blue sky at night, discs arc smoothly*
+  `2194e83`
+
+  - **Notes:** Two commits — `a15bf13` added the TDD'd pure palette
+    (`src/core/sky-palette.ts`, 5/5: phase-center keyframes, midpoint blends,
+    night→dawn wrap, sun/moon elevation arcs), `2194e83` added the scene dome
+    (`src/scene/sky-dome.ts`: BackSide gradient shader sphere r=130, sun/moon
+    discs on a behind-meadow arc with horizon fade) and wired the day clock
+    into `init-scene.ts`'s spin loop. Initial paint covers the reduced-motion
+    static frame (mid-morning). Biome import fixes folded in; full
+    `pnpm check` 242/242 ✅.
 - [ ] Task: Lighting lerp + warm window/station glows at night — *criteria:
   night never near-black, glows fade in at dusk, out at dawn*
 - [ ] Task: Cloud puffs + instanced rain/snow particles + reduced-motion —
