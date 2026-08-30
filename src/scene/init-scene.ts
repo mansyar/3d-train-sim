@@ -7,27 +7,51 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
+import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import { createAttractClock } from '../core/attract-clock';
+import { createDayClock } from '../core/day-clock';
 import type { SceneryKind } from '../core/scenery';
+import {
+  type Celestial,
+  celestialAt,
+  nightFactorAt,
+  type SkyColors,
+  skyColorsAt,
+} from '../core/sky-palette';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
+import {
+  createWeatherClock,
+  intensityOf,
+  lerpIntensity,
+  type WeatherIntensity,
+} from '../core/weather-cycle';
 import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { disposeObject } from './dispose-object';
+import { createFireflies } from './fireflies';
 import { createGround, GROUND_SIZE } from './ground';
+import { attachHeadlight, type Headlight } from './headlight';
 import { createLights } from './lights';
 import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
 import { createPlaceholderCrate } from './placeholder-crate';
-import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
+import {
+  createRideMotion,
+  parkFollowersBehind,
+  type RideMotion,
+} from './ride-motion';
+import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
+import { createWeatherParticles } from './weather-particles';
+import { disposeWindowGlows, setGlowNight } from './window-glow';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -108,9 +132,51 @@ export function initScene(
   camera.lookAt(OVERVIEW_LOOK);
 
   const disposables: Array<() => void> = [];
-  disposables.push(createLights(scene));
-  disposables.push(createGround(scene));
+  const lights = createLights(scene);
+  disposables.push(lights.dispose);
+  const ground = createGround(scene);
+  disposables.push(ground.dispose);
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
+  const weather = createWeatherParticles(scene);
+  disposables.push(weather.dispose);
+  const ambience = createAmbienceAudio(audio);
+  const fireflies = createFireflies(scene);
+  disposables.push(fireflies.dispose);
+
+  // Time of day + weather: pure clocks (driven per animation frame) recolor
+  // the sky, ease the lights, drive particles and whiten the meadow. Painted
+  // once up front so the reduced-motion static frame still shows a lit
+  // mid-morning meadow (frozen ambience under reduced motion).
+  const dayClock = createDayClock({ now: () => performance.now() });
+  const weatherClock = createWeatherClock({ now: () => performance.now() });
+  const sky = createSkyDome(scene);
+  /** One night beam per little train — parked spares included. */
+  const headlights: Headlight[] = [];
+  // Scratch objects for the frame path — the palette/intensity calls write
+  // into these instead of allocating (spec NFR: no per-frame allocation).
+  const skyColors: SkyColors = { top: 0, horizon: 0 };
+  const celestial: Celestial = { sun: 0, moon: 0 };
+  const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
+  const paintAmbience = (dt = 0.016): void => {
+    const fraction = dayClock.fraction;
+    sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
+    const night = nightFactorAt(fraction);
+    lights.update(night);
+    setGlowNight(night);
+    for (const light of headlights) light.update(night);
+    // Weather intensity lerps across any active cross-fade.
+    const blend = weatherClock.blend;
+    const base = blend
+      ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t, intensity)
+      : intensityOf(weatherClock.weather);
+    weather.update(dt, base);
+    ground.setSnow(base.snow);
+    ambience.update(base); // Rain patter + wind follow the weather bed.
+    fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
+  };
+  paintAmbience();
+  disposables.push(sky.dispose);
+
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
 
@@ -135,6 +201,8 @@ export function initScene(
     else if (event.kind === 'chirp') {
       // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
       if (rides.mode() === 'riding') return;
+      // ...and the critters are asleep at night (fireflies take the shift).
+      if (nightFactorAt(dayClock.fraction) >= 0.6) return;
       audio.chirp(event.critter);
       tracks.hopCritter(event.critter);
     }
@@ -150,6 +218,8 @@ export function initScene(
     model: Object3D;
     wagons: Object3D[];
     puffs: SteamPuffEmitter;
+    /** The engine's night beam, updated by the ambience paint. */
+    headlight: Headlight;
     motion: RideMotion;
     /** The ride state the motion last began with — a new state ⇒ re-begin. */
     begunWith: RideState | null;
@@ -273,6 +343,8 @@ export function initScene(
       });
     const puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(puffs.group);
+    const headlight = attachHeadlight(model);
+    headlights.push(headlight);
     parkFollowersBehind(model, wagons);
     scene.remove(crate.mesh);
     spinTarget = null;
@@ -284,6 +356,7 @@ export function initScene(
       model,
       wagons,
       puffs,
+      headlight,
       motion: null as unknown as RideMotion,
       begunWith: null,
       startNear: null,
@@ -306,6 +379,8 @@ export function initScene(
     scene.remove(rig.model);
     for (const wagon of rig.wagons) scene.remove(wagon);
     rig.wagons.length = 0;
+    const lightIndex = headlights.indexOf(rig.headlight);
+    if (lightIndex !== -1) headlights.splice(lightIndex, 1);
     pausedRigs.delete(rig);
   };
 
@@ -453,10 +528,14 @@ export function initScene(
     rig.puffs.dispose();
     scene.remove(rig.puffs.group);
     scene.remove(rig.model); // The old engine leaves the meadow — no ghosts.
+    const lightIndex = headlights.indexOf(rig.headlight);
+    if (lightIndex !== -1) headlights.splice(lightIndex, 1);
     const model = template.clone(true);
     scene.add(model);
     rig.kind = kind;
     rig.model = model;
+    rig.headlight = attachHeadlight(model);
+    headlights.push(rig.headlight);
     rig.puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(rig.puffs.group);
     rig.puffs.setEmitting(rides.mode() === 'riding');
@@ -544,6 +623,9 @@ export function initScene(
     camera,
     () => spinTarget,
     (dt) => {
+      dayClock.tick();
+      weatherClock.tick();
+      paintAmbience(dt);
       visibleSteamPuffs = 0;
       // Every little train ticks — parked spares too, so a pre-ride whistle
       // burst still puffs from the meadow's resting train.
@@ -554,8 +636,19 @@ export function initScene(
       }
       // Critters idle always and hop while a riding train passes close.
       // Parked spares report null — hops read as passing, not presence.
+      // Mood: rain shrinks their excitement radius, night is bedtime.
       const star = primaryRig();
-      tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null);
+      const night = nightFactorAt(dayClock.fraction);
+      const blend = weatherClock.blend;
+      const rainNow = blend
+        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t).rain
+        : intensityOf(weatherClock.weather).rain;
+      tracks.updateCritters(
+        dt,
+        star?.model.position.x ?? null,
+        star?.model.position.z ?? null,
+        { rain: rainNow, night },
+      );
       updateCamera(dt);
     },
   );
@@ -569,6 +662,7 @@ export function initScene(
     onPause: () => {
       spinLoop.suspend();
       audio.suspend();
+      ambience.suspend();
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -576,6 +670,7 @@ export function initScene(
     onResume: () => {
       spinLoop.resume();
       audio.resume();
+      ambience.resume();
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
@@ -646,6 +741,8 @@ export function initScene(
       }
       wagonTemplates.length = 0;
       for (const dispose of disposables) dispose();
+      ambience.dispose();
+      disposeWindowGlows();
       renderer.dispose();
     },
   };

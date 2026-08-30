@@ -29,10 +29,11 @@ import {
 } from '../core/scenery';
 import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
-import { createCritterLife } from './critter-life';
+import { type CritterMood, createCritterLife } from './critter-life';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
 import { disableShadows, enableCastShadows } from './shadows';
+import { attachWindowGlow } from './window-glow';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
@@ -133,8 +134,14 @@ export type PickedItem =
 
 export interface TrackRenderer {
   dispose(): void;
-  /** Advance critter idle sway/hops; the train position triggers hops. */
-  updateCritters(dt: number, trainX: number | null, trainZ: number | null): void;
+  /** Advance critter idle sway/hops; the train position triggers hops.
+   *  `mood` (optional) dampens hops in rain and silences them at night. */
+  updateCritters(
+    dt: number,
+    trainX: number | null,
+    trainZ: number | null,
+    mood?: CritterMood,
+  ): void;
   /** Trigger a hop on the critter with this voice (idle chirp dance). */
   hopCritter(voice: string): void;
   /** Begin a drag preview: the real model follows the pointer, grid-snapped. */
@@ -484,6 +491,8 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        // Buildings get a warm "windows lit" glow, driven by the night factor.
+        attachWindowGlow(model, kind);
         templates.set(kind, model);
         reconcile();
       },
@@ -497,9 +506,9 @@ export function startTrackRenderer(
   return {
     cellFromPoint,
     cellToScreen: (cell) => cellToScreen(cell, camera, canvas),
-    updateCritters(dt, trainX, trainZ): void {
+    updateCritters(dt, trainX, trainZ, mood): void {
       if (disposed) return;
-      critterLife.update(dt, trainX, trainZ);
+      critterLife.update(dt, trainX, trainZ, mood);
     },
     hopCritter(voice): void {
       if (disposed) return;

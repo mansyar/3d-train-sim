@@ -308,6 +308,67 @@ test('riding a loop with a station stops at it and rolls on cleanly', async ({ p
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('ambient day/weather cycles keep the meadow alive with a clean console', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+
+  // No ride, no touches: the pure ambience alone (sky lerp, drifting clouds,
+  // sun arc) must keep the scene visibly changing for a long idle stretch.
+  await page.waitForTimeout(10_000);
+  const a = await page.screenshot();
+  await page.waitForTimeout(1500);
+  const b = await page.screenshot();
+  expect(Buffer.compare(a, b)).not.toBe(0);
+
+  const origin = new URL(page.url()).origin;
+  const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+  expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('tablet emulation keeps an ambient frame rate with a clean console', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+  await page.waitForTimeout(2000); // Settle asset loads (locomotive GLB).
+
+  // Count animation frames over 5 s of idle ambience — headless software GL
+  // is slow, so this is a floor check (≥10 FPS), not a 60 FPS guarantee.
+  const fps = await page.evaluate(
+    () =>
+      new Promise<number>((resolve) => {
+        let frames = 0;
+        const start = performance.now();
+        const tick = () => {
+          frames += 1;
+          if (performance.now() - start < 5000) requestAnimationFrame(tick);
+          else resolve(frames / 5);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+  expect(fps, `ambient FPS: ${fps.toFixed(1)}`).toBeGreaterThanOrEqual(10);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('the sound choice survives a reload through local autosave', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

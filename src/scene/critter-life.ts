@@ -7,7 +7,6 @@ const BREATHE_AMPLITUDE = 0.01;
 const BREATHE_PERIOD_SECONDS = 1.4;
 /** Hops trigger while the riding train is within ~1–2 cells (spec FR3). */
 const HOP_RADIUS = 1.5 * (GROUND_SIZE / MEADOW_CELLS);
-const HOP_RADIUS_SQUARED = HOP_RADIUS * HOP_RADIUS;
 /** One hop: a quick anticipation squash, then a stretchy bounce. */
 const HOP_SECONDS = 0.6;
 const HOP_HEIGHT = 0.5;
@@ -33,6 +32,13 @@ interface Critter {
   cooldownUntil: number;
 }
 
+export interface CritterMood {
+  /** 0..1 — rain shrinks the hop radius (critters shelter, hop less). */
+  rain: number;
+  /** 0..1 — at night critters are off-duty: no hops, no chirps. */
+  night: number;
+}
+
 export interface CritterLife {
   /** Begin animating a placed critter clone (no-op if already tracked). */
   track(model: Object3D, id: string, voice?: string): void;
@@ -40,10 +46,16 @@ export interface CritterLife {
   forget(id: string): void;
   /** Trigger one hop on the first tracked critter with this voice (idle chirp). */
   hopByVoice(voice: string): void;
-  /** Advance idle sway and hops by dt seconds. Allocates nothing per frame. */
-  update(dt: number, trainX: number | null, trainZ: number | null): void;
+  /** Advance idle sway and hops by dt seconds. Allocates nothing per frame.
+   *  `mood` is optional; omitting it means a bright, dry day. */
+  update(dt: number, trainX: number | null, trainZ: number | null, mood?: CritterMood): void;
   dispose(): void;
 }
+
+/** Rain shrinks the excitement radius — critters shelter and hop less. */
+const RAIN_HOP_SHRINK = 0.7;
+/** Above this night factor the critters call it a day (no hops, no chirps). */
+const BEDTIME_NIGHT = 0.6;
 
 /**
  * Procedural critter life (spec FR3): every critter breathes so the meadow
@@ -87,8 +99,14 @@ export function createCritterLife(onChirp: (voice: string) => void): CritterLife
       }
     },
 
-    update(dt, trainX, trainZ) {
+    update(dt, trainX, trainZ, mood) {
       elapsed += dt;
+      const rain = mood?.rain ?? 0;
+      const night = mood?.night ?? 0;
+      const bedtime = night >= BEDTIME_NIGHT;
+      // Effective excitement radius: rain-shrunk (0 = normal, fully shy at max rain).
+      const radius = HOP_RADIUS * (1 - RAIN_HOP_SHRINK * rain) * (bedtime ? 0 : 1);
+      const radiusSquared = radius * radius;
       for (const critter of critters.values()) {
         let scaleY: number;
         let scaleXZ: number;
@@ -117,16 +135,19 @@ export function createCritterLife(onChirp: (voice: string) => void): CritterLife
           scaleXZ = 1 - breathe / 2;
         }
 
-        // A riding train passing close triggers one hop per cooldown.
+        // A riding train passing close triggers one hop per cooldown —
+        // unless it's bedtime (night) or the radius collapsed to zero (downpour).
         if (
           critter.hopStart < 0 &&
+          !bedtime &&
+          radiusSquared > 0 &&
           trainX !== null &&
           trainZ !== null &&
           elapsed >= critter.cooldownUntil
         ) {
           const dx = critter.model.position.x - trainX;
           const dz = critter.model.position.z - trainZ;
-          if (dx * dx + dz * dz <= HOP_RADIUS_SQUARED) {
+          if (dx * dx + dz * dz <= radiusSquared) {
             critter.hopStart = elapsed;
             critter.cooldownUntil = elapsed + HOP_COOLDOWN_SECONDS;
             if (critter.voice) onChirp(critter.voice);
