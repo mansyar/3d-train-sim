@@ -6,8 +6,17 @@ audio wiring is verified by smoke tests and explicit manual criteria per
 
 ## Phase 1: Ambient clock & weather logic (TDD core)
 
-- [ ] Task: Write failing tests for `day-clock.ts` (Red) — mid-morning start,
+- [x] Task: Write failing tests for `day-clock.ts` (Red) — mid-morning start,
   ~2.5 min/day phase mapping, dawn→noon→dusk→night boundaries, determinism
+  `6c3b56b`
+
+  - **Notes:** Red confirmed (module missing, 1 file failed). Green after
+    implementation: 7/7 tests — phase-slice boundary table, full-day wrap,
+    mid-morning start (fraction 0.25), determinism, dusk/night crossings with
+    one event per crossing, no events within a phase, full-cycle wrap.
+    Files: `src/core/day-clock.ts`, `src/core/day-clock.test.ts`.
+    Why: deterministic pure clock lets the scene lerp sky/light from
+    `phase`+`fraction` with zero DOM/timer coupling (attract-clock precedent).
 - [ ] Task: Implement `day-clock.ts` (Green) — pure elapsed-seconds → phase +
   sun-position mapping (`src/core/`, `attract-clock.ts` precedent)
 - [ ] Task: Write failing tests for `weather-cycle.ts` (Red) — clear→cloudy→rain
