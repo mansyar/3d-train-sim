@@ -16,15 +16,18 @@ criteria and are verified via e2e + manual checks instead of unit tests.
   - Verification Report (2026-08-30): biome clean · tsc clean · vitest 221/221 · Playwright 30/30 (tablet + phone). Manual check confirmed by user: rail wraps without clipping at 390px, drawers sit above the rail, no horizontal scroll; tablet still one row. Fix discovered during phase: smoke-spec drop coordinates were tablet-hard-coded, off-viewport on phone — made viewport-relative so the same walkthrough runs on both projects.
   - Notes: `viewport-fit=cover` added; rail `flex-wrap` + side/top/bottom safe-area insets; drawers get `max-width` + train drawer wraps, lifted above the wrapped rail on ≤540px; corner controls use safe-area insets; Playwright gained a `phone` project (iPhone 13) and `e2e/phone-shell.spec.ts` asserts no horizontal clipping at ≥360px. Files: `index.html`, `src/style.css`, `playwright.config.ts`, `e2e/phone-shell.spec.ts` (new), `e2e/smoke.spec.ts`.
 
-## Phase 2 — Tap-to-rotate + click sound (FR2)
+## Phase 2 — Tap-to-rotate + click sound (FR2) [checkpoint: 2f88695]
 
-- [ ] Task: Add `click` sound: `public/audio/click.ogg` + `click.mp3`, register in howler-voice, expose `click()` on AudioController
-- [ ] Task: Acceptance criteria recorded (per-step bounce + click; silent while muted)
-- [ ] Task: Tap-vs-drag disambiguation in `app.ts` (~12px movement threshold) — tap on placed toy rotates 90°, press-drag lifts
-- [ ] Task: Rotation step feedback: bounce animation + click + snap (unchanged 4-fold model)
-- [ ] Task: Remove the rotate knob (markup, CSS, wiring); desktop `R`-key rotation stays
-- [ ] Task: `prefers-reduced-motion` respected (instant snap, no bounce)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Add `click` sound: `public/audio/click.ogg` + `click.mp3`, register in howler-voice, expose `click()` on AudioController
+  - Acceptance: one `click()` call plays the click handle once; while muted it stays silent (shared mute rule).
+- [x] Task: Acceptance criteria recorded (per-step bounce + click; silent while muted)
+- [x] Task: Tap-vs-drag disambiguation in `app.ts` (~12px movement threshold) — tap on placed toy rotates 90°, press-drag lifts
+- [x] Task: Rotation step feedback: bounce animation + click + snap (unchanged 4-fold model)
+- [x] Task: Remove the rotate knob (markup, CSS, wiring); desktop `R`-key rotation stays
+- [x] Task: `prefers-reduced-motion` respected (instant snap, no bounce)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-08-30): biome clean · tsc clean · vitest 24/24 audio incl. new click-one-shot + click-muted · Playwright 32/32 (tablet + phone) incl. new "quick tap rotates 90°" test.
+  - Notes: added click.ogg/mp3 (synthesized soft tick, CC0); howler-voice `click` voice (0.7 volume, under others); `AudioController.click()`; app.ts reworked: press-then-move lifts (12px threshold), release-without-move rotates placed toy in place via same-cell relocate, rotate-bounce feedback, knob removed, R key kept; CSS remove .rotate-knob, add .rotate-bounce + keyframes + reduced-motion. Files: `public/audio/click.*`, `public/audio/CREDITS.md`, `src/audio/howler-voice.ts`, `src/audio/audio-controller.ts`, `src/audio/audio-controller.test.ts`, `src/ui/app.ts`, `src/style.css`, `e2e/smoke.spec.ts`.
 
 ## Phase 3 — Delete on the toy (FR3)
 
