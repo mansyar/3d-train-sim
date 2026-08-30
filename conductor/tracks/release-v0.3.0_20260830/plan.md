@@ -33,9 +33,15 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 2 — Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
-  - [ ] `pnpm check` (biome + typecheck + vitest)
-  - [ ] `pnpm exec playwright test` (e2e smoke)
+- [x] Task: Run the full local gate suite
+  - [x] `pnpm check` (biome + typecheck + vitest)
+  - [x] `pnpm exec playwright test` (e2e smoke)
+  - **Summary:** First `pnpm check` run failed on a Biome format error
+    in `src/scene/init-scene.ts` (import grouping + line wrapping,
+    leftover from the time-of-day track); applied the formatter and
+    re-ran — biome, typecheck, and all 267 vitest tests green. Full
+    Playwright suite green: 43 passed across phone + tablet. *(commits
+    1b55996, plan edits only)*
 - [ ] Task: Local container smoke check
   - [ ] `docker build` the image locally
   - [ ] Run the container and verify the app loads, SPA fallback works, and cache headers behave (short/no-cache for `sw.js`/manifest/`index.html`, immutable for hashed assets)
