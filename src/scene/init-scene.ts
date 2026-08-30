@@ -7,6 +7,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
+import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import { createAttractClock } from '../core/attract-clock';
@@ -112,6 +113,7 @@ export function initScene(
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
   const weather = createWeatherParticles(scene);
   disposables.push(weather.dispose);
+  const ambience = createAmbienceAudio(audio);
   const fireflies = createFireflies(scene);
   disposables.push(fireflies.dispose);
 
@@ -135,6 +137,7 @@ export function initScene(
       : intensityOf(weatherClock.weather);
     weather.update(dt, base);
     ground.setSnow(base.snow);
+    ambience.update(base); // Rain patter + wind follow the weather bed.
     fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
   };
   paintAmbience();
@@ -373,6 +376,7 @@ export function initScene(
     onPause: () => {
       spinLoop.suspend();
       audio.suspend();
+      ambience.suspend();
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -380,6 +384,7 @@ export function initScene(
     onResume: () => {
       spinLoop.resume();
       audio.resume();
+      ambience.resume();
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
@@ -425,6 +430,7 @@ export function initScene(
       }
       wagonSet.length = 0;
       for (const dispose of disposables) dispose();
+      ambience.dispose();
       disposeWindowGlows();
       renderer.dispose();
     },
