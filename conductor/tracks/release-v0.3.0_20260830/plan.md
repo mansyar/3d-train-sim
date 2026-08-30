@@ -5,12 +5,25 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 1 — Changelog & Version Bump
 
-- [ ] Task: Reconstruct release history and create `CHANGELOG.md`
-  - [ ] Pull v0.1.0 and v0.2.0 boundaries from git tags; summarize each release from git log
-  - [ ] Write v0.3.0 entry covering Every Layout Rides (multi-train rides, camera cycling, whistle, headlight) and Time of Day & Weather (sky cycle, ambience), plus smaller polish/fix items — parent-readable wording
-  - [ ] Adopt a Keep-a-Changelog-style format for future releases
-- [ ] Task: Bump `package.json` version to `0.3.0`
-- [ ] Task: Update the release runbook in `tech-stack.md` to include the `CHANGELOG.md` step
+- [x] Task: Reconstruct release history and create `CHANGELOG.md`
+  - [x] Pull v0.1.0 and v0.2.0 boundaries from git tags; summarize each release from git log
+  - [x] Write v0.3.0 entry covering Every Layout Rides (multi-train rides, camera cycling, whistle, headlight) and Time of Day & Weather (sky cycle, ambience), plus smaller polish/fix items — parent-readable wording
+  - [x] Adopt a Keep-a-Changelog-style format for future releases
+  - **Summary:** Created `CHANGELOG.md` at the repo root in Keep a
+    Changelog style, written for parents. v0.1.0 and v0.2.0 entries
+    reconstructed from `git tag`/`git log` (archived track plans matched
+    the log); v0.3.0 entry covers multi-train rides, camera cycling,
+    per-train whistle, night headlight, day/night & weather, and the
+    smaller polish/fix items, plus `## [Unreleased]` and compare links
+    for future releases. *(commit 1e2b560)*
+- [x] Task: Bump `package.json` version to `0.3.0`
+  - **Summary:** `package.json` → `0.3.0`, in sync with the eventual
+    `v0.3.0` tag per the runbook rule. *(commit 9755c8b)*
+- [x] Task: Update the release runbook in `tech-stack.md` to include the `CHANGELOG.md` step
+  - **Summary:** Runbook step 2 now updates `CHANGELOG.md` (move notes
+    out of `## [Unreleased]` into a dated `## [X.Y.Z]` section, refresh
+    compare links); gates step covers pnpm check + Playwright e2e; steps
+    renumbered 1–6.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Local Pre-Tag Verification
