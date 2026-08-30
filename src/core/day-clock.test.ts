@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type DayPhase, DAY_LENGTH_MS, createDayClock, phaseAtFraction } from './day-clock';
+import { createDayClock, DAY_LENGTH_MS, type DayPhase, phaseAtFraction } from './day-clock';
 
 interface Harness {
   clock: ReturnType<typeof createDayClock>;

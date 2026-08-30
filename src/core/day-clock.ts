@@ -34,7 +34,9 @@ export function phaseAtFraction(fraction: number): DayPhase {
   for (const bound of PHASE_BOUNDS) {
     if (t < bound.until) return bound.phase;
   }
-  return PHASE_BOUNDS[PHASE_BOUNDS.length - 1].phase;
+  // Unreachable — the last bound matches any t < 1 — but
+  // noUncheckedIndexedAccess cannot prove the index non-undefined.
+  return PHASE_BOUNDS[PHASE_BOUNDS.length - 1]?.phase ?? 'night';
 }
 
 export interface DayClock {

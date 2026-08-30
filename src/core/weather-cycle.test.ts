@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type Weather,
-  WEATHER_ORDER,
-  createWeatherClock,
-  nextWeather,
-} from './weather-cycle';
+import { createWeatherClock, nextWeather, WEATHER_ORDER, type Weather } from './weather-cycle';
 
 interface Harness {
   clock: ReturnType<typeof createWeatherClock>;

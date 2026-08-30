@@ -24,7 +24,9 @@ const HOLD_MAX_MS = 45_000;
 export function nextWeather(weather: Weather): Weather {
   const index = WEATHER_ORDER.indexOf(weather);
   const next = index + 1;
-  return WEATHER_ORDER[next >= WEATHER_ORDER.length ? 0 : next];
+  // Unreachable fallback — the wrap keeps the index in range — but
+  // noUncheckedIndexedAccess cannot prove the element non-undefined.
+  return WEATHER_ORDER[next >= WEATHER_ORDER.length ? 0 : next] ?? weather;
 }
 
 /** A cross-fade in progress: lerp scene state from `from` to `to` by `t`. */
@@ -42,9 +44,7 @@ export interface WeatherClock {
   /** Advance the machine — call once per animation frame. */
   tick(): void;
   /** Subscribe to fade starts; returns an unsubscribe function. */
-  subscribe(
-    listener: (event: { kind: 'weather'; from: Weather; to: Weather }) => void,
-  ): () => void;
+  subscribe(listener: (event: { kind: 'weather'; from: Weather; to: Weather }) => void): () => void;
 }
 
 export function createWeatherClock(options: {
@@ -59,9 +59,7 @@ export function createWeatherClock(options: {
   let fadeStartAt = 0;
   let fadeMs = 0;
   let nextChangeAt = drawHoldEnd(options.now());
-  const listeners = new Set<
-    (event: { kind: 'weather'; from: Weather; to: Weather }) => void
-  >();
+  const listeners = new Set<(event: { kind: 'weather'; from: Weather; to: Weather }) => void>();
 
   function drawHoldEnd(now: number): number {
     return now + HOLD_MIN_MS + random() * (HOLD_MAX_MS - HOLD_MIN_MS);
