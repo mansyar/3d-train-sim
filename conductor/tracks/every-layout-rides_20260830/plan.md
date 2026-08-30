@@ -208,7 +208,7 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
       No-op before any train rides (unchanged).
     - Gates: 246/246 tests · `tsc --noEmit` clean · Biome clean.
 
-- [x] Task: E2E smoke coverage `558f827`
+- [x] Task: E2E smoke coverage `558f827`+`a34a98f`
 
   - Extend `e2e/smoke.spec.ts`: build two disjoint loops via dev handles →
     assert two trains ride; 🎥 appears and cycles targets; assert zero
@@ -229,6 +229,23 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - Note for future runs: `playwright.config.ts` reuses running servers
       outside CI; a stale dev server served old modules and failed the test
       once. `CI=true` (fresh servers) is the reliable way to run e2e here.
-    - Tablet run: 1 passed (fresh servers).
+    - Full-suite review fixes (`a34a98f`) — the full e2e run (39 tests,
+      tablet + phone + prod) flushed out three multi-train regressions:
+      1. The parked opener train was built before wagon templates arrived
+         and never received its wagons; wagon templates are now indexed by
+         slot and late arrivals rebuild any rig's wagon line in pulling
+         order.
+      2. The pre-ride whistle had no target: `whistlePuff` now falls back
+         filmed rig → nearest riding train → the parked opener train, and
+         the spin loop ticks parked spares' emitters so their puffs render.
+      3. The UI's ▶/⏹ face was driven by guessing from world edits, so a
+         mid-ride 🚂 swap flipped it to ▶ while trains kept rolling. The
+         scene now pushes the real ride mode (`subscribeRideMode`, with the
+         same queue-and-replay wiring in `main.ts`), and the world-edit
+         subscription only refreshes the empty-meadow dim.
+    - Cargo-wagons test updated to spec R3: switching trains mid-ride keeps
+      the ride running (`is-riding` persists; wagons stay coupled).
+    - Final run: 39/39 e2e (tablet, phone, prod) · 246/246 unit ·
+      `tsc --noEmit` clean · Biome clean.
 
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
