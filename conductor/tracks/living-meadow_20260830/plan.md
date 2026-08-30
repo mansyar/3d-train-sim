@@ -116,7 +116,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   the DOM listener itself lives in the scene/audio wiring layer. Gates:
   biome ✅, `tsc --noEmit` ✅, new unit tests green.
 
-- [ ] Task: Suspend chug + timers when hidden (audio wiring)
+- [x] Task: Suspend chug + timers when hidden (audio wiring)
 
 - **Acceptance criteria (manual):**
   - On hidden, the chug loop pauses (not fades to zero — actually stops
@@ -131,7 +131,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   pause — verify no wall-clock drift in position. Gates: biome ✅,
   `tsc --noEmit` ✅.
 
-- [ ] Task: Stop/start render loop when hidden (scene wiring)
+- [x] Task: Stop/start render loop when hidden (scene wiring)
 
 - **Acceptance criteria (manual):**
   - Hidden: the RAF render loop stops entirely; attract drift and critter
@@ -144,7 +144,15 @@ criteria + smoke + manual tablet check for scene/audio wiring
   skipped while paused. Reduced-motion single-frame behavior unchanged.
   Gates: biome ✅, `tsc --noEmit` ✅.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  **Verification Report:** Automated — biome ✅, `tsc --noEmit` ✅, 221 unit
+  tests ✅, 14 Playwright smoke ✅ (zero console errors, zero external
+  requests, 2026-08-30). Manual — pending user confirmation: switching tabs
+  mid-ride pauses rendering and the chug; switching back resumes exactly
+  where it was with no lingering audio while hidden; attract drift resets on
+  return.
+  - Checkpoint: `1a0bb6f` (last functional commit).
 
 - Full manual pass: ride, hide tab, background audio check, resume; Playwright
   smoke; record in plan.

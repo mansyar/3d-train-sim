@@ -13,6 +13,7 @@ import { createAttractClock } from '../core/attract-clock';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
+import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
@@ -254,7 +255,7 @@ export function initScene(
     camera.lookAt(camLook);
   };
 
-  const stopSpin = startSpinLoop(
+  const spinLoop = startSpinLoop(
     renderer,
     scene,
     camera,
@@ -273,6 +274,24 @@ export function initScene(
     },
   );
 
+  // Tab hidden: stop rendering, quiet the chug, and pause the attract timers.
+  // Tab visible again: everything resumes on the next sync — one shared
+  // controller so a flurry of visibility events never double-fires.
+  const visibility = createVisibilityController({
+    isHidden: () => document.hidden,
+    onPause: () => {
+      spinLoop.suspend();
+      audio.suspend();
+      attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
+    },
+    onResume: () => {
+      spinLoop.resume();
+      audio.resume();
+    },
+  });
+  const onVisibility = () => visibility.sync();
+  document.addEventListener('visibilitychange', onVisibility);
+
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
     cellFromPoint: (clientX, clientY) => tracks.cellFromPoint(clientX, clientY),
@@ -290,7 +309,8 @@ export function initScene(
     notifyActivity: () => attractClock.notifyActivity(),
     dispose(): void {
       disposed = true;
-      stopSpin();
+      spinLoop.stop();
+      document.removeEventListener('visibilitychange', onVisibility);
       clearInterval(attractTimer);
       unsubscribeAttract();
       window.removeEventListener('resize', resize);
