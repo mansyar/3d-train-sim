@@ -147,8 +147,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <div class="drawer-tabs" role="tablist" aria-label="Toy groups">${tabStrip}</div>
       ${tabPanels}
     </div>
-    <button class="grid-toggle" type="button" aria-label="Toggle the placement grid"
-            aria-pressed="false">#</button>
+    ${import.meta.env.DEV ? '<button class="grid-toggle" type="button" aria-label="Toggle the placement grid" aria-pressed="false">#</button>' : ''}
     <button class="parent-gate" type="button"
             aria-label="Parent gate — press and hold to reset the world">
       <span class="gate-icon" aria-hidden="true">♻️</span>
@@ -558,12 +557,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     });
   }
 
-  // ---- Grid toggle (debug): reveal the snap cells pieces land on ----------
+  // ---- Grid toggle (debug): reveal the snap cells pieces land on. Dev-only —
+  // production builds never mount the button, so wire it only when present.
   const gridToggle = root.querySelector<HTMLButtonElement>('.grid-toggle');
-  if (!gridToggle) {
-    throw new Error('grid toggle missing from app frame');
-  }
-  gridToggle.addEventListener('click', () => {
+  gridToggle?.addEventListener('click', () => {
     const show = gridToggle.getAttribute('aria-pressed') !== 'true';
     gridToggle.setAttribute('aria-pressed', String(show));
     gridToggle.classList.toggle('is-active', show);

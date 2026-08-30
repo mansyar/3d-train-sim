@@ -1,5 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 
+import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offline-safe.
+
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { deserializeWorld } from './core/save';
