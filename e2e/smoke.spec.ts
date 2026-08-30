@@ -391,6 +391,72 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
+test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+
+  await page.goto('/');
+  await page.waitForTimeout(1500);
+
+  await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: {
+          place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+        };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    world.place('straight', { x: 8, y: 8 }, 0);
+  });
+
+  const toyPoint = await page.evaluate(() => {
+    const sceneHandle = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          cellFromPoint: (x: number, y: number) => { x: number; y: number } | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!sceneHandle) throw new Error('dev scene handle missing');
+    for (let y = 0; y < window.innerHeight; y += 24) {
+      for (let x = 0; x < window.innerWidth; x += 24) {
+        const cell = sceneHandle.cellFromPoint(x, y);
+        if (cell?.x === 8 && cell?.y === 8) return { x, y };
+      }
+    }
+    throw new Error('cell (8,8) not visible on screen');
+  });
+
+  // Press on the toy, then move just past the lift threshold — the toy lifts
+  // as a ghost and the ✕ chip appears beside it.
+  await page.mouse.move(toyPoint.x, toyPoint.y);
+  await page.mouse.down();
+  await page.mouse.move(toyPoint.x + 20, toyPoint.y + 20, { steps: 4 });
+  await expect(page.locator('.delete-chip')).toBeVisible();
+
+  // Tapping the chip deletes the toy (silently — no ding).
+  await page.locator('.delete-chip').click();
+  await page.waitForTimeout(400);
+
+  const count = await page.evaluate(() => {
+    const world = (
+      window as unknown as {
+        __tinyTracksWorld?: { pieces: () => unknown[]; scenery: () => unknown[] };
+      }
+    ).__tinyTracksWorld;
+    if (!world) throw new Error('dev world handle missing');
+    return { pieces: world.pieces().length, scenery: world.scenery().length };
+  });
+  expect(count.pieces).toBe(0);
+  expect(count.scenery).toBe(0);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
 test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {

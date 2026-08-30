@@ -43,6 +43,7 @@ if (root) {
     moveGhost: (cell, rotation, valid) => scene?.moveGhost(cell, rotation, valid),
     endGhost: () => scene?.endGhost(),
     pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
+    cellToScreen: (cell) => scene?.cellToScreen(cell) ?? null,
     setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
     setGridVisible: (visible) => scene?.setGridVisible(visible),
     startRide: () => scene?.startRide() ?? false,

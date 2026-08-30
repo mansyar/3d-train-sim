@@ -124,6 +124,8 @@ export interface AppOptions {
   endGhost(): void;
   /** The placed piece under a screen point, for relocate/trash drags. */
   pickPiece(clientX: number, clientY: number): PickedItem | null;
+  /** The screen-space center of a meadow cell, for anchoring the ✕ chip. */
+  cellToScreen(cell: Cell): { x: number; y: number } | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */
@@ -261,8 +263,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or
   // trash); null ⇒ a fresh toy from the drawer.
-  let drag: { kind: PieceType | SceneryKind; rotation: Rotation; pickedId: string | null } | null =
-    null;
+  let drag: {
+    kind: PieceType | SceneryKind;
+    rotation: Rotation;
+    pickedId: string | null;
+    /** The ghost's current cell (null off-meadow). */
+    cell: Cell | null;
+    /** Where the toy was lifted from — anchors the fixed ✕ chip target. */
+    homeCell: Cell;
+  } | null = null;
   let lastPointer = { x: -1000, y: -1000 };
   /** Fingers stray past the "rotate tap" limit before they may drag/trash. */
   const TAP_DRAG_PX = 12;
@@ -326,20 +335,109 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     options.notifyActivity();
     const cell = options.cellFromPoint(clientX, clientY);
     const placeable = cell !== null && canPlaceAt(cell);
+    drag.cell = cell;
     options.moveGhost(cell, drag.rotation, placeable);
   };
 
   const beginDrag = (kind: PieceType | SceneryKind) => {
     if (options.isReady && !options.isReady()) return;
-    drag = { kind, rotation: 0, pickedId: null };
+    drag = { kind, rotation: 0, pickedId: null, cell: null, homeCell: { x: 0, y: 0 } };
     options.beginGhost(kind);
   };
 
   const beginPlacedDrag = (picked: PickedItem) => {
     const kind = picked.kind === 'piece' ? picked.type : picked.scenery;
-    drag = { kind, rotation: picked.rotation, pickedId: picked.id };
+    drag = {
+      kind,
+      rotation: picked.rotation,
+      pickedId: picked.id,
+      cell: picked.cell,
+      homeCell: picked.cell,
+    };
     options.setPieceVisible(picked.id, false); // The ghost stands in until the drop.
     options.beginGhost(kind);
+    // Anchor the ✕ chip to the toy's home cell — a fixed target while held.
+    placeChip(picked.cell.x, picked.cell.y);
+  };
+
+  // ---- Delete-on-the-toy: a ✕ chip beside the lifted toy, plus a trash
+  // bin that reacts while a lifted toy aims at it ---------------------------
+  // Lifting a placed toy shows the chip; tapping it bins the toy silently
+  // (same convention as a trash drop — no scolding sounds).
+  const deleteChip = document.createElement('button');
+  deleteChip.className = 'delete-chip';
+  deleteChip.type = 'button';
+  deleteChip.setAttribute('aria-label', 'Delete this toy');
+  deleteChip.textContent = '✕';
+  deleteChip.hidden = true;
+  root.append(deleteChip);
+
+  /** Offset so the chip floats beside the toy, never under the finger. */
+  const CHIP_OFFSET = { x: -46, y: -78 };
+  const hideChip = () => {
+    deleteChip.hidden = true;
+  };
+  /** Anchor the chip to the dragged toy's current cell (stable while held). */
+  const placeChip = (cellX: number | null, cellY: number | null) => {
+    if (cellX === null || cellY === null) {
+      hideChip();
+      return;
+    }
+    const screen = options.cellToScreen({ x: cellX, y: cellY });
+    if (!screen) {
+      hideChip();
+      return;
+    }
+    deleteChip.hidden = false;
+    deleteChip.style.translate = `${screen.x + CHIP_OFFSET.x}px ${screen.y + CHIP_OFFSET.y}px`;
+  };
+
+  const deleteDraggedToy = () => {
+    if (!drag?.pickedId) return;
+    const id = drag.pickedId;
+    const kind = drag.kind;
+    // Clear the drag state first: a trailing pointerup must not endDrag on
+    // the already-deleted toy.
+    options.endGhost();
+    drag = null;
+    hideChip();
+    setTrashHover(false);
+    if (isPieceKind(kind)) options.world.remove(id);
+    else options.world.removeScenery(id);
+    options.setPieceVisible(id, true); // Already removed — reconcile is a no-op.
+  };
+
+  deleteChip.addEventListener('pointerdown', (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    deleteDraggedToy();
+  });
+  // Keyboard/mouse clicks on a button fire a trailing click — delete there too
+  // (drag is already null by then, so the window pointerup above is a no-op).
+  deleteChip.addEventListener('click', (event) => {
+    event.stopPropagation();
+    event.preventDefault();
+    deleteDraggedToy();
+  });
+
+  // The trash bin grows while a lifted toy aims at it, and its invisible hit
+  // zone widens so a near miss still counts.
+  const trashSlot = root.querySelector<HTMLButtonElement>('.trash-slot');
+  if (!trashSlot) {
+    throw new Error('trash slot missing from app frame');
+  }
+  const TRASH_ZONE_PX = 24;
+  const nearTrash = (clientX: number, clientY: number) => {
+    const rect = trashSlot.getBoundingClientRect();
+    return (
+      clientX >= rect.left - TRASH_ZONE_PX &&
+      clientX <= rect.right + TRASH_ZONE_PX &&
+      clientY >= rect.top - TRASH_ZONE_PX &&
+      clientY <= rect.bottom + TRASH_ZONE_PX
+    );
+  };
+  const setTrashHover = (hovering: boolean) => {
+    trashSlot.classList.toggle('is-hovering', hovering);
   };
 
   const ping = (clientX: number, clientY: number) => {
@@ -360,6 +458,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
 
   const endDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
+    hideChip();
+    setTrashHover(false);
     const { kind, rotation, pickedId } = drag;
     const cell = options.cellFromPoint(clientX, clientY);
     let settled = false;
@@ -371,15 +471,13 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
           ? options.world.place(kind, cell, rotation)
           : options.world.placeScenery(kind, cell, rotation)) === 'placed';
     } else {
-      const dropTarget = document.elementFromPoint(clientX, clientY);
-      const overTrash = dropTarget?.closest('.trash-slot') !== null;
-      const overToolbar = dropTarget?.closest('.toybox-rail') !== null;
+      const overTrash = nearTrash(clientX, clientY);
       if (overTrash) {
         if (isPieceKind(kind)) options.world.remove(pickedId);
         else options.world.removeScenery(pickedId);
         settled = true; // Binned.
         binned = true;
-      } else if (cell && !overToolbar) {
+      } else if (cell && !overToolbarAt(clientX, clientY)) {
         // Toolbar drops never relocate — the bottom grid row hides behind the
         // rail, so the toy wobble-returns to its cell instead.
         settled =
@@ -399,10 +497,22 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     drag = null;
   };
 
+  /** True when the screen point sits over the toybox rail (toolbar drops wobble home). */
+  const overToolbarAt = (clientX: number, clientY: number) => {
+    const dropTarget = document.elementFromPoint(clientX, clientY);
+    return dropTarget?.closest('.toybox-rail') !== null;
+  };
+
   window.addEventListener('pointermove', (event) => {
     lastPointer = { x: event.clientX, y: event.clientY };
     if (drag) {
       moveDrag(event.clientX, event.clientY);
+      if (drag.pickedId) {
+        // The ✕ chip stays put beside the toy's home cell — a fixed target the
+        // finger can hit; the bin cheers the toy on as it approaches.
+        placeChip(drag.homeCell.x, drag.homeCell.y);
+        setTrashHover(nearTrash(event.clientX, event.clientY));
+      }
       return;
     }
     // A press that wanders past the tap limit becomes a relocate/trash drag.
@@ -423,7 +533,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       rotatePlacedToy(picked, event.clientX, event.clientY);
       return;
     }
-    if (drag) endDrag(event.clientX, event.clientY);
+    // A tap on the ✕ chip deletes the toy — it must not also end the drag.
+    if (drag && !(event.target instanceof Element && event.target.closest('.delete-chip'))) {
+      endDrag(event.clientX, event.clientY);
+    }
   });
   window.addEventListener('pointercancel', () => {
     pressed = null;

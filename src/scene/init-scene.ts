@@ -50,6 +50,8 @@ export interface SceneHandle {
   dispose(): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
+  /** The screen-space center of a meadow cell, or null when off-camera. */
+  cellToScreen(cell: Cell): { x: number; y: number } | null;
   /** In-scene ghost preview of the toy being dragged from the drawer. */
   beginGhost(kind: PieceType | SceneryKind): void;
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
@@ -299,6 +301,7 @@ export function initScene(
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
     cellFromPoint: (clientX, clientY) => tracks.cellFromPoint(clientX, clientY),
+    cellToScreen: (cell) => tracks.cellToScreen(cell),
     beginGhost: (type) => tracks.beginGhost(type),
     moveGhost: (cell, rotation, valid) => tracks.moveGhost(cell, rotation, valid),
     endGhost: () => tracks.endGhost(),
