@@ -76,8 +76,18 @@
     flush with neighbouring straights. Same template/clone/ghost pipeline ⇒
     migrated v1 bridges render identically. 303/303, tsc + biome clean;
     exact flushness confirmed visually in Phase 4's pass.
-- [ ] Task: Placement integration — ghost validity + drawer track tab
+- [x] Task: Placement integration — ghost validity + drawer track tab `859c303`
   - Criteria: bridge toy appears in the track tab with icon; ghosts red over water for track/scenery; bridge ghost red on grass; valid water spans snap and commit
+
+  - **Notes:** The drawer/tab/icon work landed with the catalog ripple (task
+    "Bridge piece type"): `bridge: 'rails'` in drawer.ts + the trestle SVG
+    slot. Ghost preview: `canPlaceAt(cell, kind)` now checks terrain —
+    pieces via `terrainErrorFor` (bridge ⟺ water, everything else ⟺ land),
+    scenery via `!isWater` — so the ghost's red/green tint exactly matches
+    what the drop will commit (the store already enforces the same rules
+    authoritatively; both drags-from-drawer and relocate drags tint true).
+    303/303, tsc + biome clean; exact tint/snap flushness confirmed visually
+    in Phase 4's pass.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Life & sound (scene/audio wiring, criteria-verified)
