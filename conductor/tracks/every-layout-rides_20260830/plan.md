@@ -50,9 +50,15 @@ criteria + smoke + manual tablet check for scene/audio/UI wiring
     - 6 new tests; suite 237 passing. Coverage: `pathing.ts` 98.33%
       statements / 100% lines. Biome + `tsc --noEmit` clean.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) `2dc6077..cd4a642`
 
-## Phase 2: Multi-Train Ride (state + scene + audio)
+  - **Automated gates:** `CI=true pnpm test` — 237/237 passing · Biome clean ·
+    `tsc --noEmit` clean · coverage: `pathing.ts` 98.33% statements.
+  - **Manual verification (user-confirmed ✅):** user built two disjoint loops
+    in the running app and observed one train riding — expected at this
+    checkpoint, since `src/state/ride.ts` still solves only the single
+    chosen component; multi-train behavior lands in Phase 2.
+  - **Checkpoint SHA:** `cd4a642` (last functional commit of Phase 1).
 
 - [ ] Task: Multi-ride controller in `src/state/ride.ts` (logic — TDD)
 
