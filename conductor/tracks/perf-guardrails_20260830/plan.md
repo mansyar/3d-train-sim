@@ -168,7 +168,8 @@ acceptance criteria + smoke tests per `workflow.md`.
       TDD'd constants exactly). Degradation loop re-verified after the
       render-scale fix: constant buffer 1536×2048 across Q0→Q1→Q2, fps
       recovery 10→11 at Q2, zero console/page errors.
-    - Real-tablet spot-check: deferred to the user (see handoff).
+    - Real-tablet spot-check: user confirmed all good (2026-08-30) — the
+      last open verification item; track fully accepted.
 - [x] Task: Update docs — `tech-stack.md` folder structure note, `CHANGELOG.md` `[Unreleased]` entry (parent-readable) (SHA pending)
   - Notes:
     - Task: docs.
