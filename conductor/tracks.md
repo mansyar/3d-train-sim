@@ -1,9 +1,12 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of active development tracks. No tracks are currently in progress.
+Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| mobile-ux-polish_20260830 | Mobile UX Polish | feature | new |
+
+- [ ] **Track: Mobile UX Polish** *Link: [tracks/mobile-ux-polish_20260830/index.md](tracks/mobile-ux-polish_20260830/index.md)*
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
