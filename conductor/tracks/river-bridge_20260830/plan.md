@@ -203,3 +203,12 @@
     trestle crossing ride, 10 s river-active clean idle. Water polish
     shipped and user-confirmed in browser. Commits: `f08ab03` (spec FR10),
     `435de50` (water polish), `b83de64`/`e717626` (plan), plus this close-out.
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions `cb5501f`
+  - Principal-engineer review (iterative, 27 commits / 26 files): 1 Medium
+    (per-frame vertex-color array allocations in `river-water` repaint —
+    NFR breach, fixed by direct index writes), 2 Low (spec FR3 wording
+    aligned to the implemented bridge-span rule; `save.ts` version check
+    through the `isRecord` narrowing instead of an `as number` assertion).
+    Gates re-run green: biome + tsc clean, 322/322 unit.
