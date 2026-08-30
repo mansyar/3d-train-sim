@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [living-meadow_20260830](tracks/living-meadow_20260830/index.md) | Living Meadow | Feature | new |
+| [living-meadow_20260830](tracks/living-meadow_20260830/index.md) | Living Meadow | Feature | in progress |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,

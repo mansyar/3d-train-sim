@@ -8,7 +8,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
 
 ## Phase 1: Idle Attract Mode
 
-### Task: Idle/attract state machine in `src/core/` (logic — TDD)
+- [~] Task: Idle/attract state machine in `src/core/` (logic — TDD)
 
 - **Expected behavior (unit tests first):**
   - `createAttractClock(thresholdMs, { now, random })` starts in `active`;
@@ -25,7 +25,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   audio layers subscribe to its transitions and events. Gates: biome ✅,
   `tsc --noEmit` ✅, new unit tests green.
 
-### Task: Attract camera drift (scene wiring)
+- [ ] Task: Attract camera drift (scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - After the clock reports `idle`, the overview camera eases into a very
@@ -43,7 +43,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   start/stop in `init-scene.ts`. Gates: biome ✅, `tsc --noEmit` ✅, unit
   suite stays green, Playwright smoke ✅.
 
-### Task: Quiet meadow chirps + critter hop (audio/scene wiring)
+- [ ] Task: Quiet meadow chirps + critter hop (audio/scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - On an `idle` chirp event, one critter sound plays at low volume
@@ -57,14 +57,14 @@ criteria + smoke + manual tablet check for scene/audio wiring
   `init-scene.ts` subscribes to the attract clock. Gates: biome ✅,
   `tsc --noEmit` ✅, Playwright smoke ✅.
 
-### Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 - Verify acceptance criteria manually (tablet + desktop) and via the
   Playwright smoke suite; record results and checkpoint commit in the plan.
 
 ## Phase 2: Whistle Steam Burst
 
-### Task: Steam puff on whistle (scene wiring)
+- [ ] Task: Steam puff on whistle (scene wiring)
 
 - **Acceptance criteria (manual + smoke):**
   - Pressing the Whistle button emits a burst of 2–4 puffs at the
@@ -80,18 +80,18 @@ criteria + smoke + manual tablet check for scene/audio wiring
   already owns the pool — extend, don't duplicate. Gates: biome ✅,
   `tsc --noEmit` ✅, Playwright smoke ✅.
 
-### Task: E2E coverage for whistle burst
+- [ ] Task: E2E coverage for whistle burst
 
 - Extend `e2e/smoke.spec.ts` (or the steam-puff lifecycle spec) to press the
   Whistle button and assert a puff appears (dev handles expose the live
   scene). Assert zero console errors.
 - **Commit:** `test(e2e): Cover whistle steam burst`
 
-### Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Tab-Hide Pause
 
-### Task: Visibility pause controller (logic — TDD)
+- [ ] Task: Visibility pause controller (logic — TDD)
 
 - **Expected behavior (unit tests first):**
   - `createVisibilityController({ isHidden, onChange })` maps document
@@ -104,7 +104,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   the DOM listener itself lives in the scene/audio wiring layer. Gates:
   biome ✅, `tsc --noEmit` ✅, new unit tests green.
 
-### Task: Suspend chug + timers when hidden (audio wiring)
+- [ ] Task: Suspend chug + timers when hidden (audio wiring)
 
 - **Acceptance criteria (manual):**
   - On hidden, the chug loop pauses (not fades to zero — actually stops
@@ -119,7 +119,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   pause — verify no wall-clock drift in position. Gates: biome ✅,
   `tsc --noEmit` ✅.
 
-### Task: Stop/start render loop when hidden (scene wiring)
+- [ ] Task: Stop/start render loop when hidden (scene wiring)
 
 - **Acceptance criteria (manual):**
   - Hidden: the RAF render loop stops entirely; attract drift and critter
@@ -132,7 +132,7 @@ criteria + smoke + manual tablet check for scene/audio wiring
   skipped while paused. Reduced-motion single-frame behavior unchanged.
   Gates: biome ✅, `tsc --noEmit` ✅.
 
-### Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 - Full manual pass: ride, hide tab, background audio check, resume; Playwright
   smoke; record in plan.
