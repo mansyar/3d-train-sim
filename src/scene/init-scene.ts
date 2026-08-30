@@ -515,7 +515,19 @@ export function initScene(
     wagonCount: () =>
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     steamPuffCount: () => visibleSteamPuffs,
-    whistlePuff: () => primaryRig()?.puffs.burst(),
+    whistlePuff: () => {
+      // The filmed train answers; from the overview, the nearest train does
+      // (nearest to the meadow's heart, where the overview camera looks).
+      const target =
+        filmedRig() ??
+        [...rigs.values()].reduce<TrainRig | null>((nearest, rig) => {
+          if (!nearest) return rig;
+          return rig.model.position.lengthSq() < nearest.model.position.lengthSq()
+            ? rig
+            : nearest;
+        }, null);
+      target?.puffs.burst();
+    },
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),
