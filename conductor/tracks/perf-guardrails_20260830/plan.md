@@ -216,3 +216,14 @@ Q0→Q1→Q2, fps recovery 10→11 at Q2, screenshots always differ, errors [].
   Chromium). Notes the guardrails' rAF probe + reduce-motion guidance.
 - CHANGELOG [Unreleased]: guardrails shipped — ambient day/weather cycles,
   ride motion, guardrails (L1/L2 quality trims + reduce-motion), perf HUD.
+
+## Phase: Review Fixes
+fix SHA: ec7e370
+- [x] Task: Apply review suggestions
+  - `perf-monitor.ts`: `scanWindow()` now fills a shared scratch object —
+    the probe is called every frame and the zero-per-frame-allocation rule
+    covers even this small object; also dropped the dead in-bounds
+    `undefined` checks (Float64Array reads never yield undefined) in favor
+    of non-null assertions. Gates green: pnpm check (biome + tsc + 283
+    unit tests), 16/16 guardrail unit tests.
+
