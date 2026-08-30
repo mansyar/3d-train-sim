@@ -125,6 +125,7 @@ export function initScene(
   const dayClock = createDayClock({ now: () => performance.now() });
   const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(scene);
+  let headlight: Headlight | null = null;
   const paintAmbience = (dt = 0.016): void => {
     const fraction = dayClock.fraction;
     sky.update(fraction, skyColorsAt(fraction), celestialAt(fraction));
@@ -193,7 +194,6 @@ export function initScene(
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
   let visibleSteamPuffs = 0;
-  let headlight: Headlight | null = null;
   const showTrain = (kind: TrainKind): void => {
     const template = locomotiveTemplates.get(kind);
     if (!template) return;
