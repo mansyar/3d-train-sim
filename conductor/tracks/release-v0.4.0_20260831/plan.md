@@ -77,9 +77,9 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 3 - Tag & Ship
 
-- [ ] Task: Merge the release branch to `main` and push
-- [ ] Task: Tag `v0.4.0` on the release commit and push the tag
-- [ ] Task: Watch the Release workflow to green
+- [~] Task: Merge the release branch to `main` and push
+- [~] Task: Tag `v0.4.0` on the release commit and push the tag
+- [~] Task: Watch the Release workflow to green
   - [ ] Gates pass in CI
   - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.4.0` + `:latest`
   - [ ] Coolify webhook fired; production domain serves the new build
