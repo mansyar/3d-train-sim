@@ -86,15 +86,16 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 3: Verify
 
-- [ ] Task: Coverage + gates
+- [x] Task: Coverage + gates
 
 - Coverage >80% on the changed logic (ride-motion already carries colocated
   tests); run `CI=true pnpm check` (biome + `tsc --noEmit` + vitest). Record
   results in the task notes.
 - **Commit:** `chore` only if gate fixes require it.
-- **Notes:** Full suite green.
+- **Notes:** `CI=true pnpm check` green 2026-08-31 — biome 93 files 0
+  errors, `tsc --noEmit` clean, vitest 343/343 across 27 files.
 
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 - **Acceptance criteria (manual browser check):**
   - `pnpm dev`: build the reported layout — a closed loop where a curve
