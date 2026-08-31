@@ -9,8 +9,29 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-08-31
+
 ### Added
 
+- **A river winds through the meadow.** A curving stream now flows across
+  the train table. Trains can't drive through water, and the river shimmers
+  with the changing sky — sunlit blue at midday, glowing navy at night.
+  It reads as real water: lighter shallows near the banks and soft
+  highlights drifting slowly downstream.
+- **Bridges to span the water.** Chunky wooden trestle bridges join the
+  track toybox — they snap across the river (and only across the river),
+  so your railway can reach both banks.
+- **Ice and thaw.** When snow falls, the river quietly freezes over; when
+  the snow clears, it melts back to open water.
+- **A friendly duck lives on the river.** It paddles along the current and
+  wiggles its tail happily when a train rolls past — resting at night, and
+  staying out in the rain (it's a duck).
+- **The gentle sound of babbling water.** A whisper-quiet stream sound
+  plays near the river. It respects the mute switch and pauses when the
+  tab is hidden.
+- **Your old worlds keep working.** Tables built before the river arrived
+  load exactly as they were — any track now lying where the water flows
+  quietly becomes a bridge. Nothing is ever lost.
 - **The train table now looks after itself on slower tablets.** If a busy
   scene (lots of track, weather, and trains at once) makes the ride choppy,
   the app quietly turns down a few of the heaviest visual extras — softer
@@ -68,7 +89,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/tiny-tracks/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/mansyar/tiny-tracks/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mansyar/tiny-tracks/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mansyar/tiny-tracks/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mansyar/tiny-tracks/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mansyar/tiny-tracks/releases/tag/v0.1.0
