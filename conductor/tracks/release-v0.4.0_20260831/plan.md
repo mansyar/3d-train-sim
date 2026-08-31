@@ -23,10 +23,16 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 - [x] Task: Bump `package.json` version to `0.4.0`
   - **Summary:** `package.json` → `0.4.0`, in sync with the eventual
     `v0.4.0` tag per the runbook rule. *(commit 402cf4c)*
-- [~] Task: Archive the completed `release-v0.3.0_20260830` track
-  - [ ] Move `conductor/tracks/release-v0.3.0_20260830/` to
+- [x] Task: Archive the completed `release-v0.3.0_20260830` track
+  - [x] Move `conductor/tracks/release-v0.3.0_20260830/` to
         `conductor/archive/`
-  - [ ] Update `conductor/tracks.md` (registry row + archive list)
+  - [x] Update `conductor/tracks.md` (registry row + archive list)
+  - **Summary:** All four v0.3.0 track files moved to
+    `conductor/archive/release-v0.3.0_20260830/` (git rename, 100%
+    similarity); the registry row now links to the archive path (status
+    stays `done`), and the archive list already carried the track's name.
+    `conductor/tracks/` now holds only this active v0.4.0 track.
+    *(commit 6cd7191)*
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Local Pre-Tag Verification
