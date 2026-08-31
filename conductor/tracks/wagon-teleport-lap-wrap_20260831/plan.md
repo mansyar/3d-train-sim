@@ -106,9 +106,13 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
     the last rail at the pause, then the train shuttles back normally.
   - Regression sweep: straight→bridge crossing, multi-train 🎥 cycling,
     station pause — no visual change from before the fix.
-- **Verification Report:** Automated — `CI=true pnpm check` result recorded.
-  Manual — user confirmation recorded with date.
-- **Notes:** Checkpoint commit hash recorded here when the phase closes.
+- **Verification Report:** Automated — `CI=true pnpm check` green 2026-08-31
+  (biome clean, `tsc --noEmit` clean, vitest 343/343). Manual — confirmed by
+  the user in the browser 2026-08-31: the curve→bridge loop rides two laps
+  with no wagon leaving the rails at the bridge; the dead-end line overhangs
+  ~1 wagon length at the pause and shuttles back normally; regression sweep
+  (straight→bridge, multi-train 🎥, station pauses) unchanged.
+- **Notes:** Checkpoint commit: 0fb5500.
 
 Manual Verification Steps:
 1. Start the dev server: `pnpm dev`
