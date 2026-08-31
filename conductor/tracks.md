@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [wagon-teleport-lap-wrap_20260831](tracks/wagon-teleport-lap-wrap_20260831/index.md) | Wagon Teleport at the Lap Wrap (Bridge After Curve) | Bug | new |
+| [wagon-teleport-lap-wrap_20260831](tracks/wagon-teleport-lap-wrap_20260831/index.md) | Wagon Teleport at the Lap Wrap (Bridge After Curve) | Bug | in progress |
 | [time-of-day-weather_20260830](archive/time-of-day-weather_20260830/index.md) | Time of Day & Weather | Feature | done |
 | [release-v0.3.0_20260830](archive/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | done |
 

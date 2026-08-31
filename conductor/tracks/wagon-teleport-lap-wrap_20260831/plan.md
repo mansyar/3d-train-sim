@@ -9,7 +9,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 0: Characterize (pins what must not change)
 
-- [ ] Task: Write characterization tests for adjacent behaviors
+- [~] Task: Write characterization tests for adjacent behaviors
 
 - **Expected behavior (these must PASS before any fix — they pin what FR4
   forbids changing):**
