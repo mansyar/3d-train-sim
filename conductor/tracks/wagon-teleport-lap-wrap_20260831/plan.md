@@ -58,7 +58,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 2: Normalized end-overhang (Red → Green)
 
-- [ ] Task: Write failing test for the normalized end-overhang (Red)
+- [x] Task: Write failing test for the normalized end-overhang (Red)
 
 - **Expected behavior (unit test first):** On a short **open** path (total
   length under the coupler distances), when the train rests at the dead end:
@@ -69,7 +69,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 - **Commit:** `test(scene): Pin dead-end overhang to true coupler distance`
 - **Notes:** Same suite run; confirm red before implementing.
 
-- [ ] Task: Normalize the end-overhang tangent (Green)
+- [x] Task: Normalize the end-overhang tangent (Green)
 
 - **Expected behavior:**
   - The overhang displacement in `poseAt` uses the **unit** tangent for both
@@ -134,3 +134,12 @@ Green: `poseFollowers` now folds each wagon's distance into `[0, total)` when
 start ride the previous lap's tail; open paths keep clamp-and-overhang. No
 constant retuning; `FOLLOWER_GAP` stays 4.2. Full ride-motion suite green
 (8/8). Commit: fix(scene).
+
+### Phase 2 — Normalized end-overhang (complete 2026-08-31)
+Red: `overhangs the dead end by the true coupler distance, not one cell per
+unit` asserted wagon 0 at 0.45 and wagon 1 at 4.65 world units past the path
+start; pre-fix code produced 0.45×3.75 and 4.65×3.75 (raw line-delta tangent,
+one cell per unit). Green: `poseAt` normalizes the tangent (`hypot || 1`)
+before applying the `over` displacement; `rotation.y` uses `atan2`, which is
+scale-invariant, so no facing changes. Arc tangent was already unit. Full
+suite 9/9 green. Commits: test(scene) + fix(scene).
