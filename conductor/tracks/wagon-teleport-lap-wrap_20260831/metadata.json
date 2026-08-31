@@ -1,0 +1,11 @@
+{
+  "id": "wagon-teleport-lap-wrap_20260831",
+  "title": "Wagon Teleport at the Lap Wrap (Bridge After Curve)",
+  "type": "bug",
+  "status": "new",
+  "branch": "track/wagon-teleport-lap-wrap",
+  "created": "2026-08-31",
+  "updated": "2026-08-31",
+  "spec": "conductor/tracks/wagon-teleport-lap-wrap_20260831/spec.md",
+  "plan": "conductor/tracks/wagon-teleport-lap-wrap_20260831/plan.md"
+}
