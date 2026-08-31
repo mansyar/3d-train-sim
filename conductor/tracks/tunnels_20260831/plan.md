@@ -6,7 +6,7 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Tunnel Piece Type & Tunnel-Run Logic (TDD)
 
-- [ ] Task: Add the `tunnel` piece type (tests first in `pieces.test.ts`,
+- [~] Task: Add the `tunnel` piece type (tests first in `pieces.test.ts`,
       `track-graph.test.ts`, `save.test.ts`)
   - [ ] `PIECE_TYPES` gains `'tunnel'`; `BASE_ENDPOINTS.tunnel = ['north', 'south']`
   - [ ] Terrain rule: dry land only (default branch — assert ghost-red-over-water via `validatePlacement`)
