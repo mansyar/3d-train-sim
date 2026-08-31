@@ -89,8 +89,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/tiny-tracks/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/mansyar/tiny-tracks/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/mansyar/tiny-tracks/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/mansyar/tiny-tracks/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/mansyar/tiny-tracks/releases/tag/v0.1.0
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/mansyar/3d-train-sim/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/mansyar/3d-train-sim/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/mansyar/3d-train-sim/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/mansyar/3d-train-sim/releases/tag/v0.1.0
