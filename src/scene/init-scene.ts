@@ -212,6 +212,7 @@ export function initScene(
     scaledWeather.cloud = base.cloud * weatherScale;
     weather.update(dt, scaledWeather);
     ground.setSnow(base.snow);
+    tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
     water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     // River babble whispers near the water; a frozen river stands the babble
