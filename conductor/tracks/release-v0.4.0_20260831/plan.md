@@ -77,10 +77,25 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 3 - Tag & Ship
 
-- [~] Task: Merge the release branch to `main` and push
-- [~] Task: Tag `v0.4.0` on the release commit and push the tag
-- [~] Task: Watch the Release workflow to green
-  - [ ] Gates pass in CI
-  - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.4.0` + `:latest`
-  - [ ] Coolify webhook fired; production domain serves the new build
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Merge the release branch to `main` and push
+  - **Summary:** Branch pushed to origin; PR #23 ("Release v0.4.0")
+    merged to `main` as merge commit 70cfee3. *(commit 70cfee3)*
+- [x] Task: Tag `v0.4.0` on the release commit and push the tag
+  - **Summary:** `v0.4.0` tagged on the release merge commit (70cfee3)
+    and pushed — `release.yml` triggered immediately. *(tag v0.4.0)*
+- [x] Task: Watch the Release workflow to green
+  - [x] Gates pass in CI
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.4.0` + `:latest`
+  - [x] Coolify webhook fired; production domain serves the new build
+  - **Summary:** Run 33344422464 green end-to-end on the first attempt:
+    `gates` ✓ (biome, typecheck, vitest, e2e), `publish` ✓ ("Build and
+    push image" + "Deploy via Coolify webhook" both ✓; run duration
+    well under v0.3.0's 5m35s). Only non-blocking annotations: Node.js 20
+    deprecation warnings from pinned action versions. Production
+    verification on a family device stays informal per spec (out of
+    scope).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Release shipped: PR #23 merged (70cfee3), `v0.4.0`
+    tagged and pushed, Release run 33344422464 fully green (gates +
+    publish + Coolify webhook). Track bookkeeping finalized in the same
+    commit: registry status `done`, metadata status `done`.
