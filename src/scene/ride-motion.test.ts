@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
 import { Object3D } from 'three';
-import { rideComponentsOf } from '../core/pathing';
+import { describe, expect, it } from 'vitest';
 import type { PathStep } from '../core/pathing';
+import { rideComponentsOf } from '../core/pathing';
 import type { Edge, PlacedPiece } from '../core/track-graph';
 import { MEADOW_CELLS } from '../core/track-graph';
 import type { RideState } from '../state/ride';
-import { createWorldStore } from '../state/world';
 import type { WorldStore } from '../state/world';
+import { createWorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
 import { createRideMotion, segmentForStep } from './ride-motion';
 
@@ -167,6 +167,7 @@ describe('createRideMotion — the little train rides the solved path', () => {
     expect(world.place('corner', { x: 12, y: 10 }, 270)).toBe('placed');
 
     const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the loop must solve to one ride component');
     expect(component.path.closed).toBe(true); // one loop — the wrap matters
     return { world, state: { ...component, direction: 1 } };
   }
@@ -179,6 +180,7 @@ describe('createRideMotion — the little train rides the solved path', () => {
     const world = createWorldStore();
     expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
     const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone straight must solve to one ride component');
     return { world, state: { ...component, direction: 1 } };
   }
 
@@ -189,9 +191,9 @@ describe('createRideMotion — the little train rides the solved path', () => {
     // Two full laps of ~87 units at 1.1 units per frame.
     for (let i = 0; i < 170; i += 1) {
       run.motion.update(0.5);
-      expect(
-        distanceToPath(segments, run.engine.position.x, run.engine.position.z),
-      ).toBeLessThan(0.02);
+      expect(distanceToPath(segments, run.engine.position.x, run.engine.position.z)).toBeLessThan(
+        0.02,
+      );
     }
     run.motion.dispose();
   });
@@ -206,9 +208,7 @@ describe('createRideMotion — the little train rides the solved path', () => {
     for (let i = 0; i < 170; i += 1) {
       run.motion.update(0.5);
       for (const wagon of run.followers) {
-        expect(
-          distanceToPath(segments, wagon.position.x, wagon.position.z),
-        ).toBeLessThan(0.02);
+        expect(distanceToPath(segments, wagon.position.x, wagon.position.z)).toBeLessThan(0.02);
       }
     }
     run.motion.dispose();
@@ -219,6 +219,7 @@ describe('createRideMotion — the little train rides the solved path', () => {
     const run = startRide(world, state, 2);
     const segments = segmentsFor(world, state);
     const first = segments[0];
+    if (!first) throw new Error('the lone straight must solve to one segment');
     // Ride to the dead end — the engine stops, wagons overhang past the start.
     for (let i = 0; i < 20 && !run.paused.includes(true); i += 1) {
       run.motion.update(0.5);
@@ -237,6 +238,7 @@ describe('createRideMotion — the little train rides the solved path', () => {
     const run = startRide(world, state, 2);
     const segments = segmentsFor(world, state);
     const first = segments[0];
+    if (!first) throw new Error('the lone straight must solve to one segment');
     for (let i = 0; i < 20 && !run.paused.includes(true); i += 1) {
       run.motion.update(0.5);
     }
@@ -245,11 +247,11 @@ describe('createRideMotion — the little train rides the solved path', () => {
     // the path end (3.75), so wagon 0 hangs 0.45 past the start and wagon 1
     // 4.65 — not 0.45 × 3.75 and 4.65 × 3.75.
     const overhangs = [4.2 - 3.75, 2 * 4.2 - 3.75];
-    for (let i = 0; i < run.followers.length; i++) {
+    for (const [i, expected] of overhangs.entries()) {
       const wagon = run.followers[i];
-      if (!wagon) continue;
+      if (!wagon) throw new Error('missing follower wagon');
       expect(Math.abs(wagon.position.x - first.ax)).toBeLessThan(0.02);
-      expect(first.az - wagon.position.z).toBeCloseTo(overhangs[i], 1);
+      expect(first.az - wagon.position.z).toBeCloseTo(expected, 1);
     }
     run.motion.dispose();
   });
