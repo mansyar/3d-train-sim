@@ -196,6 +196,24 @@ describe('createRideMotion — the little train rides the solved path', () => {
     run.motion.dispose();
   });
 
+  it('keeps both wagons on the rails across the lap wrap', () => {
+    const { world, state } = bridgeLoopWorld();
+    const run = startRide(world, state, 2);
+    const segments = segmentsFor(world, state);
+    // The wrap window: every frame while the engine is within two coupler
+    // gaps past the path start, the trailing wagons must already sit on the
+    // previous lap's tail — on the rails, never on an off-rail extension.
+    for (let i = 0; i < 170; i += 1) {
+      run.motion.update(0.5);
+      for (const wagon of run.followers) {
+        expect(
+          distanceToPath(segments, wagon.position.x, wagon.position.z),
+        ).toBeLessThan(0.02);
+      }
+    }
+    run.motion.dispose();
+  });
+
   it('overhangs the dead end collinear with the end tangent at the pause', () => {
     const { world, state } = loneStraightWorld();
     const run = startRide(world, state, 2);

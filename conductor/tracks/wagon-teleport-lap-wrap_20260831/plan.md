@@ -27,7 +27,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 1: Closed-loop follower wrap (Red → Green)
 
-- [ ] Task: Write failing regression tests for the follower wrap (Red)
+- [~] Task: Write failing regression tests for the follower wrap (Red)
 
 - **Expected behavior (unit tests first):** Extend
   `src/scene/ride-motion.test.ts`. Drive `createRideMotion` with two follower
