@@ -53,12 +53,27 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
     river specs) in ~2.1m. *(plan edits only — no code changes)*
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke)
-- [ ] Task: Local container smoke check
-  - [ ] `docker build` the image locally
-  - [ ] Run the container and verify the app loads, SPA fallback works, and
+- [x] Task: Local container smoke check
+  - [x] `docker build` the image locally
+  - [x] Run the container and verify the app loads, SPA fallback works, and
         cache headers behave (short/no-cache for `sw.js`/manifest/
         `index.html`, immutable for hashed assets)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Built `tiny-tracks:0.4.0-smoke` and served it on port
+    8081. Verified: `/`, `/sw.js`, `/manifest.webmanifest`, and an unknown
+    route all return 200 with `Cache-Control: no-cache`; hashed
+    `/assets/index-DTdahSPR.js`, the stylesheet, and the workbox chunk
+    return 200 with `public, max-age=31536000, immutable`. (One probe
+    initially 404'd on a mis-grepped asset path — the real entry
+    `/assets/index-DTdahSPR.js` serves correctly.) Container stopped and
+    removed after the check.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Local pre-tag verification fully green with zero code
+    changes: `pnpm check` (biome + typecheck + 338 vitest), Playwright
+    e2e 51/51 (phone + tablet), and the local container serves the built
+    app with correct SPA fallback and cache headers (no-cache for
+    `sw.js`/manifest/`index.html`/fallback routes; immutable for hashed
+    assets). Ready to tag `v0.4.0` in Phase 3 — pending explicit user
+    go-ahead, since pushing the tag triggers the production deploy.
 
 ## Phase 3 - Tag & Ship
 
