@@ -44,7 +44,13 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
+- [x] Task: Run the full local gate suite
+  - [x] `pnpm check` (biome + typecheck + vitest)
+  - [x] `pnpm exec playwright test` (e2e smoke)
+  - **Summary:** Gates green with no fixes needed this time: biome +
+    `tsc --noEmit` clean, vitest 27 files / 338 tests passed; Playwright
+    e2e **51 passed** across phone + tablet (smoke, phone-shell, prod,
+    river specs) in ~2.1m. *(plan edits only — no code changes)*
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke)
 - [ ] Task: Local container smoke check
