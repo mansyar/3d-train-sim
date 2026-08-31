@@ -9,7 +9,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 0: Characterize (pins what must not change)
 
-- [~] Task: Write characterization tests for adjacent behaviors
+- [x] Task: Write characterization tests for adjacent behaviors
 
 - **Expected behavior (these must PASS before any fix — they pin what FR4
   forbids changing):**
@@ -113,3 +113,15 @@ Manual Verification Steps:
 1. Start the dev server: `pnpm dev`
 2. Open the app, lay the curve→bridge closed loop, press ▶, watch two laps.
 3. Lay a short open dead-end line, press ▶, watch the dead-end pause pose.
+
+## Task Summaries
+
+### Phase 0 — Characterization tests (complete 2026-08-31)
+Added `createRideMotion` integration tests to `src/scene/ride-motion.test.ts`
+driving the real motion against a real `WorldStore` (no mocks): engine stays
+on the rails across the lap wrap of the reported curve→bridge loop (24-piece
+closed loop; the wrap lands on the south bridge (10,10), smallest cell key);
+dead-end overhang stays collinear with the end tangent at the pause; wagon
+facing is untouched by the shuttle reversal. All green pre-fix. Test
+infrastructure: `distanceToPath` polyline check (arcs sampled at 512 points,
+ε = 0.02), `startRide` driver (dt = 0.5). Commit: test(scene).
