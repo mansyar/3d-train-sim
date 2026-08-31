@@ -75,17 +75,50 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
 
 ## Phase 2 - Tunnel Asset & Scene Mounting
 
-- [ ] Task: Model the tunnel GLB in Blender
-  - [ ] Grassy dome + rounded arch; named nodes: dome body, entry/exit
+- [x] Task: Model the tunnel GLB in Blender
+  - [x] Grassy dome + rounded arch; named nodes: dome body, entry/exit
         portal arches, snow cap
-  - [ ] Measured to the straight kit's rail height/track width (trestle-bridge
+  - [x] Measured to the straight kit's rail height/track width (trestle-bridge
         convention); export `public/assets/train-kit/tunnel.glb`
         (target < ~150 KB)
-- [ ] Task: Mount & toggle in `track-renderer.ts`
-  - [ ] Register the `tunnel` type in the GLB mount table; toggle portal
+  - **Summary:** Authored in the user's Blender (5.2 LTS, via MCP addon) in
+    a dedicated `TunnelAsset` collection — the house-authoring scene left
+    untouched. Straight kit measured first: 4-unit module (Blender y −4..0
+    = glTF/three z 0..4), bed 1.0 wide, rails 0.1 wide centred x ±0.3 with
+    crowns z −0.9, mat/underside z −1 (matches KIT_ANCHORS). Piece built
+    with pure bmesh (booleans proved flaky over remote round-trips and
+    twice ate the dome): squashed hemisphere dome (24×12, rx 1.35, ry 1.9,
+    crown z +0.9) with the rim kept flush at the mat plane — the first cut
+    (z < −0.995) deleted the equator ring too and left the dome floating
+    half a unit above the track, caught in review and rebuilt (z < −1.001,
+    rim z exactly −1.0); portal arch rings with a real hole the train
+    passes through, built as extruded arcs (r_out 1.0, r_in 0.78) at both
+    dome ends; snow cap as a proud shell over the top third (first cut
+    swallowed the whole crown — rebuilt at z 0.55); cream bed + steel rails
+    through the bore. Verified from entry 3/4, top-down, east side, and
+    exit 3/4 with material shading. Dirt/snow exported double-sided so the
+    far ring face reads as the dark tunnel interior through a portal hole.
+    Export `tunnel.glb` 34,464 bytes; nodes `tunnel_{bed,dome,
+    portal_entry,portal_exit,rails,snow_cap}`; materials `tunnel_*`.
+    *(commit f6a4e26)*
+- [x] Task: Mount & toggle in `track-renderer.ts`
+  - [x] Register the `tunnel` type in the GLB mount table; toggle portal
         nodes per `tunnelRunsOf`; wire snow-cap visibility to the weather state
-  - [ ] Toybox entry in `ui/app.ts` (draggable, ghost feedback — inherits
+  - [x] Toybox entry in `ui/app.ts` (draggable, ghost feedback — inherits
         existing wiring)
+  - **Summary:** `PIECE_URLS.tunnel` → the real GLB; BASE_YAW/KIT_ANCHORS
+    comments updated from placeholder to the real mount semantics. New
+    `syncTunnelPortals` runs on reconcile (event-driven, never per frame):
+    core seam data (`tunnelRunsOf`) decides which portal nodes render —
+    merged seams stay wall-less so end-to-end runs read as one continuous
+    hill. Snow cap hidden at template load; new `setTunnelSnow(visible)` on
+    the `TrackRenderer` interface toggles the cap across the template and
+    all placed clones, wired in `init-scene.ts` to the shared frozen gate
+    (`base.snow >= FROZEN_SNOW`, same gate as the river ice and the duck).
+    Toybox entry was completed in Phase 1 (label + dome SVG icon +
+    `TAB_FOR_KIND`); it inherits the drag/ghost/lift wiring unchanged.
+    Gates: biome clean, `tsc --noEmit` clean, vitest 28 files / 365 tests
+    passed, production build green. *(commit f6a4e26)*
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - Ride Delight: Hidden Train, Echo, Night Portals
