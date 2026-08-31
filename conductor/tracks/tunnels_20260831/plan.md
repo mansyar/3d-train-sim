@@ -6,12 +6,27 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Tunnel Piece Type & Tunnel-Run Logic (TDD)
 
-- [~] Task: Add the `tunnel` piece type (tests first in `pieces.test.ts`,
+- [x] Task: Add the `tunnel` piece type (tests first in `pieces.test.ts`,
       `track-graph.test.ts`, `save.test.ts`)
-  - [ ] `PIECE_TYPES` gains `'tunnel'`; `BASE_ENDPOINTS.tunnel = ['north', 'south']`
-  - [ ] Terrain rule: dry land only (default branch — assert ghost-red-over-water via `validatePlacement`)
-  - [ ] Save round-trip: v2 snapshot with tunnels; v1/v2 pre-tunnel snapshots load unchanged
-- [ ] Task: Tunnel-run boundaries — new pure module `src/core/tunnels.ts`
+  - [x] `PIECE_TYPES` gains `'tunnel'`; `BASE_ENDPOINTS.tunnel = ['north', 'south']`
+  - [x] Terrain rule: dry land only (default branch — assert ghost-red-over-water via `validatePlacement`)
+  - [x] Save round-trip: v2 snapshot with tunnels; v1/v2 pre-tunnel snapshots load unchanged
+  - **Summary:** Tests written first (Red): catalog set, tunnel endpoint
+    geometry mirroring the straight at all four rotations, dry-land-only
+    terrain rule via `validatePlacement` (water ghost-red), end-to-end
+    tunnel↔tunnel and tunnel↔straight connections, and v2 save round-trip +
+    verbatim restore. Green in `src/core/pieces.ts` only: `'tunnel'` added to
+    `PIECE_TYPES` and `BASE_ENDPOINTS` (`['north','south']`) — terrain
+    (default non-bridge branch), connections, pathing, and save parsing all
+    inherit it unchanged. Catalog ripple completed with the bridge's
+    placeholder pattern: `drawer.ts` `TAB_FOR_KIND.tunnel = 'rails'`,
+    `track-renderer.ts` placeholder `BASE_YAW`/`KIT_ANCHORS`/`PIECE_URLS`
+    (straight GLB until the tunnel model lands in Phase 2), and `ui/app.ts`
+    label + toybox SVG icon (grassy dome with dark arch). Drawer tests
+    updated: Rails tab holds five track pieces, catalog coverage +5.
+    Gates: biome clean, `tsc --noEmit` clean, vitest 27 files / 353 tests
+    passed (was 338; +15 tunnel tests). *(commit c6d9037)*
+- [~] Task: Tunnel-run boundaries — new pure module `src/core/tunnels.ts`
       (TDD: `tunnels.test.ts`)
   - [ ] `tunnelRunsOf(pieces)`: which portal faces of each tunnel cell open
         into air (arch rendered) vs. into another tunnel (merged)
