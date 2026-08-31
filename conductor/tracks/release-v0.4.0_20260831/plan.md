@@ -99,3 +99,15 @@ Chore track — no logic-bearing code, so no TDD tasks; verification is gates
     tagged and pushed, Release run 33344422464 fully green (gates +
     publish + Coolify webhook). Track bookkeeping finalized in the same
     commit: registry status `done`, metadata status `done`.
+
+## Phase 4 - Review Fixes
+
+- [x] Task: Apply review suggestions <d43d047>
+  - [x] Rebase all CHANGELOG compare links from the non-existent
+        `mansyar/tiny-tracks` repo to the real repo `mansyar/3d-train-sim`
+        (Low severity, pre-existing since v0.3.0)
+  - **Summary:** All 5 link definitions (Unreleased, 0.4.0, 0.3.0, 0.2.0,
+    0.1.0) now point at `github.com/mansyar/3d-train-sim/...`, resolving
+    the review's only finding. Gates re-run after the fix: biome +
+    typecheck clean, vitest 27 files / 338 tests passed. *(commit
+    d43d047)*
