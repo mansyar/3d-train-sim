@@ -6,15 +6,9 @@
  * duck, the whistle echo, and the night portal glow. No Three.js coupling.
  */
 
-import { type TrainPath } from './pathing';
+import type { TrainPath } from './pathing';
 import { baseEndpointsFor } from './pieces';
-import {
-  boundaryKey,
-  type Edge,
-  type EdgeKey,
-  neighbourOf,
-  type PlacedPiece,
-} from './track-graph';
+import { boundaryKey, type Edge, type EdgeKey, neighbourOf, type PlacedPiece } from './track-graph';
 
 /** Next compass edge clockwise — how endpoint labels advance with yaw. */
 const NEXT_EDGE: Record<Edge, Edge> = {
