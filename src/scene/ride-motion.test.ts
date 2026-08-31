@@ -232,6 +232,28 @@ describe('createRideMotion — the little train rides the solved path', () => {
     run.motion.dispose();
   });
 
+  it('overhangs the dead end by the true coupler distance, not one cell per unit', () => {
+    const { world, state } = loneStraightWorld();
+    const run = startRide(world, state, 2);
+    const segments = segmentsFor(world, state);
+    const first = segments[0];
+    for (let i = 0; i < 20 && !run.paused.includes(true); i += 1) {
+      run.motion.update(0.5);
+    }
+    expect(run.paused).toContain(true);
+    // Coupler distance is world units: 4.2 per wagon. The engine rests at
+    // the path end (3.75), so wagon 0 hangs 0.45 past the start and wagon 1
+    // 4.65 — not 0.45 × 3.75 and 4.65 × 3.75.
+    const overhangs = [4.2 - 3.75, 2 * 4.2 - 3.75];
+    for (let i = 0; i < run.followers.length; i++) {
+      const wagon = run.followers[i];
+      if (!wagon) continue;
+      expect(Math.abs(wagon.position.x - first.ax)).toBeLessThan(0.02);
+      expect(first.az - wagon.position.z).toBeCloseTo(overhangs[i], 1);
+    }
+    run.motion.dispose();
+  });
+
   it('keeps the wagon course when the engine shuttles back from the dead end', () => {
     const { world, state } = loneStraightWorld();
     const run = startRide(world, state, 2);
