@@ -166,6 +166,8 @@ export function createRideMotion(
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
+  /** Closed loops cycle; open paths clamp their followers with overhang. */
+  let closed = false;
   /** Forward distance along the path, always in [0, total]. */
   let distance = 0;
   let travelDirection: 1 | -1 = 1;
@@ -203,6 +205,7 @@ export function createRideMotion(
     }
     total = 0;
     for (const segment of segments) total += segment.length;
+    closed = state.path.closed;
     // The stations standing beside the rails become pause points: the point
     // on the rails closest to each station, so the train rests AT the station
     // rather than at the entry to its cell (spec FR4).
@@ -349,7 +352,13 @@ export function createRideMotion(
     for (let i = 0; i < followers.length; i++) {
       const follower = followers[i];
       if (!follower) continue;
-      poseAt(distance - (i + 1) * FOLLOWER_GAP, follower, false);
+      let d = distance - (i + 1) * FOLLOWER_GAP;
+      // On a closed loop the coupler distance reaches around the wrap: a
+      // wagon behind the lap start rides the previous lap's tail segments,
+      // exactly as a real train rounds a circuit. Open paths keep the
+      // clamp-and-overhang semantics for their dead ends.
+      if (closed) d = ((d % total) + total) % total;
+      poseAt(d, follower, false);
     }
   }
 

@@ -27,7 +27,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 
 ## Phase 1: Closed-loop follower wrap (Red → Green)
 
-- [~] Task: Write failing regression tests for the follower wrap (Red)
+- [x] Task: Write failing regression tests for the follower wrap (Red)
 
 - **Expected behavior (unit tests first):** Extend
   `src/scene/ride-motion.test.ts`. Drive `createRideMotion` with two follower
@@ -42,7 +42,7 @@ manual check (`conductor/workflow.md`). One task in flight at a time.
 - **Notes:** Run the suite and confirm the new tests FAIL (red) while
   characterization suites stay green. No implementation changes yet.
 
-- [ ] Task: Wrap follower distances around closed loops (Green)
+- [x] Task: Wrap follower distances around closed loops (Green)
 
 - **Expected behavior:**
   - `poseFollowers` (or `poseAt`'s contract) folds each follower's path
@@ -125,3 +125,12 @@ dead-end overhang stays collinear with the end tangent at the pause; wagon
 facing is untouched by the shuttle reversal. All green pre-fix. Test
 infrastructure: `distanceToPath` polyline check (arcs sampled at 512 points,
 ε = 0.02), `startRide` driver (dt = 0.5). Commit: test(scene).
+
+### Phase 1 — Closed-loop follower wrap (complete 2026-08-31)
+Red: `keeps both wagons on the rails across the lap wrap` failed pre-fix
+(wagon ~12 units off-rail on the straight extension past the wrap point).
+Green: `poseFollowers` now folds each wagon's distance into `[0, total)` when
+`state.path.closed` (flag captured in `beginRide`), so wagons behind the lap
+start ride the previous lap's tail; open paths keep clamp-and-overhang. No
+constant retuning; `FOLLOWER_GAP` stays 4.2. Full ride-motion suite green
+(8/8). Commit: fix(scene).
