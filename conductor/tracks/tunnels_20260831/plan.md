@@ -26,15 +26,34 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
     updated: Rails tab holds five track pieces, catalog coverage +5.
     Gates: biome clean, `tsc --noEmit` clean, vitest 27 files / 353 tests
     passed (was 338; +15 tunnel tests). *(commit c6d9037)*
-- [~] Task: Tunnel-run boundaries — new pure module `src/core/tunnels.ts`
+- [x] Task: Tunnel-run boundaries — new pure module `src/core/tunnels.ts`
       (TDD: `tunnels.test.ts`)
-  - [ ] `tunnelRunsOf(pieces)`: which portal faces of each tunnel cell open
+  - [x] `tunnelRunsOf(pieces)`: which portal faces of each tunnel cell open
         into air (arch rendered) vs. into another tunnel (merged)
-  - [ ] Works for any rotation; lone tunnel = both portals open; runs of 2+
+  - [x] Works for any rotation; lone tunnel = both portals open; runs of 2+
         = inner faces merged
-- [ ] Task: Inside-tunnel detection for the ride (TDD)
-  - [ ] Pure helper mapping ride-path steps to tunnel coverage (used for
+  - **Summary:** Red first: 12 failing tests pinning portal semantics —
+    lone tunnel arches both ends (any rotation), end-to-end pairs share one
+    seam (arches only at run ends), three-tunnel runs merge both inner
+    faces, side-by-side hills with no shared rail stay separate, plain-track
+    neighbours never merge, one entry per tunnel in piece order. Green in
+    new `src/core/tunnels.ts`: tunnel ends world-oriented from
+    `baseEndpointsFor` + rotation (same label-advance rule as pathing);
+    seams = boundary keys carrying exactly two tunnel ends (the
+    track-graph's own connection condition, tunnel-only); portals split
+    open/merged per end. *(part of commit e87da45)*
+- [x] Task: Inside-tunnel detection for the ride (TDD)
+  - [x] Pure helper mapping ride-path steps to tunnel coverage (used for
         hiding, audio duck, portal glow)
+  - **Summary:** `tunnelFlagsForPath(pieces, path)` — one boolean per
+    `TrainPath` step, true where the train rides a tunnel cell, in ride
+    order; solved via real `solvePath` rides (mixed open line, closed 2×3
+    perimeter loop with the tunnel on its bottom side — a test fix during
+    Red revealed an opposite-edge piece can't take a loop corner — long
+    two-tunnel run, empty path). Hiding itself stays geometric (the opaque
+    dome occludes through depth testing); these flags feed the chug duck,
+    whistle echo, and night portal glow in Phase 3. *(part of commit
+    e87da45)*
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Tunnel Asset & Scene Mounting
