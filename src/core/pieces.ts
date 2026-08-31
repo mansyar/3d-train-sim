@@ -1,5 +1,5 @@
-/** The piece catalog. The bridge spans the river; more shapes arrive later. */
-export const PIECE_TYPES = ['straight', 'corner', 'crossing', 'bridge'] as const;
+/** The piece catalog. The bridge spans the river; the tunnel rides under the hill. */
+export const PIECE_TYPES = ['straight', 'corner', 'crossing', 'bridge', 'tunnel'] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
 
@@ -33,6 +33,10 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   // The bridge rides exactly like the straight it mirrors — trains cross at
   // normal speed and height; only its terrain rule differs.
   bridge: ['north', 'south'],
+  // The tunnel rides exactly like the straight it mirrors — trains disappear
+  // into the hill and pop out the far side; only its terrain rule differs
+  // (dry land only: the river stays open, that's what bridges are for).
+  tunnel: ['north', 'south'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

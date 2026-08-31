@@ -50,6 +50,8 @@ const BASE_YAW: Record<PieceType, number> = {
   crossing: 0,
   // Placeholder until the trestle model lands (Phase 2): rides like a straight.
   bridge: 0,
+  // Placeholder until the tunnel model lands (Phase 2): rides like a straight.
+  tunnel: 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -86,6 +88,9 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // Placeholder until the trestle model lands (Phase 2): same anchor as the
   // straight it mirrors.
   bridge: [0, -1, 2],
+  // Placeholder until the tunnel model lands (Phase 2): same anchor as the
+  // straight it mirrors — the arch rides the rail line through the cell.
+  tunnel: [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -94,6 +99,8 @@ const PIECE_URLS: Record<PieceType, string> = {
   crossing: '/assets/train-kit/railroad-crossing.glb',
   // Placeholder until the trestle model lands (Phase 2).
   bridge: '/assets/train-kit/railroad-straight.glb',
+  // Placeholder until the tunnel model lands (Phase 2).
+  tunnel: '/assets/train-kit/railroad-straight.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */

@@ -166,6 +166,42 @@ describe('world snapshots', () => {
   });
 });
 
+describe('tunnel snapshots', () => {
+  const tunnelPiece: PlacedPiece = {
+    id: 'piece-7',
+    type: 'tunnel',
+    cell: { x: 6, y: 6 },
+    rotation: 90,
+  };
+
+  it('round-trips a v2 snapshot carrying tunnels like any other piece', () => {
+    const snapshot = serializeWorld([tunnelPiece], [], 'steam');
+
+    expect(snapshot.pieces).toEqual([tunnelPiece]);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [tunnelPiece],
+      scenery: [],
+      train: 'steam',
+    });
+  });
+
+  it('restores a persisted v2 snapshot containing tunnels verbatim', () => {
+    expect(
+      deserializeWorld({ version: 2, pieces: [tunnelPiece], scenery: [], train: 'diesel' }),
+    ).toEqual({ pieces: [tunnelPiece], scenery: [], train: 'diesel' });
+  });
+
+  it('keeps rejecting unknown piece types — the tunnel is catalog-listed, anything else is not', () => {
+    expect(
+      deserializeWorld({
+        version: 2,
+        pieces: [{ id: 'piece-1', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 }],
+        scenery: [],
+      }),
+    ).toEqual({ pieces: [], scenery: [], train: 'steam' });
+  });
+});
+
 describe('device preferences', () => {
   it('serializes a muted preference into the snapshot', () => {
     const snapshot = serializeWorld(pieces, [], 'steam', true);

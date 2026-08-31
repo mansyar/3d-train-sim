@@ -25,6 +25,7 @@ const PIECE_LABELS: Record<PieceType, string> = {
   corner: 'Corner track piece',
   crossing: 'Crossing track piece',
   bridge: 'Bridge track piece',
+  tunnel: 'Tunnel track piece',
 };
 
 /** Emoji stand-ins until the toys get their GLB thumbnails. */
@@ -96,6 +97,17 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="2.5" stroke-linecap="round"/>
       <line x1="4" y1="22.5" x2="44" y2="22.5"
             stroke="var(--toy-steel)" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
+  // The tunnel: a grassy dome with a dark arch the train rides through.
+  tunnel: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 44 A22 22 0 0 1 46 44 Z"
+            fill="var(--toy-green)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M15 44 A9 11 0 0 1 33 44 Z" fill="#3a2c22"/>
+      <line x1="17" y1="43" x2="17" y2="36"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="31" y1="43" x2="31" y2="36"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
     </svg>`,
 };
 
