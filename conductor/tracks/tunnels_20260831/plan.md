@@ -4,7 +4,7 @@ Feature track per `spec.md`. Phase 1 is logic-bearing (TDD per
 `workflow.md`); Phases 2–3 are scene/audio wiring verified by smoke tests
 and manual verification; Phase 4 closes with e2e, docs, and final gates.
 
-## Phase 1 - Core: Tunnel Piece Type & Tunnel-Run Logic (TDD)
+## Phase 1 - Core: Tunnel Piece Type & Tunnel-Run Logic (TDD) [checkpoint: e87da45]
 
 - [x] Task: Add the `tunnel` piece type (tests first in `pieces.test.ts`,
       `track-graph.test.ts`, `save.test.ts`)
@@ -54,7 +54,24 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
     dome occludes through depth testing); these flags feed the chug duck,
     whistle echo, and night portal glow in Phase 3. *(part of commit
     e87da45)*
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Automated — `pnpm test` 28 files / 365 tests passed (338
+    pre-track, +27 tunnel tests); `pnpm exec biome check .` clean;
+    `pnpm exec tsc --noEmit` clean; coverage on new logic `tunnels.ts`
+    100% and `pieces.ts` 100% (statements/branches/functions/lines).
+    Manual — Task 1's visible surface (toybox tunnel slot with dome icon,
+    red water ghost, straight-rider placeholder until the Phase 2 model)
+    verified by the user at the in-flight checkpoint; Tasks 2–3 are pure
+    core logic with no new visible surface, pinned by 12 unit tests
+    (three-tunnel runs, side-by-side separation, closed-loop rides). User
+    confirmed proceeding to Phase 2 (2026-08-31).
+
+  **Verification Report — Phase 1 (2026-08-31):**
+  Automated: `pnpm test` — 28 files / 365 tests passed; biome + typecheck
+  clean; coverage `tunnels.ts` 100%, `pieces.ts` 100%. Manual: toybox
+  surface verified by the user; run-boundary and ride-flag logic unit-
+  pinned. User confirmed Phase 1 complete (2026-08-31). Checkpoint at
+  e87da45.
 
 ## Phase 2 - Tunnel Asset & Scene Mounting
 
