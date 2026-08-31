@@ -329,9 +329,12 @@ export function createRideMotion(
     }
 
     if (over !== 0) {
-      // Straight overhang past the path ends, along the local tangent.
-      x += tangentX * over;
-      z += tangentZ * over;
+      // Straight overhang past the path ends, along the unit local tangent
+      // — `over` is a world distance, so the raw line delta (one cell per
+      // unit) must be normalized first. The arc tangent is already unit.
+      const tangentLen = Math.hypot(tangentX, tangentZ) || 1;
+      x += (tangentX / tangentLen) * over;
+      z += (tangentZ / tangentLen) * over;
     }
 
     target.position.set(x, 0, z);
