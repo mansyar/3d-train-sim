@@ -73,7 +73,7 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
   pinned. User confirmed Phase 1 complete (2026-08-31). Checkpoint at
   e87da45.
 
-## Phase 2 - Tunnel Asset & Scene Mounting
+## Phase 2 - Tunnel Asset & Scene Mounting [checkpoint: ac213a6]
 
 - [x] Task: Model the tunnel GLB in Blender
   - [x] Grassy dome + rounded arch; named nodes: dome body, entry/exit
@@ -119,7 +119,23 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
     `TAB_FOR_KIND`); it inherits the drag/ghost/lift wiring unchanged.
     Gates: biome clean, `tsc --noEmit` clean, vitest 28 files / 365 tests
     passed, production build green. *(commit f6a4e26)*
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Automated — biome clean, `tsc --noEmit` clean, vitest 28
+    files / 365 tests passed, production build green (Phase 2 touched only
+    scene/glue code plus the asset, so no new unit tests per workflow; the
+    toggles ride existing interface coverage). Asset corrected in-flight
+    after user review found the dome covered the opening: rebuilt with a
+    real boolean arch bore, dark dirt interior walls, portal bands wrapping
+    each mouth; re-exported GLB 70,856 bytes with the six expected nodes.
+    The rebuild is captured in the re-runnable `scripts/blender-tunnel.py`
+    after the unsaved Blender session was reset. *(commit ac213a6)*
+
+  **Verification Report — Phase 2 (2026-09-02):**
+  Automated: biome + typecheck clean; `pnpm test` 28 files / 365 tests
+  passed; `pnpm build` green. Manual steps proposed (toybox drag, dry-land
+  snap, red water ghost, portal merging on end-to-end runs, ride-through
+  visibility, winter snow cap). User confirmed Phase 2 complete
+  (2026-09-02). Checkpoint at ac213a6.
 
 ## Phase 3 - Ride Delight: Hidden Train, Echo, Night Portals
 
