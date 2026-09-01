@@ -45,6 +45,12 @@ const NEXT_EDGE: Record<Edge, Edge> = {
   south: 'west',
   west: 'north',
 };
+
+/** The edge one compass step clockwise — the single yaw-label convention. */
+export function nextEdge(edge: Edge): Edge {
+  return NEXT_EDGE[edge];
+}
+
 export type Edge = (typeof COMPASS)[number];
 
 /** Cells inside the 16×16 meadow only. */
@@ -116,7 +122,7 @@ export function endpointEdgesFor(piece: PlacedPiece): EdgeKey[] {
   const steps = piece.rotation / 90;
   return openEdges.map((edge) => {
     let label = edge;
-    for (let i = 0; i < steps; i++) label = NEXT_EDGE[label];
+    for (let i = 0; i < steps; i++) label = nextEdge(label);
     return boundaryKey(piece.cell, neighbourOf(piece.cell, label));
   });
 }

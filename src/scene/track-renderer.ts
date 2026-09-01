@@ -32,6 +32,7 @@ import {
   type Cell,
   type Edge,
   MEADOW_CELLS,
+  nextEdge,
   type PlacedPiece,
   type Rotation,
 } from '../core/track-graph';
@@ -275,10 +276,12 @@ export function startTrackRenderer(
     syncTunnelPortals(world.pieces());
   }
 
-  /** Compass step clockwise — a piece's yaw advances its endpoint labels. */
-  const COMPASS: Edge[] = ['north', 'east', 'south', 'west'];
-  const advancedEdge = (edge: Edge, steps: number): Edge =>
-    COMPASS[(COMPASS.indexOf(edge) + steps) % COMPASS.length] as Edge;
+  /** The piece's endpoint labels, advanced by its yaw (the core convention). */
+  const advancedEdge = (edge: Edge, steps: number): Edge => {
+    let out = edge;
+    for (let i = 0; i < steps; i++) out = nextEdge(out);
+    return out;
+  };
 
   /**
    * Portal arches render only where the hill meets open air — merged seams
@@ -533,10 +536,12 @@ export function startTrackRenderer(
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
         if (type === 'tunnel') {
-          // The snow cap is a winter-only tell — hidden until snow settles
-          // (setTunnelSnow). Clones inherit the template's hidden state.
+          // The snow cap is a winter-only tell — hidden unless snow already
+          // settled while the asset was in flight (setTunnelSnow is
+          // change-driven, so the template must honor the live state).
+          // Clones inherit the template's state.
           const cap = model.getObjectByName('tunnel_snow_cap');
-          if (cap) cap.visible = false;
+          if (cap) cap.visible = tunnelSnow;
         }
         if (type === 'straight') {
           // The trestle rides at the straight's measured rail height and

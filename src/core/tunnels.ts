@@ -8,15 +8,14 @@
 
 import type { TrainPath } from './pathing';
 import { baseEndpointsFor } from './pieces';
-import { boundaryKey, type Edge, type EdgeKey, neighbourOf, type PlacedPiece } from './track-graph';
-
-/** Next compass edge clockwise — how endpoint labels advance with yaw. */
-const NEXT_EDGE: Record<Edge, Edge> = {
-  north: 'east',
-  east: 'south',
-  south: 'west',
-  west: 'north',
-};
+import {
+  boundaryKey,
+  type Edge,
+  type EdgeKey,
+  neighbourOf,
+  nextEdge,
+  type PlacedPiece,
+} from './track-graph';
 
 /** One world-oriented tunnel end: its compass edge and boundary key. */
 interface TunnelEnd {
@@ -27,7 +26,7 @@ interface TunnelEnd {
 function tunnelEndsOf(piece: PlacedPiece): TunnelEnd[] {
   return baseEndpointsFor(piece.type).map((base) => {
     let edge: Edge = base;
-    for (let i = 0; i < piece.rotation / 90; i++) edge = NEXT_EDGE[edge];
+    for (let i = 0; i < piece.rotation / 90; i++) edge = nextEdge(edge);
     return { edge, key: boundaryKey(piece.cell, neighbourOf(piece.cell, edge)) };
   });
 }
