@@ -5,7 +5,7 @@
 
 ## Phase 1: Core — Cargo Cycle Logic & Save Migration (TDD)
 
-- [ ] Task: Cargo cycle state machine (`src/core/cargo.ts`) — pure module: per-train
+- [~] Task: Cargo cycle state machine (`src/core/cargo.ts`) — pure module: per-train
   load state (`empty ⇄ loaded`), `onStationStop(loadState)` → `load | deliver`,
   delivery-count increment with `MAX_DELIVERED_CRATES = 8` cap
   - Write failing tests first (Red): load on empty, deliver on loaded,
