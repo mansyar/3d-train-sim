@@ -205,4 +205,17 @@
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase: Review Fixes
-- [~] Task: Apply review suggestions
+- [x] Task: Apply review suggestions (1179d2f)
+  - Notes: three findings from the formal review, all fixed. (Medium)
+    `handleStationCargo` delivered before checking the station still
+    existed — a station lifted mid-ride minted a permanent orphan ledger
+    entry; now the existence check gates both the count and the confetti
+    (covered by the delivery semantics; unit suite re-run green). (Low)
+    Station drag-ghosts showed all 8 crate slots while a placed fresh
+    station shows none — scenery templates now hide slots at load and
+    reconcile fills the earned ones. (Low) `parseDeliveries` skips
+    `__proto__`/`constructor` keys, with a regression case in the
+    malformed-deliveries test. Files: `src/scene/init-scene.ts`,
+    `src/scene/track-renderer.ts`, `src/core/save.ts`,
+    `src/core/save.test.ts`. Gates after fixes: tsc + biome clean, 404
+    tests green.
