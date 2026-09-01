@@ -1,3 +1,4 @@
+import { deliveredCountAfter } from '../core/cargo';
 import { isWater } from '../core/river';
 import type { WorldData } from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
@@ -47,6 +48,12 @@ export interface WorldStore {
   relocateScenery(id: string, cell: Cell, rotation: Rotation): PlacementResult;
   /** Returns a scenery toy to the drawer. Unknown ids are ignored. */
   removeScenery(id: string): void;
+  /** Delivered-crate count for one station (0 for unknown ids). */
+  deliveryCount(stationId: string): number;
+  /** Records one delivery to a station; returns its new, capped count. */
+  deliverCrate(stationId: string): number;
+  /** A defensive copy of the delivery ledger — station id → crate count. */
+  deliveries(): Record<string, number>;
   hydrate(data: WorldData): void;
   /** Returns the meadow to a factory-fresh world: empty, steam selected. */
   reset(): void;
@@ -56,6 +63,7 @@ export interface WorldStore {
 export function createWorldStore(): WorldStore {
   const placed: PlacedPiece[] = [];
   const scenery: PlacedScenery[] = [];
+  let deliveries: Record<string, number> = {};
   let selectedTrain: TrainKind = 'steam';
   const listeners = new Set<WorldListener>();
   let nextId = 1;
@@ -154,11 +162,25 @@ export function createWorldStore(): WorldStore {
       const index = scenery.findIndex((s) => s.id === id);
       if (index === -1) return;
       scenery.splice(index, 1);
+      delete deliveries[id];
       notify();
+    },
+
+    /** A defensive copy — callers can never mutate the ledger. */
+    deliveries: () => ({ ...deliveries }),
+
+    deliveryCount: (stationId) => deliveries[stationId] ?? 0,
+
+    deliverCrate(stationId) {
+      const count = deliveredCountAfter(deliveries[stationId] ?? 0);
+      deliveries[stationId] = count;
+      notify();
+      return count;
     },
 
     hydrate(data) {
       selectedTrain = data.train;
+      deliveries = { ...(data.deliveries ?? {}) };
       placed.splice(
         0,
         placed.length,
@@ -188,6 +210,7 @@ export function createWorldStore(): WorldStore {
       selectedTrain = 'steam';
       placed.splice(0, placed.length);
       scenery.splice(0, scenery.length);
+      deliveries = {};
       nextId = 1;
       notify();
     },

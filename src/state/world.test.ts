@@ -420,3 +420,92 @@ describe('river water rules', () => {
     expect(store.pieces()).toHaveLength(4);
   });
 });
+
+describe('station deliveries', () => {
+  const placeStation = (store: ReturnType<typeof createWorldStore>, cell = NEXT_CELL) => {
+    expect(store.placeScenery('station', cell, 0)).toBe('placed');
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+    return id;
+  };
+
+  it('reports zero delivered crates before the first delivery', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+
+    expect(store.deliveryCount(id)).toBe(0);
+  });
+
+  it('reports zero for unknown ids', () => {
+    const store = createWorldStore();
+    placeStation(store);
+
+    expect(store.deliveryCount('scenery-999')).toBe(0);
+  });
+
+  it('counts each delivery', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+
+    expect(store.deliverCrate(id)).toBe(1);
+    expect(store.deliverCrate(id)).toBe(2);
+    expect(store.deliveryCount(id)).toBe(2);
+  });
+
+  it('caps the platform at MAX_DELIVERED_CRATES', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+
+    for (let i = 0; i < 20; i += 1) store.deliverCrate(id);
+    expect(store.deliveryCount(id)).toBe(8);
+  });
+
+  it('keeps the count when the station is relocated', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+    store.deliverCrate(id);
+
+    expect(store.relocateScenery(id, { x: 4, y: 4 }, 90)).toBe('placed');
+    expect(store.deliveryCount(id)).toBe(1);
+  });
+
+  it('drops the count when the station is removed', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+    store.deliverCrate(id);
+    store.removeScenery(id);
+
+    expect(store.deliveryCount(id)).toBe(0);
+  });
+
+  it('clears every count on reset', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+    store.deliverCrate(id);
+    store.reset();
+
+    expect(store.deliveryCount(id)).toBe(0);
+  });
+
+  it('hydrates counts from a save', () => {
+    const store = createWorldStore();
+    store.hydrate({
+      pieces: [],
+      scenery: [{ id: 'scenery-1', kind: 'station', cell: ORIGIN, rotation: 0 }],
+      train: 'steam',
+      deliveries: { 'scenery-1': 5 },
+    });
+
+    expect(store.deliveryCount('scenery-1')).toBe(5);
+  });
+
+  it('notifies subscribers when a crate is delivered', () => {
+    const store = createWorldStore();
+    const id = placeStation(store);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.deliverCrate(id);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

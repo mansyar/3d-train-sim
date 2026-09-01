@@ -38,11 +38,12 @@ interface WorldReader {
   train(): TrainKind;
   pieces(): readonly PlacedPiece[];
   scenery(): readonly PlacedScenery[];
+  deliveries(): Record<string, number>;
   subscribe(listener: () => void): () => void;
 }
 
 function snapshotOf(world: WorldReader, muted: boolean): WorldSnapshot {
-  return serializeWorld(world.pieces(), world.scenery(), world.train(), muted);
+  return serializeWorld(world.pieces(), world.scenery(), world.train(), muted, world.deliveries());
 }
 
 export function watchWorldPersistence(

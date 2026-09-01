@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  MAX_DELIVERED_CRATES,
-  actionAtStop,
-  deliveredCountAfter,
-  loadAfterAction,
-} from './cargo';
+import { actionAtStop, deliveredCountAfter, loadAfterAction, MAX_DELIVERED_CRATES } from './cargo';
 
 describe('actionAtStop', () => {
   it('loads at a stop when the wagons are empty', () => {

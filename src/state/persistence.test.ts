@@ -165,6 +165,22 @@ describe('mute preference', () => {
     expect(save).toHaveBeenCalledTimes(2);
   });
 
+  it('carries delivery counts into world-mutation saves', () => {
+    const store = createWorldStore();
+    store.hydrate({
+      train: 'steam',
+      pieces: [],
+      scenery: [{ id: 'scenery-41', kind: 'station', cell: NEXT_CELL, rotation: 0 }],
+      deliveries: { 'scenery-41': 3 },
+    });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ deliveries: { 'scenery-41': 3 } });
+  });
+
   it('carries the current mute preference into world-mutation saves', () => {
     const audio = makeAudio();
     audio.setMuted(true);
