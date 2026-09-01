@@ -137,7 +137,7 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
   visibility, winter snow cap). User confirmed Phase 2 complete
   (2026-09-02). Checkpoint at ac213a6.
 
-## Phase 3 - Ride Delight: Hidden Train, Echo, Night Portals
+## Phase 3 - Ride Delight: Hidden Train, Echo, Night Portals [checkpoint: b86bb2f]
 
 - [x] Task: Chug duck + whistle echo inside a tunnel run
   - [x] Reuse `setChugSoftened` for the inside-duck; synthesized echo tail on
@@ -172,7 +172,27 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
     (same 0xffe2a8 family as the headlight beam) parked at the nearest open
     arch mouth, intensity = night × proximity, off in daylight / with no
     tunnels. *(part of commit 9a95438)*
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** Automated — biome clean, `tsc --noEmit` clean, vitest 28
+    files / 375 tests passed (+10 this phase), `pnpm build` green; coverage
+    on new logic `tunnels.ts` 100% statements/lines (87.5% branches — two
+    defensive `?? 0` fallbacks), new ride-motion/audio paths covered by the
+    new tests. Asset amendment during verification: the user found the
+    train clipping through the dome — the bore had been sized from the
+    track bed, not the 1.5-scale train. Rebuilt from the train's real
+    silhouette (sliced from the kit GLB) as a full-module vault with a
+    1.30 half-width bore, crown at height 3.0; clearance verified in
+    Blender with the actual locomotive placed in the bore. *(commit
+    b86bb2f)*
+
+  **Verification Report — Phase 3 (2026-09-02):**
+  Automated: biome + typecheck clean; `pnpm test` 28 files / 375 tests
+  passed; `pnpm build` green; `tunnels.ts` coverage 100% stmts/lines.
+  Manual steps proposed (chug duck under the hill, 🎺 echo inside vs.
+  plain outside + instant mute, night portal glow at the arch mouths,
+  no glow at merged seams) plus the in-flight asset re-check (train rides
+  the bore without clipping). User confirmed Phase 3 complete
+  (2026-09-02). Checkpoint at b86bb2f.
 
 ## Phase 4 - Smoke, Docs & Final Verification
 
