@@ -31,9 +31,7 @@ const resetAndBuild = (page: import('@playwright/test').Page) =>
     return station.id;
   });
 
-test('wagons load, deliver, and the station keeps the count across a reload', async ({
-  page,
-}) => {
+test('wagons load, deliver, and the station keeps the count across a reload', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
@@ -92,9 +90,7 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('a train with no station never shows cargo and rides exactly as before', async ({
-  page,
-}) => {
+test('a train with no station never shows cargo and rides exactly as before', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
