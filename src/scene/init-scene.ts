@@ -23,8 +23,15 @@ import {
   type SkyColors,
   skyColorsAt,
 } from '../core/sky-palette';
-import { type Cell, MEADOW_CELLS, type PieceType, type Rotation } from '../core/track-graph';
+import {
+  type Cell,
+  MEADOW_CELLS,
+  neighbourOf,
+  type PieceType,
+  type Rotation,
+} from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
+import { type PortalGlow, portalGlowAt, tunnelRunsOf } from '../core/tunnels';
 import { createVisibilityController } from '../core/visibility-controller';
 import { wagonSlots } from '../core/wagons';
 import {
@@ -46,6 +53,7 @@ import { loadLocomotive } from './load-locomotive';
 import { loadWagon } from './load-wagons';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
+import { createPortalGlow } from './portal-glow';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
@@ -76,6 +84,8 @@ const STATION_DING_GAP_MS = 350;
 const ATTRACT_IDLE_MS = 25_000;
 /** How often the attract clock re-checks its timers (cheap, timer-driven). */
 const ATTRACT_TICK_MS = 250;
+/** Portal glow reach in cell units — the mouth flares as the engine nears. */
+const PORTAL_GLOW_RADIUS = 2.5;
 
 export interface SceneHandle {
   dispose(): void;
@@ -97,8 +107,9 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
-  /** The whistle's visual voice: a steam burst at the chimney (no-op before a train shows). */
-  whistlePuff(): void;
+  /** The toddler's big toot: the answering train whistles (echoing inside
+   *  tunnels) and puffs steam. No-op before a train shows. */
+  tootWhistle(): void;
   /** Debug aid: how many trains are riding right now. */
   ridingTrainCount(): number;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
@@ -181,6 +192,27 @@ export function initScene(
   const water = createRiverWater(scene);
   /** One night beam per little train — parked spares included. */
   const headlights: Headlight[] = [];
+  /** The portals catching those beams at night (one shared warm light). */
+  const portalGlowVisual = createPortalGlow(scene);
+  disposables.push(portalGlowVisual.dispose);
+  /** Open portal mouths in flat [x, z, ...] cell units — rebuilt on edits. */
+  const openPortals: number[] = [];
+  /** Scratch for the per-frame proximity lookup (zero-alloc frame path). */
+  const portalGlow: PortalGlow = { x: 0, z: 0, intensity: 0 };
+  const rebuildPortalCache = (): void => {
+    openPortals.length = 0;
+    const byId = new Map(world.pieces().map((p) => [p.id, p] as const));
+    for (const run of tunnelRunsOf(world.pieces())) {
+      const piece = byId.get(run.pieceId);
+      if (!piece) continue;
+      for (const edge of run.openPortals) {
+        const n = neighbourOf(piece.cell, edge);
+        openPortals.push((piece.cell.x + n.x) / 2, (piece.cell.y + n.y) / 2);
+      }
+    }
+  };
+  rebuildPortalCache();
+  const unsubscribePortals = world.subscribe(rebuildPortalCache);
   // Scratch objects for the frame path — the palette/intensity calls write
   // into these instead of allocating (spec NFR: no per-frame allocation).
   const skyColors: SkyColors = { top: 0, horizon: 0 };
@@ -212,6 +244,7 @@ export function initScene(
     scaledWeather.cloud = base.cloud * weatherScale;
     weather.update(dt, scaledWeather);
     ground.setSnow(base.snow);
+    tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
     water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     // River babble whispers near the water; a frozen river stands the babble
@@ -359,12 +392,22 @@ export function initScene(
     return nearest;
   };
 
-  /** The one shared chug softens only when every riding train is paused. */
+  /** The one shared chug softens when a riding train pauses at a dead end —
+   *  and it ducks gently whenever a train is under the hill. */
   const pausedRigs = new Set<TrainRig>();
+  const tunnelRigs = new Set<TrainRig>();
+  const syncChugSoftened = (): void => {
+    rideAudio.setPaused(pausedRigs.size > 0 || tunnelRigs.size > 0);
+  };
   const setRigPaused = (rig: TrainRig, paused: boolean): void => {
     if (paused) pausedRigs.add(rig);
     else pausedRigs.delete(rig);
-    rideAudio.setPaused(pausedRigs.size > 0);
+    syncChugSoftened();
+  };
+  const setRigInTunnel = (rig: TrainRig, inside: boolean): void => {
+    if (inside) tunnelRigs.add(rig);
+    else tunnelRigs.delete(rig);
+    syncChugSoftened();
   };
 
   /** A station stop earns a happy ding-ding (spec FR4), per train. */
@@ -416,6 +459,7 @@ export function initScene(
       (paused) => setRigPaused(rig, paused),
       onStationDing,
       wagons,
+      (inside) => setRigInTunnel(rig, inside),
     );
     return rig;
   };
@@ -430,6 +474,7 @@ export function initScene(
     const lightIndex = headlights.indexOf(rig.headlight);
     if (lightIndex !== -1) headlights.splice(lightIndex, 1);
     pausedRigs.delete(rig);
+    tunnelRigs.delete(rig);
   };
 
   /**
@@ -707,6 +752,20 @@ export function initScene(
         night,
         snow: weatherNow.snow,
       });
+      // The headlight catches the portals at night: a warm glow at the open
+      // arch mouth nearest the engine, keyed to night factor and proximity.
+      if (star && night > 0 && openPortals.length > 0) {
+        portalGlowAt(
+          openPortals,
+          (star.model.position.x + GROUND_SIZE / 2) / cellSize - 0.5,
+          (star.model.position.z + GROUND_SIZE / 2) / cellSize - 0.5,
+          PORTAL_GLOW_RADIUS,
+          portalGlow,
+        );
+      } else {
+        portalGlow.intensity = 0;
+      }
+      portalGlowVisual.update(portalGlow, night);
       updateCamera(dt);
     },
     // Render-scale trims go through the offscreen blit — the canvas drawing
@@ -755,10 +814,12 @@ export function initScene(
     wagonCount: () =>
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     steamPuffCount: () => visibleSteamPuffs,
-    whistlePuff: () => {
+    tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
-      // does; before any ride, the parked opener train answers.
+      // does; before any ride, the parked opener train answers. Inside a
+      // tunnel run the toot trails its soft echo.
       const target = filmedRig() ?? nearestRig(rigs.values()) ?? nearestRig(spares);
+      audio.whistle(world.train(), target !== null && tunnelRigs.has(target));
       target?.puffs.burst();
     },
     startRide: () => rides.start(),
@@ -790,6 +851,7 @@ export function initScene(
       unsubscribeBeat();
       unsubscribeRides();
       unsubscribeTrain();
+      unsubscribePortals();
       audio.dispose();
       tracks.dispose();
       crate.dispose();

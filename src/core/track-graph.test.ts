@@ -74,6 +74,14 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bridge')).toBe('water');
   });
 
+  it('rejects the tunnel on river water — dry-land toy like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'tunnel')).toBe('water');
+  });
+
+  it('accepts a tunnel on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'tunnel')).toBeNull();
+  });
+
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {
     expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
     const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];
@@ -127,6 +135,27 @@ describe('endpointEdgesFor — crossing', () => {
           .sort(),
       ).toEqual(atZero);
     }
+  });
+});
+
+describe('tunnel endpoints and connections', () => {
+  it('bridges the same cell edges as the straight it mirrors, at every rotation', () => {
+    // endpointEdgesFor keeps base order with advanced labels (180° reads
+    // south-first), unlike endpointsFor's canonical filtering.
+    expect(endpointEdgesFor(piece('t', 'tunnel', 2, 3, 0))).toEqual(['2,2|2,3', '2,3|2,4']);
+    expect(endpointEdgesFor(piece('t', 'tunnel', 2, 3, 90))).toEqual(['2,3|3,3', '1,3|2,3']);
+    expect(endpointEdgesFor(piece('t', 'tunnel', 2, 3, 180))).toEqual(['2,3|2,4', '2,2|2,3']);
+    expect(endpointEdgesFor(piece('t', 'tunnel', 2, 3, 270))).toEqual(['1,3|2,3', '2,3|3,3']);
+  });
+
+  it('connects two tunnels joined end-to-end — the seam of a long tunnel', () => {
+    const pieces = [piece('a', 'tunnel', 2, 3, 0), piece('b', 'tunnel', 2, 4, 0)];
+    expect(connectionsFor(pieces)).toEqual([{ a: 'a', b: 'b', via: '2,3|2,4' }]);
+  });
+
+  it('connects a tunnel to a plain straight exactly as two straights would', () => {
+    const pieces = [piece('a', 'tunnel', 2, 3, 0), piece('b', 'straight', 2, 4, 0)];
+    expect(connectionsFor(pieces)).toEqual([{ a: 'a', b: 'b', via: '2,3|2,4' }]);
   });
 });
 

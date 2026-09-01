@@ -28,7 +28,15 @@ import {
   sceneryUrl,
   sceneryVoice,
 } from '../core/scenery';
-import { type Cell, MEADOW_CELLS, type PlacedPiece, type Rotation } from '../core/track-graph';
+import {
+  type Cell,
+  type Edge,
+  MEADOW_CELLS,
+  nextEdge,
+  type PlacedPiece,
+  type Rotation,
+} from '../core/track-graph';
+import { tunnelRunsOf } from '../core/tunnels';
 import type { WorldStore } from '../state/world';
 import { createTrestleTemplate } from './bridge-model';
 import { type CritterMood, createCritterLife } from './critter-life';
@@ -50,6 +58,8 @@ const BASE_YAW: Record<PieceType, number> = {
   crossing: 0,
   // Placeholder until the trestle model lands (Phase 2): rides like a straight.
   bridge: 0,
+  // The tunnel rides like the straight it mirrors; the dome is yaw-symmetric.
+  tunnel: 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -86,6 +96,9 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // Placeholder until the trestle model lands (Phase 2): same anchor as the
   // straight it mirrors.
   bridge: [0, -1, 2],
+  // The tunnel: same anchor as the straight it mirrors — the dome is authored
+  // on the measured straight's mount, so rails meet neighbours flush.
+  tunnel: [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -94,6 +107,9 @@ const PIECE_URLS: Record<PieceType, string> = {
   crossing: '/assets/train-kit/railroad-crossing.glb',
   // Placeholder until the trestle model lands (Phase 2).
   bridge: '/assets/train-kit/railroad-straight.glb',
+  // The Blender-authored dome: named nodes carry the portal arches and the
+  // winter snow cap (toggled per piece in syncTunnelPortals / setTunnelSnow).
+  tunnel: '/assets/train-kit/tunnel.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
@@ -169,6 +185,8 @@ export interface TrackRenderer {
   setPieceVisible(id: string, visible: boolean): void;
   /** Debug aid: show the meadow's snap-cell boundaries. */
   setGridVisible(visible: boolean): void;
+  /** Winter tell: show/hide the tunnel domes' snow caps (event-driven). */
+  setTunnelSnow(visible: boolean): void;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -255,6 +273,33 @@ export function startTrackRenderer(
       apply(item);
     }
     syncCritterAnimations(wanted);
+    syncTunnelPortals(world.pieces());
+  }
+
+  /** The piece's endpoint labels, advanced by its yaw (the core convention). */
+  const advancedEdge = (edge: Edge, steps: number): Edge => {
+    let out = edge;
+    for (let i = 0; i < steps; i++) out = nextEdge(out);
+    return out;
+  };
+
+  /**
+   * Portal arches render only where the hill meets open air — merged seams
+   * (two tunnels riding end-to-end) stay wall-less so the run reads as one
+   * continuous hill. Seam data is core logic (tunnelRunsOf); this is the
+   * node toggling. Event-driven: runs on reconcile, never per frame.
+   */
+  function syncTunnelPortals(pieces: readonly PlacedPiece[]): void {
+    for (const run of tunnelRunsOf(pieces)) {
+      const piece = pieces.find((p) => p.id === run.pieceId);
+      const model = rendered.get(run.pieceId);
+      if (!piece || !model) continue;
+      const steps = piece.rotation / 90;
+      const entry = model.getObjectByName('tunnel_portal_entry');
+      if (entry) entry.visible = !run.mergedPortals.includes(advancedEdge('north', steps));
+      const exit = model.getObjectByName('tunnel_portal_exit');
+      if (exit) exit.visible = !run.mergedPortals.includes(advancedEdge('south', steps));
+    }
   }
 
   /** Keeps the critter animator's roster matched to the placed critters. */
@@ -454,6 +499,22 @@ export function startTrackRenderer(
     gridLines.visible = visible;
   }
 
+  let tunnelSnow = false;
+  function setTunnelSnow(visible: boolean): void {
+    if (visible === tunnelSnow) return;
+    tunnelSnow = visible;
+    const setCap = (model: Object3D): void => {
+      const cap = model.getObjectByName('tunnel_snow_cap');
+      if (cap) cap.visible = visible;
+    };
+    const template = templates.get('tunnel');
+    if (template) setCap(template);
+    for (const [id, model] of rendered) {
+      const item = tracked.get(id);
+      if (item && isPiece(item) && item.type === 'tunnel') setCap(model);
+    }
+  }
+
   for (const type of PIECE_TYPES) {
     if (type === 'bridge') continue; // The trestle is procedural — built from the measured straight below.
     loader.load(
@@ -474,6 +535,14 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        if (type === 'tunnel') {
+          // The snow cap is a winter-only tell — hidden unless snow already
+          // settled while the asset was in flight (setTunnelSnow is
+          // change-driven, so the template must honor the live state).
+          // Clones inherit the template's state.
+          const cap = model.getObjectByName('tunnel_snow_cap');
+          if (cap) cap.visible = tunnelSnow;
+        }
         if (type === 'straight') {
           // The trestle rides at the straight's measured rail height and
           // matches its track width — trains cross bridges exactly as high
@@ -544,6 +613,7 @@ export function startTrackRenderer(
     pickPiece,
     setPieceVisible,
     setGridVisible,
+    setTunnelSnow,
     dispose(): void {
       disposed = true;
       unsubscribe();

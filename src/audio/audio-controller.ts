@@ -26,6 +26,8 @@ export interface SoundHandle {
   fade: () => void;
   /** Nudges playback tempo/character without restarting. */
   rate: (value: number) => void;
+  /** Sets the loudness of one playback instance, if the backend supports it. */
+  volume?: (value: number, id?: number) => void;
   /** Runs after the one-shot finishes, if the backend supports completion hooks. */
   onEnd?: (listener: () => void) => void;
 }
@@ -58,8 +60,8 @@ export interface AudioController {
   stopChug(): void;
   /** Dips the chug while the train pauses, restores it when rolling again. */
   setChugSoftened(softened: boolean): void;
-  /** One toot, anytime. Silent while muted. */
-  whistle(train?: TrainKind): void;
+  /** One toot, anytime. Inside a tunnel run it trails a soft echo. Silent while muted. */
+  whistle(train?: TrainKind, echo?: boolean): void;
   /** One happy blip for a successful drop. Silent while muted. */
   ding(): void;
   /** One soft tick for a rotation step. Silent while muted. */
@@ -82,6 +84,10 @@ export interface AudioController {
 const SOFTEN_RATE = 0.85;
 /** Full-steam-ahead tempo. */
 const ROLLING_RATE = 1;
+/** Echo tail on inside whistles: two quick, quiet replays of the same voice. */
+const ECHO_DELAY_MS = 220;
+const ECHO_TAPS = 2;
+const ECHO_GAIN = 0.35;
 
 export function createAudioController(options: AudioControllerOptions): AudioController {
   const { createSound, setGlobalMute, startChugBeatClock, stopChugBeatClock } = options;
@@ -93,6 +99,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   let chugging = false;
   let softened = false;
   let suspended = false;
+  let disposed = false;
 
   function sound(name: string): SoundHandle {
     let handle = sounds.get(name);
@@ -166,12 +173,27 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       sound('chug').rate(softened ? SOFTEN_RATE : ROLLING_RATE);
     },
 
-    whistle: (train = 'steam') => {
-      if (muted) return;
+    whistle: (train = 'steam', echo = false) => {
+      if (muted || disposed) return;
+      const rate = whistleRate(train);
       const whistle = sound('whistle');
-      whistle.rate(whistleRate(train));
+      whistle.rate(rate);
       whistle.onEnd?.(() => whistle.rate(ROLLING_RATE));
       whistle.play();
+      if (!echo) return;
+      // The tunnel answers: a short delay/feedback tail synthesized from the
+      // same voice — quieter replays, no new audio downloaded. Each tap
+      // re-checks mute, suspension, and disposal so the echo dies instantly
+      // with the switch, the hidden tab, or the teardown.
+      for (let tap = 1; tap <= ECHO_TAPS; tap += 1) {
+        setTimeout(() => {
+          if (muted || suspended || disposed) return;
+          const echoVoice = sound('whistle');
+          echoVoice.rate(rate);
+          const id = echoVoice.play();
+          echoVoice.volume?.(ECHO_GAIN ** tap, id);
+        }, ECHO_DELAY_MS * tap);
+      }
     },
 
     ding: () => {
@@ -227,6 +249,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       beatListeners.clear();
       listeners.clear();
       chugging = false;
+      disposed = true;
     },
   };
 }

@@ -63,12 +63,73 @@ src/
   audio/           # Howler wrappers + sfx registry
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
-  assets/train-kit/  # extracted Kenney Train Kit .glb + textures
+  assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
+                     # pieces (tunnel.glb) authored in Blender
+scripts/             # Blender build recipes for original assets — deterministic
+                     # and re-runnable in any Blender session (e.g.
+                     # blender-tunnel.py builds and exports tunnel.glb)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
 
 **Boundary rule:** `src/core` is pure TypeScript (unit-testable without a browser). All WebGL lives in `src/scene`.
+
+## Authoring original 3D assets in Blender
+
+The tunnel (`scripts/blender-tunnel.py` → `tunnel.glb`) is the reference
+implementation. Original pieces are **not hand-sculpted**: each asset has a
+deterministic, checked-in Python recipe that builds and exports it, so a
+reset Blender session (or a new machine) can regenerate the asset exactly.
+Run it in any Blender session's Python console / scripting tab:
+
+```python
+exec(open(r"<repo>/scripts/blender-tunnel.py", encoding="utf-8").read())
+build_tunnel()      # (re)create the named objects
+render_checks()     # optional: camera renders to the temp folder
+export_tunnel()     # write public/assets/train-kit/tunnel.glb
+verify_glb()        # print exported node/material names + size
+```
+
+Rules of the house (learned the hard way on the tunnel):
+
+1. **Measure the mount first.** The kit module is 4 units long (rail bed
+   1.0 wide, rails crowns 0.1 above the mat). New pieces must register in
+   `track-renderer.ts` — `PIECE_URLS`, `BASE_YAW`, `KIT_ANCHORS` — and be
+   authored on those measurements so rails meet neighbours flush (same
+   convention as the trestle bridge).
+2. **Author z-up; export with `export_yup=True`.** Track runs along Blender
+   **y** (module spans y −4..0), the mat/ground plane sits at **z = −1**,
+   rails crown near z = −0.82. After export, Blender y −4..0 becomes the
+   world's z 0..4 (grid north = −z) and Blender z becomes up.
+3. **Size from the train, not the track.** Kit trains ride at 1.5 model
+   scale on the 0.9375 asset scale — ×1.6 in asset units (the locomotive is
+   ~2.3 wide with a cab at height ~2.7). Slice the actual kit GLB's vertices
+   for the real silhouette before drawing the arch; the first tunnel bore
+   was sized from the bed and the train clipped straight through it.
+4. **The node-name contract is load-bearing.** The renderer finds parts with
+   `getObjectByName`: `tunnel_dome`, `tunnel_portal_entry`/`tunnel_portal_exit`
+   (toggled per run seam), `tunnel_snow_cap` (winter tell, hidden at load).
+   Blender object names become glTF node names — rename nothing casually.
+5. **Materials are named, Principled, and double-sided.** `tunnel_*` palette
+   (grass, cream bed, steel rails, dirt interior, snow); leave backface
+   culling off so the exporter writes `doubleSided: true` — the dark bore
+   interior and the open snow shell read correctly from both sides.
+6. **Verify with real renders, not viewport screenshots** (the MCP
+   screenshot path can serve stale frames). Park a camera and
+   `bpy.ops.render.render(write_still=True)`, then view the PNG. For fit
+   checks, import the actual kit GLB (scale ×1.6) and place it inside the
+   geometry — the render is the acceptance test.
+7. **Export by selection and verify the file.** Select only the asset's
+   objects, then `bpy.ops.export_scene.gltf(filepath=…, export_format='GLB',
+   use_selection=True, export_yup=True, export_apply=False)` — check-in
+   helpers in the recipe handle this (Blender 5.x uses `export_format`; the
+   bmesh ops API also shifted vs. older tutorials, e.g.
+   `contextual_create(bm, geom=…)`). Then parse the GLB's JSON chunk to
+   confirm node/material names and size (target < ~150 KB).
+8. **Placeable pieces need renderer wiring + smoke.** Add the catalog entry
+   and renderer maps, then an e2e spec that places the piece (dev
+   `__tinyTracksWorld` handle), asserts its GLB loads, and requires a clean
+   console — see `e2e/tunnel.spec.ts`.
 
 ## Build & Deployment Pipeline
 

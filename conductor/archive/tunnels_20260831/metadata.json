@@ -1,0 +1,11 @@
+{
+  "id": "tunnels_20260831",
+  "title": "Tunnels",
+  "type": "feature",
+  "status": "in progress",
+  "branch": "track/tunnels",
+  "created": "2026-08-31",
+  "updated": "2026-08-31",
+  "spec": "conductor/tracks/tunnels_20260831/spec.md",
+  "plan": "conductor/tracks/tunnels_20260831/plan.md"
+}

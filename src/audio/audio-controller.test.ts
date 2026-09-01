@@ -25,6 +25,9 @@ function fakeHandle(): SoundHandle & { calls: string[]; finish: () => void } {
     rate: vi.fn((value: number) => {
       calls.push(`rate:${value}`);
     }),
+    volume: vi.fn((value: number, id?: number) => {
+      calls.push(`volume:${value}:${id ?? '*'}`);
+    }),
     onEnd: vi.fn((listener: () => void) => {
       calls.push('onEnd');
       endListener = listener;
@@ -71,6 +74,7 @@ function makeWired() {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('createAudioController', () => {
@@ -196,6 +200,54 @@ describe('createAudioController', () => {
       expect(handles.get(name)?.calls ?? []).not.toContain('play');
     }
     expect(controller.isChugging()).toBe(true);
+  });
+
+  it('an inside whistle trails a quiet two-tap echo from the same voice', () => {
+    vi.useFakeTimers();
+    const { controller, handles } = makeWired();
+    controller.whistle('steam', true);
+    const handle = handles.get('whistle');
+    expect(handle?.calls.filter((call) => call === 'play')).toHaveLength(1);
+
+    vi.advanceTimersByTime(230); // just past the first echo delay
+    expect(handle?.calls.filter((call) => call === 'play')).toHaveLength(2);
+    vi.advanceTimersByTime(230); // and the second
+    expect(handle?.calls.filter((call) => call === 'play')).toHaveLength(3);
+
+    // Echo taps replay at their own falling volume — a soft tail, not toots.
+    const gains =
+      handle?.calls
+        .filter((call) => call.startsWith('volume:'))
+        .map((call) => Number(call.split(':')[1])) ?? [];
+    expect(gains).toHaveLength(2);
+    expect(gains[0]).toBeCloseTo(0.35);
+    expect(gains[1]).toBeCloseTo(0.35 ** 2);
+  });
+
+  it('a plain whistle never echoes', () => {
+    vi.useFakeTimers();
+    const { controller, handles } = makeWired();
+    controller.whistle();
+    vi.advanceTimersByTime(1000);
+    expect(handles.get('whistle')?.calls.filter((call) => call === 'play')).toHaveLength(1);
+  });
+
+  it('echo taps respect mute instantly — even between taps', () => {
+    vi.useFakeTimers();
+    const { controller, handles } = makeWired();
+    controller.whistle('steam', true);
+    controller.setMuted(true);
+    vi.advanceTimersByTime(1000);
+    expect(handles.get('whistle')?.calls.filter((call) => call === 'play')).toHaveLength(1);
+  });
+
+  it('echo taps die with the controller', () => {
+    vi.useFakeTimers();
+    const { controller, handles } = makeWired();
+    controller.whistle('steam', true);
+    controller.dispose();
+    vi.advanceTimersByTime(1000);
+    expect(handles.get('whistle')?.calls.filter((call) => call === 'play')).toHaveLength(1);
   });
 
   it('unmuting resumes a chug that was started while muted', () => {

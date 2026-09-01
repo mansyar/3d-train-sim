@@ -11,12 +11,28 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, and bridge', () => {
-    expect([...PIECE_TYPES].sort()).toEqual(['bridge', 'corner', 'crossing', 'straight']);
+  it('offers exactly the piece set: straight, corner, crossing, bridge, and tunnel', () => {
+    expect([...PIECE_TYPES].sort()).toEqual(['bridge', 'corner', 'crossing', 'straight', 'tunnel']);
   });
 
   it('gives every piece a 1-cell footprint', () => {
     expect(FOOTPRINT_CELLS).toBe(1);
+  });
+});
+
+describe('tunnel piece geometry', () => {
+  it('joins opposite edges exactly like a straight — trains ride through unchanged', () => {
+    expect(endpointsFor('tunnel', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('tunnel', 90)).toEqual(['east', 'west']);
+    // Symmetric under 180°, same as the straight it mirrors.
+    expect(endpointsFor('tunnel', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('tunnel', 270)).toEqual(['east', 'west']);
+  });
+
+  it('gives the tunnel exactly two endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('tunnel', rotation)).toHaveLength(2);
+    }
   });
 });
 

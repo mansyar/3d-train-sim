@@ -274,3 +274,63 @@ describe('createRideMotion — the little train rides the solved path', () => {
     run.motion.dispose();
   });
 });
+
+describe('createRideMotion — riding under the hill reports tunnel coverage', () => {
+  /**
+   * A three-cell open line: straight → tunnel → straight, ridden south. The
+   * tunnel is the middle segment — entered 3.75 units along the path.
+   */
+  function tunnelLineWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
+    expect(world.place('tunnel', { x: 2, y: 3 }, 0)).toBe('placed');
+    expect(world.place('straight', { x: 2, y: 4 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the line must solve to one ride component');
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  it('announces entering and leaving the tunnel run, once per change', () => {
+    const { world, state } = tunnelLineWorld();
+    const engine = new Object3D();
+    const inside: boolean[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      undefined,
+      undefined,
+      [],
+      (value) => inside.push(value),
+    );
+    motion.begin(state);
+    expect(inside).toEqual([]); // the ride starts in the open — no news yet
+
+    for (let i = 0; i < 9; i += 1) motion.update(0.5); // roll most of the line
+    // The engine crosses into the tunnel cell and back out — exactly two
+    // announcements, no per-frame chatter. (The ride stops short of the dead
+    // end, so the shuttle return can't re-enter the tunnel.)
+    expect(inside).toEqual([true, false]);
+    motion.dispose();
+  });
+
+  it('reports open air again when the motion ends', () => {
+    const { world, state } = tunnelLineWorld();
+    const engine = new Object3D();
+    const inside: boolean[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      undefined,
+      undefined,
+      [],
+      (value) => inside.push(value),
+    );
+    motion.begin(state);
+    for (let i = 0; i < 5; i += 1) motion.update(0.5); // roll into the tunnel
+    expect(inside).toEqual([true]);
+    motion.dispose();
+    expect(inside).toEqual([true, false]);
+  });
+});

@@ -225,6 +225,7 @@ body {
 
 .drawer-panel {
   display: flex;
+  flex-wrap: wrap; /* Five+ track toys wrap to a second row on phones. */
   gap: 16px;
   justify-content: center;
 }
