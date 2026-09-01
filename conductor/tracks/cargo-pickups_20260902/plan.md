@@ -64,7 +64,7 @@
 
 ## Phase 2: Station Asset — Blender Recipe & Mounting
 
-- [ ] Task: `scripts/blender-station.py` — deterministic, re-runnable recipe:
+- [x] Task: `scripts/blender-station.py` — deterministic, re-runnable recipe: (12a5c20)
   polished 1-cell station with integrated cargo platform, 8 named crate slots
   (`station_crate_1..8`), named-node + material contract, same export
   conventions as the tunnel recipe (`export_format="GLB"`, `export_yup`,
@@ -73,6 +73,19 @@
   - Acceptance criteria (visual, verified at checkpoint): station reads as a
     chunky landmark at 0.7 scenery scale; crates sit flush on the platform;
     no inverted normals in zoom renders
+  - Notes: recipe builds 16 objects — cream building + terracotta gable
+    roof, door + windows, wooden cargo deck (0.18 high), sloping canopy on
+    two dark posts, and 8 named crate slots (station_crate_1..8, 2x4 grid on
+    the deck) — plus cargo_crate exported separately as crate.glb. Named
+    contracts verified via verify_glb(): station.glb 24,260 B (15 nodes, 5
+    station_* materials), crate.glb 2,380 B (cargo_crate / crate_wood).
+    Render checks (quarter/deck/side) via real renders with the previous
+    tunnel check scene hidden; crates read as distinct slots after resizing
+    to 0.30 and separating crate orange from deck brown. Session lesson
+    (same as tunnels): the live Blender scene held stale objects —
+    render_checks() now hides everything outside the recipe.
+    Files: `scripts/blender-station.py` (new), `public/assets/train-kit/
+    station.glb` (new), `public/assets/train-kit/crate.glb` (new).
 - [ ] Task: Mount the new station model — point the scenery loader at
   `station.glb` (fantasy-town-kit stays for house/cottage), verify
   placement/anchor/scale unchanged, existing saves render placed stations on
