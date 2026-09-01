@@ -64,10 +64,11 @@ src/
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
-                     # pieces (tunnel.glb) authored in Blender
+                     # pieces (tunnel.glb, station.glb, crate.glb) authored
+                     # in Blender
 scripts/             # Blender build recipes for original assets — deterministic
                      # and re-runnable in any Blender session (e.g.
-                     # blender-tunnel.py builds and exports tunnel.glb)
+                     # blender-tunnel.py, blender-station.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```

@@ -152,14 +152,26 @@
 
 ## Phase 4: Smoke, Docs & Final Gates
 
-- [ ] Task: Playwright smoke (`e2e/cargo.spec.ts`) — place a loop with two
+- [x] Task: Playwright smoke (`e2e/cargo.spec.ts`) — place a loop with two
   stations, press play, assert crate load then delivery (wagon crate
   visibility, station slot gain), reload persistence of counts, no external
   requests/console errors
-- [ ] Task: Docs — CHANGELOG parent-facing bullets under `[Unreleased]`;
+  - Notes: two tests x two viewports: (1) loop + station — ride, delivery
+    count ≥ 1 after two stops, count identical after reload, crate.glb
+    fetched, zero external requests/console errors; (2) station-less loop —
+    rides unchanged, no scenery, no errors. (The spec asserts the count via
+    the store rather than pixel-checking wagon visibility — the live visual
+    verification is the checkpoint's manual step.)
+- [x] Task: Docs — CHANGELOG parent-facing bullets under `[Unreleased]`;
   product.md roadmap line; tech-stack.md notes (station recipe in the
   asset-authoring section/folder map)
-- [ ] Task: Full gate suite — `pnpm exec biome check .`,
+  - Notes: CHANGELOG gains a parent-facing cargo-delivery bullet;
+    product.md roadmap strikes station cargo gameplay; tech-stack folder
+    map lists station.glb/crate.glb and blender-station.py alongside the
+    tunnel recipe.
+- [x] Task: Full gate suite — `pnpm exec biome check .`,
   `pnpm exec tsc --noEmit`, `CI=true pnpm test -- --coverage`,
   `pnpm exec playwright test`
+  - Notes: all green — biome clean, tsc clean, 404 unit tests
+    (confetti pool 100% lines), 57 e2e tests across the six specs.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)

@@ -52,6 +52,7 @@ Supporting guardrails:
 - Track switches and branches
 - ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it). Elevation remains roadmap.
 - ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow; elevation remains roadmap.
+- ~~Station cargo gameplay~~ — ✅ shipped (cargo-pickups_20260902, 2026-09-02): wagons load crates at a station and deliver at the next — confetti burst, and the station's platform (Kenney-matched restyle, Blender-authored) accumulates up to 8 delivered crates that persist in the save.
 - Time of day and weather
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
 
