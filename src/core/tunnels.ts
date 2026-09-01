@@ -85,3 +85,43 @@ export function tunnelFlagsForPath(pieces: readonly PlacedPiece[], path: TrainPa
   const tunnels = new Set(pieces.filter((p) => p.type === 'tunnel').map((p) => p.id));
   return path.steps.map((step) => tunnels.has(step.pieceId));
 }
+
+/** The night headlight catching a portal mouth, in cell units. */
+export interface PortalGlow {
+  /** The glowing mouth's centre in cell coordinates (cell centre = +0.5). */
+  x: number;
+  z: number;
+  /** 0..1 — full at the mouth, fading to dark at the glow radius. */
+  intensity: number;
+}
+
+/**
+ * The nearest open portal mouth to the engine, with proximity intensity —
+ * the single input the night portal glow visual needs. Portals arrive as a
+ * flat [x, z, ...] array in cell units (built once per world edit by the
+ * scene from `tunnelRunsOf`), so the per-frame scan allocates nothing.
+ * Only real arch mouths glow — a merged seam is wall-less hill, nothing to
+ * catch the beam.
+ */
+export function portalGlowAt(
+  portals: readonly number[],
+  ex: number,
+  ez: number,
+  radius: number,
+  out: PortalGlow,
+): PortalGlow {
+  out.x = 0;
+  out.z = 0;
+  out.intensity = 0;
+  for (let i = 0; i + 1 < portals.length; i += 2) {
+    const px = portals[i] ?? 0;
+    const pz = portals[i + 1] ?? 0;
+    const t = 1 - Math.hypot(px - ex, pz - ez) / radius;
+    if (t > out.intensity) {
+      out.intensity = t;
+      out.x = px;
+      out.z = pz;
+    }
+  }
+  return out;
+}

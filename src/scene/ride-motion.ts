@@ -3,6 +3,7 @@ import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf, type PlacedPiece } from '../core/track-graph';
+import { tunnelFlagsForPath } from '../core/tunnels';
 import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
@@ -163,6 +164,8 @@ export function createRideMotion(
   onPausedChange?: (paused: boolean) => void,
   onStationStop?: (stationId: string) => void,
   followers: readonly Object3D[] = [],
+  /** Announces the engine entering/leaving a tunnel run (chug duck, echo). */
+  onTunnelChange?: (inside: boolean) => void,
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -193,15 +196,36 @@ export function createRideMotion(
     onPausedChange?.(next);
   };
 
+  /**
+   * Tunnel coverage per segment (built once per ride from the pure path
+   * flags), announced only on change — the chug duck listens for under-hill
+   * moments, never per-frame chatter.
+   */
+  let tunnelSteps: boolean[] = [];
+  let insideTunnel = false;
+  const setInsideTunnel = (next: boolean): void => {
+    if (next === insideTunnel) return;
+    insideTunnel = next;
+    onTunnelChange?.(next);
+  };
+
   function beginRide(state: RideState): void {
     const byId = new Map(world.pieces().map((piece) => [piece.id, piece]));
+    const flags = tunnelFlagsForPath(world.pieces(), state.path);
     segments = [];
+    tunnelSteps = [];
     const cells: Cell[] = [];
+    let stepIndex = 0;
     for (const step of state.path.steps) {
       const piece = byId.get(step.pieceId);
-      if (!piece) continue; // Stale step — re-solves on the next start.
+      if (!piece) {
+        stepIndex += 1;
+        continue; // Stale step — re-solves on the next start.
+      }
       cells.push(piece.cell);
       segments.push(segmentForStep(piece, step));
+      tunnelSteps.push(flags[stepIndex] === true);
+      stepIndex += 1;
     }
     total = 0;
     for (const segment of segments) total += segment.length;
@@ -284,10 +308,11 @@ export function createRideMotion(
     };
   }
 
-  /** Write the pose for forward-path distance `d` into `target`. */
-  function poseAt(d: number, target: Object3D = activeModel, faceTravel = true): void {
+  /** Write the pose for forward-path distance `d` into `target`; returns the
+   * segment index the pose landed on (-1 for overhang past the path ends). */
+  function poseAt(d: number, target: Object3D = activeModel, faceTravel = true): number {
     const first = segments[0];
-    if (!first) return;
+    if (!first) return -1;
     // Coupled wagons can hang past a short path's ends. The overhang runs
     // straight along the end tangent — like a real train overhanging the
     // last rail — instead of snapping onto the engine.
@@ -295,12 +320,16 @@ export function createRideMotion(
     const over = d - clamped;
     let remaining = clamped;
     let segment = first;
+    let segmentIndex = 0;
+    let index = 0;
     for (const candidate of segments) {
       if (remaining <= candidate.length) {
         segment = candidate;
+        segmentIndex = index;
         break;
       }
       remaining -= candidate.length;
+      index += 1;
     }
 
     const u = segment.length > 0 ? remaining / segment.length : 0;
@@ -340,6 +369,7 @@ export function createRideMotion(
     target.position.set(x, 0, z);
     // The locomotive's forward is -Z at yaw 0 (plus the kit's authored offset).
     target.rotation.y = Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET;
+    return segmentIndex;
   }
 
   /**
@@ -367,7 +397,9 @@ export function createRideMotion(
 
   /** One pose write for the whole little train: engine plus wagons. */
   function poseTrain(d: number): void {
-    poseAt(d);
+    const segmentIndex = poseAt(d);
+    // An overhang past the path ends keeps its last under/over-hill verdict.
+    if (segmentIndex >= 0) setInsideTunnel(tunnelSteps[segmentIndex] === true);
     poseFollowers();
   }
 
@@ -493,9 +525,11 @@ export function createRideMotion(
 
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
+      setInsideTunnel(false); // ...and nothing stays under the hill.
       segments = [];
       total = 0;
       stops = [];
+      tunnelSteps = [];
       armed.clear();
       stationStopTimer = 0;
       brakeTarget = null;

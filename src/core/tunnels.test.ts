@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { solvePath } from './pathing';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
-import { tunnelFlagsForPath, tunnelRunsOf } from './tunnels';
+import { type PortalGlow, portalGlowAt, tunnelFlagsForPath, tunnelRunsOf } from './tunnels';
 
 function piece(id: string, type: PieceType, x: number, y: number, rotation: Rotation): PlacedPiece {
   return { id, type, cell: { x, y }, rotation };
@@ -115,5 +115,41 @@ describe('tunnelFlagsForPath — riding under the hill', () => {
     expect(
       tunnelFlagsForPath([piece('t', 'tunnel', 2, 3, 0)], { steps: [], closed: false }),
     ).toEqual([]);
+  });
+});
+
+describe('portalGlowAt — the headlight catches the nearest open portal mouth', () => {
+  // Flat [x, z, ...] portal positions in cell units: the north and south
+  // mouths of the tunnel at (2, 3) — midpoints toward its open neighbours.
+  const lone = [2, 2.5, 2, 3.5];
+  const out: PortalGlow = { x: 0, z: 0, intensity: 0 };
+
+  it('blazes at the mouth the engine is entering', () => {
+    portalGlowAt(lone, 2, 2.5, 2.5, out);
+    expect(out.x).toBe(2);
+    expect(out.z).toBe(2.5);
+    expect(out.intensity).toBeCloseTo(1);
+  });
+
+  it('fades with approach distance and dies beyond the radius', () => {
+    portalGlowAt(lone, 2, 1.5, 2.5, out); // one cell short of the north mouth
+    expect(out.z).toBe(2.5);
+    expect(out.intensity).toBeCloseTo(1 - 1 / 2.5);
+    portalGlowAt(lone, 9, 9, 2.5, out);
+    expect(out.intensity).toBe(0);
+  });
+
+  it('picks the nearest mouth and never glows inside a wall-less seam', () => {
+    // Two merged tunnels: the seam at (2, 3.5) has no arch; the mouths are
+    // (2, 2.5) and (2, 4.5) — the engine at the seam still lights a real one.
+    const run = [2, 2.5, 2, 4.5];
+    portalGlowAt(run, 2, 3.5, 1.5, out);
+    expect(out.z).toBe(2.5);
+    expect(out.intensity).toBeCloseTo(1 - 1 / 1.5);
+  });
+
+  it('stays dark with no portals cached', () => {
+    portalGlowAt([], 2, 3, 2.5, out);
+    expect(out.intensity).toBe(0);
   });
 });

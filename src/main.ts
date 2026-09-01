@@ -55,7 +55,7 @@ if (root) {
     startRide: () => scene?.startRide() ?? false,
     stopRide: () => scene?.stopRide(),
     notifyActivity: () => scene?.notifyActivity(),
-    whistlePuff: () => scene?.whistlePuff(),
+    tootWhistle: () => scene?.tootWhistle(),
     cycleFilmTarget: () => scene?.cycleFilmTarget(),
     subscribeFilmCount: (listener) => {
       filmCountListeners.push(listener);

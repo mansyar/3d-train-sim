@@ -172,8 +172,8 @@ export interface AppOptions {
   stopRide(): void;
   /** Tell the scene the toddler is interacting (keeps the attract mode away). */
   notifyActivity(): void;
-  /** Steam burst at the locomotive chimney (whistle's visual voice). */
-  whistlePuff(): void;
+  /** The big toot: the answering train whistles (echoing inside tunnels) and puffs. */
+  tootWhistle(): void;
   /** Each tap cycles the chase camera: filmed train → next train → overview. */
   cycleFilmTarget(): void;
   /** The number of riding trains, pushed on every ride change (🎥 visibility). */
@@ -668,8 +668,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   }
 
   whistleToot.addEventListener('click', () => {
-    options.audio.whistle(options.world.train());
-    options.whistlePuff(); // Steam is the whistle's visible voice.
+    options.tootWhistle(); // Whistle, echo inside tunnels, and the steam puff.
   });
 
   // ---- 🎥 camera cycle: joins the rail while two or more trains ride -----
