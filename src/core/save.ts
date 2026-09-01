@@ -1,3 +1,4 @@
+import { MAX_DELIVERED_CRATES } from './cargo';
 import { PIECE_TYPES } from './pieces';
 import { isWater } from './river';
 import { type PlacedScenery, SCENERY_KINDS, type SceneryKind } from './scenery';
@@ -10,10 +11,10 @@ import {
 } from './track-graph';
 import { TRAIN_KINDS, type TrainKind } from './trains';
 
-const SNAPSHOT_VERSION = 2;
+const SNAPSHOT_VERSION = 3;
 
-/** Snapshot versions this build understands: the current one plus pre-river v1. */
-const SUPPORTED_VERSIONS: readonly number[] = [1, 2];
+/** Snapshot versions this build understands: current, pre-tunnel v2, pre-river v1. */
+const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
 
 export interface DevicePreferences {
   muted: boolean;
@@ -25,12 +26,15 @@ export interface WorldSnapshot {
   scenery: PlacedScenery[];
   train?: TrainKind;
   preferences?: DevicePreferences;
+  deliveries?: Record<string, number>;
 }
 
 export interface WorldData {
   pieces: PlacedPiece[];
   scenery: PlacedScenery[];
   train: TrainKind;
+  /** Delivered-crate counts, keyed by the station scenery's id. */
+  deliveries: Record<string, number>;
 }
 
 export function serializeWorld(
@@ -38,6 +42,7 @@ export function serializeWorld(
   scenery: readonly PlacedScenery[],
   train: TrainKind = 'steam',
   muted = false,
+  deliveries: Record<string, number> = {},
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -57,6 +62,8 @@ export function serializeWorld(
   };
   // Sound-on is the default, so it is omitted to keep snapshots minimal.
   if (muted) snapshot.preferences = { muted: true };
+  // Same for an empty delivery ledger.
+  if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
   return snapshot;
 }
 
@@ -89,7 +96,24 @@ export function deserializeWorld(value: unknown): WorldData {
     pieces: validPieces,
     scenery: validScenery,
     train: isTrainKind(value.train) ? value.train : 'steam',
+    deliveries: parseDeliveries(value.deliveries),
   };
+}
+
+/**
+ * Delivered-crate counts keyed by station id. Additive data, so it is read
+ * forgivingly: a malformed entry is dropped (a lost count is a pity — a lost
+ * world is a tragedy), counts are clamped to the platform's cap, and zero or
+ * missing counts mean an empty ledger.
+ */
+function parseDeliveries(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return {};
+  const deliveries: Record<string, number> = {};
+  for (const [id, count] of Object.entries(value)) {
+    if (typeof count !== 'number' || !Number.isInteger(count) || count <= 0) continue;
+    deliveries[id] = Math.min(count, MAX_DELIVERED_CRATES);
+  }
+  return deliveries;
 }
 
 /**
@@ -164,5 +188,5 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function emptyWorld(): WorldData {
-  return { pieces: [], scenery: [], train: 'steam' };
+  return { pieces: [], scenery: [], train: 'steam', deliveries: {} };
 }

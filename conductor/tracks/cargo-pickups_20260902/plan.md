@@ -21,11 +21,22 @@
     `src/core/cargo.ts` (new), `src/core/cargo.test.ts` (new). Why: the whole
     pickup/deliver choreography reduces to one deterministic per-stop answer,
     so the ride wiring in Phase 3 stays trivial.
-- [ ] Task: Save migration for delivery counts (`src/core/save.ts`) — snapshot
+- [x] Task: Save migration for delivery counts (`src/core/save.ts`) — snapshot
   version bump; per-station delivered-count map on `WorldData`; legacy/missing
   counts migrate to 0; serialize/deserialize round-trip
   - Failing tests first: round-trip, v-1 migration to zero counts,
     unknown/malformed counts ignored
+  - Notes: TDD red→green (6 new tests). Snapshot v3 adds optional
+    `deliveries` (station id → count), omitted when empty like `preferences`;
+    `WorldData.deliveries` is a required record (always present, possibly
+    empty). Parsing is forgiving: non-records and malformed entries drop
+    without emptying the world, counts must be positive integers and are
+    clamped to `MAX_DELIVERED_CRATES`. Pre-v3 snapshots migrate to `{}`.
+    Updated the v2-era expectations in `save.test.ts` and
+    `persistence.test.ts` for the bump. Files: `src/core/save.ts`,
+    `src/core/save.test.ts`, `src/state/persistence.test.ts`. Why: delivered
+    crates must survive reloads, and the versioned-migration pattern from the
+    river keeps old worlds safe.
 - [ ] Task: World store integration (`src/state/world.ts`, `persistence.ts`) —
   delivery-count read/update API; relocate keeps count, remove drops it,
   reset clears
