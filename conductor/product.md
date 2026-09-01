@@ -31,7 +31,9 @@ Supporting guardrails:
 ## Core Gameplay Loop
 1. **Build:** drag track pieces (straights, 90° curves, crossings, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
-3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding; the chase camera follows one train, and the 🎥 button cycles between riding trains and the overview while ≥2 ride. Whistle button. ⏹ stops them all.
+3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
+crate there, loaded wagons deliver theirs in a confetti burst, and the station's
+platform keeps the delivered crates (up to 8); the chase camera follows one train, and the 🎥 button cycles between riding trains and the overview while ≥2 ride. Whistle button. ⏹ stops them all.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
 
 ## V1 Scope (Lean Core)

@@ -77,8 +77,10 @@ conductor/          # project management source of truth
 
 ## Authoring original 3D assets in Blender
 
-The tunnel (`scripts/blender-tunnel.py` → `tunnel.glb`) is the reference
-implementation. Original pieces are **not hand-sculpted**: each asset has a
+The tunnel (`scripts/blender-tunnel.py` → `tunnel.glb`) and the station
+(`scripts/blender-station.py` → `station.glb` + the wagon-load `crate.glb`,
+whose named `station_crate_1..8` child nodes are toggled at runtime) are the
+reference implementations. Original pieces are **not hand-sculpted**: each asset has a
 deterministic, checked-in Python recipe that builds and exports it, so a
 reset Blender session (or a new machine) can regenerate the asset exactly.
 Run it in any Blender session's Python console / scripting tab:
