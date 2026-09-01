@@ -47,7 +47,7 @@ DOOR = (-0.12, 0.12, -0.25, -0.19, 0.0, 0.50)  # proud of the front wall
 WINDOWS = ((-0.42, -0.28), (0.28, 0.42))  # x spans on the front wall
 WINDOW_Y = (-0.25, -0.19)
 WINDOW_Z = (0.45, 0.65)
-DECK = (-0.90, 0.90, 0.05, 0.95, 0.0, 0.18)
+DECK = (-0.90, 0.90, -0.25, 0.95, 0.0, 0.18)
 # Canopy: thin sloping slab from the building wall out over the deck.
 CANOPY_X = 0.95
 CANOPY_Y0, CANOPY_Y1 = -0.19, 1.00
@@ -65,8 +65,11 @@ CRATE_NAMES = tuple(f"station_crate_{i}" for i in range(1, 9))
 STATION_NAMES = (
     "station_body",
     "station_roof",
+    "station_base",
+    "station_timber",
     "station_door",
     "station_windows",
+    "station_panes",
     "station_platform",
     "station_canopy",
     "station_canopy_posts",
@@ -74,8 +77,10 @@ STATION_NAMES = (
 
 MATERIALS = {
     "station_cream": (0.960, 0.930, 0.850, 1.0),
-    "station_roof": (0.780, 0.300, 0.220, 1.0),
-    "station_trim": (0.250, 0.180, 0.140, 1.0),
+    "station_roof": (0.130, 0.540, 0.460, 1.0),
+    "station_trim": (0.350, 0.200, 0.120, 1.0),
+    "station_timber": (0.720, 0.440, 0.250, 1.0),
+    "station_pane": (0.950, 0.950, 0.920, 1.0),
     "station_wood": (0.550, 0.380, 0.240, 1.0),
     "station_crate": (0.920, 0.580, 0.220, 1.0),
     "crate_wood": (0.920, 0.580, 0.220, 1.0),
@@ -149,11 +154,22 @@ def _roof():
 
 
 def _windows():
+    """Framed windows: proud dark frame, white pane, cross mullions."""
     bm = bmesh.new()
+    bm_panes = bmesh.new()
     for x0, x1 in WINDOWS:
-        _box_verts(bm, x0, x1, WINDOW_Y[0], WINDOW_Y[1], WINDOW_Z[0], WINDOW_Z[1])
+        cx = (x0 + x1) / 2
+        cz = (WINDOW_Z[0] + WINDOW_Z[1]) / 2
+        hw, hh = (x1 - x0) / 2, (WINDOW_Z[1] - WINDOW_Z[0]) / 2
+        # Frame sits proud of the wall; mullions cross just in front of the pane.
+        _box_verts(bm, x0 - 0.02, x1 + 0.02, WINDOW_Y[0] - 0.03, WINDOW_Y[1], WINDOW_Z[0] - 0.02, WINDOW_Z[1] + 0.02)
+        _box_verts(bm, cx - 0.012, cx + 0.012, WINDOW_Y[0] - 0.045, WINDOW_Y[1] + 0.01, WINDOW_Z[0], WINDOW_Z[1])
+        _box_verts(bm, x0, x1, WINDOW_Y[0] - 0.045, WINDOW_Y[1] + 0.01, cz - 0.012, cz + 0.012)
+        _box_verts(bm_panes, cx - hw + 0.02, cx + hw - 0.02, WINDOW_Y[0] - 0.035, WINDOW_Y[1] - 0.005, cz - hh + 0.02, cz + hh - 0.02)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    return _link(bm, "station_windows", ["station_trim"])
+    _link(bm, "station_windows", ["station_trim"])
+    bmesh.ops.recalc_face_normals(bm_panes, faces=bm_panes.faces)
+    _link(bm_panes, "station_panes", ["station_pane"])
 
 
 def _canopy():
@@ -212,6 +228,17 @@ def build_station():
 
     _box("station_body", BUILDING, "station_cream")
     _roof()
+    base_bm = bmesh.new()
+    _box_verts(base_bm, BUILDING[0] - 0.04, BUILDING[1] + 0.04, BUILDING[2] - 0.04, BUILDING[3] + 0.04, -0.05, 0.05)
+    bmesh.ops.recalc_face_normals(base_bm, faces=base_bm.faces)
+    _link(base_bm, "station_base", ["station_trim"])
+    # Corner timbers wrap all four wall corners, Kenney fantasy-town style.
+    timber_bm = bmesh.new()
+    for cx in (BUILDING[0], BUILDING[1]):
+        for cy in (BUILDING[2], BUILDING[3]):
+            _box_verts(timber_bm, cx - 0.045, cx + 0.045, cy - 0.045, cy + 0.045, 0.0, BUILDING[5] + 0.03)
+    bmesh.ops.recalc_face_normals(timber_bm, faces=timber_bm.faces)
+    _link(timber_bm, "station_timber", ["station_timber"])
     _box("station_door", DOOR, "station_trim")
     _windows()
     _box("station_platform", DECK, "station_wood")
