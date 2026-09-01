@@ -5,13 +5,22 @@
 
 ## Phase 1: Core — Cargo Cycle Logic & Save Migration (TDD)
 
-- [~] Task: Cargo cycle state machine (`src/core/cargo.ts`) — pure module: per-train
+- [x] Task: Cargo cycle state machine (`src/core/cargo.ts`) — pure module: per-train
   load state (`empty ⇄ loaded`), `onStationStop(loadState)` → `load | deliver`,
-  delivery-count increment with `MAX_DELIVERED_CRATES = 8` cap
+  delivery-count increment with `MAX_DELIVERED_CRATES = 8` cap (1785e8e)
   - Write failing tests first (Red): load on empty, deliver on loaded,
     alternation across stops, single-station alternation, cap enforcement,
     no-op outcomes
   - Implement to pass (Green); refactor; verify coverage >80%
+  - Notes: TDD red→green (7 unit tests, all passing; module fully covered).
+    API settled as three pure functions — `actionAtStop(load)` (empty loads,
+    loaded delivers; alternates by construction, no route bookkeeping),
+    `loadAfterAction(action)` (refactored to drop an unused parameter after
+    green), `deliveredCountAfter(count)` (caps at `MAX_DELIVERED_CRATES = 8`;
+    later deliveries still celebrate but the pile stops growing). Files:
+    `src/core/cargo.ts` (new), `src/core/cargo.test.ts` (new). Why: the whole
+    pickup/deliver choreography reduces to one deterministic per-stop answer,
+    so the ride wiring in Phase 3 stays trivial.
 - [ ] Task: Save migration for delivery counts (`src/core/save.ts`) — snapshot
   version bump; per-station delivered-count map on `WorldData`; legacy/missing
   counts migrate to 0; serialize/deserialize round-trip
