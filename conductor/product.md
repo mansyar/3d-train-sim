@@ -29,7 +29,7 @@ Supporting guardrails:
 - No multi-language, no accounts, no cloud sync, no app store distribution.
 
 ## Core Gameplay Loop
-1. **Build:** drag track pieces (straights, 90° curves, crossings) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
+1. **Build:** drag track pieces (straights, 90° curves, crossings, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
 3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding; the chase camera follows one train, and the 🎥 button cycles between riding trains and the overview while ≥2 ride. Whistle button. ⏹ stops them all.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
@@ -50,15 +50,15 @@ Supporting guardrails:
 - ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
 - ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons (colors/other variants still roadmap)
 - Track switches and branches
-- ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it). Tunnels and elevation remain roadmap.
-- Tunnels, elevation
+- ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it). Elevation remains roadmap.
+- ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow; elevation remains roadmap.
 - Time of day and weather
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
 
 ## Platform & Technical Requirements
 - **Devices:** iPads (Safari) + mid-spec Android tablets (Chrome) primary; phones (≥360px) supported as first-class. Touch-first; desktop browser support welcome but secondary.
 - **Stack:** TypeScript · Three.js (GLTFLoader) · Vite · vanilla DOM overlay UI · Howler.js · IndexedDB persistence · PWA (service worker) · Vitest (logic TDD) + Playwright (smoke tests).
-- **Assets:** Kenney Train Kit (CC0, glTF) — embedded in repo, no attribution required.
+- **Assets:** Kenney Train Kit (CC0, glTF) — embedded in repo, no attribution required. Original pieces (the tunnel) are Blender-authored via deterministic, checked-in recipes (`scripts/blender-tunnel.py`) — re-runnable in any Blender session, no attribution required.
 - **Performance:** simple scenes, zero physics engine, kinematic train on splines.
 
 ## Deployment & Operations

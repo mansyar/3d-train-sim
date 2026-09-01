@@ -63,7 +63,11 @@ src/
   audio/           # Howler wrappers + sfx registry
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
-  assets/train-kit/  # extracted Kenney Train Kit .glb + textures
+  assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
+                     # pieces (tunnel.glb) authored in Blender
+scripts/             # Blender build recipes for original assets — deterministic
+                     # and re-runnable in any Blender session (e.g.
+                     # blender-tunnel.py builds and exports tunnel.glb)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
