@@ -15,6 +15,15 @@ Usage inside Blender's Python console (or via an MCP bridge):
 Coordinate convention (matches the straight kit / KIT_ANCHORS in
 track-renderer.ts): Blender y -4..0 becomes glTF z 0..4 after export_yup;
 the mat/ground plane sits at z = -1; rails crown at z = -0.82.
+
+The hill is a Brio-style vault: a half-cylinder of the kit's rounded-arch
+profile extruded the full 4-unit module, end faces flat (adjacent tunnels
+inset 0.01 per end so merged runs never z-fight), with proud portal frames
+on each face. Sized to swallow the biggest kit train: the locomotive rides
+at 1.5 model scale on a 0.9375 asset scale, i.e. local units × 1.6 —
+half-width ≤ 1.14 up to height 0.8, ≤ 1.05 up to height 2.25, thin chimney
+tip to height 2.66. The bore (half-width 1.30, legs to height 1.70,
+semicircular cap to a crown at height 3.0) clears all of it.
 """
 
 import math
@@ -32,23 +41,27 @@ GROUND_Z = -1.0
 RAIL_X, RAIL_W = 0.3, 0.1
 RAIL_TOP_Z = -0.82
 
-# Tunnel bore: arch radius, spring line, sized for train clearance.
-BORE_R = 0.78
-SPRING_Z = -0.35
+# Tunnel bore: rounded arch — legs to the spring line, semicircular cap.
+BORE_HW = 1.30
+BORE_SPRING_Z = 0.70  # height 1.70 above the ground
+BORE_CROWN_Z = BORE_SPRING_Z + BORE_HW  # height 3.0 above the ground
 
-# Grassy dome: hemisphere scaled per axis, centred mid-run.
-DOME_RX, DOME_RY, DOME_H = 1.7, 1.9, 3.1
-DOME_CX, DOME_CY, DOME_CZ = 0.0, -2.0, GROUND_Z
+# Vault: the hill itself, same arch language, extruded the module length.
+VAULT_HW = 1.68
+VAULT_SPRING_Z = 1.05
+VAULT_CAP_RY = 1.42  # flatter cap than the bore's semicircle
+VAULT_INSET = 0.01  # per end, so merged modules never z-fight
 
-# Portal arch bands: annulus sector wrapped around the bore mouth.
-PORTAL_R_OUT = 0.98
-PORTAL_DEPTH = 0.4
-PORTAL_ENTRY_Y = (0.05, -0.35)
-PORTAL_EXIT_Y = (-3.65, -4.05)
+# Portal frames: proud horseshoe bands wrapping each mouth.
+PORTAL_R_OUT = 1.55
+PORTAL_DEPTH = 0.35
+PORTAL_ENTRY_Y = (PORTAL_DEPTH, 0.0)
+PORTAL_EXIT_Y = (BED_Y0, BED_Y0 - PORTAL_DEPTH)
 
-# Snow shell: drapes the dome above this world z, offset grows toward apex.
-SNOW_ZCUT = 1.67
+# Snow strip: drapes the vault crown above this world z, y-proud at both ends.
+SNOW_ZCUT = 1.55
 SNOW_OFFSET_MIN, SNOW_OFFSET_MAX = 0.02, 0.12
+SNOW_Y0, SNOW_Y1 = 0.12, BED_Y0 - 0.12
 
 NAMES = (
     "tunnel_bed",
@@ -103,119 +116,107 @@ def _box_verts(bm, x0, x1, y0, y1, z0, z1):
         bm.faces.new([vs[i] for i in q])
 
 
-def _arch_profile(r_out, r_in, n=25):
-    prof = [(-r_out, GROUND_Z), (-r_out, SPRING_Z)]
+def _arch_profile(half_width, spring_z, cap_rx, cap_ry, bottom_z, n=24):
+    """Closed arch cross-section in (x, z): leg corners, cap, bottom edge."""
+    prof = [(-half_width, bottom_z), (-half_width, spring_z)]
     for i in range(1, n + 1):
         t = math.pi * (1 - i / n)
-        prof.append((r_out * math.cos(t), SPRING_Z + r_out * math.sin(t)))
-    prof.append((r_out, GROUND_Z))
-    prof.append((r_in, GROUND_Z))
-    for i in range(n + 1):
-        t = math.pi * i / n
-        prof.append((r_in * math.cos(t), SPRING_Z + r_in * math.sin(t)))
-    prof.append((-r_in, GROUND_Z))
+        prof.append((cap_rx * math.cos(t), spring_z + cap_ry * math.sin(t)))
+    prof.append((half_width, bottom_z))
     return prof
 
 
-def _portal(name, y_far, y_near):
-    prof = _arch_profile(PORTAL_R_OUT, BORE_R)
+def _extrude_profile(prof, y0, y1):
+    """Closed prism from a 2D profile: two rings, side quads, end caps."""
     bm = bmesh.new()
-    far = [bm.verts.new((px, y_far, pz)) for px, pz in prof]
-    near = [bm.verts.new((px, y_near, pz)) for px, pz in prof]
+    ring0 = [bm.verts.new((px, y0, pz)) for px, pz in prof]
+    ring1 = [bm.verts.new((px, y1, pz)) for px, pz in prof]
     n = len(prof)
     for i in range(n):
         j = (i + 1) % n
-        bm.faces.new([far[i], far[j], near[j], near[i]])
-    bm.faces.new(far[::-1])
-    bm.faces.new(near)
+        bm.faces.new([ring0[i], ring0[j], ring1[j], ring1[i]])
+    bm.faces.new(ring0[::-1])
+    bm.faces.new(ring1)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+
+def _portal(name, y_far, y_near):
+    """A proud horseshoe frame on the vault's flat face: band around the mouth."""
+    r_out, r_in, spring, n = PORTAL_R_OUT, BORE_HW, BORE_SPRING_Z, 24
+    prof = [(-r_out, GROUND_Z), (-r_out, spring)]
+    for i in range(1, n + 1):
+        t = math.pi * (1 - i / n)
+        prof.append((r_out * math.cos(t), spring + r_out * math.sin(t)))
+    prof.append((r_out, GROUND_Z))
+    prof.append((r_in, GROUND_Z))
+    for i in range(1, n + 1):
+        t = math.pi * i / n
+        prof.append((r_in * math.cos(t), spring + r_in * math.sin(t)))
+    prof.append((-r_in, GROUND_Z))
+    bm = _extrude_profile(prof, y_far, y_near)
     return _link(bm, name, ["tunnel_dirt"])
 
 
-def _dome():
-    bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=1.0)
-    lower = [v for v in bm.verts if v.co.z < -1e-4]
-    bmesh.ops.delete(bm, geom=lower, context="VERTS")
-    rim = [e for e in bm.edges if e.is_boundary]
-    bmesh.ops.contextual_create(bm, geom=rim)
-    for v in bm.verts:
-        v.co.x *= DOME_RX
-        v.co.y *= DOME_RY
-        v.co.z *= DOME_H
-        v.co += Vector((DOME_CX, DOME_CY, DOME_CZ))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    dome = _link(bm, "tunnel_dome", ["tunnel_grass"])
+def _vault():
+    """The hill: rounded-arch prism over the full module, then bored."""
+    prof = _arch_profile(VAULT_HW, VAULT_SPRING_Z, VAULT_HW, VAULT_CAP_RY, GROUND_Z)
+    bm = _extrude_profile(prof, VAULT_INSET, BED_Y0 - VAULT_INSET)
+    vault = _link(bm, "tunnel_dome", ["tunnel_grass"])
 
     cutter = _bore_cutter()
-    mod = dome.modifiers.new("Bore", "BOOLEAN")
+    mod = vault.modifiers.new("Bore", "BOOLEAN")
     mod.operation = "DIFFERENCE"
     mod.solver = "EXACT"
     mod.object = cutter
-    bpy.context.view_layer.objects.active = dome
-    dome.select_set(True)
+    bpy.context.view_layer.objects.active = vault
+    vault.select_set(True)
     bpy.ops.object.modifier_apply(modifier="Bore")
     cutter_me = cutter.data
     bpy.data.objects.remove(cutter, do_unlink=True)
     bpy.data.meshes.remove(cutter_me)
 
     # Bore walls read as the dark tunnel interior: reassign cut faces to dirt.
-    me = dome.data
+    me = vault.data
     for p in me.polygons:
         c = p.center
-        wall_leg = abs(abs(c.x) - BORE_R) < 0.01 and c.z <= SPRING_Z + 0.01 and c.z > GROUND_Z - 0.05
-        wall_arch = c.z > SPRING_Z and abs(math.hypot(c.x, c.z - SPRING_Z) - BORE_R) < 0.01
-        if wall_leg or wall_arch:
+        wall_leg = abs(abs(c.x) - BORE_HW) < 0.01 and c.z <= BORE_SPRING_Z + 0.01 and c.z > GROUND_Z - 0.05
+        wall_cap = c.z > BORE_SPRING_Z and abs(math.hypot(c.x, c.z - BORE_SPRING_Z) - BORE_HW) < 0.01
+        if wall_leg or wall_cap:
             p.material_index = 1
-    return dome
+    return vault
 
 
 def _bore_cutter():
-    prof = [
-        (BORE_R * math.cos(t), SPRING_Z + BORE_R * math.sin(t))
-        for t in (math.pi * (1 - i / 24) for i in range(25))
-    ]
-    prof.append((BORE_R, GROUND_Z - 0.3))
-    prof.append((-BORE_R, GROUND_Z - 0.3))
-    bm = bmesh.new()
-    y_near, y_far = 0.6, BED_Y0 - 0.6
-    near = [bm.verts.new((px, y_near, pz)) for px, pz in prof]
-    far = [bm.verts.new((px, y_far, pz)) for px, pz in prof]
-    n = len(prof)
-    for i in range(n):
-        j = (i + 1) % n
-        bm.faces.new([near[i], near[j], far[j], far[i]])
-    bm.faces.new(near)
-    bm.faces.new(far[::-1])
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    prof = _arch_profile(BORE_HW, BORE_SPRING_Z, BORE_HW, BORE_HW, GROUND_Z - 0.3)
+    bm = _extrude_profile(prof, 0.6, BED_Y0 - 0.6)
     return _link(bm, "tunnel_bore_cutter", ["tunnel_dirt"])
 
 
 def _snow_cap():
+    """A proud snow strip draped over the vault crown, the run's full length."""
+    phic = math.asin((SNOW_ZCUT - VAULT_SPRING_Z) / VAULT_CAP_RY)
+    steps = 14
     bm = bmesh.new()
-    phic = math.acos((SNOW_ZCUT - DOME_CZ) / DOME_H)
-    rings = []
-    for k in range(6):
-        phi = phic * (1 - k / 6)
-        off = SNOW_OFFSET_MIN + (SNOW_OFFSET_MAX - SNOW_OFFSET_MIN) * (phic - phi) / phic
-        ring = []
-        for i in range(24):
-            th = 2 * math.pi * i / 24
-            sl, cl = math.sin(phi), math.cos(phi)
-            p = Vector((DOME_RX * sl * math.cos(th), DOME_RY * sl * math.sin(th), DOME_H * cl))
-            nrm = Vector((p.x / (DOME_RX * DOME_RX), p.y / (DOME_RY * DOME_RY), p.z / (DOME_H * DOME_H)))
-            q = p + nrm.normalized() * off
-            ring.append(bm.verts.new((q.x, q.y + DOME_CY, q.z + DOME_CZ)))
-        rings.append(ring)
-    for k in range(5):
-        for i in range(24):
-            j = (i + 1) % 24
-            bm.faces.new([rings[k][i], rings[k][j], rings[k + 1][j], rings[k + 1][i]])
-    apex = bm.verts.new((0.0, DOME_CY, DOME_CZ + DOME_H + SNOW_OFFSET_MAX))
-    for i in range(24):
-        j = (i + 1) % 24
-        bm.faces.new([rings[-1][j], rings[-1][i], apex])
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    rows = []
+    for y in (SNOW_Y0, SNOW_Y1):
+        row = []
+        for i in range(steps + 1):
+            t = phic + (math.pi - 2 * phic) * i / steps
+            sl, cl = math.sin(t), math.cos(t)
+            px, pz = VAULT_HW * cl, VAULT_SPRING_Z + VAULT_CAP_RY * sl
+            nx, nz = cl / VAULT_HW, sl / VAULT_CAP_RY
+            norm = math.hypot(nx, nz)
+            progress = (sl - math.sin(phic)) / (1 - math.sin(phic))
+            off = SNOW_OFFSET_MIN + (SNOW_OFFSET_MAX - SNOW_OFFSET_MIN) * progress
+            row.append(
+                bm.verts.new((px + nx / norm * off, y, pz + nz / norm * off))
+            )
+        rows.append(row)
+    for i in range(steps):
+        bm.faces.new([rows[0][i], rows[0][i + 1], rows[1][i + 1], rows[1][i]])
+    # Winding above already points the strip outward; recalc_face_normals is
+    # unreliable on an open shell and can flip the whole strip's lighting.
     return _link(bm, "tunnel_snow_cap", ["tunnel_snow"])
 
 
@@ -244,7 +245,7 @@ def build_tunnel():
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     _link(bm, "tunnel_rails", ["tunnel_steel"])
 
-    _dome()
+    _vault()
     _portal("tunnel_portal_entry", *PORTAL_ENTRY_Y)
     _portal("tunnel_portal_exit", *PORTAL_EXIT_Y)
     _snow_cap()
@@ -280,8 +281,9 @@ def render_checks():
     scene = bpy.context.scene
     scene.camera = cam
     views = (
-        ("tunnel_head.png", (0.0, 3.8, 0.15), (0.0, -2.0, 0.15), 35.0),
-        ("tunnel_quarter.png", (5.0, 4.5, 3.4), (0.0, -2.0, 0.3), 40.0),
+        ("tunnel_head.png", (0.0, 6.5, 1.4), (0.0, -2.0, 0.9), 35.0),
+        ("tunnel_quarter.png", (6.5, 5.5, 4.5), (0.0, -2.0, 0.7), 40.0),
+        ("tunnel_side.png", (9.0, -2.0, 2.2), (0.0, -2.0, 1.0), 40.0),
     )
     import os
     import tempfile
