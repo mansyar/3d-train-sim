@@ -33,14 +33,16 @@ export interface PlacedScenery {
   rotation: Rotation;
 }
 
-/** The meadow model for each kind (Kenney kits, CC0, vendored in the repo). */
+/** The meadow model for each kind (Kenney kits, CC0, vendored in the repo);
+ *  the station is an original Blender-authored piece (scripts/blender-station.py)
+ *  with named crate slots for the cargo deliveries. */
 const SCENERY_URLS: Record<SceneryKind, string> = {
   tree: '/assets/nature-kit/tree_default.glb',
   bush: '/assets/nature-kit/plant_bushDetailed.glb',
   rock: '/assets/nature-kit/rock_smallA.glb',
   house: '/assets/fantasy-town-kit/house.glb',
   cottage: '/assets/fantasy-town-kit/cottage.glb',
-  station: '/assets/fantasy-town-kit/station.glb',
+  station: '/assets/train-kit/station.glb',
   pig: '/assets/quaternius-farm/pig.glb',
   sheep: '/assets/quaternius-farm/sheep.glb',
   pug: '/assets/quaternius-farm/pug.glb',

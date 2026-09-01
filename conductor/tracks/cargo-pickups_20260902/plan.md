@@ -86,10 +86,19 @@
     render_checks() now hides everything outside the recipe.
     Files: `scripts/blender-station.py` (new), `public/assets/train-kit/
     station.glb` (new), `public/assets/train-kit/crate.glb` (new).
-- [ ] Task: Mount the new station model — point the scenery loader at
+- [x] Task: Mount the new station model — point the scenery loader at
   `station.glb` (fantasy-town-kit stays for house/cottage), verify
   placement/anchor/scale unchanged, existing saves render placed stations on
   the new model
+  - Notes: one-line catalog change in `SCENERY_URLS` plus a test update —
+    house/cottage stay on the Kenney kit; the station asserts
+    `/assets/train-kit/station.glb`. Verified in the live app via a
+    throwaway Playwright spec (removed after): placement returns `placed`,
+    rotation 180 shows the cargo deck + crate slots to the camera, and an
+    existing save renders around it untouched. Full Playwright suite (55
+    tests) green. Files: `src/core/scenery.ts`, `src/core/scenery.test.ts`.
+    Why: the crate slots in the GLB are what Phase 3 toggles per delivery
+    count.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3: Ride & Scene Wiring — Load, Deliver, Celebrate
