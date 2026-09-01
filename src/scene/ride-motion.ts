@@ -166,6 +166,8 @@ export function createRideMotion(
   followers: readonly Object3D[] = [],
   /** Announces the engine entering/leaving a tunnel run (chug duck, echo). */
   onTunnelChange?: (inside: boolean) => void,
+  /** Announces the station cargo duty at each stop (load ⇄ deliver). */
+  onStationCargo?: (stationId: string) => void,
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -473,7 +475,10 @@ export function createRideMotion(
           poseTrain(distance);
           if (getState() !== null) {
             stationStopTimer = STATION_STOP_SECONDS;
-            if (stationId) onStationStop?.(stationId); // Ding-ding from rest.
+            if (stationId) {
+              onStationStop?.(stationId); // Ding-ding from rest.
+              onStationCargo?.(stationId); // Wagons load or deliver here.
+            }
           }
           return;
         }

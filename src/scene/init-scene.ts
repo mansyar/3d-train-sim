@@ -1,5 +1,6 @@
 import type { Object3D } from 'three';
 import {
+  Box3,
   NeutralToneMapping,
   PCFSoftShadowMap,
   PerspectiveCamera,
@@ -12,6 +13,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
+import { actionAtStop, type CargoLoad, loadAfterAction } from '../core/cargo';
 import { createDayClock } from '../core/day-clock';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
 import { riverProximity } from '../core/river';
@@ -43,6 +45,7 @@ import {
 import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
+import { createConfetti } from './confetti';
 import { disposeObject } from './dispose-object';
 import { createDuck, FROZEN_SNOW } from './duck';
 import { createFireflies } from './fireflies';
@@ -50,7 +53,7 @@ import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
 import { loadLocomotive } from './load-locomotive';
-import { loadWagon } from './load-wagons';
+import { loadCrate, loadWagon } from './load-wagons';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createPortalGlow } from './portal-glow';
@@ -78,6 +81,8 @@ const overviewBase = OVERVIEW_POSITION.clone();
 const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 /** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
 const CAMERA_EASE = 2.5;
+/** How long the wagon crates take to pop aboard at a station load. */
+const CARGO_POP_SECONDS = 0.25;
 /** The breath between the two dings of a station welcome. */
 const STATION_DING_GAP_MS = 350;
 /** Inactivity before the meadow comes alive with a slow camera drift. */
@@ -271,6 +276,9 @@ export function initScene(
   // reduced motion (static frame, no RAF loop). Any toddler touch calls
   // notifyActivity() through the SceneHandle.
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // The delivery celebration: a pooled burst at the station. Reduced motion
+  // keeps the delivery (crates, count) but skips the flying particles.
+  const confetti = createConfetti(scene, () => !reducedMotion);
   const attract = createAttractCamera(overviewBase, OVERVIEW_LOOK, { reducedMotion });
   const attractClock = createAttractClock(ATTRACT_IDLE_MS, {
     now: () => performance.now(),
@@ -301,6 +309,10 @@ export function initScene(
     puffs: SteamPuffEmitter;
     /** The engine's night beam, updated by the ambience paint. */
     headlight: Headlight;
+    /** The wagon cargo cycle: empty loads at a stop, loaded delivers. */
+    cargo: CargoLoad;
+    /** Load pop-in progress, 1 = settled. Sits at 1 unless animating. */
+    cargoPop: number;
     motion: RideMotion;
     /** The ride state the motion last began with — a new state ⇒ re-begin. */
     begunWith: RideState | null;
@@ -312,6 +324,7 @@ export function initScene(
   const spares: TrainRig[] = []; // built rigs resting between rides
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
   const wagonTemplates: (Object3D | null)[] = []; // by slot index, cloned per rig
+  let crateTemplate: Object3D | null = null; // the wagon-load delivery crate
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
@@ -446,12 +459,15 @@ export function initScene(
       kind,
       model,
       wagons,
+      cargo: 'empty',
+      cargoPop: 1,
       puffs,
       headlight,
       motion: null as unknown as RideMotion,
       begunWith: null,
       startNear: null,
     };
+    for (const wagon of wagons) attachCrateToWagon(wagon);
     rig.motion = createRideMotion(
       model,
       world,
@@ -460,8 +476,71 @@ export function initScene(
       onStationDing,
       wagons,
       (inside) => setRigInTunnel(rig, inside),
+      (stationId) => handleStationCargo(rig, stationId),
     );
     return rig;
+  };
+
+  /** The delivery crates riding this rig's wagons (attached lazily). */
+  const cratesOf = (rig: TrainRig): Object3D[] => {
+    const found: Object3D[] = [];
+    for (const wagon of rig.wagons) {
+      const crate = wagon.getObjectByName('cargo_crate');
+      if (crate) found.push(crate);
+    }
+    return found;
+  };
+
+  /** Mounts a delivery crate on a wagon's cargo bed, hidden until loaded. */
+  const attachCrateToWagon = (wagon: Object3D): void => {
+    if (!crateTemplate || wagon.getObjectByName('cargo_crate')) return;
+    const crate = crateTemplate.clone(true);
+    crate.visible = false;
+    crate.name = 'cargo_crate';
+    // max.y is yaw-invariant, so the bed height is exact at any heading.
+    const bedTop = new Box3().setFromObject(wagon).max.y;
+    crate.position.y = bedTop - wagon.position.y + 0.02;
+    wagon.add(crate);
+  };
+
+  /** The load pop-in: a quick ease-out-back so crates bounce aboard. */
+  const advanceCargoPop = (rig: TrainRig, dt: number): void => {
+    rig.cargoPop = Math.min(1, rig.cargoPop + dt / CARGO_POP_SECONDS);
+    const t = rig.cargoPop - 1;
+    const overshoot = 1 + 2.70158 * t * t * t + 1.70158 * t * t;
+    const scale = Math.max(overshoot, 0.01);
+    for (const crate of cratesOf(rig)) crate.scale.setScalar(scale);
+  };
+
+  /** Shows the wagons' crates, popping them aboard when loading. */
+  const setCargoLoaded = (rig: TrainRig, loaded: boolean): void => {
+    rig.cargoPop = 1;
+    for (const crate of cratesOf(rig)) {
+      crate.visible = loaded;
+      crate.scale.setScalar(1);
+    }
+    if (loaded && !reducedMotion) {
+      rig.cargoPop = 0; // The next frames pop them up to full size.
+      for (const crate of cratesOf(rig)) crate.scale.setScalar(0.01);
+    }
+  };
+
+  /**
+   * One stop of the cargo cycle: empty wagons load, loaded wagons deliver.
+   * Delivery bumps the station's persisted count (the platform gains a
+   * crate via the world subscription) and pops the confetti.
+   */
+  const handleStationCargo = (rig: TrainRig, stationId: string): void => {
+    const action = actionAtStop(rig.cargo);
+    rig.cargo = loadAfterAction(action);
+    setCargoLoaded(rig, action === 'load');
+    if (action !== 'deliver') return;
+    world.deliverCrate(stationId);
+    const station = world.scenery().find((item) => item.id === stationId);
+    if (station) {
+      const at = cellToWorld(station.cell);
+      confetti.burst(at.x, 0.5, at.z);
+    }
   };
 
   /** Frees a rig's scene objects (kind rebuilds and teardown). */
@@ -571,6 +650,22 @@ export function initScene(
         // Kit asset unavailable — the crate remains as the fallback placeholder.
       });
   }
+
+  loadCrate()
+    .then((crateModel) => {
+      if (disposed) {
+        disposeObject(crateModel);
+        return;
+      }
+      crateTemplate = crateModel;
+      // Rigs built before the crate arrived get their cargo now.
+      for (const rig of [...rigs.values(), ...spares]) {
+        for (const wagon of rig.wagons) attachCrateToWagon(wagon);
+      }
+    })
+    .catch(() => {
+      // Crate asset unavailable — trains ride without cargo visuals.
+    });
 
   for (const [index, slot] of wagonSlots().entries()) {
     loadWagon(slot)
@@ -731,8 +826,10 @@ export function initScene(
       for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.update(dt);
         rig.puffs.update(dt);
+        if (rig.cargoPop < 1) advanceCargoPop(rig, dt);
         visibleSteamPuffs += rig.puffs.activeCount();
       }
+      confetti.update(dt);
       // Critters idle always and hop while a riding train passes close.
       // Parked spares report null — hops read as passing, not presence.
       // Mood: rain shrinks their excitement radius, night is bedtime.
@@ -855,6 +952,8 @@ export function initScene(
       audio.dispose();
       tracks.dispose();
       crate.dispose();
+      confetti.dispose();
+      if (crateTemplate) disposeObject(crateTemplate);
       for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.dispose();
         disposeRigVisuals(rig);

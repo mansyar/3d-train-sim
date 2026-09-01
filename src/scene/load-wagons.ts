@@ -14,3 +14,18 @@ export function loadWagon(slot: WagonSlot): Promise<Group> {
     return model;
   });
 }
+
+/**
+ * Loads the station-delivery crate that rides on a wagon (Blender-authored,
+ * scripts/blender-station.py). Base at the origin so it sits on the wagon
+ * bed when positioned at the measured cargo height.
+ */
+export function loadCrate(): Promise<Group> {
+  const loader = new GLTFLoader();
+  return loader.loadAsync('/assets/train-kit/crate.glb').then((gltf) => {
+    const model = gltf.scene;
+    model.scale.setScalar(1.5);
+    enableCastShadows(model);
+    return model;
+  });
+}
