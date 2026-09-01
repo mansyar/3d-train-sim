@@ -21,14 +21,14 @@ describe('world snapshots', () => {
   it('serializes a JSON-safe, versioned snapshot with the selected train', () => {
     const snapshot = serializeWorld(pieces, scenery, 'diesel');
 
-    expect(snapshot).toEqual({ version: 2, pieces, scenery, train: 'diesel' });
+    expect(snapshot).toEqual({ version: 3, pieces, scenery, train: 'diesel' });
     expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
   });
 
   it('round-trips tracks, scenery, and train without changing order or fields', () => {
     const snapshot = serializeWorld(pieces, scenery, 'tram');
 
-    expect(deserializeWorld(snapshot)).toEqual({ pieces, scenery, train: 'tram' });
+    expect(deserializeWorld(snapshot)).toEqual({ pieces, scenery, train: 'tram', deliveries: {} });
   });
 
   it('restores steam for legacy snapshots without a train field', () => {
@@ -36,6 +36,7 @@ describe('world snapshots', () => {
       pieces,
       scenery,
       train: 'steam',
+      deliveries: {},
     });
   });
 
@@ -44,20 +45,28 @@ describe('world snapshots', () => {
       pieces,
       scenery,
       train: 'steam',
+      deliveries: {},
     });
   });
 
   it('rejects malformed and unknown-version snapshots safely', () => {
-    expect(deserializeWorld(null)).toEqual({ pieces: [], scenery: [], train: 'steam' });
-    expect(deserializeWorld({ version: 3, pieces, scenery })).toEqual({
+    expect(deserializeWorld(null)).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
+      deliveries: {},
+    });
+    expect(deserializeWorld({ version: 4, pieces, scenery })).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
     });
     expect(deserializeWorld({ version: 1, pieces: 'bad', scenery: [] })).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
+      deliveries: {},
     });
   });
 
@@ -68,7 +77,12 @@ describe('world snapshots', () => {
       scenery: [{ id: 'scenery-2', kind: 'dragon', cell: { x: 16, y: 0 }, rotation: 0 }],
     };
 
-    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    expect(deserializeWorld(invalid)).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
   });
 
   it('round-trips town buildings and critters like any other scenery', () => {
@@ -86,12 +100,13 @@ describe('world snapshots', () => {
       pieces,
       scenery: townAndCritters,
       train: 'steam',
+      deliveries: {},
     });
   });
 
   it('loads a legacy world of only V1 kinds unchanged', () => {
     const legacy = serializeWorld(pieces, scenery, 'steam');
-    expect(deserializeWorld(legacy)).toEqual({ pieces, scenery, train: 'steam' });
+    expect(deserializeWorld(legacy)).toEqual({ pieces, scenery, train: 'steam', deliveries: {} });
   });
 
   it('drops unknown scenery kinds but keeps the rest of the world', () => {
@@ -113,6 +128,7 @@ describe('world snapshots', () => {
         { id: 'scenery-3', kind: 'sheep', cell: { x: 3, y: 9 }, rotation: 0 },
       ],
       train: 'steam',
+      deliveries: {},
     });
   });
 
@@ -125,7 +141,12 @@ describe('world snapshots', () => {
     const snapshot = serializeWorld(crossing, [], 'steam');
 
     expect(snapshot.pieces).toEqual(crossing);
-    expect(deserializeWorld(snapshot)).toEqual({ pieces: crossing, scenery: [], train: 'steam' });
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: crossing,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
   });
 
   it('restores a persisted crossing snapshot (rotation preserved verbatim)', () => {
@@ -140,6 +161,7 @@ describe('world snapshots', () => {
       pieces: [{ id: 'piece-9', type: 'crossing', cell: { x: 5, y: 6 }, rotation: 270 }],
       scenery: [],
       train: 'steam',
+      deliveries: {},
     });
   });
 
@@ -150,7 +172,12 @@ describe('world snapshots', () => {
       scenery: [{ id: 'scenery-2', kind: 'tree', cell: { x: 0, y: 0 }, rotation: 0 }],
     };
 
-    expect(deserializeWorld(invalid)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    expect(deserializeWorld(invalid)).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
   });
 
   it('rejects snapshots over the shared capacity', () => {
@@ -160,9 +187,14 @@ describe('world snapshots', () => {
       cell: { x: index % 16, y: Math.floor(index / 16) },
       rotation: 0 as const,
     }));
-    const snapshot: WorldSnapshot = { version: 2, pieces: fullPieces, scenery: [] };
+    const snapshot: WorldSnapshot = { version: 3, pieces: fullPieces, scenery: [] };
 
-    expect(deserializeWorld(snapshot)).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
   });
 });
 
@@ -182,13 +214,14 @@ describe('tunnel snapshots', () => {
       pieces: [tunnelPiece],
       scenery: [],
       train: 'steam',
+      deliveries: {},
     });
   });
 
   it('restores a persisted v2 snapshot containing tunnels verbatim', () => {
     expect(
       deserializeWorld({ version: 2, pieces: [tunnelPiece], scenery: [], train: 'diesel' }),
-    ).toEqual({ pieces: [tunnelPiece], scenery: [], train: 'diesel' });
+    ).toEqual({ pieces: [tunnelPiece], scenery: [], train: 'diesel', deliveries: {} });
   });
 
   it('keeps rejecting unknown piece types — the tunnel is catalog-listed, anything else is not', () => {
@@ -198,7 +231,102 @@ describe('tunnel snapshots', () => {
         pieces: [{ id: 'piece-1', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 }],
         scenery: [],
       }),
-    ).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+  });
+});
+
+describe('delivery snapshots — per-station crate counts', () => {
+  const station: PlacedScenery = {
+    id: 'scenery-1',
+    kind: 'station',
+    cell: { x: 2, y: 2 },
+    rotation: 0,
+  };
+
+  it('omits deliveries when no station has received crates', () => {
+    expect(serializeWorld([], [station], 'steam', false, {})).toEqual({
+      version: 3,
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+    });
+  });
+
+  it('round-trips delivery counts keyed by station id', () => {
+    const snapshot = serializeWorld([], [station], 'steam', false, { 'scenery-1': 4 });
+
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+      deliveries: { 'scenery-1': 4 },
+    });
+  });
+
+  it('migrates pre-cargo snapshots to a world with no deliveries', () => {
+    expect(deserializeWorld({ version: 2, pieces: [], scenery: [station] })).toEqual({
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+      deliveries: {},
+    });
+  });
+
+  it('drops malformed delivery entries without dropping the world', () => {
+    const snapshot = {
+      version: 3 as const,
+      pieces: [],
+      scenery: [station],
+      deliveries: {
+        'scenery-1': 3,
+        bad: 'x',
+        'scenery-2': -1,
+        'scenery-3': 2.5,
+        'scenery-4': '9',
+        'scenery-5': null,
+        __proto__: { polluted: true },
+      },
+    };
+
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+      deliveries: { 'scenery-1': 3 },
+    });
+  });
+
+  it('clamps counts over the platform cap', () => {
+    const snapshot = {
+      version: 3 as const,
+      pieces: [],
+      scenery: [station],
+      deliveries: { 'scenery-1': 99 },
+    };
+
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+      deliveries: { 'scenery-1': 8 },
+    });
+  });
+
+  it('forgives a non-record deliveries field', () => {
+    const snapshot = {
+      version: 3 as const,
+      pieces: [],
+      scenery: [station],
+      deliveries: 'all the crates',
+    };
+
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [],
+      scenery: [station],
+      train: 'steam',
+      deliveries: {},
+    });
   });
 });
 
@@ -207,7 +335,7 @@ describe('device preferences', () => {
     const snapshot = serializeWorld(pieces, [], 'steam', true);
 
     expect(snapshot).toEqual({
-      version: 2,
+      version: 3,
       pieces,
       scenery: [],
       train: 'steam',
@@ -218,7 +346,7 @@ describe('device preferences', () => {
 
   it('omits preferences when sound is on', () => {
     expect(serializeWorld(pieces, scenery, 'steam')).toEqual({
-      version: 2,
+      version: 3,
       pieces,
       scenery,
       train: 'steam',
@@ -299,7 +427,7 @@ describe('river migration — v1 snapshots load as v2 bridges', () => {
   it('round-trips v2 snapshots — bridges persist as bridges', () => {
     const first = deserializeWorld(v1);
     const v2 = serializeWorld(first.pieces, first.scenery, first.train);
-    expect(v2.version).toBe(2);
+    expect(v2.version).toBe(3);
     expect(deserializeWorld(v2)).toEqual(first);
   });
 
@@ -317,6 +445,6 @@ describe('river migration — v1 snapshots load as v2 bridges', () => {
   it('still refuses broken v1 snapshots — migration never weakens validation', () => {
     expect(
       deserializeWorld({ version: 1, pieces: [{ id: 'x', type: 'nope' }], scenery: [] }),
-    ).toEqual({ pieces: [], scenery: [], train: 'steam' });
+    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
   });
 });

@@ -17,6 +17,7 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { AudioController } from '../audio/audio-controller';
+import { MAX_DELIVERED_CRATES } from '../core/cargo';
 import { PIECE_TYPES, type PieceType } from '../core/pieces';
 import {
   type PlacedScenery,
@@ -274,6 +275,7 @@ export function startTrackRenderer(
     }
     syncCritterAnimations(wanted);
     syncTunnelPortals(world.pieces());
+    syncStationCrates(world.scenery(), (id) => world.deliveryCount(id));
   }
 
   /** The piece's endpoint labels, advanced by its yaw (the core convention). */
@@ -299,6 +301,27 @@ export function startTrackRenderer(
       if (entry) entry.visible = !run.mergedPortals.includes(advancedEdge('north', steps));
       const exit = model.getObjectByName('tunnel_portal_exit');
       if (exit) exit.visible = !run.mergedPortals.includes(advancedEdge('south', steps));
+    }
+  }
+
+  /**
+   * Delivered crates: each station's platform slots fill up to its
+   * persisted delivery count. Event-driven — runs on reconcile (world
+   * subscribe), never per frame.
+   */
+  function syncStationCrates(
+    scenery: readonly PlacedScenery[],
+    deliveryCount: (id: string) => number,
+  ): void {
+    for (const item of scenery) {
+      if (item.kind !== 'station') continue;
+      const model = rendered.get(item.id);
+      if (!model) continue;
+      const count = deliveryCount(item.id);
+      for (let i = 1; i <= MAX_DELIVERED_CRATES; i += 1) {
+        const slot = model.getObjectByName(`station_crate_${i}`);
+        if (slot) slot.visible = i <= count;
+      }
     }
   }
 
@@ -584,6 +607,14 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        if (kind === 'station') {
+          // Crate slots are delivery-earned — a fresh station (and its drag
+          // ghost) shows an empty platform; reconcile fills the earned ones.
+          for (let i = 1; i <= MAX_DELIVERED_CRATES; i += 1) {
+            const slot = model.getObjectByName(`station_crate_${i}`);
+            if (slot) slot.visible = false;
+          }
+        }
         // Buildings get a warm "windows lit" glow, driven by the night factor.
         attachWindowGlow(model, kind);
         templates.set(kind, model);

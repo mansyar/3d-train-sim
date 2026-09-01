@@ -11,6 +11,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ### Added
 
+- **Cargo deliveries! The wagons are working freight cars now.** At the
+  first station, chunky crates pop aboard both wagons; at the next stop
+  they come off in a little confetti burst — and the station's platform
+  keeps one delivered crate for every delivery, up to a cheerful pile of
+  eight. Deliveries survive pauses and page reloads, so the meadow slowly
+  fills up with your child's work. The station got a makeover to match the
+  other town buildings, with its own cargo platform under the awning.
+
 - **Tunnels! A grassy hill the train disappears into.** A chunky new tunnel
   piece joins the track toybox. It snaps onto the layout like any straight,
   and the train vanishes under the hill and pops out the far side — the

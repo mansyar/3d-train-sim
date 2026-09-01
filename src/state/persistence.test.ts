@@ -21,6 +21,7 @@ const NEXT_CELL = { x: 1, y: 0 };
 
 const data: WorldData = {
   train: 'diesel',
+  deliveries: {},
   pieces: [{ id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 }],
   scenery: [{ id: 'scenery-41', kind: 'tree', cell: NEXT_CELL, rotation: 90 }],
 };
@@ -53,7 +54,7 @@ describe('autosave subscription', () => {
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     store.subscribe(() =>
       save({
-        version: 2,
+        version: 3,
         train: store.train(),
         pieces: [...store.pieces()],
         scenery: [...store.scenery()],
@@ -109,7 +110,7 @@ describe('mute preference', () => {
     const audio = makeAudio();
 
     restoreMutePreference(
-      { version: 2, pieces: [], scenery: [], preferences: { muted: true } },
+      { version: 3, pieces: [], scenery: [], preferences: { muted: true } },
       audio,
     );
     expect(audio.setMuted).toHaveBeenCalledTimes(1);
@@ -134,7 +135,7 @@ describe('mute preference', () => {
     audio.emit();
     expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0]?.[0]).toMatchObject({
-      version: 2,
+      version: 3,
       train: 'steam',
       pieces: [{ type: 'straight', cell: ORIGIN }],
       scenery: [],
@@ -162,6 +163,22 @@ describe('mute preference', () => {
     audio.setMuted(false);
     audio.emit();
     expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('carries delivery counts into world-mutation saves', () => {
+    const store = createWorldStore();
+    store.hydrate({
+      train: 'steam',
+      pieces: [],
+      scenery: [{ id: 'scenery-41', kind: 'station', cell: NEXT_CELL, rotation: 0 }],
+      deliveries: { 'scenery-41': 3 },
+    });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ deliveries: { 'scenery-41': 3 } });
   });
 
   it('carries the current mute preference into world-mutation saves', () => {
@@ -197,7 +214,7 @@ describe('indexeddb storage', () => {
 
   it('loads the stored world snapshot', async () => {
     const db = makeDb();
-    const stored: WorldSnapshot = { version: 2, pieces: [], scenery: [] };
+    const stored: WorldSnapshot = { version: 3, pieces: [], scenery: [] };
     db.get.mockResolvedValue(stored);
     openDBMock.mockResolvedValue(db as never);
 
@@ -217,7 +234,7 @@ describe('indexeddb storage', () => {
     const db = makeDb();
     openDBMock.mockResolvedValue(db as never);
     const snapshot: WorldSnapshot = {
-      version: 2,
+      version: 3,
       pieces: [],
       scenery: [],
       preferences: { muted: true },

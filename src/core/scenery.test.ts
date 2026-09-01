@@ -42,9 +42,13 @@ describe('sceneryUrl', () => {
   });
 
   it('serves town toys from the vendored Kenney fantasy town kit', () => {
-    for (const kind of TOWN_KINDS) {
+    for (const kind of ['house', 'cottage'] as const) {
       expect(sceneryUrl(kind)).toMatch(/^\/assets\/fantasy-town-kit\/[\w-]+\.glb$/);
     }
+  });
+
+  it('serves the station from the Blender-authored train kit pieces', () => {
+    expect(sceneryUrl('station')).toBe('/assets/train-kit/station.glb');
   });
 
   it('serves critters from the vendored Quaternius farm pack', () => {
