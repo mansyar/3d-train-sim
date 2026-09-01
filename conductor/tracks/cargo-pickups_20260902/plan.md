@@ -117,7 +117,17 @@
     count.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3: Ride & Scene Wiring — Load, Deliver, Celebrate
+## Phase 3: Ride & Scene Wiring — Load, Deliver, Celebrate [checkpoint: 9b0a597]
+
+> **Verification Report** — Automated: biome clean, tsc clean, 404 unit
+> tests (confetti pool 100% lines), 57 e2e tests, live throwaway spec
+> showed load on stop 1 → deliver on stop 2 with deliveryCount ≥ 1 and no
+> console errors. Manual: crates visibly pop aboard (logs + tender),
+> confetti at delivery, station platform fills with the delivered crate.
+> A user spot-check found the crates NOT rendering — two bugs fixed
+> (9b0a597): the wagon re-dress path skipped crate attachment, and the
+> mount height ignored the wagon's 1.5 root scale. User confirmed
+> (with the fix verified on screenshots): 2026-09-02.
 
 - [x] Task: Wagon crate meshes — load `crate.glb` template, attach one per
   wagon, visibility-toggled; gentle scale pop-in on load (instant toggle
@@ -160,7 +170,15 @@
     tender box.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4: Smoke, Docs & Final Gates
+## Phase 4: Smoke, Docs & Final Gates [checkpoint: 9b0a597]
+
+> **Verification Report** — Automated: full gate suite green after the
+> crate fix — biome clean, tsc clean, 404 unit tests, 57 e2e tests across
+> six specs (cargo.spec.ts: delivery + reload persistence, station-less
+> regression, zero external requests, zero console errors). Docs: parent
+> CHANGELOG bullet, product.md roadmap line, tech-stack.md asset map.
+> Manual: the checkpoint's hands-on pass (loop + station, two stops,
+> reload persistence). User confirmed: 2026-09-02.
 
 - [x] Task: Playwright smoke (`e2e/cargo.spec.ts`) — place a loop with two
   stations, press play, assert crate load then delivery (wagon crate
