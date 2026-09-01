@@ -1,0 +1,11 @@
+{
+  "id": "cargo-pickups_20260902",
+  "title": "Station Cargo Pickups",
+  "type": "feature",
+  "status": "in progress",
+  "branch": "track/cargo-pickups_20260902",
+  "created": "2026-09-02",
+  "updated": "2026-09-02",
+  "spec": "conductor/tracks/cargo-pickups_20260902/spec.md",
+  "plan": "conductor/tracks/cargo-pickups_20260902/plan.md"
+}
