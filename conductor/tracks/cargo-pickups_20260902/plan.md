@@ -148,6 +148,16 @@
     `station_crate_1..8` slots from the persisted count on reconcile.
     Verified live (throwaway spec, removed after): load on stop 1, deliver
     on stop 2, deliveryCount ≥ 1, no console errors.
+    Visual follow-up (user asked "is the crate visible on the wagon?": it
+    was NOT — two bugs, fixed 9b0a597): (1) rigs are built before the wagon
+    GLBs arrive, and the wagon-arrival re-dress cloned wagons without
+    attaching crates — the crate-load dressing had already no-oped on the
+    then-empty rigs, so no crate ever mounted; (2) the mount height was
+    computed in world units but set as a child-local offset, under-sizing
+    it by the wagon's 1.5 root scale so crates sank into the cargo. Fix:
+    attach in the wagon re-dress path, divide the offset by the wagon
+    scale. Screenshot bursts confirm crates riding on the logs and in the
+    tender box.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Smoke, Docs & Final Gates
