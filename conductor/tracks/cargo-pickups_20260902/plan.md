@@ -23,7 +23,7 @@
     so the ride wiring in Phase 3 stays trivial.
 - [x] Task: Save migration for delivery counts (`src/core/save.ts`) — snapshot
   version bump; per-station delivered-count map on `WorldData`; legacy/missing
-  counts migrate to 0; serialize/deserialize round-trip
+  counts migrate to 0; serialize/deserialize round-trip (6940930)
   - Failing tests first: round-trip, v-1 migration to zero counts,
     unknown/malformed counts ignored
   - Notes: TDD red→green (6 new tests). Snapshot v3 adds optional
