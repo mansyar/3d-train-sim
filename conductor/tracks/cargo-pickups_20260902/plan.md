@@ -119,21 +119,35 @@
 
 ## Phase 3: Ride & Scene Wiring — Load, Deliver, Celebrate
 
-- [ ] Task: Wagon crate meshes — load `crate.glb` template, attach one per
+- [x] Task: Wagon crate meshes — load `crate.glb` template, attach one per
   wagon, visibility-toggled; gentle scale pop-in on load (instant toggle
-  under reduced motion); change-driven only, never per-frame
-- [ ] Task: Wire the cycle into rides (`ride-motion.ts` / `init-scene.ts`) — on
+  under reduced motion); change-driven only, never per-frame (330376d)
+- [x] Task: Wire the cycle into rides (`ride-motion.ts` / `init-scene.ts`) — on
   each station stop: `cargo.onStationStop` decides load vs deliver; deliver →
   remove wagon crates, bump the station's count in the world, fire a
   pooled/instanced confetti burst at the station; loads/delivers during the
   existing pause (duration unchanged); trains with no stations never show
   crates
-- [ ] Task: Station crate slots — station model's 8 slots toggle visible from
+- [x] Task: Station crate slots — station model's 8 slots toggle visible from
   the persisted count (change-driven); count updates reflect live without
-  reload
-- [ ] Task: Confetti burst (`src/scene/`) — small pooled particle burst, capped
+  reload (330376d)
+- [x] Task: Confetti burst (`src/scene/`) — small pooled particle burst, capped
   lifetime, zero steady-state allocation, skipped under reduced motion; no
-  new audio (existing ding carries it)
+  new audio (existing ding carries it) (330376d)
+  - Notes (all four Phase 3 wiring tasks, one commit): `src/core/confetti.ts`
+    (TDD, 5 tests) — pooled burst physics with gravity, lifetime, palette
+    index; `src/scene/confetti.ts` — pooled meshes over shared geometry + 4
+    materials, scale-fade, reduced-motion gate; `load-wagons.ts` gains
+    `loadCrate()`; `ride-motion.ts` gained `onStationCargo` alongside the
+    ding callback; `init-scene.ts` attaches a `cargo_crate` clone to each
+    wagon bed (lazy, survived late-GLB arrival via re-dressing) and
+    `handleStationCargo` runs the per-rig cycle: load pops crates aboard
+    (ease-out-back over 0.25 s, instant under reduced motion), deliver hides
+    them, bumps `world.deliverCrate(stationId)` and bursts confetti at the
+    station; `track-renderer.ts` `syncStationCrates` fills each station's
+    `station_crate_1..8` slots from the persisted count on reconcile.
+    Verified live (throwaway spec, removed after): load on stop 1, deliver
+    on stop 2, deliveryCount ≥ 1, no console errors.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: Smoke, Docs & Final Gates
