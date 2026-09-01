@@ -497,9 +497,10 @@ export function initScene(
     const crate = crateTemplate.clone(true);
     crate.visible = false;
     crate.name = 'cargo_crate';
-    // max.y is yaw-invariant, so the bed height is exact at any heading.
+    // max.y is yaw-invariant, so the bed height is exact at any heading;
+    // the wagon root is scaled, so the world offset converts to local units.
     const bedTop = new Box3().setFromObject(wagon).max.y;
-    crate.position.y = bedTop - wagon.position.y + 0.02;
+    crate.position.y = (bedTop - wagon.position.y) / (wagon.scale.y || 1) + 0.02;
     wagon.add(crate);
   };
 
@@ -685,6 +686,7 @@ export function initScene(
             if (!template) continue;
             const clone = template.clone(true);
             scene.add(clone);
+            attachCrateToWagon(clone);
             rig.wagons.push(clone);
           }
           if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
