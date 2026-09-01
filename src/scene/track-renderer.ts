@@ -607,6 +607,14 @@ export function startTrackRenderer(
         model.add(gltf.scene);
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
+        if (kind === 'station') {
+          // Crate slots are delivery-earned — a fresh station (and its drag
+          // ghost) shows an empty platform; reconcile fills the earned ones.
+          for (let i = 1; i <= MAX_DELIVERED_CRATES; i += 1) {
+            const slot = model.getObjectByName(`station_crate_${i}`);
+            if (slot) slot.visible = false;
+          }
+        }
         // Buildings get a warm "windows lit" glow, driven by the night factor.
         attachWindowGlow(model, kind);
         templates.set(kind, model);

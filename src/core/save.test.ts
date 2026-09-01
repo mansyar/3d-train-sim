@@ -285,6 +285,7 @@ describe('delivery snapshots — per-station crate counts', () => {
         'scenery-3': 2.5,
         'scenery-4': '9',
         'scenery-5': null,
+        __proto__: { polluted: true },
       },
     };
 

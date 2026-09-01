@@ -110,6 +110,7 @@ function parseDeliveries(value: unknown): Record<string, number> {
   if (!isRecord(value)) return {};
   const deliveries: Record<string, number> = {};
   for (const [id, count] of Object.entries(value)) {
+    if (id === '__proto__' || id === 'constructor') continue;
     if (typeof count !== 'number' || !Number.isInteger(count) || count <= 0) continue;
     deliveries[id] = Math.min(count, MAX_DELIVERED_CRATES);
   }

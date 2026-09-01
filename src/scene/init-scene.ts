@@ -536,9 +536,11 @@ export function initScene(
     rig.cargo = loadAfterAction(action);
     setCargoLoaded(rig, action === 'load');
     if (action !== 'deliver') return;
-    world.deliverCrate(stationId);
+    // A station lifted mid-ride cannot receive the delivery — the crates
+    // simply come off; no orphan count, no celebration.
     const station = world.scenery().find((item) => item.id === stationId);
     if (station) {
+      world.deliverCrate(stationId);
       const at = cellToWorld(station.cell);
       confetti.burst(at.x, 0.5, at.z);
     }

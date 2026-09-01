@@ -203,3 +203,6 @@
   - Notes: all green — biome clean, tsc clean, 404 unit tests
     (confetti pool 100% lines), 57 e2e tests across the six specs.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase: Review Fixes
+- [~] Task: Apply review suggestions
