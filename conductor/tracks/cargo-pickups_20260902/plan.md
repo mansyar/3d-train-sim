@@ -3,7 +3,15 @@
 **Track ID:** `cargo-pickups_20260902` · **Branch:** `track/cargo-pickups_20260902` ·
 **Type:** Feature · **Spec:** [spec.md](spec.md)
 
-## Phase 1: Core — Cargo Cycle Logic & Save Migration (TDD)
+## Phase 1: Core — Cargo Cycle Logic & Save Migration (TDD) [checkpoint: ba4e5bb]
+
+> **Verification Report** — Automated: `pnpm exec biome check .` clean;
+> `pnpm exec tsc --noEmit` clean; `CI=true pnpm test` 29 files / 398 tests
+> passing; coverage on changed logic modules cargo.ts 100%, world.ts 100%
+> lines, save.ts 98.3% lines, persistence.ts 92.6% lines (all >80%).
+> Manual: dev server loads, existing worlds restore, existing rides behave
+> unchanged (core-only phase — nothing user-visible yet). User confirmed:
+> 2026-09-02.
 
 - [x] Task: Cargo cycle state machine (`src/core/cargo.ts`) — pure module: per-train
   load state (`empty ⇄ loaded`), `onStationStop(loadState)` → `load | deliver`,
