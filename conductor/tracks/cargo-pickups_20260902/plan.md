@@ -62,9 +62,17 @@
     store call per delivery, and the store is the single writer to the save.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2: Station Asset — Blender Recipe & Mounting
+## Phase 2: Station Asset — Blender Recipe & Mounting [checkpoint: 06f8619]
 
-- [x] Task: `scripts/blender-station.py` — deterministic, re-runnable recipe: (12a5c20)
+> **Verification Report** — Automated: biome clean, tsc clean, 399 unit
+> tests, 55 Playwright e2e tests passing; verify_glb() confirms the named
+> node/material contract; render checks (quarter/deck/side) show distinct
+> crate slots and no normal artifacts. Manual: dev-server placement
+> screenshots — station places and rotates, deck + crates face the camera
+> at rotation 180, existing saves render untouched; user approved the
+> Kenney-matched restyle. User confirmed: 2026-09-02.
+
+- [x] Task: `scripts/blender-station.py` — deterministic, re-runnable recipe: (12a5c20, restyled 06f8619)
   polished 1-cell station with integrated cargo platform, 8 named crate slots
   (`station_crate_1..8`), named-node + material contract, same export
   conventions as the tunnel recipe (`export_format="GLB"`, `export_yup`,
@@ -86,6 +94,14 @@
     render_checks() now hides everything outside the recipe.
     Files: `scripts/blender-station.py` (new), `public/assets/train-kit/
     station.glb` (new), `public/assets/train-kit/crate.glb` (new).
+    Polish pass (user feedback: match the Kenney house style): imported the
+    Kenney house/cottage into the check scene for a side-by-side, then
+    restyled — teal roof + canopy (family palette), orange-brown corner
+    timbers wrapping all four wall corners, framed windows (dark frame +
+    mullions + white panes as their own station_panes node), a base plinth,
+    and the deck extended to meet the wall. Final GLB: 33,584 B, 18 nodes,
+    7 station_* materials; pane node initially missed the selection list —
+    caught by verify_glb() and fixed.
 - [x] Task: Mount the new station model — point the scenery loader at
   `station.glb` (fantasy-town-kit stays for house/cottage), verify
   placement/anchor/scale unchanged, existing saves render placed stations on
