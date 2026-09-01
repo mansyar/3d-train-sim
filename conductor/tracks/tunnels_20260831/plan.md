@@ -194,10 +194,37 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
   the bore without clipping). User confirmed Phase 3 complete
   (2026-09-02). Checkpoint at b86bb2f.
 
-## Phase 4 - Smoke, Docs & Final Verification
+## Phase 4 - Smoke, Docs & Final Verification [checkpoint: 2c07411]
 
-- [ ] Task: Playwright smoke — place a tunnel, run the train through it,
+- [x] Task: Playwright smoke — place a tunnel, run the train through it,
       assert no console errors
-- [ ] Task: CHANGELOG `[Unreleased]` — parent-readable tunnel bullet
-- [ ] Task: Final gates (`pnpm check`, e2e) + manual tablet checklist +
+  - **Summary:** New `e2e/tunnel.spec.ts` (tablet + phone projects): a
+    straight–tunnel–straight line placed via the dev handle, asserting the
+    tunnel GLB loads only on placement, a parked 🎺 toot, then a full ride
+    through the hill that stays riding and visibly moving on the far side —
+    console clean, zero external requests. Second test: a three-tunnel run
+    rides as one hill and the world round-trips through the real autosave
+    reload. Running the full suite also surfaced (and the fix shipped with
+    this task) a mobile regression from the toybox entry: the Rails tab's
+    fifth track toy overflowed the 360px phone shell — drawer panels now
+    wrap to a second row. Full suite 55 passed. *(commit 2c07411)*
+- [x] Task: CHANGELOG `[Unreleased]` — parent-readable tunnel bullet
+  - **Summary:** Four plain-language bullets under `[Unreleased]`: the
+    grassy tunnel hill and its disappear/reappear ride, end-to-end runs
+    becoming one long hill, the under-the-hill chug duck + whistle echo
+    with instant mute, the winter snow cap, and the night portal glow.
+    *(part of commit 2c07411)*
+- [x] Task: Final gates (`pnpm check`, e2e) + manual tablet checklist +
       phase checkpoint
+  - **Summary:** biome clean; `tsc --noEmit` clean; `pnpm test` 28 files /
+    375 tests; `pnpm build` green (tunnel GLB 34,444 bytes — target <~150
+    KB); full Playwright suite 55 passed across tablet/phone/prod.
+
+  **Verification Report — Phase 4 (2026-09-02):**
+  Automated: biome + typecheck clean; `pnpm test` 375 tests passed; build
+  green; `pnpm exec playwright test` 55 passed (tablet, phone, prod).
+  Manual: the full tablet checklist proposed (drag/snap/ghost-red, ride
+  through with no clipping, merged runs read as one hill, echo + instant
+  mute, winter snow cap, night portal glow, autosave round-trip, frame
+  feel). User confirmed the track complete (2026-09-02). Checkpoint at
+  2c07411.
