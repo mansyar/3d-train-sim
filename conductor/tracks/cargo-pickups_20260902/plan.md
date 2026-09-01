@@ -37,11 +37,21 @@
     `src/core/save.test.ts`, `src/state/persistence.test.ts`. Why: delivered
     crates must survive reloads, and the versioned-migration pattern from the
     river keeps old worlds safe.
-- [ ] Task: World store integration (`src/state/world.ts`, `persistence.ts`) —
+- [x] Task: World store integration (`src/state/world.ts`, `persistence.ts`) —
   delivery-count read/update API; relocate keeps count, remove drops it,
-  reset clears
+  reset clears (0f036d5)
   - Failing tests first: relocate/remove/reset semantics; hydrate from
     migrated save
+  - Notes: TDD red→green (9 world tests + 1 persistence test). Store gains
+    `deliveryCount(id)` (0 for unknown ids), `deliverCrate(id)` (capped via
+    `deliveredCountAfter`, notifies so autosave + live UI update together),
+    and a defensive-copy `deliveries()` reader. Relocating keeps the count
+    (ids are stable); `removeScenery` drops it; `reset` and `hydrate` swap
+    the whole ledger. `persistence.WorldReader` grew `deliveries()` so every
+    autosave carries the counts. Files: `src/state/world.ts`,
+    `src/state/world.test.ts`, `src/state/persistence.ts`,
+    `src/state/persistence.test.ts`. Why: the ride layer (Phase 3) needs one
+    store call per delivery, and the store is the single writer to the save.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Station Asset — Blender Recipe & Mounting
