@@ -228,3 +228,18 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
   mute, winter snow cap, night portal glow, autosave round-trip, frame
   feel). User confirmed the track complete (2026-09-02). Checkpoint at
   2c07411.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 6eca691
+  - **Summary:** conductor-review over `78b0846..HEAD` (iterative mode,
+    21 files): plan/style/testing/security all passed; two Medium findings
+    fixed — (1) the tunnel's snow cap now initializes from the live winter
+    state when the GLB loads late (previously a tunnel placed after snow
+    settled stayed bald until the weather gate flipped twice), and (2) the
+    yaw→compass-edge convention collapsed to one home (`nextEdge` exported
+    from track-graph), removing duplicates in `tunnels.ts` and the track
+    renderer's portal sync. Two Low notes (echo `rate` retunes all whistle
+    instances within the ≤440 ms window; `pieces.find` in the event-driven
+    portal sync) recorded as accepted. Gates after fixes: biome + tsc
+    clean, 375 tests passed, tunnel e2e green. *(commit 6eca691)*
