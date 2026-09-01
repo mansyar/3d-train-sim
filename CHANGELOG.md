@@ -9,6 +9,22 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+
+- **Tunnels! A grassy hill the train disappears into.** A chunky new tunnel
+  piece joins the track toybox. It snaps onto the layout like any straight,
+  and the train vanishes under the hill and pops out the far side — the
+  classic Brio anticipation moment. Line tunnels up end-to-end and they
+  become one long hill with arches only at the ends.
+- **Under-the-hill sounds.** While the train is inside a tunnel, the chug
+  gently softens and a toot of the whistle trails a soft echo, like a real
+  tunnel. The mute switch silences everything instantly, as always.
+- **A snow cap for winter.** When snow falls, the tunnel hill wears a white
+  crown; when the snow clears, it melts away.
+- **A warm glow at the portals at night.** At night, the engine's headlight
+  catches the tunnel arches as the train approaches — purely for the cosy
+  looks of it.
+
 ## [0.4.0] — 2026-08-31
 
 ### Added
