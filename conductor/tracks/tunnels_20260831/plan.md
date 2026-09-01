@@ -139,13 +139,40 @@ and manual verification; Phase 4 closes with e2e, docs, and final gates.
 
 ## Phase 3 - Ride Delight: Hidden Train, Echo, Night Portals
 
-- [ ] Task: Chug duck + whistle echo inside a tunnel run
-  - [ ] Reuse `setChugSoftened` for the inside-duck; synthesized echo tail on
+- [x] Task: Chug duck + whistle echo inside a tunnel run
+  - [x] Reuse `setChugSoftened` for the inside-duck; synthesized echo tail on
         inside whistles; mute-respecting
-- [ ] Task: Headlight portal glow at night
-  - [ ] Portal glow keyed to night factor + engine proximity to a tunnel
+  - **Summary:** TDD. Red: echo tests in `audio-controller.test.ts`
+    (two-tap tail, falling volume, plain whistle never echoes, mute between
+    taps silences instantly, taps die with dispose) and tunnel-coverage
+    tests in `ride-motion.test.ts` (enter/leave announced exactly once per
+    change, dispose reports open air). Green: `createRideMotion` gains an
+    `onTunnelChange` callback driven by `tunnelFlagsForPath` over the ride's
+    own steps (change-detected in `poseTrain`, reset on dispose); the scene
+    aggregates paused + in-tunnel rigs into the one shared
+    `setChugSoftened`, composing with the dead-end softening. Echo = two
+    quieter delayed replays of the same whistle voice (220 ms apart, gains
+    0.35/0.1225 — no new downloads), each tap re-checking mute/suspend/
+    dispose; `SoundHandle` gains optional per-instance `volume` (Howler
+    wired). The 🎺 button now routes through one scene entry point
+    (`tootWhistle`) so the answering train, its echo state, and its steam
+    puff stay coherent (`whistlePuff` retired from SceneHandle/AppOptions).
+    Gates: biome clean, tsc clean, 28 files / 375 tests (+10), build green.
+    *(part of commit 9a95438)*
+- [x] Task: Headlight portal glow at night
+  - [x] Portal glow keyed to night factor + engine proximity to a tunnel
         entry/exit (reuses `headlight.ts` conventions)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Summary:** TDD. Red: five `portalGlowAt` tests in `tunnels.test.ts`
+    (full strength at the mouth, distance fade, dark beyond radius, nearest
+    mouth wins and a wall-less merged seam never glows, dark with none).
+    Green: pure `portalGlowAt(portals, ex, ez, radius, out)` over a flat
+    [x, z, ...] cell-unit portal array — the scene rebuilds the cache from
+    `tunnelRunsOf` on world edits, so the per-frame scan allocates nothing
+    (spec NFR). Visual: new `portal-glow.ts` — one shared warm PointLight
+    (same 0xffe2a8 family as the headlight beam) parked at the nearest open
+    arch mouth, intensity = night × proximity, off in daylight / with no
+    tunnels. *(part of commit 9a95438)*
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 - Smoke, Docs & Final Verification
 
