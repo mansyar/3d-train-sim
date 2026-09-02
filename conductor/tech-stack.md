@@ -64,11 +64,13 @@ src/
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
-                     # pieces (tunnel.glb, station.glb, crate.glb) authored
-                     # in Blender
+                     # pieces (tunnel.glb, station.glb, crate.glb, and the
+                     # hill run hill-slope-up/hill-hill/hill-slope-down.glb +
+                     # their hill-snow-*.glb crowns) authored in Blender
 scripts/             # Blender build recipes for original assets — deterministic
                      # and re-runnable in any Blender session (e.g.
-                     # blender-tunnel.py, blender-station.py)
+                     # blender-tunnel.py, blender-station.py,
+                     # blender-hill-snow.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
@@ -77,10 +79,13 @@ conductor/          # project management source of truth
 
 ## Authoring original 3D assets in Blender
 
-The tunnel (`scripts/blender-tunnel.py` → `tunnel.glb`) and the station
+The tunnel (`scripts/blender-tunnel.py` → `tunnel.glb`), the station
 (`scripts/blender-station.py` → `station.glb` + the wagon-load `crate.glb`,
-whose named `station_crate_1..8` child nodes are toggled at runtime) are the
-reference implementations. Original pieces are **not hand-sculpted**: each asset has a
+whose named `station_crate_1..8` child nodes are toggled at runtime), and
+the hill run (`scripts/blender-hill-snow.py` → `hill-slope-up.glb`,
+`hill-hill.glb`, `hill-slope-down.glb` + the `hill-snow-*.glb` winter
+crowns, whose named `hill_snow_*` nodes toggle like the tunnel's snow cap)
+are the reference implementations. Original pieces are **not hand-sculpted**: each asset has a
 deterministic, checked-in Python recipe that builds and exports it, so a
 reset Blender session (or a new machine) can regenerate the asset exactly.
 Run it in any Blender session's Python console / scripting tab:

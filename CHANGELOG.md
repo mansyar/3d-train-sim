@@ -7,6 +7,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/); versions
 are `vX.Y.Z` git tags that trigger the release pipeline (see
 `conductor/tech-stack.md`).
 
+## [Unreleased]
+
+### Added
+
+- **Hills! The meadow gains real elevation.** Three chunky new pieces join
+  the track toybox: a rising slope, a grassy hilltop, and a falling slope.
+  Line them up and the train puffs its way up, cruises across the top of
+  the world, and coasts back down — the follow-camera goes along for the
+  ride. Hills snap together like straights, mix freely with flat track
+  (any little height differences at the joints get smoothed away with a
+  gentle ease, never a bump), and in winter the hilltops wear snow crowns
+  that melt away when the snow clears.
+
 ## [0.5.0] - 2026-09-02
 
 ### Added
