@@ -34,14 +34,27 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
-  - [ ] `pnpm check` (biome + typecheck + vitest)
-  - [ ] `pnpm exec playwright test` (e2e smoke)
-- [ ] Task: Local container smoke check
-  - [ ] `docker build` the image locally
-  - [ ] Run container; verify app loads, SPA fallback, cache headers
+- [x] Task: Run the full local gate suite (first run: 12 workers flaked 5
+      WebGL-parallelism tests; rerun at 2 workers green)
+  - [x] `pnpm check` (biome + typecheck + vitest)
+  - [x] `pnpm exec playwright test` (e2e smoke)
+  - Notes: `pnpm check` fully green (biome clean, `tsc --noEmit` clean,
+    404/404 Vitest tests). First Playwright run: 54/59 passed; 5 failures
+    were a local parallelism artifact — 10 workers exhausted GPU WebGL
+    contexts (`gl.getShaderPrecisionFormat` TypeError during renderer
+    init, clustered timeouts). All 5 passed on rerun with `--workers=2`
+    (35.9s). No `src/` changes in this track, so no product regression.
+- [x] Task: Local container smoke check
+  - [x] `docker build` the image locally
+  - [x] Run container; verify app loads, SPA fallback, cache headers
         (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed
         assets)
+  - Notes: Built `tiny-tracks:v0.5.0-local` (723.64 kB JS / 192.33 kB
+    gzip; PWA precache 141 entries / ~8.97 MB). Container smoke via curl:
+    `/` → 200 `text/html` `no-cache`; `/sw.js` → `no-cache`;
+    `/manifest.webmanifest` → `no-cache`; `/assets/index-azP8Dkrq.js` →
+    `public, max-age=31536000, immutable`; SPA fallback `/some/deep/route`
+    → 200 `text/html` `no-cache`. All as specified by `nginx.conf`.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - Tag & Ship
