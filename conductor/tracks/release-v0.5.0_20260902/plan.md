@@ -113,3 +113,11 @@ gates + smoke + checkpoints per `workflow.md`.
     pinned action versions (pre-existing since v0.4.0).
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) —
       checkpoint `62b64de`; release shipped per run 33585202265.
+
+## Phase 4 - Review Fixes
+
+- [x] Task: Apply review suggestions <cf7c26d>
+  - Notes: Restore the em-dash in the cargo-deliveries changelog bullet
+    ("confetti burst — and") that a section restore had turned into a
+    hyphen — the spec required verbatim note moves. Modified:
+    `CHANGELOG.md` only. Gates re-run after the fix (biome clean).
