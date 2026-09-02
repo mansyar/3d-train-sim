@@ -32,6 +32,9 @@ const resetAndBuild = (page: import('@playwright/test').Page) =>
   });
 
 test('wagons load, deliver, and the station keeps the count across a reload', async ({ page }) => {
+  // The poll below allows 45s, so the test itself must outlive it: on loaded
+  // CI runners the 30s default kills the test before a slow first lap lands.
+  test.setTimeout(90_000);
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
@@ -57,10 +60,9 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
   await page.click('.ride-toggle');
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
 
-  // Long enough for two station stops: the first loads, the second delivers.
-  // Then poll rather than read once: slow runners can stretch the first lap
-  // past any fixed wait, so a single read flakes with 0 deliveries.
-  await page.waitForTimeout(15000);
+  // Long enough for the first station stop (loads); the poll below waits for
+  // the delivery, so no fixed wait needs to cover two stops.
+  await page.waitForTimeout(8000);
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
 
   await expect
