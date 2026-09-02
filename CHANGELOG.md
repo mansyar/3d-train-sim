@@ -7,13 +7,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/); versions
 are `vX.Y.Z` git tags that trigger the release pipeline (see
 `conductor/tech-stack.md`).
 
-## [Unreleased]
+## [0.5.0] - 2026-09-02
 
 ### Added
 
 - **Cargo deliveries! The wagons are working freight cars now.** At the
   first station, chunky crates pop aboard both wagons; at the next stop
-  they come off in a little confetti burst — and the station's platform
+  they come off in a little confetti burst - and the station's platform
   keeps one delivered crate for every delivery, up to a cheerful pile of
   eight. Deliveries survive pauses and page reloads, so the meadow slowly
   fills up with your child's work. The station got a makeover to match the
@@ -113,7 +113,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mansyar/3d-train-sim/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/mansyar/3d-train-sim/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/mansyar/3d-train-sim/compare/v0.1.0...v0.2.0
