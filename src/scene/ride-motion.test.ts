@@ -23,7 +23,8 @@ function piece(
 }
 
 function step(from: Edge, to: Edge): PathStep {
-  return { pieceId: 'p', from, to };
+  // Flat test pieces: the natural step heights sit at grade.
+  return { pieceId: 'p', from, to, entryHeight: 0, exitHeight: 0 };
 }
 
 /** The cell-centre of (8, 8) — the river runs through the middle columns. */
