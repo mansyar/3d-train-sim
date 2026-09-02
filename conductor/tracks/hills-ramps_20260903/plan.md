@@ -119,15 +119,27 @@ verification; Phase 3 closes with e2e, docs, and final gates.
   - Render checks (real renders per house rule 6): side profile,
     three-quarter, winter (snow draping crest + upper slopes, rails poke
     through), and a kit-locomotive fit check at ×1.6 on the slope.
-- [ ] Task: Mount hills in `track-renderer.ts` (+ `init-scene.ts` weather
-      wiring)
-  - [ ] Real `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` for the three types
+- [x] Task: Mount hills in `track-renderer.ts` (+ `init-scene.ts` weather
+      wiring) [d016635]
+  - [x] Real `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` for the three types
         (direction convention: `slope-up` climbs south→north at yaw 0 —
         verify against the GLB with a render check, tunnel rule #3: size
         from the train)
-  - [ ] Snow shells: hidden at load, `setHillSnow(visible)` event-driven
+  - [x] Snow shells: hidden at load, `setHillSnow(visible)` event-driven
         toggle on the shared frozen gate (`FROZEN_SNOW`, same as
         tunnel/river ice)
+
+  Notes:
+  - Direction verified programmatically against the exported GLBs (vertex
+    slice of the rail lines): slope-up crowns at glTF z=0 (north, 0.2) and
+    grades at z=4 (south, −0.9); crest constant 0.2; slope-down mirrored —
+    so BASE_YAW 0 for all three, anchors unchanged [0,−1,2].
+  - Snow crowns load as separate shell GLBs, are scaled/anchored on the
+    piece's mount, attached to templates (and already-rendered pieces —
+    asset race safe) as hidden clones, and toggled via `setHillSnow` on
+    the same `base.snow >= FROZEN_SNOW` gate as the tunnel cap.
+  - Ghost previews inherit the crown through the template clone, so drag
+    previews wear snow in winter like the placed pieces.
 - [ ] Task: Ride height in the scene (`ride-motion.ts` / `init-scene.ts`)
   - [ ] Engine, wagons, and crates sample path step heights + the blend
         rule; chase camera follows position + height with existing easing;
