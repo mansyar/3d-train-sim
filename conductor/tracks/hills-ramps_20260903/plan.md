@@ -7,19 +7,35 @@ verification; Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Hill Pieces & Height Profiles (TDD)
 
-- [ ] Task: Add the three hill piece types (tests first in `pieces.test.ts`,
-      `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`)
-  - [ ] `PIECE_TYPES` gains `'slope-up' | 'hill' | 'slope-down'`;
+- [x] Task: Add the three hill piece types (tests first in `pieces.test.ts`,
+      `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`) [cd76450]
+  - [x] `PIECE_TYPES` gains `'slope-up' | 'hill' | 'slope-down'`;
         `BASE_ENDPOINTS` = `['north','south']` each (mirror the straight at
         all 4 rotations)
-  - [ ] Terrain rule: dry land only (default branch — assert
+  - [x] Terrain rule: dry land only (default branch — assert
         ghost-red-over-water via `validatePlacement`)
-  - [ ] Save round-trip: snapshot containing all three types; pre-hill
+  - [x] Save round-trip: snapshot containing all three types; pre-hill
         snapshots load unchanged; no version bump
-  - [ ] Catalog ripple: `drawer.ts` rails tab holds 8 pieces; renderer
+  - [x] Catalog ripple: `drawer.ts` rails tab holds 8 pieces; renderer
         placeholder maps (`BASE_YAW`/`KIT_ANCHORS`/`PIECE_URLS` → straight
         GLB until Phase 2); `ui/app.ts` labels + 3 hand-drawn SVG icons
         (rising slope, crowned hill, falling slope)
+
+  Notes:
+  - TDD: 8 new tests written first, confirmed red (8 failed / 404 passed),
+    then implemented to green (412/412 passing). The terrain-rule tests
+    passed immediately because `terrainErrorFor`'s default branch already
+    treats every non-bridge piece as dry-land-only — kept as regression
+    guards per spec.
+  - Kit GLB measurement (node script over POSITION accessors) confirmed the
+    spec's H ≈ 1.1: `railroad-straight-hill-complete` tops at y = 1.100,
+    `hill-beginning` at 1.071 vs the straight's 0.1 rail crown; module spans
+    4 units (z 0..4), 1.0 wide. H = 1.1 will be calibrated in elevation.ts.
+  - Files: `src/core/pieces.ts`, `src/core/drawer.ts`, `src/core/pieces.test.ts`,
+    `src/core/track-graph.test.ts`, `src/core/save.test.ts`,
+    `src/core/drawer.test.ts`, `src/scene/track-renderer.ts`, `src/ui/app.ts`.
+  - Gates: Biome clean, `tsc --noEmit` clean, coverage: pieces 100%,
+    drawer 100%, track-graph 100%, save 98.3% lines.
 - [ ] Task: New pure module `src/core/elevation.ts` (TDD: `elevation.test.ts`)
   - [ ] `heightAt(type, t)`: piecewise-linear profiles from the measured
         GLB geometry — `slope-up` 0→H, `hill` constant H, `slope-down` H→0;
