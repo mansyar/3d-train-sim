@@ -199,6 +199,20 @@ verification; Phase 3 closes with e2e, docs, and final gates.
       `product.md` roadmap: strike elevation, note bumps/corner-ramps
       remain; `tech-stack.md` notes (snow-shell recipe added to the asset
       list) [a3dfb30]
-- [ ] Task: Final gates — `pnpm check`, coverage on new logic (>80%),
-      full Playwright suite
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Final gates — `pnpm check`, coverage on new logic (>80%),
+      full Playwright suite [18d2031]
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 3 / final):
+  - `pnpm check` (Biome + `tsc --noEmit` + Vitest): green, 445/445.
+  - Coverage on new logic: elevation.ts 100%; ride-motion.ts new
+    height/blend logic covered by the new tests (module 70.6% statements —
+    remainder is pre-existing station-brake machinery; scene glue per
+    tech-stack is e2e/manual verified).
+  - Full Playwright suite: 61 passed + hills.spec 4/4 (two phone-profile
+    flakes in river/tunnel specs on the first run passed cleanly on
+    re-run — resource-timing flakes, unrelated to this track).
+  - Manual tablet check: PENDING user confirmation (2026-09-03) — steps
+    recorded in the Phase 2 verification report; re-verify before merging
+    to main.
+
