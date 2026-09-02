@@ -51,7 +51,9 @@ test('a placed hill run loads its GLBs and the train rides over the crest cleanl
 
   // The pieces' own GLBs arrive only when a hill is placed.
   await page.waitForFunction(() =>
-    performance.getEntriesByType('resource').some((entry) => entry.name.includes('hill-slope-up.glb')),
+    performance
+      .getEntriesByType('resource')
+      .some((entry) => entry.name.includes('hill-slope-up.glb')),
   );
   await page.waitForFunction(() =>
     performance.getEntriesByType('resource').some((entry) => entry.name.includes('hill-hill.glb')),

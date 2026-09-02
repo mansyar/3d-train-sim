@@ -1,5 +1,5 @@
-import { easedHeightAt, type RideSpan } from '../core/elevation';
 import type { Object3D } from 'three';
+import { easedHeightAt, type RideSpan } from '../core/elevation';
 import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import type { Edge } from '../core/track-graph';
@@ -591,14 +591,14 @@ export function createRideMotion(
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
       setInsideTunnel(false); // ...and nothing stays under the hill.
-    segments = [];
-    total = 0;
-    stops = [];
-    tunnelSteps = [];
-    spans = [];
-    reverseSpans = [];
-    forwardEntry = [];
-    backwardEntry = [];
+      segments = [];
+      total = 0;
+      stops = [];
+      tunnelSteps = [];
+      spans = [];
+      reverseSpans = [];
+      forwardEntry = [];
+      backwardEntry = [];
       armed.clear();
       stationStopTimer = 0;
       brakeTarget = null;
