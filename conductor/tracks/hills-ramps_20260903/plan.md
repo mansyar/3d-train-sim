@@ -76,9 +76,23 @@ verification; Phase 3 closes with e2e, docs, and final gates.
   - Blend rule: shipped inside the elevation.ts module (same red-green
     cycle, same commit as the profiles) — see the Task 2 notes for the
     RideSpan signature refinement.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 - Assets, Mounting & Scene Riding
+  Verification Report (Phase 1):
+  - Automated: `CI=true pnpm test` → 442/442 passing (31 files);
+    `pnpm exec biome check .` and `pnpm exec tsc --noEmit` clean;
+    coverage on new/changed logic — elevation.ts 100%, pieces.ts 100%,
+    drawer.ts 100%, pathing.ts 98.4% lines / 100% functions, save.ts
+    98.3% lines, track-graph.ts 100% lines.
+  - Manual verification steps: run `pnpm dev`, open on tablet/touch
+    emulation; Rails tab shows 8 pieces with the three new icons (rising
+    slope, crowned hill, falling slope); each snaps on land, ghosts red
+    over water, lifts/trashes like track; reload restores placed hills;
+    hill pieces render as straight placeholders and trains ride flat
+    until Phase 2 (expected at this checkpoint).
+  - User confirmation: yes (2026-09-03).
+
+## Phase 2 - Assets, Mounting & Scene Riding [checkpoint: 24c7c56]
 
 - [ ] Task: Snow-cap shells in Blender (house rules 1–8 from `tech-stack.md`)
   - [ ] Measure the three kit hill GLBs first (module length, rail line,
