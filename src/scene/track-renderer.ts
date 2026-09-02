@@ -61,6 +61,12 @@ const BASE_YAW: Record<PieceType, number> = {
   bridge: 0,
   // The tunnel rides like the straight it mirrors; the dome is yaw-symmetric.
   tunnel: 0,
+  // Placeholders until the kit hill GLBs mount (Phase 2): all ride like a
+  // straight; slope-up gets its base yaw when the model's climb direction
+  // is verified against the GLB.
+  'slope-up': 0,
+  hill: 0,
+  'slope-down': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -100,6 +106,11 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // The tunnel: same anchor as the straight it mirrors — the dome is authored
   // on the measured straight's mount, so rails meet neighbours flush.
   tunnel: [0, -1, 2],
+  // Placeholders until the kit hill GLBs mount (Phase 2): same anchor as the
+  // straight they mirror.
+  'slope-up': [0, -1, 2],
+  hill: [0, -1, 2],
+  'slope-down': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -111,6 +122,11 @@ const PIECE_URLS: Record<PieceType, string> = {
   // The Blender-authored dome: named nodes carry the portal arches and the
   // winter snow cap (toggled per piece in syncTunnelPortals / setTunnelSnow).
   tunnel: '/assets/train-kit/tunnel.glb',
+  // Placeholders until the kit hill GLBs mount (Phase 2): the straight GLB
+  // stands in so worlds containing hills still render.
+  'slope-up': '/assets/train-kit/railroad-straight.glb',
+  hill: '/assets/train-kit/railroad-straight.glb',
+  'slope-down': '/assets/train-kit/railroad-straight.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */

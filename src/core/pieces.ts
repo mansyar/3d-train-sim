@@ -1,5 +1,14 @@
-/** The piece catalog. The bridge spans the river; the tunnel rides under the hill. */
-export const PIECE_TYPES = ['straight', 'corner', 'crossing', 'bridge', 'tunnel'] as const;
+/** The piece catalog. The bridge spans the river; the tunnel rides under the hill; the hill run climbs it. */
+export const PIECE_TYPES = [
+  'straight',
+  'corner',
+  'crossing',
+  'bridge',
+  'tunnel',
+  'slope-up',
+  'hill',
+  'slope-down',
+] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
 
@@ -37,6 +46,12 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   // into the hill and pop out the far side; only its terrain rule differs
   // (dry land only: the river stays open, that's what bridges are for).
   tunnel: ['north', 'south'],
+  // The hill run rides exactly like the straight it mirrors — slope-up climbs
+  // south→north at yaw 0, hill cruises the crest, slope-down descends. Only
+  // the height profile (elevation.ts) and terrain rule differ (dry land only).
+  'slope-up': ['north', 'south'],
+  hill: ['north', 'south'],
+  'slope-down': ['north', 'south'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

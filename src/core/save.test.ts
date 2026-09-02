@@ -235,6 +235,70 @@ describe('tunnel snapshots', () => {
   });
 });
 
+describe('hill snapshots — additive piece types', () => {
+  const hillRun: PlacedPiece[] = [
+    { id: 'piece-h1', type: 'slope-up', cell: { x: 4, y: 4 }, rotation: 0 },
+    { id: 'piece-h2', type: 'hill', cell: { x: 4, y: 3 }, rotation: 180 },
+    { id: 'piece-h3', type: 'slope-down', cell: { x: 4, y: 2 }, rotation: 0 },
+  ];
+
+  it('round-trips a snapshot carrying the three hill types like any other piece', () => {
+    const snapshot = serializeWorld(hillRun, [], 'steam');
+
+    expect(snapshot.version).toBe(3); // additive types: no version bump
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: hillRun,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
+  });
+
+  it('restores a persisted pre-hill v3 snapshot verbatim — old worlds load untouched', () => {
+    const preHill = {
+      version: 3 as const,
+      pieces: [
+        { id: 'piece-1', type: 'straight', cell: { x: 2, y: 3 }, rotation: 0 },
+        { id: 'piece-2', type: 'tunnel', cell: { x: 2, y: 4 }, rotation: 0 },
+      ],
+      scenery: [],
+      train: 'tram' as const,
+    };
+
+    expect(deserializeWorld(preHill)).toEqual({
+      pieces: preHill.pieces,
+      scenery: [],
+      train: 'tram',
+      deliveries: {},
+    });
+  });
+
+  it('round-trips hill pieces at every rotation', () => {
+    const rotated: PlacedPiece[] = [
+      { id: 'piece-r1', type: 'slope-up', cell: { x: 1, y: 1 }, rotation: 90 },
+      { id: 'piece-r2', type: 'hill', cell: { x: 2, y: 1 }, rotation: 270 },
+      { id: 'piece-r3', type: 'slope-down', cell: { x: 3, y: 1 }, rotation: 180 },
+    ];
+
+    expect(deserializeWorld(serializeWorld(rotated, [], 'steam'))).toEqual({
+      pieces: rotated,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
+  });
+
+  it('keeps rejecting unknown piece types alongside the hill catalog', () => {
+    expect(
+      deserializeWorld({
+        version: 3,
+        pieces: [{ id: 'piece-1', type: 'rollercoaster', cell: { x: 0, y: 0 }, rotation: 0 }],
+        scenery: [],
+      }),
+    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+  });
+});
+
 describe('delivery snapshots — per-station crate counts', () => {
   const station: PlacedScenery = {
     id: 'scenery-1',

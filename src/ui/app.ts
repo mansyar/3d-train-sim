@@ -26,6 +26,9 @@ const PIECE_LABELS: Record<PieceType, string> = {
   crossing: 'Crossing track piece',
   bridge: 'Bridge track piece',
   tunnel: 'Tunnel track piece',
+  'slope-up': 'Rising slope track piece',
+  hill: 'Hilltop track piece',
+  'slope-down': 'Falling slope track piece',
 };
 
 /** Emoji stand-ins until the toys get their GLB thumbnails. */
@@ -108,6 +111,36 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
       <line x1="31" y1="43" x2="31" y2="36"
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+  // The hill run: a rising slope, the crowned crest, and the mirror descent —
+  // drawn as a chunky rail bed climbing left to right (rising), level (crest),
+  // and falling.
+  'slope-up': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 42 L46 12 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="4" y1="40" x2="44" y2="12"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="4" y1="45" x2="44" y2="17"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  hill: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 20 Q24 6 46 20 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M4 18 Q24 5 44 18" fill="none"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M4 24 Q24 11 44 24" fill="none"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  'slope-down': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 12 L46 42 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="4" y1="12" x2="44" y2="40"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="4" y1="17" x2="44" y2="45"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`,
 };
 

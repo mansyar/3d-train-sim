@@ -82,6 +82,18 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'tunnel')).toBeNull();
   });
 
+  it('rejects the hill run on river water — dry-land toys like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'slope-up')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'slope-down')).toBe('water');
+  });
+
+  it('accepts the hill run on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'slope-up')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'hill')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'slope-down')).toBeNull();
+  });
+
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {
     expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
     const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];
