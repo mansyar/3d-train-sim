@@ -32,7 +32,15 @@ gates + smoke + checkpoints per `workflow.md`.
     kept consistent with prior releases.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 - Local Pre-Tag Verification
+## Phase 2 - Local Pre-Tag Verification [checkpoint: ccdbc8e]
+
+> **Verification Report (2026-09-02):** Automated — `pnpm check` green
+> (biome, `tsc --noEmit`, 404/404 Vitest); Playwright 59/59 after a
+> `--workers=2` rerun of 5 GPU-contention flakes (10-worker first pass hit
+> WebGL context exhaustion; not a product regression — zero `src/` changes
+> in this track). Docker build + container smoke green (cache headers and
+> SPA fallback exactly per `nginx.conf`). Manual verification: user
+> reviewed the results table and confirmed "Yes, ship it" (2026-09-02).
 
 - [x] Task: Run the full local gate suite (first run: 12 workers flaked 5
       WebGL-parallelism tests; rerun at 2 workers green)
