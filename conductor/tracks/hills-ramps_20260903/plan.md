@@ -94,12 +94,31 @@ verification; Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 2 - Assets, Mounting & Scene Riding [checkpoint: 24c7c56]
 
-- [ ] Task: Snow-cap shells in Blender (house rules 1–8 from `tech-stack.md`)
-  - [ ] Measure the three kit hill GLBs first (module length, rail line,
+- [x] Task: Snow-cap shells in Blender (house rules 1–8 from `tech-stack.md`) [9f8dba6]
+  - [x] Measure the three kit hill GLBs first (module length, rail line,
         crest silhouette); author thin white crown shells in a dedicated
         collection; named nodes (`hill_snow_*` contract); deterministic
         recipe `scripts/blender-hill-snow.py`; export + verify GLB JSON
         chunk + render checks (target < ~15 KB each)
+
+  Notes:
+  - Deviation (documented per workflow): the kit's three "straight-hill"
+    GLBs are bare rail ramps — rails and sleepers with no terrain beneath
+    (meant to be sunk into user-built ground), and their joint heights
+    disagree (0.1/0.25 low ends, 1.071/1.1 high ends). Mounted as-is they
+    would float as ladders in the meadow, so the three pieces are
+    Blender-authored on the kit's own measurements (tunnel precedent):
+    grassy trapezoid embankments carrying the kit straight's warped
+    rails+sleepers, climbing the elevation.ts profiles exactly
+    (smoothstep-eased, grade crown −0.9 → crest crown 0.2 in model space,
+    KIT_ANCHOR [0,−1,2] convention), so wheels sit on real kit rails.
+  - Exports: hill-slope-up.glb / hill-hill.glb / hill-slope-down.glb
+    (50–57 KB, palette-textured kit rails + hill_grass mounds) and
+    hill-snow-*.glb shells (9–12 KB, under the 15 KB target) with
+    hill_snow_* named nodes, verified via GLB JSON chunk parse.
+  - Render checks (real renders per house rule 6): side profile,
+    three-quarter, winter (snow draping crest + upper slopes, rails poke
+    through), and a kit-locomotive fit check at ×1.6 on the slope.
 - [ ] Task: Mount hills in `track-renderer.ts` (+ `init-scene.ts` weather
       wiring)
   - [ ] Real `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` for the three types
