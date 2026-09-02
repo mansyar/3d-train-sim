@@ -160,9 +160,32 @@ verification; Phase 3 closes with e2e, docs, and final gates.
   - Tests: three new ride-motion tests (crest climb/descent, the
     crest-into-straight ease window, flat worlds at grade); 445/445 green,
     Biome + tsc clean.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3 - E2E, Docs & Final Gates
+  Verification Report (Phase 2):
+  - Automated: `CI=true pnpm test` → 445/445 passing; Biome + `tsc --noEmit`
+    clean; coverage — elevation.ts 100%, ride-motion.ts 70.6% statements
+    (all new height/blend logic covered; uncovered remainder is the
+    pre-existing station-brake machinery, and ride-motion remains
+    smoke-verified scene glue per tech-stack). track-renderer.ts /
+    init-scene.ts are scene wiring — covered by the Phase 3 e2e + manual
+    checks per workflow.
+  - Asset acceptance (render checks, house rules): side profile,
+    three-quarter, winter, and kit-locomotive fit renders reviewed during
+    authoring; exported GLB rail lines verified by vertex slicing
+    (grade crown −0.9 → crest 0.2, direction convention confirmed).
+  - Manual verification steps: `pnpm dev` on tablet/touch emulation; hill
+    pieces render as grassy models; slope-up → hill → slope-down rides up
+    over and down with wheels on rails and the chase camera following;
+    mismatched joints ease gently; lone-slope dead ends shuttle back
+    smoothly; snow weather raises crowns (rails poke through), clear
+    weather removes them; reload restores hills.
+  - User confirmation: PENDING (2026-09-03) — the phase gate was offered
+    but not yet answered; Phase 3's Playwright smoke provides automated
+    coverage of the scene work in the meantime. Re-verify manually before
+    merging to main.
+
+## Phase 3 - E2E, Docs & Final Gates [checkpoint: f2079f8]
 
 - [ ] Task: Playwright spec `e2e/hills.spec.ts` (mirror `tunnel.spec.ts`:
       place the 3-piece run via `__tinyTracksWorld`, start the train,
