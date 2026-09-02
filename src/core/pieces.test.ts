@@ -11,8 +11,17 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, bridge, and tunnel', () => {
-    expect([...PIECE_TYPES].sort()).toEqual(['bridge', 'corner', 'crossing', 'straight', 'tunnel']);
+  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, and the hill run', () => {
+    expect([...PIECE_TYPES].sort()).toEqual([
+      'bridge',
+      'corner',
+      'crossing',
+      'hill',
+      'slope-down',
+      'slope-up',
+      'straight',
+      'tunnel',
+    ]);
   });
 
   it('gives every piece a 1-cell footprint', () => {
@@ -43,6 +52,31 @@ describe('bridge piece geometry', () => {
     // Symmetric under 180°, same as the straight it mirrors.
     expect(endpointsFor('bridge', 180)).toEqual(['north', 'south']);
     expect(endpointsFor('bridge', 270)).toEqual(['east', 'west']);
+  });
+});
+
+describe('hill run piece geometry', () => {
+  it('joins opposite edges exactly like a straight — at every rotation', () => {
+    expect(endpointsFor('slope-up', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('slope-up', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('slope-up', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('slope-up', 270)).toEqual(['east', 'west']);
+    expect(endpointsFor('hill', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('hill', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('hill', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('hill', 270)).toEqual(['east', 'west']);
+    expect(endpointsFor('slope-down', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('slope-down', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('slope-down', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('slope-down', 270)).toEqual(['east', 'west']);
+  });
+
+  it('gives each hill piece exactly two endpoints at every rotation', () => {
+    for (const type of ['slope-up', 'hill', 'slope-down'] as const) {
+      for (const rotation of ALL_ROTATIONS) {
+        expect(endpointsFor(type, rotation)).toHaveLength(2);
+      }
+    }
   });
 });
 

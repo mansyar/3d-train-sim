@@ -1,3 +1,4 @@
+import { stepHeights } from './elevation';
 import { baseEndpointsFor } from './pieces';
 import {
   boundaryKey,
@@ -14,6 +15,14 @@ export interface PathStep {
   pieceId: string;
   from: Edge;
   to: Edge;
+  /**
+   * Natural heights above the flat rail plane at the step's entry and exit
+   * edges (elevation.ts). The ride layer eases any disagreement between a
+   * step's entry height and the height the train actually carries in; the
+   * graph itself stays height-blind — hills never alter connectivity.
+   */
+  entryHeight: number;
+  exitHeight: number;
 }
 
 /**
@@ -102,6 +111,7 @@ function invariant<T>(value: T | undefined, message: string): T {
 
 /** Connectivity the walk needs: partner lookup plus cell/degree helpers. */
 interface TrackGraph {
+  pieceOf(id: string): PlacedPiece;
   cellOf(id: string): Cell;
   endsOfPiece(id: string): End[];
   partnerOf: Map<string, Map<EdgeKey, End>>;
@@ -110,7 +120,8 @@ interface TrackGraph {
 
 function buildGraph(pieces: readonly PlacedPiece[]): TrackGraph {
   const byId = new Map(pieces.map((p) => [p.id, p] as const));
-  const cellOf = (id: string) => invariant(byId.get(id), `unknown piece ${id}`).cell;
+  const pieceOf = (id: string) => invariant(byId.get(id), `unknown piece ${id}`);
+  const cellOf = (id: string) => pieceOf(id).cell;
   const endsByPiece = new Map(pieces.map((p) => [p.id, endsOf(p)] as const));
   const endsOfPiece = (id: string) => invariant(endsByPiece.get(id), `unknown piece ${id}`);
 
@@ -140,6 +151,7 @@ function buildGraph(pieces: readonly PlacedPiece[]): TrackGraph {
   }
 
   return {
+    pieceOf,
     cellOf,
     endsOfPiece,
     partnerOf,
@@ -191,7 +203,7 @@ function minCellKeyOf(ids: readonly string[], cellOf: TrackGraph['cellOf']): str
  * deterministic bijection until the lap closes or an open end ends the pass.
  */
 function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
-  const { cellOf, endsOfPiece, partnerOf, degreeOf } = graph;
+  const { pieceOf, cellOf, endsOfPiece, partnerOf, degreeOf } = graph;
 
   const byStartCell = (a: string, b: string) =>
     cellKey(cellOf(a)).localeCompare(cellKey(cellOf(b)));
@@ -237,7 +249,15 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
         ? `piece ${curId} has a single end`
         : `piece ${curId} has no ${OPPOSITE_EDGE[curEntry]} end`,
     );
-    steps.push({ pieceId: curId, from: curEntry, to: exitEnd.edge });
+    const placed = pieceOf(curId);
+    const heights = stepHeights({ type: placed.type, rotation: placed.rotation, from: curEntry });
+    steps.push({
+      pieceId: curId,
+      from: curEntry,
+      to: exitEnd.edge,
+      entryHeight: heights.entry,
+      exitHeight: heights.exit,
+    });
 
     const partner = partnerOf.get(curId)?.get(exitEnd.key);
     if (!partner) break; // open end — the ride finished this pass

@@ -114,8 +114,20 @@ describe('solvePath — open layouts (zero dead ends, guaranteed ride)', () => {
     expect(path.closed).toBe(false);
     expect(path.steps.map((s) => s.pieceId)).toEqual(['a', 'b']);
     // The ride starts at a dead end, entering through the piece's open end.
-    expect(path.steps[0]).toEqual({ pieceId: 'a', from: 'west', to: 'east' });
-    expect(path.steps[1]).toEqual({ pieceId: 'b', from: 'west', to: 'east' });
+    expect(path.steps[0]).toEqual({
+      pieceId: 'a',
+      from: 'west',
+      to: 'east',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+    expect(path.steps[1]).toEqual({
+      pieceId: 'b',
+      from: 'west',
+      to: 'east',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
   });
 
   it('rides an L-shaped dead-end path through a corner', () => {
@@ -142,7 +154,9 @@ describe('solvePath — open layouts (zero dead ends, guaranteed ride)', () => {
     const path = solvePath(pieces);
 
     expect(path.closed).toBe(false);
-    expect(path.steps).toEqual([{ pieceId: 'lonely', from: 'north', to: 'east' }]);
+    expect(path.steps).toEqual([
+      { pieceId: 'lonely', from: 'north', to: 'east', entryHeight: 0, exitHeight: 0 },
+    ]);
   });
 
   it('returns a no-op path for an empty meadow', () => {
@@ -198,7 +212,13 @@ describe('solvePath — crossing (straight-through only)', () => {
     expect(path.closed).toBe(false);
     // Dead ends sort to the west arm (cell '0,0'), so the ride starts there.
     expect(path.steps.map((s) => s.pieceId)).toEqual(['w', 'x', 'e']);
-    expect(path.steps[1]).toEqual({ pieceId: 'x', from: 'west', to: 'east' });
+    expect(path.steps[1]).toEqual({
+      pieceId: 'x',
+      from: 'west',
+      to: 'east',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
   });
 
   it('exits opposite when entering from the north (deterministic start picks the north arm)', () => {
@@ -215,7 +235,13 @@ describe('solvePath — crossing (straight-through only)', () => {
 
     expect(path.closed).toBe(false);
     expect(path.steps.map((s) => s.pieceId)).toEqual(['n', 'x', 's']);
-    expect(path.steps[1]).toEqual({ pieceId: 'x', from: 'north', to: 'south' });
+    expect(path.steps[1]).toEqual({
+      pieceId: 'x',
+      from: 'north',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
   });
 
   it('treats an unconnected crossing edge as a dead end (pause + shuttle back)', () => {
@@ -227,8 +253,8 @@ describe('solvePath — crossing (straight-through only)', () => {
 
     expect(path.closed).toBe(false);
     expect(path.steps).toEqual([
-      { pieceId: 'n', from: 'north', to: 'south' },
-      { pieceId: 'x', from: 'north', to: 'south' },
+      { pieceId: 'n', from: 'north', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'x', from: 'north', to: 'south', entryHeight: 0, exitHeight: 0 },
     ]);
   });
 
@@ -240,7 +266,9 @@ describe('solvePath — crossing (straight-through only)', () => {
     expect(path.closed).toBe(false);
     // With four open ends the solver enters through the lowest-key open end
     // (west) — the exit MUST be the opposite edge, not just "another end".
-    expect(path.steps).toEqual([{ pieceId: 'x', from: 'west', to: 'east' }]);
+    expect(path.steps).toEqual([
+      { pieceId: 'x', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
+    ]);
   });
 });
 
@@ -276,8 +304,8 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
     // The full lap: 17 pieces with the crossing ridden twice.
     expect(path.steps).toHaveLength(18);
     expect(path.steps.filter((s) => s.pieceId === 'cx')).toEqual([
-      { pieceId: 'cx', from: 'north', to: 'south' },
-      { pieceId: 'cx', from: 'west', to: 'east' },
+      { pieceId: 'cx', from: 'north', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'cx', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
     ]);
 
     // Consecutive steps are physically connected, and the lap wraps: the
@@ -328,7 +356,7 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
     expect(path.closed).toBe(true);
     expect(path.steps).toHaveLength(12);
     expect(path.steps.filter((s) => s.pieceId === 'cx')).toEqual([
-      { pieceId: 'cx', from: 'west', to: 'east' },
+      { pieceId: 'cx', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
     ]);
   });
 
@@ -345,7 +373,110 @@ describe('solvePath — crossing re-entry (loops through one crossing twice)', (
     // Starts at the spur's dead end, rides through the crossing, and stops
     // at the crossing's open south face (the ride layer shuttles back).
     expect(path.steps.map((s) => s.pieceId)).toEqual(['tip', 'spur', 'cx']);
-    expect(path.steps[2]).toEqual({ pieceId: 'cx', from: 'north', to: 'south' });
+    expect(path.steps[2]).toEqual({
+      pieceId: 'cx',
+      from: 'north',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+  });
+});
+
+describe('solvePath — steps carry heights', () => {
+  it('annotates a hill run: climb, crest cruise, descent (natural per-piece heights)', () => {
+    // slope-up climbs south→north at yaw 0; the run spans (2,3) → (2,2) → (2,1).
+    const pieces = [
+      piece('up', 'slope-up', 2, 3, 0),
+      piece('crest', 'hill', 2, 2, 0),
+      piece('down', 'slope-down', 2, 1, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    // The deterministic walk starts at the smallest-cell dead end — the
+    // slope-down's north edge — and rides the run in reverse.
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['down', 'crest', 'up']);
+    expect(path.steps[0]).toEqual({
+      pieceId: 'down',
+      from: 'north',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 1.1,
+    });
+    expect(path.steps[1]).toEqual({
+      pieceId: 'crest',
+      from: 'north',
+      to: 'south',
+      entryHeight: 1.1,
+      exitHeight: 1.1,
+    });
+    expect(path.steps[2]).toEqual({
+      pieceId: 'up',
+      from: 'north',
+      to: 'south',
+      entryHeight: 1.1,
+      exitHeight: 0,
+    });
+  });
+
+  it('rides the hill crest at height in both directions around a loop', () => {
+    const pieces = [
+      piece('nw', 'corner', 0, 0, 90),
+      piece('top', 'hill', 1, 0, 90),
+      piece('ne', 'corner', 2, 0, 180),
+      piece('se', 'corner', 2, 1, 270),
+      piece('bottom', 'hill', 1, 1, 90),
+      piece('sw', 'corner', 0, 1, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(true);
+    const hillSteps = path.steps.filter((s) => s.pieceId === 'top' || s.pieceId === 'bottom');
+    for (const step of hillSteps) {
+      expect(step.entryHeight).toBeCloseTo(1.1, 6);
+      expect(step.exitHeight).toBeCloseTo(1.1, 6);
+    }
+    // Corners stay at grade.
+    const cornerSteps = path.steps.filter((s) => s.pieceId !== 'top' && s.pieceId !== 'bottom');
+    for (const step of cornerSteps) {
+      expect(step.entryHeight).toBe(0);
+      expect(step.exitHeight).toBe(0);
+    }
+  });
+
+  it('annotates a lone slope dead end with its climb (shuttle brings it back down)', () => {
+    const pieces = [piece('ramp', 'slope-up', 4, 4, 0)];
+
+    const path = solvePath(pieces);
+
+    // The walk enters through the lower-key open end — the north edge — so
+    // the step rides the slope reversed: crest first, grade on exit.
+    expect(path.steps[0]).toEqual({
+      pieceId: 'ramp',
+      from: 'north',
+      to: 'south',
+      entryHeight: 1.1,
+      exitHeight: 0,
+    });
+  });
+
+  it('keeps connectivity, ranking, and shuttling untouched by heights', () => {
+    // The same layout as the two-piece line test, with the straights swapped
+    // for hills: same traversal shape, only the heights differ.
+    const pieces = [piece('a', 'hill', 0, 0, 90), piece('b', 'hill', 1, 0, 90)];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(false);
+    expect(path.steps.map((s) => s.pieceId)).toEqual(['a', 'b']);
+    expect(path.steps[0]?.from).toBe('west');
+    for (const step of path.steps) {
+      expect(step.entryHeight).toBeCloseTo(1.1, 6);
+      expect(step.exitHeight).toBeCloseTo(1.1, 6);
+    }
   });
 });
 
@@ -430,8 +561,8 @@ describe('solveRidePaths — one path per connected component', () => {
     expect(paths.map((p) => p.closed)).toEqual([true, false]);
     // The line rides from its west dead end eastward.
     expect(paths[1]?.steps).toEqual([
-      { pieceId: 'line-1', from: 'west', to: 'east' },
-      { pieceId: 'line-2', from: 'west', to: 'east' },
+      { pieceId: 'line-1', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'line-2', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
     ]);
   });
 
@@ -441,7 +572,9 @@ describe('solveRidePaths — one path per connected component', () => {
     const paths = solveRidePaths(pieces);
 
     expect(paths).toHaveLength(2);
-    expect(paths[1]?.steps).toEqual([{ pieceId: 'lonely', from: 'north', to: 'east' }]);
+    expect(paths[1]?.steps).toEqual([
+      { pieceId: 'lonely', from: 'north', to: 'east', entryHeight: 0, exitHeight: 0 },
+    ]);
     expect(paths[1]?.closed).toBe(false);
   });
 
@@ -462,7 +595,13 @@ describe('solveRidePaths — one path per connected component', () => {
     expect(paths).toHaveLength(1);
     expect(paths[0]?.closed).toBe(false);
     expect(paths[0]?.steps.map((s) => s.pieceId)).toEqual(['w', 'x', 'e']);
-    expect(paths[0]?.steps[1]).toEqual({ pieceId: 'x', from: 'west', to: 'east' });
+    expect(paths[0]?.steps[1]).toEqual({
+      pieceId: 'x',
+      from: 'west',
+      to: 'east',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
   });
 });
 

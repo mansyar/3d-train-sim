@@ -52,8 +52,9 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 - ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
 - ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons (colors/other variants still roadmap)
 - Track switches and branches
-- ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it). Elevation remains roadmap.
-- ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow; elevation remains roadmap.
+- ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it).
+- ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow.
+- ~~Elevation~~ — ✅ shipped (hills-ramps_20260903, 2026-09-03): the meadow gains real height — a three-piece hill run (`slope-up` climbs, `hill` cruises the crest, `slope-down` descends) with gentle auto-blending at any joint, chase camera following over the top, and winter snow crowns. Still roadmap: `bump-up`/`bump-down` pieces, elevated corners/corner-ramps, and half-height cruise variants.
 - ~~Station cargo gameplay~~ — ✅ shipped (cargo-pickups_20260902, 2026-09-02): wagons load crates at a station and deliver at the next — confetti burst, and the station's platform (Kenney-matched restyle, Blender-authored) accumulates up to 8 delivered crates that persist in the save.
 - Time of day and weather
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug

@@ -20,4 +20,4 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `every-layout-rides_20260830`, `river-bridge_20260830`,
 `release-v0.3.0_20260830`, `perf-guardrails_20260830`,
 `release-v0.4.0_20260831`, `wagon-teleport-lap-wrap_20260831`, `tunnels_20260831`,
-`cargo-pickups_20260902`, `release-v0.5.0_20260902`.
+`cargo-pickups_20260902`, `release-v0.5.0_20260902`, `hills-ramps_20260903`.

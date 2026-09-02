@@ -61,6 +61,12 @@ const BASE_YAW: Record<PieceType, number> = {
   bridge: 0,
   // The tunnel rides like the straight it mirrors; the dome is yaw-symmetric.
   tunnel: 0,
+  // The hill run rides like the straight it mirrors: the climb direction is
+  // baked into the authored GLBs (slope-up climbs south→north at yaw 0,
+  // verified against the render check), so no extra base yaw applies.
+  'slope-up': 0,
+  hill: 0,
+  'slope-down': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -100,6 +106,12 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // The tunnel: same anchor as the straight it mirrors — the dome is authored
   // on the measured straight's mount, so rails meet neighbours flush.
   tunnel: [0, -1, 2],
+  // The hill run: authored on the straight's mount (kit anchor convention —
+  // the ride plane sits 0.1 above the origin's ground line), so rails meet
+  // neighbours flush at grade and at the crest height H above it.
+  'slope-up': [0, -1, 2],
+  hill: [0, -1, 2],
+  'slope-down': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -111,6 +123,24 @@ const PIECE_URLS: Record<PieceType, string> = {
   // The Blender-authored dome: named nodes carry the portal arches and the
   // winter snow cap (toggled per piece in syncTunnelPortals / setTunnelSnow).
   tunnel: '/assets/train-kit/tunnel.glb',
+  // Blender-authored on the kit's measurements (blender-hill-snow.py): the
+  // kit's own straight-hill GLBs are bare rail ramps, so these carry the
+  // kit straight's warped rails on grassy embankments riding elevation.ts.
+  'slope-up': '/assets/train-kit/hill-slope-up.glb',
+  hill: '/assets/train-kit/hill-hill.glb',
+  'slope-down': '/assets/train-kit/hill-slope-down.glb',
+};
+
+/**
+ * The winter snow crowns (blender-hill-snow.py), authored on each hill
+ * piece's mount: loaded separately and attached to their piece template as
+ * a hidden child, toggled event-driven by setHillSnow on the shared frozen
+ * gate (tunnel_snow_cap precedent).
+ */
+const HILL_SNOW_URLS: Partial<Record<PieceType, string>> = {
+  'slope-up': '/assets/train-kit/hill-snow-slope-up.glb',
+  hill: '/assets/train-kit/hill-snow-hill.glb',
+  'slope-down': '/assets/train-kit/hill-snow-slope-down.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
@@ -176,6 +206,8 @@ export interface TrackRenderer {
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** Drop the preview ghost and release its per-drag materials. */
   endGhost(): void;
+  /** Show/hide the hill run's winter snow crowns (event-driven, change-gated). */
+  setHillSnow(visible: boolean): void;
   /** The meadow cell under a screen point, or null off-meadow. */
   cellFromPoint(clientX: number, clientY: number): Cell | null;
   /** The screen-space center of a meadow cell, or null when off-camera. */
@@ -538,6 +570,38 @@ export function startTrackRenderer(
     }
   }
 
+  let hillSnow = false;
+  /** Loaded snow-crown scenes keyed by hill type (clones share geometry). */
+  const hillSnowShells: Partial<Record<PieceType, Object3D>> = {};
+
+  /** Attaches a hill's snow crown hidden-unless-snow-already-settled. */
+  function attachHillSnow(model: Object3D, type: PieceType): void {
+    const shell = hillSnowShells[type];
+    if (!shell) return;
+    const crown = shell.clone(true);
+    crown.visible = hillSnow;
+    enableCastShadows(crown);
+    model.add(crown);
+  }
+
+  /** Winter crowns on the hill run — the tunnel snow cap's sibling toggle. */
+  function setHillSnow(visible: boolean): void {
+    if (visible === hillSnow) return;
+    hillSnow = visible;
+    for (const type of Object.keys(HILL_SNOW_URLS) as PieceType[]) {
+      const setCrown = (model: Object3D): void => {
+        const crown = model.getObjectByName(`hill_snow_${type}`);
+        if (crown) crown.visible = visible;
+      };
+      const template = templates.get(type);
+      if (template) setCrown(template);
+      for (const [id, model] of rendered) {
+        const item = tracked.get(id);
+        if (item && isPiece(item) && item.type === type) setCrown(model);
+      }
+    }
+  }
+
   for (const type of PIECE_TYPES) {
     if (type === 'bridge') continue; // The trestle is procedural — built from the measured straight below.
     loader.load(
@@ -566,6 +630,10 @@ export function startTrackRenderer(
           const cap = model.getObjectByName('tunnel_snow_cap');
           if (cap) cap.visible = tunnelSnow;
         }
+        if (type in HILL_SNOW_URLS) {
+          // The crown may have landed before its piece template did.
+          attachHillSnow(model, type);
+        }
         if (type === 'straight') {
           // The trestle rides at the straight's measured rail height and
           // matches its track width — trains cross bridges exactly as high
@@ -582,6 +650,38 @@ export function startTrackRenderer(
         }
         templates.set(type, model);
         reconcile(); // Render items placed before the asset arrived.
+      },
+      undefined,
+      () => {
+        // Asset unavailable — the world keeps working, models stay absent.
+      },
+    );
+  }
+
+  // Hill snow crowns load separately from their pieces: authored on the
+  // same mount, so the piece's scale/anchor applies verbatim.
+  for (const type of Object.keys(HILL_SNOW_URLS) as PieceType[]) {
+    loader.load(
+      HILL_SNOW_URLS[type] as string,
+      (gltf) => {
+        if (disposed) {
+          disposeObject(gltf.scene);
+          return;
+        }
+        const scale = CELL_SIZE / KIT_MODULE_UNITS;
+        const [ax, ay, az] = KIT_ANCHORS[type];
+        gltf.scene.scale.setScalar(scale);
+        gltf.scene.position.set(-scale * ax, -scale * ay, -scale * az);
+        hillSnowShells[type] = gltf.scene;
+        // The template passes the crown to every future placement; hills
+        // already on the meadow get theirs directly (asset race, and the
+        // winter state at load time).
+        const template = templates.get(type);
+        if (template) attachHillSnow(template, type);
+        for (const [id, model] of rendered) {
+          const item = tracked.get(id);
+          if (item && isPiece(item) && item.type === type) attachHillSnow(model, type);
+        }
       },
       undefined,
       () => {
@@ -645,6 +745,7 @@ export function startTrackRenderer(
     setPieceVisible,
     setGridVisible,
     setTunnelSnow,
+    setHillSnow,
     dispose(): void {
       disposed = true;
       unsubscribe();
@@ -658,6 +759,10 @@ export function startTrackRenderer(
       tracked.clear();
       for (const template of templates.values()) disposeObject(template);
       templates.clear();
+      for (const shell of Object.values(hillSnowShells)) {
+        if (shell) disposeObject(shell); // Attached clones share geometry — idempotent.
+      }
+      for (const type of Object.keys(hillSnowShells) as PieceType[]) delete hillSnowShells[type];
       critterLife.dispose();
       animatedCritters.clear();
       scene.remove(gridLines);

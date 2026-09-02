@@ -23,7 +23,8 @@ function piece(
 }
 
 function step(from: Edge, to: Edge): PathStep {
-  return { pieceId: 'p', from, to };
+  // Flat test pieces: the natural step heights sit at grade.
+  return { pieceId: 'p', from, to, entryHeight: 0, exitHeight: 0 };
 }
 
 /** The cell-centre of (8, 8) — the river runs through the middle columns. */
@@ -270,6 +271,71 @@ describe('createRideMotion — the little train rides the solved path', () => {
       // Wagons never flip — their facing is untouched by the reversal.
       const yaw = ((wagon.rotation.y % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
       expect(Math.min(yaw, 2 * Math.PI - yaw)).toBeLessThan(0.1); // still southward
+    }
+    run.motion.dispose();
+  });
+});
+
+describe('createRideMotion — riding the hill run carries the train up and over', () => {
+  /** slope-up → hill → slope-down climbing south to north at (2,4) → (2,2). */
+  function hillRunWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('slope-up', { x: 2, y: 4 }, 0)).toBe('placed');
+    expect(world.place('hill', { x: 2, y: 3 }, 0)).toBe('placed');
+    expect(world.place('slope-down', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the hill run must solve to one ride component');
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  it('climbs onto the crest and back down to grade (wheels on the rails)', () => {
+    const { world, state } = hillRunWorld();
+    const run = startRide(world, state, 0);
+    // The ride starts at the run's north dead end (the slope-down's low edge)
+    // at grade.
+    expect(run.engine.position.y).toBeCloseTo(0, 5);
+    // One cell of travel puts the engine on the hill crest at HILL_HEIGHT.
+    run.motion.update(3.75 / 2.2 + 0.2);
+    expect(run.engine.position.y).toBeCloseTo(1.1, 1);
+    // And the descent returns it to grade.
+    run.motion.update(7.5 / 2.2);
+    expect(run.engine.position.y).toBeCloseTo(0, 1);
+    run.motion.dispose();
+  });
+
+  it('eases a crest-into-plain-straight mismatch instead of popping', () => {
+    const world = createWorldStore();
+    // A hill with a plain straight south of it: the walk starts at the hill's
+    // open north edge (the smaller cell), cruises the crest, then crosses the
+    // crest-into-straight joint carrying full height — the disagreement case.
+    expect(world.place('straight', { x: 3, y: 4 }, 0)).toBe('placed');
+    expect(world.place('hill', { x: 3, y: 3 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the layout must solve to one ride component');
+    const run = startRide(world, { ...component, direction: 1 }, 0);
+
+    // Ride to just past the joint, mid-blend-window: clearly off the ground,
+    // but not yet down at grade — an ease, never a pop.
+    run.motion.update(4.22 / 2.2);
+    const inWindow = run.engine.position.y;
+    expect(inWindow).toBeGreaterThan(0.05);
+    expect(inWindow).toBeLessThan(1.05);
+    // Past the window the train is back at grade on the plain straight.
+    run.motion.update(0.6);
+    expect(run.engine.position.y).toBeCloseTo(0, 1);
+    run.motion.dispose();
+  });
+
+  it('keeps flat worlds riding at grade through the same arithmetic', () => {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone straight must solve to one ride component');
+    const run = startRide(world, { ...component, direction: 1 }, 1);
+    for (let i = 0; i < 6; i += 1) {
+      run.motion.update(0.3);
+      expect(run.engine.position.y).toBe(0);
+      expect(run.followers[0]?.position.y).toBe(0);
     }
     run.motion.dispose();
   });
