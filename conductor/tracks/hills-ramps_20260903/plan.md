@@ -58,15 +58,24 @@ verification; Phase 3 closes with e2e, docs, and final gates.
     `easedHeightAt(prevExitHeight, span, t)` carry the step's rotation and
     entry edge in a `RideSpan` so direction (forward vs. reversed riding)
     stays deterministic inside the module rather than in every caller.
-- [ ] Task: Path steps carry heights (TDD: extend `pathing.test.ts`)
-  - [ ] `solvePath` annotates each step with entry/exit heights from
+- [x] Task: Path steps carry heights (TDD: extend `pathing.test.ts`) [ba32f09]
+  - [x] `solvePath` annotates each step with entry/exit heights from
         `elevation.ts`; connectivity/rank/shuttle unchanged; all existing
         path tests assert heights 0
-- [ ] Task: Gentle auto-blend rule (TDD)
-  - [ ] Pure `easedHeightAt(prevExitHeight, type, t)`: eases height
+- [x] Task: Gentle auto-blend rule (TDD) [e933bc3]
+  - [x] Pure `easedHeightAt(prevExitHeight, type, t)`: eases height
         disagreements over a bounded fraction of the step; covers
         hill-into-straight, slope-into-slope, lone-slope dead ends,
         reversed riding
+
+  Notes:
+  - Pathing: `PathStep` gained `entryHeight`/`exitHeight` (natural,
+    per-piece); existing step literals updated to assert 0/0, four new
+    hill annotation tests. 442/442 green; pathing.ts 100% lines; the ride
+    motion test helper constructs flat steps explicitly.
+  - Blend rule: shipped inside the elevation.ts module (same red-green
+    cycle, same commit as the profiles) — see the Task 2 notes for the
+    RideSpan signature refinement.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Assets, Mounting & Scene Riding
