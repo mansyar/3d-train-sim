@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [hills-ramps_20260903](tracks/hills-ramps_20260903/index.md) | Hills & Ramps (Elevation) | Feature | new |
+| [hills-ramps_20260903](tracks/hills-ramps_20260903/index.md) | Hills & Ramps (Elevation) | Feature | in progress |
 | [release-v0.5.0_20260902](archive/release-v0.5.0_20260902/index.md) | Release v0.5.0 | Chore | done |
 | [wagon-teleport-lap-wrap_20260831](archive/wagon-teleport-lap-wrap_20260831/index.md) | Wagon Teleport at the Lap Wrap (Bridge After Curve) | Bug | done |
 | [cargo-pickups_20260902](archive/cargo-pickups_20260902/index.md) | Station Cargo Pickups | Feature | done |
