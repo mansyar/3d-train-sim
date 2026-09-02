@@ -3,7 +3,13 @@
 Chore track — no logic-bearing code, so no TDD tasks; verification is
 gates + smoke + checkpoints per `workflow.md`.
 
-## Phase 1 - Changelog & Version Bump
+## Phase 1 - Changelog & Version Bump [checkpoint: 9662980]
+
+> **Verification Report (2026-09-02):** Phase changed only non-logic files
+> (`CHANGELOG.md`, `package.json`) — no unit tests required. Sanity check:
+> `node -e require('./package.json')` parsed with `version=0.5.0`. Manual
+> verification suggested (`git diff 14c28d4 -- CHANGELOG.md package.json`);
+> user confirmed "Yes, looks good" (2026-09-02).
 
 - [x] Task: Update `CHANGELOG.md` for v0.5.0 (d16d8b3)
   - [x] Move `## [Unreleased]` notes into `## [0.5.0] - 2026-09-02`
