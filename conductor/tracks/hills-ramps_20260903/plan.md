@@ -140,11 +140,26 @@ verification; Phase 3 closes with e2e, docs, and final gates.
     the same `base.snow >= FROZEN_SNOW` gate as the tunnel cap.
   - Ghost previews inherit the crown through the template clone, so drag
     previews wear snow in winter like the placed pieces.
-- [ ] Task: Ride height in the scene (`ride-motion.ts` / `init-scene.ts`)
-  - [ ] Engine, wagons, and crates sample path step heights + the blend
+- [x] Task: Ride height in the scene (`ride-motion.ts` / `init-scene.ts`) [f2079f8]
+  - [x] Engine, wagons, and crates sample path step heights + the blend
         rule; chase camera follows position + height with existing easing;
         overview unchanged; no per-frame allocations; quality tiers
         untouched
+
+  Notes:
+  - `poseAt` samples `easedHeightAt(entry, span, s)` per segment: s is
+    traversal progress from the entry edge (mirrored span when shuttling
+    back), and the carried height is the neighbour's natural exit
+    (precomputed per segment in beginRide — eased exits always land on the
+    natural profile at the window's end, so no per-frame chaining state).
+  - Dead-end flips stay pop-free: at the turnaround the backward entry
+    height equals the height the train already rests at.
+  - Camera: the chase already films `model.position`, so height tracking
+    needed no camera change; overview untouched. Quality tiers untouched;
+    per-frame cost is arithmetic only.
+  - Tests: three new ride-motion tests (crest climb/descent, the
+    crest-into-straight ease window, flat worlds at grade); 445/445 green,
+    Biome + tsc clean.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - E2E, Docs & Final Gates
