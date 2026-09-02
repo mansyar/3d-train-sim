@@ -195,10 +195,10 @@ verification; Phase 3 closes with e2e, docs, and final gates.
   - Two tests x tablet + phone profiles: crest transit (GLB loads, still
     riding, animation alive, zero external requests, clean console) and
     autosave reload with the run flanked by straights. 4/4 green.
-- [ ] Task: Docs — `CHANGELOG.md` `[Unreleased]` entry (parent-voice);
+- [x] Task: Docs — `CHANGELOG.md` `[Unreleased]` entry (parent-voice);
       `product.md` roadmap: strike elevation, note bumps/corner-ramps
       remain; `tech-stack.md` notes (snow-shell recipe added to the asset
-      list)
+      list) [a3dfb30]
 - [ ] Task: Final gates — `pnpm check`, coverage on new logic (>80%),
       full Playwright suite
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
