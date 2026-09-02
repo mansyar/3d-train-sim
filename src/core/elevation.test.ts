@@ -4,9 +4,9 @@ import {
   HILL_BLEND_FRACTION,
   HILL_HEIGHT,
   heightAt,
+  type RideSpan,
   rideHeightAt,
   stepHeights,
-  type RideSpan,
 } from './elevation';
 import { PIECE_TYPES, type PieceType, type Rotation } from './pieces';
 

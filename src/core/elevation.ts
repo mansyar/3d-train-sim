@@ -9,7 +9,7 @@
  * ride-frame helpers below map world-oriented steps onto it.
  */
 
-import { type Edge, type PieceType, type Rotation } from './pieces';
+import type { Edge, PieceType, Rotation } from './pieces';
 
 /** Hill crest height above the flat rail plane (kit rail line, from the GLBs). */
 export const HILL_HEIGHT = 1.1;
