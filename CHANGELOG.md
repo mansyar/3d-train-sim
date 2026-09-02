@@ -13,7 +13,7 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 - **Cargo deliveries! The wagons are working freight cars now.** At the
   first station, chunky crates pop aboard both wagons; at the next stop
-  they come off in a little confetti burst - and the station's platform
+  they come off in a little confetti burst — and the station's platform
   keeps one delivered crate for every delivery, up to a cheerful pile of
   eight. Deliveries survive pauses and page reloads, so the meadow slowly
   fills up with your child's work. The station got a makeover to match the
