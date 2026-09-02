@@ -1,3 +1,4 @@
+import { easedHeightAt, type RideSpan } from '../core/elevation';
 import type { Object3D } from 'three';
 import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
@@ -211,11 +212,24 @@ export function createRideMotion(
     onTunnelChange?.(next);
   };
 
+  /**
+   * Per-segment elevation data (built once per ride): the ride span each
+   * step crosses (plus its mirror for shuttling back), and the height the
+   * train carries into each end — so disagreeing joints ease gently via the
+   * core blend rule instead of popping (spec FR4). Flat worlds stay at 0
+   * through the same arithmetic — one code path, no hill branching.
+   */
+  let spans: RideSpan[] = [];
+  let reverseSpans: RideSpan[] = [];
+  let forwardEntry: number[] = [];
+  let backwardEntry: number[] = [];
+
   function beginRide(state: RideState): void {
     const byId = new Map(world.pieces().map((piece) => [piece.id, piece]));
     const flags = tunnelFlagsForPath(world.pieces(), state.path);
     segments = [];
     tunnelSteps = [];
+    const kept: { piece: PlacedPiece; step: PathStep }[] = [];
     const cells: Cell[] = [];
     let stepIndex = 0;
     for (const step of state.path.steps) {
@@ -224,10 +238,40 @@ export function createRideMotion(
         stepIndex += 1;
         continue; // Stale step — re-solves on the next start.
       }
+      kept.push({ piece, step });
       cells.push(piece.cell);
       segments.push(segmentForStep(piece, step));
       tunnelSteps.push(flags[stepIndex] === true);
       stepIndex += 1;
+    }
+    // Elevation bookkeeping: what each segment's ride span is, and the height
+    // the train carries into each end of it (the neighbour's natural exit —
+    // the blend rule's window always lands on the natural profile, so eased
+    // exits need no extra state).
+    spans = [];
+    reverseSpans = [];
+    forwardEntry = [];
+    backwardEntry = [];
+    const last = kept.length - 1;
+    for (let i = 0; i <= last; i++) {
+      const cur = kept[i];
+      if (!cur) continue;
+      const prev = kept[i - 1];
+      const next = kept[i + 1];
+      spans.push({ type: cur.piece.type, rotation: cur.piece.rotation, from: cur.step.from });
+      reverseSpans.push({
+        type: cur.piece.type,
+        rotation: cur.piece.rotation,
+        from: cur.step.to,
+      });
+      forwardEntry.push(
+        prev
+          ? prev.step.exitHeight
+          : last > 0 && state.path.closed
+            ? (kept[last]?.step.exitHeight ?? 0)
+            : cur.step.entryHeight,
+      );
+      backwardEntry.push(next ? next.step.entryHeight : cur.step.exitHeight);
     }
     total = 0;
     for (const segment of segments) total += segment.length;
@@ -368,7 +412,23 @@ export function createRideMotion(
       z += (tangentZ / tangentLen) * over;
     }
 
-    target.position.set(x, 0, z);
+    // Ride height: the natural profile along the segment, eased onto from the
+    // height carried across the entry edge — disagreeing joints blend gently
+    // over the core rule's bounded window, in both travel directions (spec
+    // FR4/FR5). Overhangs past the path ends hold the end height (level rails
+    // beyond the last sleeper).
+    const span = spans[segmentIndex];
+    let y = 0;
+    if (span) {
+      const forward = travelDirection === 1;
+      const entry = forward ? forwardEntry[segmentIndex] : backwardEntry[segmentIndex];
+      const eff = forward ? span : reverseSpans[segmentIndex];
+      if (entry !== undefined && eff) {
+        y = easedHeightAt(entry, eff, forward ? u : 1 - u);
+      }
+    }
+
+    target.position.set(x, y, z);
     // The locomotive's forward is -Z at yaw 0 (plus the kit's authored offset).
     target.rotation.y = Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET;
     return segmentIndex;
@@ -531,10 +591,14 @@ export function createRideMotion(
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
       setInsideTunnel(false); // ...and nothing stays under the hill.
-      segments = [];
-      total = 0;
-      stops = [];
-      tunnelSteps = [];
+    segments = [];
+    total = 0;
+    stops = [];
+    tunnelSteps = [];
+    spans = [];
+    reverseSpans = [];
+    forwardEntry = [];
+    backwardEntry = [];
       armed.clear();
       stationStopTimer = 0;
       brakeTarget = null;
