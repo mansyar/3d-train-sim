@@ -58,8 +58,24 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
 
   // Long enough for two station stops: the first loads, the second delivers.
+  // Then poll rather than read once: slow runners can stretch the first lap
+  // past any fixed wait, so a single read flakes with 0 deliveries.
   await page.waitForTimeout(15000);
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+
+  await expect
+    .poll(
+      async () =>
+        (await page.evaluate(
+          ([id]) =>
+            (
+              window as unknown as { __tinyTracksWorld?: WorldHandle }
+            ).__tinyTracksWorld?.deliveryCount(id),
+          [stationId] as const,
+        )) ?? 0,
+      { timeout: 45000, intervals: [2000] },
+    )
+    .toBeGreaterThanOrEqual(1);
 
   const count = await page.evaluate(
     ([id]) =>
@@ -68,7 +84,6 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
       ),
     [stationId] as const,
   );
-  expect(count ?? 0).toBeGreaterThanOrEqual(1);
 
   // The delivery survives a reload: the platform keeps its crate.
   await page.reload();

@@ -67,6 +67,15 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 3 - Tag & Ship
 
+- [x] Task (in-flight correction): Fix flaky cargo e2e delivery timing
+  - Notes: The tag-run Release workflow (run 33583780716) failed its e2e
+    smoke: `e2e/cargo.spec.ts` read the delivery counter once after a fixed
+    15 s wait and got 0 on both profiles on slow CI runners (the same test
+    flaked locally at 10 workers). Fix is test-only (no `src/` changes):
+    poll the counter with `expect.poll` (45 s timeout, 2 s intervals)
+    instead of a single read. Verified locally: biome + `tsc --noEmit`
+    clean; cargo spec 4/4 green on tablet+phone. Modified: `e2e/cargo.spec.ts`.
+    Why: the release must not gate on a timing-sensitive single read.
 - [ ] Task: Push branch, open PR "Release v0.5.0", merge to `main`
 - [ ] Task: Tag `v0.5.0` on the release merge commit and push the tag
 - [ ] Task: Watch the Release workflow to green
