@@ -36,13 +36,28 @@ verification; Phase 3 closes with e2e, docs, and final gates.
     `src/core/drawer.test.ts`, `src/scene/track-renderer.ts`, `src/ui/app.ts`.
   - Gates: Biome clean, `tsc --noEmit` clean, coverage: pieces 100%,
     drawer 100%, track-graph 100%, save 98.3% lines.
-- [ ] Task: New pure module `src/core/elevation.ts` (TDD: `elevation.test.ts`)
-  - [ ] `heightAt(type, t)`: piecewise-linear profiles from the measured
+- [x] Task: New pure module `src/core/elevation.ts` (TDD: `elevation.test.ts`) [e933bc3]
+  - [x] `heightAt(type, t)`: piecewise-linear profiles from the measured
         GLB geometry — `slope-up` 0→H, `hill` constant H, `slope-down` H→0;
         every existing type flat 0; H calibrated to the kit rail line
         (≈1.1)
-  - [ ] Pure + total: no three.js, deterministic, direction handled by
+  - [x] Pure + total: no three.js, deterministic, direction handled by
         per-piece progress (rotation-agnostic)
+
+  Notes:
+  - TDD: 26 tests written first (red: module missing), then implemented
+    (438/438 suite green). Gates clean; `elevation.ts` 100% coverage.
+  - Measured GLB rail-line profiles (vertex slicing, rail band |x| ≤ 0.4):
+    hill-beginning climbs 0.100 → 1.071, hill-complete 0.100 → 1.100,
+    hill-end 0.250 → 1.100, bump-up 0.100 → 0.599 → 0.100 — the kit's
+    "complete" is a ramp, not a plateau, so the plateau `hill` profile is
+    defined by this module per spec and the GLB→type mounting decision
+    (which asset stands in for the crest) is deferred to Phase 2's render
+    check, with the auto-blend covering any residual joint mismatch.
+  - API refinement: `rideHeightAt(span, t)` / `stepHeights(span)` /
+    `easedHeightAt(prevExitHeight, span, t)` carry the step's rotation and
+    entry edge in a `RideSpan` so direction (forward vs. reversed riding)
+    stays deterministic inside the module rather than in every caller.
 - [ ] Task: Path steps carry heights (TDD: extend `pathing.test.ts`)
   - [ ] `solvePath` annotates each step with entry/exit heights from
         `elevation.ts`; connectivity/rank/shuttle unchanged; all existing
