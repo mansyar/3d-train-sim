@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { endpointsFor, type Edge, type Rotation } from './pieces';
+import { type Edge, endpointsFor, type Rotation } from './pieces';
 import { nextBranch, routeSwitch } from './switches';
 
 const ALL_ROTATIONS: Rotation[] = [0, 90, 180, 270];

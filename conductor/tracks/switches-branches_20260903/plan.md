@@ -57,7 +57,7 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     follow it unchanged.
   - Session-only by contract: nothing here touches save.ts — counters are
     runtime state, each placed switch starts on the straight branch.
-- [ ] Task: Solver generalization to Y topologies (TDD: extend
+- [~] Task: Solver generalization to Y topologies (TDD: extend
       `pathing.test.ts`)
   - [ ] `walkComponent` handles 3-endpoint pieces via the routing rule:
         the ride becomes a periodic walk that covers both branches

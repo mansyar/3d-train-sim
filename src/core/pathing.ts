@@ -1,5 +1,6 @@
 import { stepHeights } from './elevation';
 import { baseEndpointsFor } from './pieces';
+import { routeSwitch } from './switches';
 import {
   boundaryKey,
   type Cell,
@@ -202,36 +203,12 @@ function minCellKeyOf(ids: readonly string[], cellOf: TrackGraph['cellOf']): str
  * the smallest cell entering through its lower-key end (cycle), then ride the
  * deterministic bijection until the lap closes or an open end ends the pass.
  */
-function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
-  const { pieceOf, cellOf, endsOfPiece, partnerOf, degreeOf } = graph;
-
-  const byStartCell = (a: string, b: string) =>
-    cellKey(cellOf(a)).localeCompare(cellKey(cellOf(b)));
-
-  let startId: string;
-  let entryEdge: Edge;
-  if (ids.some((id) => degreeOf(id) < 2)) {
-    // Open path or lone piece: start at a dead end (degree ≤ 1), entering
-    // through its open end, and ride inward.
-    const endpoints = ids.filter((id) => degreeOf(id) <= 1).sort(byStartCell);
-    startId = invariant(endpoints[0], 'path component without an endpoint');
-    const openEnds = endsOfPiece(startId)
-      .filter((end) => !partnerOf.get(startId)?.has(end.key))
-      .sort((a, b) => (a.key < b.key ? -1 : 1));
-    entryEdge = invariant(openEnds[0], 'endpoint without an open end').edge;
-  } else {
-    // Cycle: start at the smallest cell, entering through its lower-key end.
-    const sorted = ids.slice().sort(byStartCell);
-    startId = invariant(sorted[0], 'cycle component without pieces');
-    const connected = endsOfPiece(startId)
-      .filter((end) => partnerOf.get(startId)?.has(end.key))
-      .sort((a, b) => (a.key < b.key ? -1 : 1));
-    entryEdge = invariant(connected[0], 'cycle piece without connected ends').edge;
-  }
-
+function walkSimple(ids: readonly string[], graph: TrackGraph): TrainPath {
+  const { pieceOf, endsOfPiece, partnerOf } = graph;
+  const start = startOf(ids, graph);
   const steps: PathStep[] = [];
-  let curId = startId;
-  let curEntry: Edge = entryEdge;
+  let curId = start.startId;
+  let curEntry: Edge = start.entryEdge;
   let closed = false;
   for (;;) {
     const ends = endsOfPiece(curId);
@@ -240,16 +217,20 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
       `piece ${curId} has no ${curEntry} end`,
     );
     // Two-end pieces exit through their only other end; a crossing (four
-    // ends) routes straight through to the edge opposite the entry.
+    // ends) routes straight through to the edge opposite the entry; a switch
+    // rides its frozen straight-through routing (cap fallback only — live
+    // components take the alternating walk below).
+    const placed = pieceOf(curId);
     const exitEnd = invariant(
       ends.length === 2
         ? ends.find((end) => end.key !== entryEnd.key)
-        : ends.find((end) => end.edge === OPPOSITE_EDGE[curEntry]),
+        : placed.type === 'switch'
+          ? ends.find((end) => end.edge === routeSwitch(0, placed.rotation, curEntry).exit)
+          : ends.find((end) => end.edge === OPPOSITE_EDGE[curEntry]),
       ends.length === 2
         ? `piece ${curId} has a single end`
-        : `piece ${curId} has no ${OPPOSITE_EDGE[curEntry]} end`,
+        : `piece ${curId} has no exit for ${curEntry}`,
     );
-    const placed = pieceOf(curId);
     const heights = stepHeights({ type: placed.type, rotation: placed.rotation, from: curEntry });
     steps.push({
       pieceId: curId,
@@ -261,7 +242,7 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
 
     const partner = partnerOf.get(curId)?.get(exitEnd.key);
     if (!partner) break; // open end — the ride finished this pass
-    if (partner.pieceId === startId && partner.edge === entryEdge) {
+    if (partner.pieceId === start.startId && partner.edge === start.entryEdge) {
       closed = true; // back at the exact start state — the lap is complete
       break;
     }
@@ -275,6 +256,123 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
   }
 
   return { steps, closed };
+}
+
+/** Where a component's ride starts: the piece and the edge it enters by. */
+interface WalkStart {
+  startId: string;
+  entryEdge: Edge;
+}
+
+/** The deterministic start rule, shared by both walks — never array order. */
+function startOf(ids: readonly string[], graph: TrackGraph): WalkStart {
+  const { cellOf, endsOfPiece, partnerOf, degreeOf } = graph;
+
+  const byStartCell = (a: string, b: string) =>
+    cellKey(cellOf(a)).localeCompare(cellKey(cellOf(b)));
+
+  if (ids.some((id) => degreeOf(id) < 2)) {
+    // Open path or lone piece: start at a dead end (degree ≤ 1), entering
+    // through its open end, and ride inward.
+    const endpoints = ids.filter((id) => degreeOf(id) <= 1).sort(byStartCell);
+    const startId = invariant(endpoints[0], 'path component without an endpoint');
+    const openEnds = endsOfPiece(startId)
+      .filter((end) => !partnerOf.get(startId)?.has(end.key))
+      .sort((a, b) => (a.key < b.key ? -1 : 1));
+    return { startId, entryEdge: invariant(openEnds[0], 'endpoint without an open end').edge };
+  }
+  // Cycle: start at the smallest cell, entering through its lower-key end.
+  const sorted = ids.slice().sort(byStartCell);
+  const startId = invariant(sorted[0], 'cycle component without pieces');
+  const connected = endsOfPiece(startId)
+    .filter((end) => partnerOf.get(startId)?.has(end.key))
+    .sort((a, b) => (a.key < b.key ? -1 : 1));
+  return { startId, entryEdge: invariant(connected[0], 'cycle piece without connected ends').edge };
+}
+
+/** Beyond this many simulated steps the periodic walk falls back to frozen routing. */
+const SWITCH_WALK_STEP_CAP = 4096;
+
+/**
+ * The alternating walk for components containing a switch. The train is
+ * simulated exactly as the ride layer will play it — routing through each
+ * piece by its rules (switches by their live alternation counters), reversing
+ * in place at dead ends like the shuttle — and the walk stops when a full
+ * state (piece, entry edge, every switch counter) repeats. The steps between
+ * the two sightings are the periodic ride: one continuous, closed cycle that
+ * covers both branches of every switch (two loops ride as alternating laps;
+ * dead-end spurs ride out and shuttle back inside the cycle).
+ *
+ * Termination: the state space (pieces × 4 edges × 2^switches) is finite and
+ * the transition deterministic, so a cycle always exists; the step cap keeps
+ * even absurd layouts total, falling back to frozen straight-through routing.
+ */
+function walkAlternating(ids: readonly string[], graph: TrackGraph): TrainPath | null {
+  const { pieceOf, endsOfPiece, partnerOf } = graph;
+  const start = startOf(ids, graph);
+  const switchIds = ids.filter((id) => pieceOf(id).type === 'switch');
+  const counters = new Map<string, number>();
+  const stateKey = (pieceId: string, entry: Edge) =>
+    `${pieceId}|${entry}|${switchIds.map((id) => counters.get(id) ?? 0).join(',')}`;
+
+  const visited = new Map<string, number>();
+  const steps: PathStep[] = [];
+  let curId = start.startId;
+  let curEntry: Edge = start.entryEdge;
+  for (;;) {
+    const key = stateKey(curId, curEntry);
+    const seenAt = visited.get(key);
+    if (seenAt !== undefined) return { steps: steps.slice(seenAt), closed: true };
+    if (steps.length >= SWITCH_WALK_STEP_CAP) return null; // frozen fallback
+    visited.set(key, steps.length);
+
+    const ends = endsOfPiece(curId);
+    const placed = pieceOf(curId);
+    const entryEnd = invariant(
+      ends.find((end) => end.edge === curEntry),
+      `piece ${curId} has no ${curEntry} end`,
+    );
+    let routed: ReturnType<typeof routeSwitch> | null = null;
+    if (placed.type === 'switch') {
+      routed = routeSwitch(counters.get(curId) ?? 0, placed.rotation, curEntry);
+      counters.set(curId, routed.counter);
+    }
+    const exitEnd = invariant(
+      placed.type === 'switch'
+        ? ends.find((end) => end.edge === (routed?.exit ?? curEntry))
+        : ends.length === 2
+          ? ends.find((end) => end.key !== entryEnd.key)
+          : ends.find((end) => end.edge === OPPOSITE_EDGE[curEntry]),
+      `piece ${curId} has no exit for ${curEntry}`,
+    );
+    const heights = stepHeights({ type: placed.type, rotation: placed.rotation, from: curEntry });
+    steps.push({
+      pieceId: curId,
+      from: curEntry,
+      to: exitEnd.edge,
+      entryHeight: heights.entry,
+      exitHeight: heights.exit,
+    });
+
+    const partner = partnerOf.get(curId)?.get(exitEnd.key);
+    if (partner) {
+      curId = partner.pieceId;
+      curEntry = partner.edge;
+    } else {
+      curEntry = exitEnd.edge; // Dead end: the ride reverses into the same piece.
+    }
+  }
+}
+
+/**
+ * One ride per component. Components without switches keep the single-pass
+ * walk they have always had, byte for byte; a component with a switch gets
+ * its alternating periodic cycle (see `walkAlternating`), falling back to
+ * frozen routing only past the step cap. The solver never fails.
+ */
+function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
+  if (!ids.some((id) => graph.pieceOf(id).type === 'switch')) return walkSimple(ids, graph);
+  return walkAlternating(ids, graph) ?? walkSimple(ids, graph);
 }
 
 /**
