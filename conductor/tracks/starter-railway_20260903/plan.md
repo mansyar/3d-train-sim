@@ -27,7 +27,9 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
   - Notes: No refactor needed — builders already minimal via shared `rail`/`decor` helpers. Coverage 100% stmts/branch/funcs/lines on `starters.ts`. `tsc --noEmit` clean; `biome check --write` fixed import order + formatting only, tests still 7/7 after.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 — Undoable replace (state)
+## Phase 2 — Undoable replace (state) [checkpoint: 738794c058dea249d711165badfa75cef5fe3e75]
+
+- Verification Report: automated `pnpm test` → 34 files / 519 tests green; `world.ts` 94.25% lines. Manual: app boots/behaves unchanged (no UI wiring yet — correct), no console errors. User confirmed 2026-09-03.
 
 - Notes: `WorldStore.applyPreset(data)` swaps pieces/scenery/train/deliveries as ONE mutation (single notify → one autosave write) and arms single-undo with an exact snapshot restore (replacing any in-progress edit undo, like `hydrate()`). Red: 4 new tests failed (`applyPreset is not a function`); Green: 66/66 in `world.test.ts`. Coverage: `world.ts` 94.25% lines, `starters.ts` 100%. `tsc` + `biome` clean.
 - [x] Task: Failing tests for world-store preset replace [0f8e4fe]
