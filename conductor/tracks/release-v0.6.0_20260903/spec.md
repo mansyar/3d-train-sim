@@ -47,11 +47,17 @@ track *executes* it for v0.6.0.
    - Watch the Release workflow: gates green, image lands on
      `ghcr.io/mansyar/tiny-tracks:0.6.0` + `:latest`, Coolify webhook
      fires.
+6. **Release-blocker fix (approved rider, 2026-09-03):** Phase 2
+   verification found the five toybox tabs total ~508px in a
+   non-scrollable strip, so Town + Critters are unreachable at 360px
+   and `phone-shell` e2e fails deterministically. Fix CSS-only: all
+   five tabs fit and stay tappable at 360px with no behavior change.
 
 ## Non-Functional Requirements
 
-- No gameplay code touched; `src/` expected untouched (test-only deflake
-  allowed if CI flakes, as in v0.5.0).
+- Gameplay code untouched; `src/` holds only the approved tab-strip CSS
+  fix (plus the earlier test-only e2e format fix) — no logic, behavior,
+  or asset changes.
 - No secrets in the repo; deploy credentials remain GitHub Actions
   secrets only.
 
@@ -64,6 +70,8 @@ track *executes* it for v0.6.0.
 - [ ] Local Docker container serves the built app correctly.
 - [ ] Release workflow for `v0.6.0` is green end-to-end (gates → GHCR →
       Coolify webhook).
+- [ ] All five toybox tabs fit and are tappable at 360px wide
+      (release-blocker fix).
 - [ ] All quality gates remain green.
 
 ## Out of Scope
@@ -72,4 +80,5 @@ track *executes* it for v0.6.0.
   "workflow green = shipped").
 - Any changes to `release.yml`, the Dockerfile, or the deploy
   infrastructure.
-- New features, fixes, or polish riding along with the release.
+- New features, fixes, or polish riding along with the release —
+  exception: the approved tab-strip release-blocker fix (FR 6).

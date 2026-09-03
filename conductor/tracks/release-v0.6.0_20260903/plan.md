@@ -38,7 +38,24 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
+- [~] Task: Run the full local gate suite
+  - Acceptance: `pnpm check` green and the full Playwright e2e suite
+    green (rerun at `--workers=2` if GPU-context flakes recur).
+  - Progress: `pnpm check` green (biome clean after formatting-only
+    e2e fix 18a3969, tsc clean, 508/508 vitest). E2e 73/77: the 2 boot
+    timeouts are GPU flakes (pass at `--workers=2`); `phone-shell`
+    fails deterministically — real tab-strip overflow, fixed below.
+- [x] Task: Fit the drawer tab strip at 360px (release-blocker fix) (e89f775)
+  - Acceptance: all five `.drawer-tab` buttons lie within the viewport
+    at 360px wide, stay tappable (≥56px wide, 64px tall), no behavior
+    change; `phone-shell` e2e green.
+  - [x] Compact the tab strip on narrow screens (CSS media query,
+    matching existing style).
+  - Notes: Extended the existing `@media (max-width: 540px)` block in
+    `src/style.css`: `.drawer-tabs` gap 12px→6px, tabs `flex: 1 1 0`
+    with `min-width: 0` and tighter side padding — five even tabs of
+    ~58×68px at 360px, 64px height kept. `phone-shell` passes on phone
+    + tablet projects. Files: `src/style.css` (+12 lines) only.
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2`
         if GPU-context flakes recur per the v0.5.0 lesson)
