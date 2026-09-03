@@ -242,8 +242,17 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     exits, ride-motion onSwitchRoad); the e2e proves the ride survives
     the full cycle, which a broken branch could not.
   - 4/4 green: tablet 2 passed, phone 2 passed; biome + tsc clean.
-- [ ] Task: Docs — CHANGELOG (parent-voice), `product.md` roadmap strike,
-      `tech-stack.md` asset list + authoring reference
+- [x] Task: Docs — CHANGELOG (parent-voice), `product.md` roadmap strike,
+      `tech-stack.md` asset list + authoring reference [a75264d]
+
+  Notes:
+  - CHANGELOG Unreleased: parent-voice switches entry (Y-junction, two
+    ways out, blades flip, normal speed, old saves unchanged).
+  - product.md: roadmap strikes switches as shipped with out-of-scope
+    follow-ups (left-mirror, levers, double-slip/3-way).
+  - tech-stack.md: asset tree + recipe list gain `switch.glb` /
+    `blender-switch.py`; authoring paragraph notes the `switch_blades`
+    node contract (0 ↔ −0.21).
 - [ ] Task: Final gates — `pnpm check` (biome + tsc + vitest), coverage
       report on new core modules, full Playwright run
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
