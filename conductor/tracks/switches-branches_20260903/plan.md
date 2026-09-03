@@ -162,14 +162,28 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     scene ships a Cube/Camera/Light — `blender-switch.py` purges them
     before the render checks; the hills recipe never hit this because it
     ran inside an interactive session.
-- [ ] Task: Ride through the branch (extend `ride-motion.test.ts` where
-      logic-bearing; manual criteria otherwise)
-  - [ ] Within-piece geometry for the switch: stem edge → branch point →
+- [x] Task: Ride through the branch (extend `ride-motion.test.ts` where
+      logic-bearing; manual criteria otherwise) [ac4ed48]
+  - [x] Within-piece geometry for the switch: stem edge → branch point →
         chosen exit edge midpoint (straight or curved leg), matching the
         solver's `to` edge; no pause or slowdown at the points
-  - [ ] Runtime alternation: the ride advances the switch counter at each
+  - [x] Runtime alternation: the ride advances the switch counter at each
         stem entry and rides the chosen branch; wagons/crates follow
         through either branch
+
+  Notes:
+  - `segmentForStep` curves for switch when to != opposite(from)
+    (SE-pivot quarter-arc r=CELL/2, kit-corner geometry); straight
+    stem→north stays a line. No pause/slowdown at the points.
+  - `createRideMotion` builds per-ride switch choreography: per-segment
+    road (pieceId+exit), turnaround pauses where a step re-enters the
+    same piece reversed (dead-end bounce), wrap turnaround at the seam.
+    `poseTrain` announces road once per change via `onSwitchRoad`
+    (scene-side blade listener, zero per-frame cost).
+  - Tests: +5 (3 segment geometry S-N/S-E/N-E-rot180, Y-layout ride
+    stays on rails <0.02 engine/<0.03 wagon, onSwitchRoad alternates
+    north/east with no repeat/chatter). 19/19 ride-motion, 476/476
+    full suite, tsc clean.
 - [ ] Task: Renderer mounting + blade animation
   - [ ] `switch.glb` registered (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`);
         wheels sit on rails; materials match the kit
