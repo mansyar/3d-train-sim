@@ -8,18 +8,34 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Switch Semantics & Y-Topology Solver (TDD)
 
-- [~] Task: Add the `switch` piece type (tests first in `pieces.test.ts`,
-      `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`)
-  - [ ] `PIECE_TYPES` gains `'switch'`; `BASE_ENDPOINTS` = `['north',
+- [x] Task: Add the `switch` piece type (tests first in `pieces.test.ts`,
+      `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`) [3bb79a4]
+  - [x] `PIECE_TYPES` gains `'switch'`; `BASE_ENDPOINTS` = `['north',
         'east', 'south']` (yaw 0: stem south, straight branch north,
         diverging branch east — the spec's right-hand Y)
-  - [ ] Terrain rule: dry land only (regression-guard via
+  - [x] Terrain rule: dry land only (regression-guard via
         `validatePlacement`, ghost red over water)
-  - [ ] Save round-trip: snapshot containing a switch; pre-switch
+  - [x] Save round-trip: snapshot containing a switch; pre-switch
         snapshots load unchanged; no version bump
-  - [ ] Catalog ripple: `drawer.ts` rails tab holds 9 pieces; renderer
+  - [x] Catalog ripple: `drawer.ts` rails tab holds 9 pieces; renderer
         placeholder maps (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` → straight
         GLB until Phase 2); `ui/app.ts` label + hand-drawn SVG icon
+
+  Notes:
+  - TDD: 12 new tests written first, confirmed red (12 failed / 85 passed
+    in the touched files — all "unknown type" failures), then implemented
+    to green (456/456 across the full suite). Biome + tsc clean.
+  - Switch geometry: 3 endpoints, canonical order at every rotation
+    (0°: N/E/S — stem S, straight branch N, diverging branch E; 180°:
+    N/S/W, etc.). `endpointEdgesFor` keeps base order with advanced
+    labels (tunnel precedent), asserted at all 4 rotations.
+  - Save stays v3 (additive type string, hill precedent); round-trips at
+    every rotation; pre-switch v3 snapshots verbatim.
+  - Renderer placeholders: straight GLB, yaw 0, straight's KIT_ANCHOR —
+    replaced by the authored Y-junction in Phase 2.
+  - Files: `src/core/pieces.ts`, `src/core/drawer.ts`,
+    `src/core/{pieces,track-graph,save,drawer}.test.ts`,
+    `src/scene/track-renderer.ts`, `src/ui/app.ts`.
 - [ ] Task: New pure module `src/core/switches.ts` (TDD:
       `switches.test.ts`)
   - [ ] Entry→exit routing: stem entry → alternating branch (first pass
