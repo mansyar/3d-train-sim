@@ -253,6 +253,15 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - tech-stack.md: asset tree + recipe list gain `switch.glb` /
     `blender-switch.py`; authoring paragraph notes the `switch_blades`
     node contract (0 ↔ −0.21).
-- [ ] Task: Final gates — `pnpm check` (biome + tsc + vitest), coverage
+- [x] Task: Final gates — `pnpm check` (biome + tsc + vitest), coverage
       report on new core modules, full Playwright run
+
+  Notes:
+  - `pnpm check` clean: biome + tsc + 476/476 vitest (32 files).
+  - Coverage: switches.ts 100% all metrics; pathing.ts 99.31% lines
+    (only the unreachable step-cap fallback uncovered) — exceeds >80%.
+  - Playwright switches.spec.ts 4/4 (tablet + phone). Full suite: 64
+    passed, 3 smoke.spec.ts load-flakes (ambient frame rate, tap
+    rotate, diesel click) — all 3 pass in isolation, unrelated to
+    this track (smoke.spec.ts untouched).
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
