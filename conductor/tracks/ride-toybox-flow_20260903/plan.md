@@ -22,14 +22,22 @@ icons + e2e/docs. One phase at a time, sequential tasks.
     src/core/drawer.test.ts. Why: Rails tab held 9 toys wrapping to 2 rows
     on phones; ≤6 per panel keeps one row at 360px. Tests 10/10 green,
     drawer.ts 100% stmts/lines, tsc + biome clean.
-- [ ] Task: Ride-ready detector
-  - [ ] Red: new `src/core/ride-ready.test.ts` — `isRideable([])` false,
+- [x] Task: Ride-ready detector (42847f8)
+  - [x] Red: new `src/core/ride-ready.test.ts` — `isRideable([])` false,
     `isRideable([one])` true; `closesLoop(before, after)` true only when the
     new piece creates a graph cycle (straight line → false, closed oval →
     true), using `track-graph` connections.
-  - [ ] Green: new `src/core/ride-ready.ts` — minimal pure fns, no three.js,
+  - [x] Green: new `src/core/ride-ready.ts` — minimal pure fns, no three.js,
     no per-frame work (runs on edit only).
-  - [ ] Verify: coverage >80% for `ride-ready.ts`.
+  - [x] Verify: coverage >80% for `ride-ready.ts`.
+  - Notes: Red failed on missing module as expected; Green added
+    isRideable/hasCycle (union-find over connectionsFor)/closesLoop.
+    Simplified find (no path compression — 64-piece cap, edit-time only)
+    for 100% line coverage. Files: src/core/ride-ready.ts,
+    src/core/ride-ready.test.ts. Why: pure edit-time detector keeps the
+    render loop allocation-free while giving app.ts a one-call celebration
+    signal. Tests 11/11 green, ride-ready.ts 95% stmts / 100% lines,
+    tsc + biome clean.
 - [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
 
 ## Phase 2 — Ride-mode rail + celebration (UI glue, no unit tests)
