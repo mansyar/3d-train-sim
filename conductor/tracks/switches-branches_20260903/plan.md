@@ -36,14 +36,27 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - Files: `src/core/pieces.ts`, `src/core/drawer.ts`,
     `src/core/{pieces,track-graph,save,drawer}.test.ts`,
     `src/scene/track-renderer.ts`, `src/ui/app.ts`.
-- [~] Task: New pure module `src/core/switches.ts` (TDD:
-      `switches.test.ts`)
-  - [ ] Entry→exit routing: stem entry → alternating branch (first pass
+- [x] Task: New pure module `src/core/switches.ts` (TDD:
+      `switches.test.ts`) [85bc07e]
+  - [x] Entry→exit routing: stem entry → alternating branch (first pass
         straight, then diverging); branch entry → stem; total for every
         entry edge
-  - [ ] Per-switch alternation counter: pure state machine
+  - [x] Per-switch alternation counter: pure state machine
         (advance-on-use semantics per spec FR2, reverse passes included);
         session-only by contract — never serialized
+
+  Notes:
+  - TDD: 9 tests written first (red: module missing), then implemented —
+    `switches.ts` 100% line/branch/function coverage.
+  - API: `routeSwitch(counter, rotation, from)` → `{ exit, counter }`
+    (world-oriented edges in and out; rotation mapping kept inside the
+    module, RideSpan precedent from elevation.ts) and `nextBranch(counter)`
+    for the scene's blade state. Counter is a two-state machine folded mod
+    2; stem entries advance it, branch entries never touch it — the rule
+    is entry-based and direction-agnostic, so shuttling (reverse) passes
+    follow it unchanged.
+  - Session-only by contract: nothing here touches save.ts — counters are
+    runtime state, each placed switch starts on the straight branch.
 - [ ] Task: Solver generalization to Y topologies (TDD: extend
       `pathing.test.ts`)
   - [ ] `walkComponent` handles 3-endpoint pieces via the routing rule:
