@@ -7,14 +7,21 @@ icons + e2e/docs. One phase at a time, sequential tasks.
 
 ## Phase 1 — Logic: drawer split + ride-ready detect (TDD)
 
-- [ ] Task: Drawer 4 → 5 tabs
-  - [ ] Red: extend `src/core/drawer.test.ts` — Rails holds
+- [x] Task: Drawer 4 → 5 tabs (0ffc42e)
+  - [x] Red: extend `src/core/drawer.test.ts` — Rails holds
     straight/corner/crossing only; new `adventure` tab holds
     bridge/tunnel/slope-up/hill/slope-down/switch with icon 🌉 and aria
     `Adventure toys`; order rails, adventure, nature, town, critter.
-  - [ ] Green: update `src/core/drawer.ts` (`DRAWER_TABS`, `TAB_FOR_KIND`,
+  - [x] Green: update `src/core/drawer.ts` (`DRAWER_TABS`, `TAB_FOR_KIND`,
     `TAB_ICONS`, `TAB_ARIA`).
-  - [ ] Verify: `CI=true pnpm test -- --coverage` covers `drawer.ts` >80%.
+  - [x] Verify: `CI=true pnpm test -- --coverage` covers `drawer.ts` >80%.
+  - Notes: Red wrote 10 drawer tests (5 failed as expected); Green split
+    DRAWER_TABS 4→5, retargeted TAB_FOR_KIND adventure kinds, added 🌉 icon
+    + aria, and routed drawerTabs() grouping via tabForKind so adventure
+    pieces land on their own tab. Files: src/core/drawer.ts,
+    src/core/drawer.test.ts. Why: Rails tab held 9 toys wrapping to 2 rows
+    on phones; ≤6 per panel keeps one row at 360px. Tests 10/10 green,
+    drawer.ts 100% stmts/lines, tsc + biome clean.
 - [ ] Task: Ride-ready detector
   - [ ] Red: new `src/core/ride-ready.test.ts` — `isRideable([])` false,
     `isRideable([one])` true; `closesLoop(before, after)` true only when the
