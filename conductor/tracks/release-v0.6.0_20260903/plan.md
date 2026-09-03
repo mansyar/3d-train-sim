@@ -106,7 +106,7 @@ gates + smoke + checkpoints per `workflow.md`.
   - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.6.0` +
         `:latest`
   - [ ] Coolify webhook fired; production serves the new build
-- [x] Task: Phase Verification & Checkpoint (checkpoint-sha)
+- [x] Task: Phase Verification & Checkpoint (79c5634)
   - Verification Report (2026-09-03): Release run 33746893151 fully
     green — gates 8m22s (full gate + tablet E2E smoke), publish 1m0s
     (image `:0.6.0` + `:latest`, Coolify webhook fired). Tag `v0.6.0`
