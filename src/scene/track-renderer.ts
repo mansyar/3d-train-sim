@@ -67,7 +67,9 @@ const BASE_YAW: Record<PieceType, number> = {
   'slope-up': 0,
   hill: 0,
   'slope-down': 0,
-  // Placeholder until the switch model lands (Phase 2): rides like a straight.
+  // The switch rides like the straight it mirrors in yaw: stem south,
+  // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
+  // correctly with no extra base yaw (verified in the render checks).
   switch: 0,
 };
 
@@ -114,8 +116,10 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   'slope-up': [0, -1, 2],
   hill: [0, -1, 2],
   'slope-down': [0, -1, 2],
-  // Placeholder until the switch model lands (Phase 2): same anchor as the
-  // straight it will mirror (authored on the kit's straight mount).
+  // The switch: authored on the straight's mount (blender-switch.py —
+  // through-road is the kit straight's own rails, diverge is the kit
+  // corner's rails rotated onto the SE-pivot arc), so the same anchor
+  // lands both roads' ends on their edge midpoints flush with neighbours.
   switch: [0, -1, 2],
 };
 
@@ -134,8 +138,10 @@ const PIECE_URLS: Record<PieceType, string> = {
   'slope-up': '/assets/train-kit/hill-slope-up.glb',
   hill: '/assets/train-kit/hill-hill.glb',
   'slope-down': '/assets/train-kit/hill-slope-down.glb',
-  // Placeholder until the Blender-authored Y-junction lands (Phase 2).
-  switch: '/assets/train-kit/railroad-straight.glb',
+  // Blender-authored Y-junction (blender-switch.py): kit straight rails
+  // for the through-road + kit corner rails for the diverging road on the
+  // kit mount, with a named `switch_blades` node the renderer flips.
+  switch: '/assets/train-kit/switch.glb',
 };
 
 /**
@@ -227,6 +233,8 @@ export interface TrackRenderer {
   setGridVisible(visible: boolean): void;
   /** Winter tell: show/hide the tunnel domes' snow caps (event-driven). */
   setTunnelSnow(visible: boolean): void;
+  /** Flip a switch's point blades to the chosen road (event-driven). */
+  setSwitchRoad(pieceId: string, exit: Edge): void;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -362,6 +370,70 @@ export function startTrackRenderer(
         if (slot) slot.visible = i <= count;
       }
     }
+  }
+
+  /**
+   * Point blades flip to the road the train will take: 0 (through) or
+   * -0.21 rad (diverge) about the blades node's local Y — the Blender
+   * +z angle from blender-switch.py arrives as glTF +y via export_yup
+   * (verified: -0.21 in the render checks reads as diverge). Stem merges
+   * (world exit = stem) keep the last branch — only stem entries
+   * alternate, so only north/east-model exits move the blades.
+   * Event-driven (ride-motion onSwitchRoad): a short ease-out tween,
+   * instant snap under prefers-reduced-motion, no per-frame cost outside
+   * the tween.
+   */
+  const BLADE_THROUGH_Y = 0;
+  const BLADE_DIVERGE_Y = -0.21;
+  const BLADE_TWEEN_MS = 180;
+  const bladeTweens = new Map<
+    string,
+    { node: Object3D; from: number; to: number; start: number }
+  >();
+  let bladeRaf: number | null = null;
+
+  const runBladeTweens = (now: number): void => {
+    for (const [id, tween] of [...bladeTweens]) {
+      const t = (now - tween.start) / BLADE_TWEEN_MS;
+      if (t >= 1) {
+        tween.node.rotation.y = tween.to;
+        bladeTweens.delete(id);
+      } else {
+        const eased = 1 - (1 - t) * (1 - t) * (1 - t);
+        tween.node.rotation.y = tween.from + (tween.to - tween.from) * eased;
+      }
+    }
+    bladeRaf = bladeTweens.size > 0 ? requestAnimationFrame(runBladeTweens) : null;
+  };
+
+  function setSwitchRoad(pieceId: string, exit: Edge): void {
+    const item = tracked.get(pieceId);
+    if (!item || !isPiece(item) || item.type !== 'switch') return;
+    const model = rendered.get(pieceId);
+    if (!model) return;
+    const blades = model.getObjectByName('switch_blades');
+    if (!blades) return;
+    // World exit -> model exit (yaw 0 frame): model north = through,
+    // model east = diverge. Invert the yaw advance applied at mount.
+    const steps = item.rotation / 90;
+    let modelExit: Edge = exit;
+    for (let i = 0; i < (4 - steps) % 4; i++) modelExit = nextEdge(nextEdge(nextEdge(modelExit)));
+    const target =
+      modelExit === 'north' ? BLADE_THROUGH_Y : modelExit === 'east' ? BLADE_DIVERGE_Y : null;
+    if (target === null) return; // a branch→stem merge keeps the last branch
+    if (Math.abs(blades.rotation.y - target) < 1e-4 && !bladeTweens.has(pieceId)) return;
+    if (reducedMotion || disposed) {
+      blades.rotation.y = target;
+      bladeTweens.delete(pieceId);
+      return;
+    }
+    bladeTweens.set(pieceId, {
+      node: blades,
+      from: blades.rotation.y,
+      to: target,
+      start: performance.now(),
+    });
+    if (bladeRaf === null) bladeRaf = requestAnimationFrame(runBladeTweens);
   }
 
   /** Keeps the critter animator's roster matched to the placed critters. */
@@ -753,12 +825,16 @@ export function startTrackRenderer(
     setGridVisible,
     setTunnelSnow,
     setHillSnow,
+    setSwitchRoad,
     dispose(): void {
       disposed = true;
       unsubscribe();
       endGhost();
       if (popRaf !== null) cancelAnimationFrame(popRaf);
       popRaf = null;
+      if (bladeRaf !== null) cancelAnimationFrame(bladeRaf);
+      bladeRaf = null;
+      bladeTweens.clear();
       for (const pop of pops) scene.remove(pop.model);
       pops.length = 0;
       for (const model of rendered.values()) scene.remove(model);
