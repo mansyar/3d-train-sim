@@ -6,7 +6,7 @@ solver generalization to Y topologies. Phase 2 is asset + scene riding
 (Blender recipe, renderer mount, blade animation, within-piece branch
 geometry). Phase 3 closes with e2e, docs, and final gates.
 
-## Phase 1 - Core: Switch Semantics & Y-Topology Solver (TDD)
+## Phase 1 - Core: Switch Semantics & Y-Topology Solver (TDD) [checkpoint: 3e4acf4]
 
 - [x] Task: Add the `switch` piece type (tests first in `pieces.test.ts`,
       `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`) [3bb79a4]
@@ -101,6 +101,29 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - Ride-layer contract for Phase 2: reversal steps (piece re-entered,
     `from` == previous step's `to`) need a facing flip at turnarounds;
     blade state = each switch's counter during the ride.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 1):
+  - Automated: `CI=true pnpm test` → 471/471 passing (32 files);
+    `pnpm exec biome check .` and `pnpm exec tsc --noEmit` clean;
+    coverage on new/changed logic — switches.ts 100% (all metrics),
+    pathing.ts 97.7% lines / 97.9% functions (uncovered lines = the
+    unreachable step-cap fallback), pieces.ts 100%, drawer.ts 100%
+    lines, track-graph.ts 96.3% lines (pre-existing gaps), save.ts
+    98.3% lines.
+  - Phase scope: every logic-bearing changed file carries tests;
+    `track-renderer.ts` / `ui/app.ts` changes are non-logic catalog
+    placeholders (straight GLB, label, SVG icon) verified by the gates.
+  - Manual verification steps: run `pnpm dev`, open on tablet/touch
+    emulation; Rails tab shows 9 pieces with the new switch icon; the
+    switch snaps on land, ghosts red over water, lifts/trashes like
+    track; reload restores it. Switches render as straight placeholders
+    and ride placeholder geometry until Phase 2 (hills-checkpoint
+    precedent).
+  - User confirmation: PENDING — the phase-gate question received no
+    user response (2026-09-03); proceeded per session autonomy
+    guidance. Not treated as approval; confirm at the next gate or in
+    review.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Asset, Mounting & Scene Riding
