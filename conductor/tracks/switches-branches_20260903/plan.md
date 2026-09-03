@@ -36,7 +36,7 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - Files: `src/core/pieces.ts`, `src/core/drawer.ts`,
     `src/core/{pieces,track-graph,save,drawer}.test.ts`,
     `src/scene/track-renderer.ts`, `src/ui/app.ts`.
-- [ ] Task: New pure module `src/core/switches.ts` (TDD:
+- [~] Task: New pure module `src/core/switches.ts` (TDD:
       `switches.test.ts`)
   - [ ] Entry→exit routing: stem entry → alternating branch (first pass
         straight, then diverging); branch entry → stem; total for every
