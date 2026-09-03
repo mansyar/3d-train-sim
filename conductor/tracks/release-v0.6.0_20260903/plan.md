@@ -5,7 +5,15 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 1 - Changelog & Version Bump
 
-- [ ] Task: Update `CHANGELOG.md` for v0.6.0
+- [x] Task: Update `CHANGELOG.md` for v0.6.0 (c497578)
+  - Acceptance: `## [Unreleased]` is empty; new dated `## [0.6.0] -
+    2026-09-03` section holds the four Added bullets verbatim; compare
+    links refreshed and repo-correct (`mansyar/3d-train-sim`).
+  - Notes: Moved the Unreleased Added block (toybox flow, oops-proof,
+    switches, hills) verbatim under the new dated heading; Unreleased
+    left empty. Compare links: added `v0.5.0...v0.6.0`, re-pointed
+    Unreleased to `v0.6.0...HEAD`, all on `mansyar/3d-train-sim`.
+    Files: `CHANGELOG.md` only.
   - [ ] Move `## [Unreleased]` notes verbatim into `## [0.6.0] - 2026-09-03`
   - [ ] Parent-readable bullets kept verbatim: tidier toybox + ride-button
         cheer, oops-proof take-back button, switches Y-junction, hills
@@ -13,7 +21,12 @@ gates + smoke + checkpoints per `workflow.md`.
   - [ ] Refresh compare links (`v0.5.0...v0.6.0`, Unreleased →
         `v0.6.0...HEAD`); keep them on `mansyar/3d-train-sim`; leave
         `## [Unreleased]` empty
-- [ ] Task: Bump `package.json` version to `0.6.0`
+- [x] Task: Bump `package.json` version to `0.6.0` (63a06ec)
+  - Acceptance: `package.json` version reads `0.6.0`, matching the
+    eventual `v0.6.0` tag.
+  - Notes: Single-line version bump; verified no other in-repo version
+    references needed changing (remaining `0.5.0` strings are history,
+    compare links, and archive docs). Files: `package.json` only.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Local Pre-Tag Verification
