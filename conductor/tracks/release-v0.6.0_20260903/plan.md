@@ -38,13 +38,15 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [~] Task: Run the full local gate suite
+- [x] Task: Run the full local gate suite (bac1e25)
   - Acceptance: `pnpm check` green and the full Playwright e2e suite
     green (rerun at `--workers=2` if GPU-context flakes recur).
   - Progress: `pnpm check` green (biome clean after formatting-only
     e2e fix 18a3969, tsc clean, 508/508 vitest). E2e 73/77: the 2 boot
     timeouts are GPU flakes (pass at `--workers=2`); `phone-shell`
     fails deterministically — real tab-strip overflow, fixed below.
+  - Notes: Full suite re-run at `--workers=2` after the tab fix:
+    **77/77 green** (~5min). Gate suite complete.
 - [x] Task: Fit the drawer tab strip at 360px (release-blocker fix) (e89f775)
   - Acceptance: all five `.drawer-tab` buttons lie within the viewport
     at 360px wide, stay tappable (≥56px wide, 64px tall), no behavior
@@ -59,7 +61,17 @@ gates + smoke + checkpoints per `workflow.md`.
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2`
         if GPU-context flakes recur per the v0.5.0 lesson)
-- [ ] Task: Local container smoke check
+- [x] Task: Local container smoke check (plan-commit-sha)
+  - Acceptance: local `docker build` succeeds; running container
+    serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
+    `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
+    back to `index.html` — all per `nginx.conf`.
+  - Notes: `docker build -t tiny-tracks:0.6.0 .` green (JS bundle
+    742.78kB / gzip 196.83kB; precache 148 entries / ~9.03MB — up from
+    v0.5.0's 141/~8.97MB with hill+switch assets, expected). Curl
+    smoke all as specified: `/` 200 html no-cache; `/sw.js` no-cache;
+    manifest no-cache; hashed JS immutable; unknown route → index.html
+    200 no-cache. Container stopped/removed.
   - [ ] `docker build` the image locally
   - [ ] Run container; verify app loads, SPA fallback, cache headers
         (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed
