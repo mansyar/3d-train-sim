@@ -94,6 +94,45 @@ body {
   background: var(--toy-orange);
 }
 
+/* The ▶ button's invitation — a gentle halo glow once the meadow turns
+   rideable (box-shadow only, so the button's box never moves: taps and
+   automated clicks always land), and a one-shot happy pop when a drop
+   closes a loop. */
+.ride-toggle.is-ready-pulse {
+  animation: ride-pulse 1.6s ease-in-out infinite;
+}
+
+.ride-toggle.pop {
+  animation: ride-pop 0.45s ease-out;
+}
+
+@keyframes ride-pulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 0 var(--toy-brown);
+  }
+
+  50% {
+    box-shadow:
+      0 4px 0 var(--toy-brown),
+      0 0 0 10px rgba(255, 255, 255, 0.55);
+  }
+}
+
+@keyframes ride-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 .ride-toggle.is-dimmed {
   opacity: 0.4;
 }
@@ -243,9 +282,18 @@ body {
 
 .drawer-panel {
   display: flex;
-  flex-wrap: wrap; /* Five+ track toys wrap to a second row on phones. */
+  flex-wrap: nowrap; /* One scrollable row: the 6-toy Adventure panel swipes
+     sideways on phones instead of wrapping over the meadow. Drags starting
+     on a toy still place it (slots keep touch-action: none); swipes starting
+     on the gaps scroll. */
   gap: 16px;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-inline: auto;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  width: max-content;
 }
 
 .drawer-panel[hidden] {
@@ -284,12 +332,16 @@ body {
   border-radius: 20px;
   box-shadow: 0 4px 0 var(--toy-brown);
   cursor: grab;
-  font-size: 40px;
-  line-height: 1;
   min-height: 72px;
   min-width: 72px;
   padding: 10px;
   touch-action: none;
+}
+
+.scenery-slot svg {
+  display: block;
+  height: 44px;
+  width: 44px;
 }
 
 .scenery-slot.is-dimmed {
@@ -326,11 +378,16 @@ body {
   border-radius: 20px;
   box-shadow: 0 4px 0 var(--toy-brown);
   cursor: pointer;
-  font-size: 40px;
   min-height: 72px;
   min-width: 72px;
   padding: 10px;
   touch-action: manipulation;
+}
+
+.train-slot svg {
+  display: block;
+  height: 44px;
+  width: 44px;
 }
 
 .train-slot[aria-pressed='true'] {
@@ -583,6 +640,12 @@ body {
   .rotate-bounce {
     animation: none;
     display: none;
+  }
+
+  /* The invitation stays still — and never hides the ▶ button itself. */
+  .ride-toggle.is-ready-pulse,
+  .ride-toggle.pop {
+    animation: none;
   }
 
   /* The bin may still grow, but it never pulses. */

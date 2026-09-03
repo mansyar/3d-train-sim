@@ -11,6 +11,15 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ### Added
 
+- **A tidier toybox and a ride button that cheers them on.** The track
+  drawer now has five picture tabs — Rails, Adventure, Nature, Town, and
+  Critters — so little hands find the right toy faster, and every toy and
+  train button is a chunky drawn picture (no more emoji boxes). The moment
+  the first track lands, the green ▶ button glows as an invitation, and
+  closing a loop earns a happy pop with a ding. Pressing ▶ tucks all the
+  building tools away so nothing can be bumped mid-ride; ⏹ brings them
+  right back with the railway exactly as it was.
+
 - **Oops-proof building! A take-back button for little accidents.** A chunky
   ↩️ button joins the bottom bar whenever the meadow changes: one tap takes
   back the very last move — a placed track, a moved tree, a toy dropped in

@@ -1,5 +1,6 @@
 import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
+import { closesLoop } from '../core/ride-ready';
 import { isWater } from '../core/river';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import {
@@ -32,17 +33,109 @@ const PIECE_LABELS: Record<PieceType, string> = {
   switch: 'Switch track piece',
 };
 
-/** Emoji stand-ins until the toys get their GLB thumbnails. */
+/** Chunky inline SVGs in the PIECE_ICONS construction: 48×48 viewBox,
+ * `var(--toy-*)` fills, brown outlines, steel accents. No emoji in kid UI. */
 const SCENERY_ICONS: Record<SceneryKind, string> = {
-  tree: '🌳',
-  bush: '🌿',
-  rock: '🪨',
-  house: '🏠',
-  cottage: '🛖',
-  station: '🚉',
-  pig: '🐷',
-  sheep: '🐑',
-  pug: '🐶',
+  // A round-canopy tree on a stubby trunk.
+  tree: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="21" y="28" width="6" height="14" rx="2" fill="var(--toy-brown)"/>
+      <circle cx="24" cy="18" r="14" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="13" r="4" fill="var(--toy-cream)" opacity=".5"/>
+    </svg>`,
+  // A low garden bush — all canopy, no trunk.
+  bush: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="24" cy="30" rx="17" ry="12" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="17" cy="27" r="3.5" fill="var(--toy-cream)" opacity=".5"/>
+    </svg>`,
+  // A chunky boulder with a sunlit edge.
+  rock: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 40 L14 20 L30 14 L42 26 L39 40 Z" fill="var(--toy-steel)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="17" y1="24" x2="28" y2="20" stroke="var(--toy-cream)"
+            stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    </svg>`,
+  // A gabled house with an orange roof and a brown door.
+  house: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="12" y="20" width="24" height="20" rx="2" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M6 22 L24 6 L42 22 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="21" y="29" width="6" height="11" rx="1" fill="var(--toy-brown)"/>
+    </svg>`,
+  // The cottage: round walls, mossy roof, porthole window.
+  cottage: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="11" y="22" width="26" height="18" rx="8" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M5 24 Q24 4 43 24 Z" fill="var(--toy-green)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="24" cy="31" r="5" fill="var(--toy-steel)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
+  // The station: orange signboard, clock face, steel platform.
+  station: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="10" y="14" width="28" height="18" rx="2" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <rect x="6" y="8" width="36" height="7" rx="3" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="24" cy="23" r="5" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <rect x="10" y="32" width="28" height="6" rx="2" fill="var(--toy-steel)"
+            stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
+  // A round piggy: orange head, cream snout, perky ears.
+  pig: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M14 15 L10 5 L21 10 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M34 15 L38 5 L27 10 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="24" cy="26" r="15" fill="var(--toy-orange)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="21" r="2" fill="var(--toy-brown)"/>
+      <circle cx="30" cy="21" r="2" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="30" rx="6" ry="5" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="22" cy="30" r="1.2" fill="var(--toy-brown)"/>
+      <circle cx="26" cy="30" r="1.2" fill="var(--toy-brown)"/>
+    </svg>`,
+  // A woolly sheep: cream puffs around a brown face.
+  sheep: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="15" cy="19" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="24" cy="14" r="8" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="33" cy="19" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="17" cy="28" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="31" cy="28" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <ellipse cx="24" cy="32" rx="7" ry="6" fill="var(--toy-brown)"/>
+      <circle cx="22" cy="31" r="1.2" fill="var(--toy-cream)"/>
+      <circle cx="26" cy="31" r="1.2" fill="var(--toy-cream)"/>
+    </svg>`,
+  // A pug: orange crunch-face, cream muzzle, floppy brown ears.
+  pug: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="13" cy="22" rx="5" ry="9" fill="var(--toy-brown)"/>
+      <ellipse cx="35" cy="22" rx="5" ry="9" fill="var(--toy-brown)"/>
+      <circle cx="24" cy="24" r="14" fill="var(--toy-orange)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="20" r="1.8" fill="var(--toy-brown)"/>
+      <circle cx="30" cy="20" r="1.8" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="30" rx="7" ry="6" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="24" cy="27" r="2.2" fill="var(--toy-brown)"/>
+    </svg>`,
 };
 
 const PIECE_ICONS: Record<PieceType, string> = {
@@ -172,7 +265,7 @@ const toySlot = (kind: PieceType | SceneryKind): string =>
     : `<button class="scenery-slot" type="button" data-scenery="${kind}"
               aria-label="${sceneryAria(kind)}">${SCENERY_ICONS[kind]}</button>`;
 
-/** The four chunky tabs (Rails / Nature / Town / Critters) of the toybox. */
+/** The five chunky tabs (Rails / Adventure / Nature / Town / Critters) of the toybox. */
 const TOY_TABS = drawerTabs();
 const tabStrip = TOY_TABS.map(
   (tab) => `<button class="drawer-tab" type="button" data-tab="${tab.id}"
@@ -284,7 +377,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     button.dataset.train = kind;
     button.setAttribute('aria-label', trainAria(kind));
     button.setAttribute('aria-pressed', String(options.world.train() === kind));
-    button.textContent = trainIcon(kind);
+    button.innerHTML = trainIcon(kind);
     trainDrawer.append(button);
   }
   root.append(trainDrawer);
@@ -292,7 +385,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('toybox chrome missing from app frame');
   }
 
-  // ---- Tabbed toybox drawer (Rails / Nature / Town / Critters) -----------
+  // ---- Tabbed toybox drawer (Rails / Adventure / Nature / Town / Critters) -----------
   // One tab active at a time; the drawer itself is one of the three
   // toybox drawers (toys / trains) — never two at once.
   const tabButtons = new Map(
@@ -330,6 +423,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // One drawer open at a time — the toybox flips between toys and trains.
   // The single 🧸 toggle remembers the tab you were on (Rails first time).
   const setDrawer = (which: 'toys' | 'trains' | null) => {
+    // Mid-ride the drawers stay shut — the rail hides their triggers, and a
+    // ride that begins with one open closes it.
+    if (riding && which !== null) return;
     const openToys = which === 'toys';
     const openTrains = which === 'trains';
     drawer.toggleAttribute('hidden', !openToys);
@@ -375,12 +471,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // A just-pressed placed toy, awaiting either a tap (rotate in place) or
   // enough movement to become a relocate drag. null when idle.
   let pressed: { picked: PickedItem; startX: number; startY: number } | null = null;
+  // Whether trains are rolling. Declared up top so every build entry point
+  // below can refuse work mid-ride; the scene pushes the real value.
+  let riding = false;
 
   // Pressing a placed toy does NOT lift it yet: a release without movement is
   // a rotate tap, and only movement past TAP_DRAG_PX turns the press into a
   // lift-drag (relocate or trash). Light taps no longer lift pieces.
   canvas.addEventListener('pointerdown', (event) => {
-    if (drag || pressed || (options.isReady && !options.isReady())) return;
+    if (drag || pressed || riding || (options.isReady && !options.isReady())) return;
     const picked = options.pickPiece(event.clientX, event.clientY);
     if (picked) pressed = { picked, startX: event.clientX, startY: event.clientY };
   });
@@ -439,7 +538,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   };
 
   const beginDrag = (kind: PieceType | SceneryKind) => {
-    if (options.isReady && !options.isReady()) return;
+    if (riding || (options.isReady && !options.isReady())) return;
     drag = { kind, rotation: 0, pickedId: null, cell: null, homeCell: { x: 0, y: 0 } };
     options.beginGhost(kind);
   };
@@ -626,6 +725,19 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     }
   });
   window.addEventListener('pointerup', (event) => {
+    if (riding) {
+      // A ride began mid-gesture (a second finger on ▶): drop the press or
+      // drag, commit nothing, and never stop the train.
+      pressed = null;
+      if (drag) {
+        if (drag.pickedId) options.setPieceVisible(drag.pickedId, true);
+        options.endGhost();
+        drag = null;
+      }
+      hideChip();
+      setTrashHover(false);
+      return;
+    }
     if (pressed) {
       // Released where it started: a rotate tap on the placed toy.
       const { picked } = pressed;
@@ -685,7 +797,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('ride toggle missing from app frame');
   }
 
-  let riding = false;
   const refreshRide = () => {
     const empty = options.world.pieces().length === 0;
     // An empty meadow dims the button — but a train easing to a stop (a
@@ -696,6 +807,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     rideToggle.classList.toggle('is-riding', riding);
     rideToggle.innerHTML = riding ? RIDE_ICONS.stop : RIDE_ICONS.play;
     rideToggle.setAttribute('aria-label', riding ? 'Stop the train' : 'Ride the train');
+    // The invitation is spent once trains roll, and moot on an empty meadow.
+    if (riding || empty) rideToggle.classList.remove('is-ready-pulse');
   };
 
   // The ▶/⏹ face follows the real ride state pushed by the scene: scoped
@@ -704,6 +817,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   options.subscribeRideMode((isRiding) => {
     riding = isRiding;
     refreshRide();
+    // Ride mode sheds the build tools; the stop hands them back untouched.
+    // ⏹, whistle, 🎥, mute, and the parent gate stay on the rail.
+    if (riding) setDrawer(null);
+    toysSlot.hidden = riding;
+    trainSlot.hidden = riding;
+    trashSlot.hidden = riding;
+    if (gridToggle) gridToggle.hidden = riding;
+    hideChip();
+    refreshUndo();
   });
 
   rideToggle.addEventListener('click', () => {
@@ -716,6 +838,33 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   options.world.subscribe(() => refreshRide());
   refreshRide();
 
+  // ---- Ride-ready invitation: ▶ pulses when the meadow turns rideable,
+  // and pops with a happy ding when a drop closes a loop ------------------
+  // Edit-time only — closesLoop's union-find never touches the render loop.
+  // The ding is mute-respecting by construction; reduced-motion hands get
+  // the ding but no motion.
+  const prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let prevPieces = options.world.pieces();
+  rideToggle.addEventListener('animationend', () => rideToggle.classList.remove('pop'));
+  options.world.subscribe(() => {
+    const after = options.world.pieces();
+    if (!riding) {
+      if (prevPieces.length === 0 && after.length > 0 && !prefersStill) {
+        rideToggle.classList.add('is-ready-pulse');
+      }
+      if (closesLoop(prevPieces, after)) {
+        options.audio.ding();
+        if (!prefersStill) {
+          // Restart the pop when loops close back-to-back.
+          rideToggle.classList.remove('pop');
+          void rideToggle.offsetWidth;
+          rideToggle.classList.add('pop');
+        }
+      }
+    }
+    prevPieces = after;
+  });
+
   // ---- Undo: joins the rail after a change, takes back the last one -----
   // Session-only by construction: a reload restores the exact world but arms
   // no undo, so the button stays hidden until the next change.
@@ -724,7 +873,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('undo toggle missing from app frame');
   }
   const refreshUndo = () => {
-    undoToggle.hidden = !options.world.canUndo();
+    undoToggle.hidden = riding || !options.world.canUndo();
   };
   options.world.subscribe(refreshUndo);
   refreshUndo();

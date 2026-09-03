@@ -4,17 +4,25 @@ import { SCENERY_KINDS } from './scenery';
 import type { PieceType } from './track-graph';
 
 describe('drawerTabs', () => {
-  it('exposes exactly the four toddler tabs in order', () => {
-    expect(DRAWER_TABS).toEqual(['rails', 'nature', 'town', 'critter']);
-    expect(drawerTabs().map((tab) => tab.id)).toEqual(['rails', 'nature', 'town', 'critter']);
+  it('exposes exactly the five toddler tabs in order', () => {
+    expect(DRAWER_TABS).toEqual(['rails', 'adventure', 'nature', 'town', 'critter']);
+    expect(drawerTabs().map((tab) => tab.id)).toEqual([
+      'rails',
+      'adventure',
+      'nature',
+      'town',
+      'critter',
+    ]);
   });
 
-  it('holds the nine track pieces on the Rails tab, in piece order', () => {
+  it('holds the basic track pieces on the Rails tab, in piece order', () => {
     const rails = drawerTabs().find((tab) => tab.id === 'rails');
-    expect(rails?.kinds).toEqual<PieceType[]>([
-      'straight',
-      'corner',
-      'crossing',
+    expect(rails?.kinds).toEqual<PieceType[]>(['straight', 'corner', 'crossing']);
+  });
+
+  it('holds the adventure pieces on the Adventure tab, in piece order', () => {
+    const adventure = drawerTabs().find((tab) => tab.id === 'adventure');
+    expect(adventure?.kinds).toEqual<PieceType[]>([
       'bridge',
       'tunnel',
       'slope-up',
@@ -43,19 +51,28 @@ describe('drawerTabs', () => {
       expect(tab.aria.length).toBeGreaterThan(0);
     }
   });
+
+  it('gives the Adventure tab a bridge icon and label', () => {
+    const adventure = drawerTabs().find((tab) => tab.id === 'adventure');
+    expect(adventure?.icon).toBe('🌉');
+    expect(adventure?.aria).toBe('Adventure toys');
+  });
 });
 
 describe('tabForKind', () => {
-  it('maps track pieces to the Rails tab', () => {
+  it('maps basic track pieces to the Rails tab', () => {
     expect(tabForKind('straight')).toBe('rails');
     expect(tabForKind('corner')).toBe('rails');
     expect(tabForKind('crossing')).toBe('rails');
-    expect(tabForKind('bridge')).toBe('rails');
-    expect(tabForKind('tunnel')).toBe('rails');
-    expect(tabForKind('slope-up')).toBe('rails');
-    expect(tabForKind('hill')).toBe('rails');
-    expect(tabForKind('slope-down')).toBe('rails');
-    expect(tabForKind('switch')).toBe('rails');
+  });
+
+  it('maps adventure pieces to the Adventure tab', () => {
+    expect(tabForKind('bridge')).toBe('adventure');
+    expect(tabForKind('tunnel')).toBe('adventure');
+    expect(tabForKind('slope-up')).toBe('adventure');
+    expect(tabForKind('hill')).toBe('adventure');
+    expect(tabForKind('slope-down')).toBe('adventure');
+    expect(tabForKind('switch')).toBe('adventure');
   });
 
   it('maps each scenery kind to its catalog category tab', () => {
