@@ -62,7 +62,7 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
 > Verification Report (Phase 3 — user sign-off 2026-09-03): automated — `tsc` clean, `biome` clean, unit 34 files / 519 tests green, smoke 40/40, switches 4/4, hills/tunnel/undo/ride-toybox/cargo/river/prod/phone-shell green; manual — user confirmed on tablet that all three gallery presets render fully connected, ride, apply behind the gate, undo restores, and reset empties.
 > Checkpoint SHA: `1cf56589dc3711e396a94cdf1068d0e4751fc47a`
 
-## Phase 4 — E2E + gates
+## Phase 4 — E2E + gates — complete
 
 - [x] Task: Playwright specs (`e2e/starter-railway.spec.ts`) [SHA: 6ed720d]
   - [x] Fresh boot (empty IDB) shows the oval and rides with a clean console
@@ -71,9 +71,9 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
   - [x] Zero external requests; tablet + phone viewports
 - [x] Task: Full local gates green
   - [x] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` + `CI=true pnpm test` + Playwright
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (user sign-off 2026-09-04; SHA `83714f37206fedd734da7cd11a4227b641a2f934`)
 
 > Notes (Phase 4, code SHA 6ed720d): 3 specs × tablet + phone (6/6 green). Helpers: `boot()` wipes IDB for the first-run path, `openGallery()` holds the gate (retries ×3 — shader-compile jank after reload can delay the 2 s arm timer past release), `rideForAWhile()` uses the `.ride-toggle.is-riding` class (the dev handle is the raw store: flat `pieces()`/`scenery()`, boot flag `__tinyTracksReady`). E2E lessons applied from existing suites: `test.setTimeout(120_000)` (cargo precedent), `gate.click({ force: true })` (armed gate pulses by design). Gates 2026-09-04: `biome check .` clean, `tsc` clean, unit 34 files green, `starter-railway` 6/6, `smoke` 40/40 (two earlier failures — tablet parent-gate hold, phone fps — were load flakes: both pass on rerun, parent-gate 1/1 in isolation).
 >
 > Verification Report (Phase 4): scope since Phase 3 checkpoint `5a23e46` is one new file, `e2e/starter-railway.spec.ts` — no `src/` changes. Automated: all gates above green. Manual: none required beyond the Phase 3 tablet sign-off (same behaviors, now automated).
-> Checkpoint SHA: pending user yes → `6ed720d` (code) + plan commit to follow.
+> Checkpoint SHA: `83714f37206fedd734da7cd11a4227b641a2f934` (user sign-off 2026-09-04; code `6ed720d` + plan `83714f3`).
