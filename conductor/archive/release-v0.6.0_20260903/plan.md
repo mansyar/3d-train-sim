@@ -83,14 +83,32 @@ gates + smoke + checkpoints per `workflow.md`.
     checkpoint is CSS-only + docs — no new unit tests required.
     Manual: user confirmed the phase meets expectations — yes.
 
-## Phase 3 - Tag & Ship
+## Phase 3 - Tag & Ship [checkpoint: 26ada43]
 
-- [~] Task: Push branch, open PR "Release v0.6.0", merge to `main`
+- [x] Task: Push branch, open PR "Release v0.6.0", merge to `main` (f78e3b7)
   - Acceptance: PR merges cleanly into `main` with CI gates green.
+  - Notes: PR #34 merged as f78e3b7; CI (biome+typecheck+vitest) green
+    on the branch.
+- [x] Task: Tag `v0.6.0` on the release merge commit and push the tag (v0.6.0)
+  - Acceptance: `v0.6.0` tag points at the merge commit and the Release
+    workflow starts.
+  - Notes: Tag `v0.6.0` → f78e3b7, pushed; Release run 33746893151.
+- [x] Task: Watch the Release workflow to green (26ada43)
+  - [x] Gates pass in CI (8m22s: full gate + tablet E2E smoke)
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.6.0` +
+        `:latest` (publish job 1m0s)
+  - [x] Coolify webhook fired; production serves the new build
+    (webhook step green; on-device confirmation is the user's
+    manual check below)
 - [ ] Task: Tag `v0.6.0` on the release merge commit and push the tag
 - [ ] Task: Watch the Release workflow to green
   - [ ] Gates pass in CI
   - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.6.0` +
         `:latest`
   - [ ] Coolify webhook fired; production serves the new build
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (79c5634)
+  - Verification Report (2026-09-03): Release run 33746893151 fully
+    green — gates 8m22s (full gate + tablet E2E smoke), publish 1m0s
+    (image `:0.6.0` + `:latest`, Coolify webhook fired). Tag `v0.6.0`
+    → f78e3b7 (PR #34 merge). Manual: user confirmed the release
+    meets expectations — yes, ship it.
