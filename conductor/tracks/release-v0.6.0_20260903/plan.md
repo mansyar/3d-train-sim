@@ -85,7 +85,8 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 3 - Tag & Ship
 
-- [ ] Task: Push branch, open PR "Release v0.6.0", merge to `main`
+- [~] Task: Push branch, open PR "Release v0.6.0", merge to `main`
+  - Acceptance: PR merges cleanly into `main` with CI gates green.
 - [ ] Task: Tag `v0.6.0` on the release merge commit and push the tag
 - [ ] Task: Watch the Release workflow to green
   - [ ] Gates pass in CI
