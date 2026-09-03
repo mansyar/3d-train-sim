@@ -38,7 +38,13 @@ icons + e2e/docs. One phase at a time, sequential tasks.
     render loop allocation-free while giving app.ts a one-call celebration
     signal. Tests 11/11 green, ride-ready.ts 95% stmts / 100% lines,
     tsc + biome clean.
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Phase 1 Verification & Checkpoint
+  - Verification Report: auto — full suite 33 files / 508 tests pass;
+    ride-ready.ts 95% stmts / 100% lines / 100% funcs; drawer.ts 100%;
+    tsc --noEmit clean; biome clean. Manual — `pnpm dev` toybox shows 5
+    tabs (Rails 3, Adventure 6, Nature/Town/Critter unchanged), confirmed
+    by user 2026-09-03.
+  - [checkpoint: f2b3fa5094bcd34462b97238a0a453d521a9a4a1]
 
 ## Phase 2 — Ride-mode rail + celebration (UI glue, no unit tests)
 
