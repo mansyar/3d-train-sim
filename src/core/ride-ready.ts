@@ -19,7 +19,11 @@ export function hasCycle(pieces: readonly PlacedPiece[]): boolean {
   for (const piece of pieces) parent.set(piece.id, piece.id);
   const find = (start: string): string => {
     let root = start;
-    while (parent.get(root) !== root) root = parent.get(root) as string;
+    let next = parent.get(root);
+    while (next !== undefined && next !== root) {
+      root = next;
+      next = parent.get(root);
+    }
     return root;
   };
   for (const connection of connectionsFor(pieces)) {

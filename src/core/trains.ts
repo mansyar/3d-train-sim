@@ -14,9 +14,9 @@ interface TrainDefinition {
   whistle: string;
 }
 
-const WHEEL = (cx: number) =>
-  `<circle cx="${cx}" cy="37" r="5" fill="var(--toy-brown)"/>` +
-  `<circle cx="${cx}" cy="37" r="2" fill="var(--toy-cream)"/>`;
+function wheel(cx: number): string {
+  return `<circle cx="${cx}" cy="37" r="5" fill="var(--toy-brown)"/><circle cx="${cx}" cy="37" r="2" fill="var(--toy-cream)"/>`;
+}
 
 const TRAINS: Record<TrainKind, TrainDefinition> = {
   steam: {
@@ -37,7 +37,7 @@ const TRAINS: Record<TrainKind, TrainDefinition> = {
               stroke="var(--toy-brown)" stroke-width="2"/>
       <path d="M38 33 L44 33 L38 26 Z" fill="var(--toy-steel)"
             stroke="var(--toy-brown)" stroke-width="2.5" stroke-linejoin="round"/>
-      ${WHEEL(12)}${WHEEL(30)}
+      ${wheel(12)}${wheel(30)}
     </svg>`,
     aria: 'Steam locomotive',
     whistle: 'whistle-steam',
@@ -59,7 +59,7 @@ const TRAINS: Record<TrainKind, TrainDefinition> = {
             stroke-width="2" stroke-linecap="round"/>
       <line x1="13" y1="19" x2="13" y2="22" stroke="var(--toy-brown)"
             stroke-width="2" stroke-linecap="round"/>
-      ${WHEEL(12)}${WHEEL(32)}
+      ${wheel(12)}${wheel(32)}
     </svg>`,
     aria: 'Diesel locomotive',
     whistle: 'whistle-diesel',
@@ -80,7 +80,7 @@ const TRAINS: Record<TrainKind, TrainDefinition> = {
             stroke="var(--toy-brown)" stroke-width="2"/>
       <rect x="27" y="24" width="6" height="6" rx="1" fill="var(--toy-cream)"
             stroke="var(--toy-brown)" stroke-width="2"/>
-      ${WHEEL(13)}${WHEEL(31)}
+      ${wheel(13)}${wheel(31)}
     </svg>`,
     aria: 'Classic tram',
     whistle: 'whistle-tram',
