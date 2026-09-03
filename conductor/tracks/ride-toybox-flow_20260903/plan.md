@@ -48,19 +48,47 @@ icons + e2e/docs. One phase at a time, sequential tasks.
 
 ## Phase 2 — Ride-mode rail + celebration (UI glue, no unit tests)
 
-- [ ] Task: Riding hides build tools
-  - [ ] Acceptance: start ride → toybox triggers, trash, undo, delete-chip,
+- [x] Task: Riding hides build tools (980b3c8)
+  - [x] Acceptance: start ride → toybox triggers, trash, undo, delete-chip,
     grid-toggle hidden; train drawer locked; canvas lift/drag ignored;
     ⏹/whistle/film/mute/gate stay; stop → tools return, world exact.
-  - [ ] Implement in `src/ui/app.ts` (ride-mode subscription) — no unit
+  - [x] Implement in `src/ui/app.ts` (ride-mode subscription) — no unit
     tests (glue); manual + smoke verification.
-- [ ] Task: Ride-button pulse + loop pop
-  - [ ] Acceptance: empty → non-empty adds pulse class; `closesLoop` fires
-    one mute-respecting ding + pop class (removed on animationend);
-    reduced-motion applies neither.
-  - [ ] Implement in `src/ui/app.ts` + `src/style.css`
-    (`is-ready-pulse`, `pop` keyframes, reduced-motion guards).
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes: moved `riding` state up top; guards at canvas pointerdown,
+    beginDrag, setDrawer; ride-mode callback hides toys/trains triggers,
+    trash, grid, chip, closes drawers, refreshUndo respects riding; window
+    pointerup drops mid-ride gestures committing nothing (second-finger ▶
+    edge). Zero CSS — rail buttons obey UA [hidden]. Also fixed two stale
+    'four tabs' comments → five. Files: src/ui/app.ts (+33/−6). Why:
+    hiding beats disabling — a dimmed button still invites a tap that reads
+    as failure when the train stops. Gates: tsc + biome clean, 508 unit
+    pass, smoke 39/40 (ambient-FPS flake 3.0 under load; passes solo with
+    and without the change).
+- [x] Task: Ride-button pulse + loop pop (ff61761)
+  - [x] Acceptance: first piece → ▶ pulses; 4th corner closing a square →
+    ding + pop; muted → silent; reduced-motion → still; riding stops
+    further pulses.
+  - [x] Implement in `src/ui/app.ts` + `src/style.css` (glue); logic
+    already unit-tested (`closesLoop`). Manual + smoke verification.
+  - Notes: world subscriber snapshots pieces() (fresh copies per
+    state/world.ts:127 — no live-array aliasing); empty→non-empty adds
+    .is-ready-pulse, closesLoop→ding+restartable .pop (animationend
+    cleanup); refreshRide spends the invitation when riding/empty; JS
+    prefers-reduced-motion guard + CSS animation:none belt-and-braces
+    (separate rule — the shared stillness rule's display:none would hide
+    ▶ itself). Files: app.ts (+46), style.css (+25). Gates: tsc + biome
+    clean.
+  - Fix 07b5130: scale-pulse made ▶ never "stable" so clicks timed out
+    (smoke 13 failed) — pulse is now a box-shadow halo (box never moves).
+    Full smoke 40/40 green.
+- [x] Task: Phase 2 Verification & Checkpoint (07b5130)
+  - Verification Report: auto — 508 unit pass; tsc + biome clean; full
+    smoke 40/40 green (after glow-pulse fix). Scope since Phase 1
+    checkpoint: src/ui/app.ts, src/style.css only (UI glue, no logic).
+    Manual — `pnpm dev` glow-on-first-piece, ding+pop on loop close,
+    tools hide/return around rides, muted loop-close silent; confirmed by
+    user 2026-09-03.
+  - [checkpoint: 07b5130bc141dd2997bf00ec03674fc196f5d222]
 
 ## Phase 3 — SVG icons + layout + e2e/docs
 
