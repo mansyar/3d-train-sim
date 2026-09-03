@@ -94,10 +94,12 @@ body {
   background: var(--toy-orange);
 }
 
-/* The ▶ button's invitation — a gentle breathing pulse once the meadow turns
-   rideable, and a one-shot happy pop when a drop closes a loop. */
+/* The ▶ button's invitation — a gentle halo glow once the meadow turns
+   rideable (box-shadow only, so the button's box never moves: taps and
+   automated clicks always land), and a one-shot happy pop when a drop
+   closes a loop. */
 .ride-toggle.is-ready-pulse {
-  animation: ride-pulse 1.2s ease-in-out infinite;
+  animation: ride-pulse 1.6s ease-in-out infinite;
 }
 
 .ride-toggle.pop {
@@ -107,11 +109,13 @@ body {
 @keyframes ride-pulse {
   0%,
   100% {
-    transform: scale(1);
+    box-shadow: 0 4px 0 var(--toy-brown);
   }
 
   50% {
-    transform: scale(1.08);
+    box-shadow:
+      0 4px 0 var(--toy-brown),
+      0 0 0 10px rgba(255, 255, 255, 0.55);
   }
 }
 
