@@ -172,7 +172,7 @@ const toySlot = (kind: PieceType | SceneryKind): string =>
     : `<button class="scenery-slot" type="button" data-scenery="${kind}"
               aria-label="${sceneryAria(kind)}">${SCENERY_ICONS[kind]}</button>`;
 
-/** The four chunky tabs (Rails / Nature / Town / Critters) of the toybox. */
+/** The five chunky tabs (Rails / Adventure / Nature / Town / Critters) of the toybox. */
 const TOY_TABS = drawerTabs();
 const tabStrip = TOY_TABS.map(
   (tab) => `<button class="drawer-tab" type="button" data-tab="${tab.id}"
@@ -292,7 +292,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('toybox chrome missing from app frame');
   }
 
-  // ---- Tabbed toybox drawer (Rails / Nature / Town / Critters) -----------
+  // ---- Tabbed toybox drawer (Rails / Adventure / Nature / Town / Critters) -----------
   // One tab active at a time; the drawer itself is one of the three
   // toybox drawers (toys / trains) — never two at once.
   const tabButtons = new Map(
@@ -330,6 +330,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // One drawer open at a time — the toybox flips between toys and trains.
   // The single 🧸 toggle remembers the tab you were on (Rails first time).
   const setDrawer = (which: 'toys' | 'trains' | null) => {
+    // Mid-ride the drawers stay shut — the rail hides their triggers, and a
+    // ride that begins with one open closes it.
+    if (riding && which !== null) return;
     const openToys = which === 'toys';
     const openTrains = which === 'trains';
     drawer.toggleAttribute('hidden', !openToys);
@@ -375,12 +378,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // A just-pressed placed toy, awaiting either a tap (rotate in place) or
   // enough movement to become a relocate drag. null when idle.
   let pressed: { picked: PickedItem; startX: number; startY: number } | null = null;
+  // Whether trains are rolling. Declared up top so every build entry point
+  // below can refuse work mid-ride; the scene pushes the real value.
+  let riding = false;
 
   // Pressing a placed toy does NOT lift it yet: a release without movement is
   // a rotate tap, and only movement past TAP_DRAG_PX turns the press into a
   // lift-drag (relocate or trash). Light taps no longer lift pieces.
   canvas.addEventListener('pointerdown', (event) => {
-    if (drag || pressed || (options.isReady && !options.isReady())) return;
+    if (drag || pressed || riding || (options.isReady && !options.isReady())) return;
     const picked = options.pickPiece(event.clientX, event.clientY);
     if (picked) pressed = { picked, startX: event.clientX, startY: event.clientY };
   });
@@ -439,7 +445,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   };
 
   const beginDrag = (kind: PieceType | SceneryKind) => {
-    if (options.isReady && !options.isReady()) return;
+    if (riding || (options.isReady && !options.isReady())) return;
     drag = { kind, rotation: 0, pickedId: null, cell: null, homeCell: { x: 0, y: 0 } };
     options.beginGhost(kind);
   };
@@ -626,6 +632,19 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     }
   });
   window.addEventListener('pointerup', (event) => {
+    if (riding) {
+      // A ride began mid-gesture (a second finger on ▶): drop the press or
+      // drag, commit nothing, and never stop the train.
+      pressed = null;
+      if (drag) {
+        if (drag.pickedId) options.setPieceVisible(drag.pickedId, true);
+        options.endGhost();
+        drag = null;
+      }
+      hideChip();
+      setTrashHover(false);
+      return;
+    }
     if (pressed) {
       // Released where it started: a rotate tap on the placed toy.
       const { picked } = pressed;
@@ -685,7 +704,6 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('ride toggle missing from app frame');
   }
 
-  let riding = false;
   const refreshRide = () => {
     const empty = options.world.pieces().length === 0;
     // An empty meadow dims the button — but a train easing to a stop (a
@@ -704,6 +722,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   options.subscribeRideMode((isRiding) => {
     riding = isRiding;
     refreshRide();
+    // Ride mode sheds the build tools; the stop hands them back untouched.
+    // ⏹, whistle, 🎥, mute, and the parent gate stay on the rail.
+    if (riding) setDrawer(null);
+    toysSlot.hidden = riding;
+    trainSlot.hidden = riding;
+    trashSlot.hidden = riding;
+    if (gridToggle) gridToggle.hidden = riding;
+    hideChip();
+    refreshUndo();
   });
 
   rideToggle.addEventListener('click', () => {
@@ -724,7 +751,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('undo toggle missing from app frame');
   }
   const refreshUndo = () => {
-    undoToggle.hidden = !options.world.canUndo();
+    undoToggle.hidden = riding || !options.world.canUndo();
   };
   options.world.subscribe(refreshUndo);
   refreshUndo();
