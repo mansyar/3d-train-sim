@@ -8,8 +8,8 @@
 import { PIECE_TYPES, type PieceType } from './pieces';
 import { SCENERY_KINDS, type SceneryKind, sceneryCategory } from './scenery';
 
-/** The four toddler-visible drawer tabs, in toybox order. */
-export const DRAWER_TABS = ['rails', 'nature', 'town', 'critter'] as const;
+/** The five toddler-visible drawer tabs, in toybox order. */
+export const DRAWER_TABS = ['rails', 'adventure', 'nature', 'town', 'critter'] as const;
 export type DrawerTabId = (typeof DRAWER_TABS)[number];
 
 /** One tab: its identity, its chunky icon, and the toys it holds. */
@@ -21,17 +21,17 @@ export interface DrawerTab {
   kinds: (PieceType | SceneryKind)[];
 }
 
-/** The tab each toy kind belongs to. Rails pieces share the Rails tab. */
+/** The tab each toy kind belongs to. Basics ride Rails; big tricks ride Adventure. */
 const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
   straight: 'rails',
   corner: 'rails',
   crossing: 'rails',
-  bridge: 'rails',
-  tunnel: 'rails',
-  'slope-up': 'rails',
-  hill: 'rails',
-  'slope-down': 'rails',
-  switch: 'rails',
+  bridge: 'adventure',
+  tunnel: 'adventure',
+  'slope-up': 'adventure',
+  hill: 'adventure',
+  'slope-down': 'adventure',
+  switch: 'adventure',
   tree: 'nature',
   bush: 'nature',
   rock: 'nature',
@@ -45,6 +45,7 @@ const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
 
 const TAB_ICONS: Record<DrawerTabId, string> = {
   rails: '🛤️',
+  adventure: '🌉',
   nature: '🌳',
   town: '🏠',
   critter: '🐾',
@@ -52,6 +53,7 @@ const TAB_ICONS: Record<DrawerTabId, string> = {
 
 const TAB_ARIA: Record<DrawerTabId, string> = {
   rails: 'Rails toys',
+  adventure: 'Adventure toys',
   nature: 'Nature toys',
   town: 'Town toys',
   critter: 'Critter toys',
@@ -62,7 +64,7 @@ export function drawerTabs(): DrawerTab[] {
   const kindsByTab = new Map<DrawerTabId, (PieceType | SceneryKind)[]>(
     DRAWER_TABS.map((id) => [id, []]),
   );
-  for (const kind of PIECE_TYPES) kindsByTab.get('rails')?.push(kind);
+  for (const kind of PIECE_TYPES) kindsByTab.get(tabForKind(kind))?.push(kind);
   for (const kind of SCENERY_KINDS) kindsByTab.get(sceneryCategory(kind))?.push(kind);
   return DRAWER_TABS.map((id) => ({
     id,
