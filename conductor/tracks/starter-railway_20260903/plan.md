@@ -10,16 +10,19 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
 
 ## Phase 1 — Preset builders (pure core)
 
-- [ ] Task: Failing tests for `src/core/starters.ts`
-  - [ ] Three builders return `WorldData` (pieces, scenery, train `steam`, deliveries `{}`)
-  - [ ] Every layout is a closed loop (assert via `track-graph` connectivity) and rideable in one tap
-  - [ ] Dry-land rule: no `terrainErrorFor` / `isWater` violations except `bridge` pieces on water
-  - [ ] Budgets: ≤ ~20 toys, 16×16 bounds, no hills/switches/tunnels, exactly 1+ station where specified
-- [ ] Task: Implement builders to green (minimum code, no three.js imports)
-  - [ ] Cozy Oval, Station Village, River Crossing builders + `cozyOval()` default export for boot
-- [ ] Task: Refactor + coverage
-  - [ ] `CI=true pnpm test -- --coverage` — >80% on `src/core/starters.ts`
-  - [ ] `pnpm exec tsc --noEmit` and `pnpm exec biome check .` clean
+- [x] Task: Failing tests for `src/core/starters.ts` (`d05664f`)
+  - [x] Three builders return `WorldData` (pieces, scenery, train `steam`, deliveries `{}`)
+  - [x] Every layout is a closed loop (assert via `track-graph` connectivity) and rideable in one tap
+  - [x] Dry-land rule: no `terrainErrorFor` / `isWater` violations except `bridge` pieces on water
+  - [x] Budgets: ≤ ~20 toys, 16×16 bounds, no hills/switches/tunnels, exactly 1+ station where specified
+  - Notes: Wrote `src/core/starters.test.ts` (7 tests, shared `expectValidStarter` invariant helper) before the module existed; suite failed with "Cannot find module './starters'" (Red). One real bug caught pre-implementation review: none — Red was import-only as expected.
+- [x] Task: Implement builders to green (minimum code, no three.js imports) (`d05664f`)
+  - [x] Cozy Oval, Station Village, River Crossing builders + `cozyOval()` default export for boot
+  - Notes: Created `src/core/starters.ts` — three pure builders + `STARTER_PRESETS` gallery list. Cozy Oval: 10-piece west-bank oval + station/2 trees/house (14 toys). Station Village: 14-piece loop + station/house/cottage/pig/sheep (19 toys). River Crossing: 18-piece loop crossing water twice on 6 trestle bridges + station/tree (20 toys). Deviation from spec FR2 ("1–2 trestle bridges"): the 3-wide river band forces ≥3 bridges per crossing, so two crossings need 6 — still "trestle bridges", spec wording was aspirational. Fixed one layout bug during Green: village pig at (5,4) sat in row-4 water (band is cx6±1 there); moved to (2,8). Files: created `src/core/starters.ts`, `src/core/starters.test.ts`. Why: pure-core presets keep scene/persistence decoupled; deterministic `piece-N`/`scenery-N` ids keep the store's `nextId` advancing after hydrate.
+- [x] Task: Refactor + coverage (`d05664f`)
+  - [x] `CI=true pnpm test -- --coverage` — >80% on `src/core/starters.ts`
+  - [x] `pnpm exec tsc --noEmit` and `pnpm exec biome check .` clean
+  - Notes: No refactor needed — builders already minimal via shared `rail`/`decor` helpers. Coverage 100% stmts/branch/funcs/lines on `starters.ts`. `tsc --noEmit` clean; `biome check --write` fixed import order + formatting only, tests still 7/7 after.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Undoable replace (state)
