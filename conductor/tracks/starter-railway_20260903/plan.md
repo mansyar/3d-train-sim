@@ -29,15 +29,16 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
 
 ## Phase 2 — Undoable replace (state)
 
-- [ ] Task: Failing tests for world-store preset replace
-  - [ ] Applying a preset is ONE mutation and arms single-undo
-  - [ ] Undo restores pieces, scenery, selected train, and deliveries exactly
-  - [ ] Gallery hydration clears prior pending-undo (same single-inverse rule as `hydrate()`)
-  - [ ] `reset()` still returns an empty meadow with `steam` selected
-- [ ] Task: Implement replace to green (minimum code in `src/state/world.ts`)
-- [ ] Task: Refactor + coverage
-  - [ ] `CI=true pnpm test -- --coverage` — >80% on new `src/state/` logic
-  - [ ] `pnpm exec tsc --noEmit` and `pnpm exec biome check .` clean
+- Notes: `WorldStore.applyPreset(data)` swaps pieces/scenery/train/deliveries as ONE mutation (single notify → one autosave write) and arms single-undo with an exact snapshot restore (replacing any in-progress edit undo, like `hydrate()`). Red: 4 new tests failed (`applyPreset is not a function`); Green: 66/66 in `world.test.ts`. Coverage: `world.ts` 94.25% lines, `starters.ts` 100%. `tsc` + `biome` clean.
+- [x] Task: Failing tests for world-store preset replace [0f8e4fe]
+  - [x] Applying a preset is ONE mutation and arms single-undo
+  - [x] Undo restores pieces, scenery, selected train, and deliveries exactly
+  - [x] Gallery hydration clears prior pending-undo (same single-inverse rule as `hydrate()`)
+  - [x] `reset()` still returns an empty meadow with `steam` selected
+- [x] Task: Implement replace to green (minimum code in `src/state/world.ts`) [0f8e4fe]
+- [x] Task: Refactor + coverage
+  - [x] `CI=true pnpm test -- --coverage` — >80% on new `src/state/` logic
+  - [x] `pnpm exec tsc --noEmit` and `pnpm exec biome check .` clean
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Boot seed + parent-gated gallery (UI glue)
