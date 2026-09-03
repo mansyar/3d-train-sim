@@ -92,15 +92,39 @@ icons + e2e/docs. One phase at a time, sequential tasks.
 
 ## Phase 3 — SVG icons + layout + e2e/docs
 
-- [ ] Task: Chunky SVG icons + 5-tab layout
-  - [ ] Acceptance: zero emoji in toybox/train drawer; 48×48 SVGs in
+- [x] Task: Chunky SVG icons + 5-tab layout (6763925)
+  - [x] Acceptance: zero emoji in toybox/train slots; 48×48 SVGs in
     `PIECE_ICONS` style (`var(--toy-*)`, brown outline); aria unchanged;
-    panels fit one row at 360px; targets ≥64px.
-  - [ ] Implement in `src/ui/app.ts` (`SCENERY_ICONS`, train icons) +
-    `src/style.css` (tab/panel sizing).
-- [ ] Task: E2E + docs
-  - [ ] Playwright spec: riding hides build tools; 5 tabs visible with
-    correct counts; loop closure pops without console errors (touch tablet
-    viewport).
-  - [ ] `CHANGELOG.md` Unreleased note (parent-worded, one line).
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+    panels one row at 360px (Adventure swipes); targets ≥64px (72px kept).
+  - [x] Implement in `src/ui/app.ts` (`SCENERY_ICONS`), `src/core/trains.ts`
+    (fleet icons) + `src/style.css` (slot svg sizing, panel row).
+  - Notes: 9 scenery + 3 loco SVGs (steam=chimney/dome/cowcatcher,
+    diesel=stripe/cab-hump, tram=windows/pantograph); tab-strip emoji kept
+    per spec FR2 (🌉 mandated; SVG in pure core drawer.ts would break the
+    core/UI boundary). trains.test passes unchanged (string asserts).
+    Layout: 6×72+5×16=512 > 336 avail — user chose scrollable row over
+    two-rows/compact; panel = max-content + auto margins (small panels stay
+    centered, overflow scrolls without left-clip), touch-action pan-x so
+    toy drags still place. Spec FR2/AC2 updated to the chosen resolution.
+    Files: app.ts (+~150/−12), trains.ts, style.css. Gates: tsc + biome
+    clean, 508 unit pass.
+- [x] Task: E2E + docs (d33f798)
+  - [x] Playwright spec `e2e/ride-toybox-flow.spec.ts` (3 tests × tablet +
+    phone): riding hides build tools; 5 tabs with Rails 3 / Adventure 6 /
+    Nature-Town-Critter 3 + swipe-overflow only when narrow; first piece
+    pulses, loop closure fires `ride-pop` (animationstart observer — the
+    class is gone in 0.45s), all slots render `<svg>`; clean console.
+  - [x] `CHANGELOG.md` Unreleased parent-worded note.
+  - Notes: two test bugs fixed, both harness-side — re-tapping the open
+    Rails tab closes it (tap only when hidden); hidden panels measure
+    scrollWidth 0 (re-open Adventure before measuring). Files:
+    e2e/ride-toybox-flow.spec.ts (new), CHANGELOG.md. Gates: 6/6 e2e
+    green, biome clean.
+- [x] Task: Phase 3 Verification & Checkpoint (d33f798)
+  - Verification Report: auto — 508 unit pass (trains.test covers new
+    icon strings); tsc + biome clean; smoke 40/40 + new spec 6/6 = 46/46
+    green. Scope since Phase 2 checkpoint: app.ts, trains.ts, style.css,
+    ride-toybox-flow.spec.ts (code) + changelog/spec/plan (docs).
+    Manual — `pnpm dev` phone-width: 12 SVGs readable, Adventure swipes
+    with peek, small panels centered one row; confirmed by user 2026-09-03.
+  - [checkpoint: d33f798870243226a358789ef6dc2af352c9714d]
