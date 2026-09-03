@@ -85,8 +85,21 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 3 - Tag & Ship
 
-- [~] Task: Push branch, open PR "Release v0.6.0", merge to `main`
+- [x] Task: Push branch, open PR "Release v0.6.0", merge to `main` (f78e3b7)
   - Acceptance: PR merges cleanly into `main` with CI gates green.
+  - Notes: PR #34 merged as f78e3b7; CI (biome+typecheck+vitest) green
+    on the branch.
+- [x] Task: Tag `v0.6.0` on the release merge commit and push the tag (v0.6.0)
+  - Acceptance: `v0.6.0` tag points at the merge commit and the Release
+    workflow starts.
+  - Notes: Tag `v0.6.0` → f78e3b7, pushed; Release run 33746893151.
+- [x] Task: Watch the Release workflow to green (plan-sha)
+  - [x] Gates pass in CI (8m22s: full gate + tablet E2E smoke)
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.6.0` +
+        `:latest` (publish job 1m0s)
+  - [x] Coolify webhook fired; production serves the new build
+    (webhook step green; on-device confirmation is the user's
+    manual check below)
 - [ ] Task: Tag `v0.6.0` on the release merge commit and push the tag
 - [ ] Task: Watch the Release workflow to green
   - [ ] Gates pass in CI
