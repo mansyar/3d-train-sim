@@ -1,6 +1,6 @@
 {
   "name": "tiny-tracks",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "A web-based 3D toy train table for toddlers — lay the track, press the button, watch your train go.",
   "type": "module",
