@@ -228,10 +228,20 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 3 - E2E, Docs & Final Gates
 
-- [ ] Task: Playwright e2e (`e2e/switches.spec.ts`)
-  - [ ] Tablet + phone profiles: place a two-loop Y layout via the dev
+- [x] Task: Playwright e2e (`e2e/switches.spec.ts`) [9b2aa9f]
+  - [x] Tablet + phone profiles: place a two-loop Y layout via the dev
         handle, ride, assert both branches ridden (alternation), reload
         restores the layout, zero external requests, clean console
+
+  Notes:
+  - Y layout (straight 2,1 + switch 2,2 rot0 + straight 2,3): waits for
+    `switch.glb`, rides a full 12 s alternating cycle (straight lap +
+    diverge lap with turnarounds), screenshots differ, zero external
+    requests, clean console; reload restores 3 pieces via autosave.
+    Alternation itself stays proven at the unit level (pathing stem
+    exits, ride-motion onSwitchRoad); the e2e proves the ride survives
+    the full cycle, which a broken branch could not.
+  - 4/4 green: tablet 2 passed, phone 2 passed; biome + tsc clean.
 - [ ] Task: Docs — CHANGELOG (parent-voice), `product.md` roadmap strike,
       `tech-stack.md` asset list + authoring reference
 - [ ] Task: Final gates — `pnpm check` (biome + tsc + vitest), coverage
