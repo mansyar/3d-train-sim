@@ -59,6 +59,8 @@ export interface WorldStore {
   /** A defensive copy of the delivery ledger — station id → crate count. */
   deliveries(): Record<string, number>;
   hydrate(data: WorldData): void;
+  /** Replaces the whole meadow with a preset world as ONE undoable change. */
+  applyPreset(data: WorldData): void;
   /** Returns the meadow to a factory-fresh world: empty, steam selected. */
   reset(): void;
   subscribe(listener: WorldListener): () => void;
@@ -269,6 +271,36 @@ export function createWorldStore(): WorldStore {
       deliveries = {};
       nextId = 1;
       pendingUndo = null;
+      notify();
+    },
+
+    applyPreset(data) {
+      // A starter-gallery pick lands as ONE mutation: the prior build is
+      // snapshotted (pieces, scenery, train, deliveries) so a single undo
+      // restores it exactly, replacing any in-progress edit undo.
+      const copyPieces = (list: PlacedPiece[]) =>
+        list.map((piece) => ({ ...piece, cell: { ...piece.cell } }));
+      const copyScenery = (list: PlacedScenery[]) =>
+        list.map((item) => ({ ...item, cell: { ...item.cell } }));
+      const priorPieces = copyPieces(placed);
+      const priorScenery = copyScenery(scenery);
+      const priorDeliveries = { ...deliveries };
+      const priorTrain = selectedTrain;
+      const priorNextId = nextId;
+      selectedTrain = data.train;
+      deliveries = { ...(data.deliveries ?? {}) };
+      placed.splice(0, placed.length, ...copyPieces(data.pieces));
+      scenery.splice(0, scenery.length, ...copyScenery(data.scenery));
+      nextId = 1;
+      for (const piece of placed) advanceId(piece.id);
+      for (const item of scenery) advanceId(item.id);
+      pendingUndo = () => {
+        selectedTrain = priorTrain;
+        deliveries = { ...priorDeliveries };
+        placed.splice(0, placed.length, ...copyPieces(priorPieces));
+        scenery.splice(0, scenery.length, ...copyScenery(priorScenery));
+        nextId = priorNextId;
+      };
       notify();
     },
 
