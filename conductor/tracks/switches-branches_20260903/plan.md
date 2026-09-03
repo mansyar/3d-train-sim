@@ -57,17 +57,50 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     follow it unchanged.
   - Session-only by contract: nothing here touches save.ts — counters are
     runtime state, each placed switch starts on the straight branch.
-- [~] Task: Solver generalization to Y topologies (TDD: extend
-      `pathing.test.ts`)
-  - [ ] `walkComponent` handles 3-endpoint pieces via the routing rule:
+- [x] Task: Solver generalization to Y topologies (TDD: extend
+      `pathing.test.ts`) [3e4acf4]
+  - [x] `walkComponent` handles 3-endpoint pieces via the routing rule:
         the ride becomes a periodic walk that covers both branches
         (two loops sharing a switch ride as alternating laps)
-  - [ ] Dead-end branch: ride out and shuttle back through the switch;
+  - [x] Dead-end branch: ride out and shuttle back through the switch;
         reverse passes follow FR2's entry-based rules
-  - [ ] Chained switches compose; crossings/straights/corners/hills byte
+  - [x] Chained switches compose; crossings/straights/corners/hills byte
         for byte unchanged — every existing path test passes untouched
-  - [ ] Termination: every topology still yields a finite periodic walk
+  - [x] Termination: every topology still yields a finite periodic walk
         (no infinite expansion); determinism under any input order
+
+  Notes:
+  - Design: components WITHOUT switches keep the legacy single-pass walk
+    byte for byte (all 34 pre-existing path tests untouched). Components
+    WITH switches take `walkAlternating`: a faithful simulation of the
+    ride (switch routing via `routeSwitch` with live per-piece counters,
+    in-place reversals at dead ends exactly like the ride layer's
+    shuttle) with cycle detection on the full state (piece, entry edge,
+    all switch counters); the emitted path is the periodic cycle,
+    closed=true, so the ride layer loops it unchanged.
+  - Key insight (drove the design): a static single-pass open path can
+    never cover both branches under the existing shuttle model (out-and-
+    back repeats the same branch), so the alternation had to be baked
+    into the path as a periodic choreography — reversals are expressed
+    as ordinary PathSteps (piece re-entered through the edge it just
+    exited), which existing consumers already tolerate (crossings ride
+    twice per lap today).
+  - Termination: finite state space + deterministic transition ⇒ a cycle
+    always exists; a 4096-step cap falls back to frozen straight-through
+    routing (unreachable for real layouts; keeps the solver total —
+    "never fails" product rule).
+  - TDD: 6 new tests (lone switch exact cycle; Y with dead-end branches;
+    figure-8 with two switches + two crossings; chained-switch line;
+    flat heights; per-component ride separation) — 5 confirmed red
+    (legacy walk threw on 3-endpoint pieces), then green. Also fixed a
+    broken test expectation during green (a cycle carries exactly two
+    stem passes per lap: straight + diverge).
+  - Gates: biome clean (import order auto-fix), tsc clean, 471/471.
+    Coverage: pathing.ts 97.7% lines / 97.9% funcs (uncovered lines =
+    the cap fallback), switches.ts 100%.
+  - Ride-layer contract for Phase 2: reversal steps (piece re-entered,
+    `from` == previous step's `to`) need a facing flip at turnarounds;
+    blade state = each switch's counter during the ride.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Asset, Mounting & Scene Riding
