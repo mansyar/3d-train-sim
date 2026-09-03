@@ -509,3 +509,197 @@ describe('station deliveries', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('world store undo', () => {
+  it('starts with nothing to undo and stays silent', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.canUndo()).toBe(false);
+    expect(store.undo()).toBe(false);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('undoes a placed piece and notifies exactly once', () => {
+    const store = createWorldStore();
+    expect(store.place('corner', ORIGIN, 90)).toBe('placed');
+    expect(store.canUndo()).toBe(true);
+
+    const listener = vi.fn();
+    store.subscribe(listener);
+    expect(store.undo()).toBe(true);
+
+    expect(store.pieces()).toHaveLength(0);
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(store.canUndo()).toBe(false);
+    expect(store.undo()).toBe(false);
+  });
+
+  it('undoes placed scenery the same way as track', () => {
+    const store = createWorldStore();
+    expect(store.placeScenery('tree', ORIGIN, 0)).toBe('placed');
+
+    expect(store.undo()).toBe(true);
+    expect(store.scenery()).toHaveLength(0);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it('never arms undo for failed placements', () => {
+    const store = createWorldStore();
+    expect(store.place('corner', ORIGIN, 0)).toBe('placed');
+    expect(store.undo()).toBe(true);
+
+    expect(store.place('straight', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.place('straight', { x: 16, y: 0 }, 0)).toBe('out-of-bounds');
+    expect(store.placeScenery('rock', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('water');
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it('a refused placement leaves the pending undo untouched', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.place('corner', NEXT_CELL, 90);
+    expect(store.place('straight', ORIGIN, 0)).toBe('occupied');
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toHaveLength(1);
+    expect(store.pieces()[0]?.type).toBe('straight');
+  });
+
+  it('a capacity refusal leaves the last fill undo armed', () => {
+    const store = createWorldStore();
+    fillWorld(store, MAX_PIECES);
+    expect(store.place('straight', { x: 0, y: 15 }, 0)).toBe('capacity');
+    // The only armed undo is the last successful fill placement.
+    expect(store.canUndo()).toBe(true);
+  });
+
+  it('restores a removed piece with its id, rotation, and list position', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.place('corner', NEXT_CELL, 90);
+    const first = store.pieces()[0];
+    if (!first) throw new Error('fixture failed');
+
+    store.remove(first.id);
+    expect(store.pieces()).toHaveLength(1);
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toHaveLength(2);
+    const restored = store.pieces()[0];
+    expect(restored?.id).toBe(first.id);
+    expect(restored?.type).toBe('straight');
+    expect(restored?.cell).toEqual(ORIGIN);
+    expect(restored?.rotation).toBe(0);
+  });
+
+  it('restores removed scenery with its kind', () => {
+    const store = createWorldStore();
+    store.placeScenery('pig', ORIGIN, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    store.removeScenery(id);
+    expect(store.undo()).toBe(true);
+
+    const restored = store.scenery()[0];
+    expect(restored?.id).toBe(id);
+    expect(restored?.kind).toBe('pig');
+    expect(restored?.cell).toEqual(ORIGIN);
+  });
+
+  it('ignores unknown removes without arming undo', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.undo();
+
+    store.remove('ghost');
+    store.removeScenery('ghost');
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it('moves a relocated piece back home', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const id = store.pieces()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocate(id, NEXT_CELL, 90)).toBe('placed');
+    expect(store.undo()).toBe(true);
+
+    expect(store.pieces()[0]?.cell).toEqual(ORIGIN);
+    expect(store.pieces()[0]?.rotation).toBe(0);
+  });
+
+  it('restores the rotation of a same-cell turn', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const id = store.pieces()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocate(id, ORIGIN, 90)).toBe('placed');
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()[0]?.rotation).toBe(0);
+  });
+
+  it('moves relocated scenery back home', () => {
+    const store = createWorldStore();
+    store.placeScenery('tree', ORIGIN, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    expect(store.relocateScenery(id, NEXT_CELL, 90)).toBe('placed');
+    expect(store.undo()).toBe(true);
+    expect(store.scenery()[0]?.cell).toEqual(ORIGIN);
+  });
+
+  it('never arms undo for a not-found relocate', () => {
+    const store = createWorldStore();
+    expect(store.relocate('ghost', NEXT_CELL, 0)).toBe('not-found');
+    expect(store.relocateScenery('ghost', NEXT_CELL, 0)).toBe('not-found');
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it('keeps only the last mutation: one undo, then empty', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.place('corner', NEXT_CELL, 90);
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toHaveLength(1);
+    expect(store.pieces()[0]?.type).toBe('straight');
+    expect(store.undo()).toBe(false);
+  });
+
+  it('clears pending undo on hydrate and on reset', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+
+    store.hydrate({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+    expect(store.canUndo()).toBe(false);
+
+    store.place('straight', ORIGIN, 0);
+    store.reset();
+    expect(store.canUndo()).toBe(false);
+    expect(store.undo()).toBe(false);
+  });
+
+  it('leaves undo alone for train selection and crate delivery', () => {
+    const store = createWorldStore();
+    store.placeScenery('station', NEXT_CELL, 0);
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+
+    store.selectTrain('diesel');
+    expect(store.canUndo()).toBe(true);
+
+    store.deliverCrate(id);
+    expect(store.canUndo()).toBe(true);
+
+    expect(store.undo()).toBe(true);
+    expect(store.scenery()).toHaveLength(0);
+    expect(store.train()).toBe('diesel');
+    expect(store.deliveryCount(id)).toBe(1);
+  });
+});

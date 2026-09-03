@@ -11,6 +11,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ### Added
 
+- **Oops-proof building! A take-back button for little accidents.** A chunky
+  ↩️ button joins the bottom bar whenever the meadow changes: one tap takes
+  back the very last move — a placed track, a moved tree, a toy dropped in
+  the trash — with a happy pop right where the toy comes back. Dropped
+  somewhere a toy can't go? It wobbles home with a soft wooden knock (never
+  a scolding sound). The trash stays instant and the take-back only ever
+  remembers the last move of this play session: reloading brings the railway
+  back exactly as it was, with no ↩️ waiting.
 - **Switches! The track can split in two.** A chunky new Y-junction piece
   joins the track toybox: one way in, two ways out. Build two loops sharing
   one junction, a little side track to nowhere, or chain switches together

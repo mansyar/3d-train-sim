@@ -260,6 +260,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Mute the sounds">🔊</button>
       <button class="trash-slot" type="button"
               aria-label="Trash bin — drop a track piece here to remove it">🗑️</button>
+      <button class="undo-toggle" type="button"
+              aria-label="Take back the last change" hidden>↩️</button>
     </div>
   `;
   const canvas = root.querySelector<HTMLCanvasElement>('.scene-canvas');
@@ -589,6 +591,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (!binned) options.audio.ding(); // Trash drops stay silent — no scolding sounds.
     } else {
       wobbleReturn(clientX, clientY);
+      options.audio.thunk(); // A soft knock for a drop that bounced home — never a scolding.
     }
     options.endGhost();
     drag = null;
@@ -712,6 +715,42 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // Any world edit refreshes the empty-meadow dim.
   options.world.subscribe(() => refreshRide());
   refreshRide();
+
+  // ---- Undo: joins the rail after a change, takes back the last one -----
+  // Session-only by construction: a reload restores the exact world but arms
+  // no undo, so the button stays hidden until the next change.
+  const undoToggle = root.querySelector<HTMLButtonElement>('.undo-toggle');
+  if (!undoToggle) {
+    throw new Error('undo toggle missing from app frame');
+  }
+  const refreshUndo = () => {
+    undoToggle.hidden = !options.world.canUndo();
+  };
+  options.world.subscribe(refreshUndo);
+  refreshUndo();
+  undoToggle.addEventListener('click', () => {
+    const before = new Map<string, Cell>();
+    for (const toy of [...options.world.pieces(), ...options.world.scenery()]) {
+      before.set(toy.id, toy.cell);
+    }
+    if (!options.world.undo()) return;
+    // undo() notified, so the button already hid itself again.
+    options.audio.ding(); // The happy pop, mirror of a placement.
+    const after = new Map<string, Cell>();
+    for (const toy of [...options.world.pieces(), ...options.world.scenery()]) {
+      after.set(toy.id, toy.cell);
+    }
+    // A restored toy pops where it came back; a taken-back placement pops
+    // where it vanished. A same-cell rotate has no anchor — ding only.
+    const moved = [...after.entries()].find(([id, cell]) => {
+      const was = before.get(id);
+      return !was || was.x !== cell.x || was.y !== cell.y;
+    });
+    const gone = moved ? undefined : [...before.entries()].find(([id]) => !after.has(id));
+    const anchor = moved?.[1] ?? gone?.[1];
+    const screen = anchor ? options.cellToScreen(anchor) : null;
+    if (screen) ping(screen.x, screen.y);
+  });
 
   // ---- Sound box: a big toot anytime, and a parent-friendly mute ---------
   const whistleToot = root.querySelector<HTMLButtonElement>('.whistle-toot');

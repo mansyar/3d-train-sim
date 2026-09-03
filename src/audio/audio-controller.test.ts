@@ -170,6 +170,22 @@ describe('createAudioController', () => {
     expect(handles.get('click')?.calls).toEqual(['play']);
   });
 
+  it('a bad drop knocks softly: the tick slowed down, then back to baseline', () => {
+    const { controller, handles } = makeWired();
+    controller.thunk();
+
+    handles.get('click')?.finish();
+    expect(handles.get('click')?.calls).toEqual(['rate:0.55', 'onEnd', 'play', 'rate:1']);
+  });
+
+  it('a muted thunk stays silent', () => {
+    const { controller, handles } = makeWired();
+    controller.setMuted(true);
+    controller.thunk();
+
+    expect(handles.get('click')?.calls ?? []).not.toContain('play');
+  });
+
   it('plays each train whistle at its profile rate and resets to baseline', () => {
     const { controller, handles } = makeWired();
     controller.whistle('diesel');

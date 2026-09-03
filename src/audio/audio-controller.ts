@@ -11,7 +11,7 @@
  *    softens when the train pauses at a dead end.
  *  - Mute is instant and total. A chug asked for while muted still *counts*
  *    (the train believes it is chugging) but says nothing until unmuted.
- *  - One-shots (whistle, ding) are fire-and-forget; muted, they are silent.
+ *  - One-shots (whistle, ding, thunk) are fire-and-forget; muted, they are silent.
  */
 
 import type { TrainKind } from '../core/trains';
@@ -66,6 +66,8 @@ export interface AudioController {
   ding(): void;
   /** One soft tick for a rotation step. Silent while muted. */
   click(): void;
+  /** One soft low knock for a drop that wobbled home. Silent while muted. */
+  thunk(): void;
   /** One critter chirp for a passing train (a voice id from the catalog). Silent while muted. */
   chirp(voice: string): void;
   /** Observes state changes (mute or chug). Returns an unsubscribe fn. */
@@ -84,6 +86,8 @@ export interface AudioController {
 const SOFTEN_RATE = 0.85;
 /** Full-steam-ahead tempo. */
 const ROLLING_RATE = 1;
+/** A slowed tick reads as a soft wooden knock. */
+const THUNK_RATE = 0.55;
 /** Echo tail on inside whistles: two quick, quiet replays of the same voice. */
 const ECHO_DELAY_MS = 220;
 const ECHO_TAPS = 2;
@@ -204,6 +208,16 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     click: () => {
       if (muted) return;
       sound('click').play();
+    },
+
+    thunk: () => {
+      if (muted) return;
+      // No new audio downloads: the rotation tick slowed down is a low
+      // wooden knock — distinct from the happy ding, never a scolding sound.
+      const knock = sound('click');
+      knock.rate(THUNK_RATE);
+      knock.onEnd?.(() => knock.rate(ROLLING_RATE));
+      knock.play();
     },
 
     chirp: (voice) => {

@@ -29,7 +29,7 @@ Supporting guardrails:
 - No multi-language, no accounts, no cloud sync, no app store distribution.
 
 ## Core Gameplay Loop
-1. **Build:** drag track pieces (straights, 90° curves, crossings, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away.
+1. **Build:** drag track pieces (straights, 90° curves, crossings, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away. A ↩️ take-back in the bottom bar undoes the very last move.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
 3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
 crate there, loaded wagons deliver theirs in a confetti burst, and the station's
@@ -43,7 +43,7 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 - 🎥 camera cycling between riding trains and the overview (visible at ≥2 rides; hidden under reduced motion)
 - Go / stop / whistle control panel
 - Follow-camera
-- Sound: chug loop, whistle, happy dings
+- Sound: chug loop, whistle, happy dings, soft knock for drops that bounce home
 - Autosave via IndexedDB
 - Parent-gated full reset (long-press)
 - PWA offline install

@@ -10,6 +10,7 @@ Registry of active development tracks.
 | [cargo-pickups_20260902](archive/cargo-pickups_20260902/index.md) | Station Cargo Pickups | Feature | done |
 | [time-of-day-weather_20260830](archive/time-of-day-weather_20260830/index.md) | Time of Day & Weather | Feature | done |
 | [release-v0.3.0_20260830](archive/release-v0.3.0_20260830/index.md) | Release v0.3.0 | Chore | done |
+| [oops-proof-building_20260903](archive/oops-proof-building_20260903/index.md) | Oops-Proof Building | Feature | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
