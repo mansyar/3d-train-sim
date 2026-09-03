@@ -61,7 +61,7 @@ gates + smoke + checkpoints per `workflow.md`.
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2`
         if GPU-context flakes recur per the v0.5.0 lesson)
-- [x] Task: Local container smoke check (plan-commit-sha)
+- [x] Task: Local container smoke check (9ee2df9)
   - Acceptance: local `docker build` succeeds; running container
     serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
     `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
