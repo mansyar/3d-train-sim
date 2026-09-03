@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 /**
  * Switch smoke: the Y-junction drags in like any track piece, loads its own
  * GLB, and a ride over the alternating branches stays clean — the train
@@ -92,6 +94,7 @@ test('a Y switch layout survives a reload', async ({ page }) => {
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+  await clearMeadow(page);
   await placeLine(page, Y_LAYOUT);
   await page.waitForTimeout(800);
 

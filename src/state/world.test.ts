@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
+import { cozyOval, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
 import { createWorldStore } from './world';
 
@@ -701,5 +702,69 @@ describe('world store undo', () => {
     expect(store.scenery()).toHaveLength(0);
     expect(store.train()).toBe('diesel');
     expect(store.deliveryCount(id)).toBe(1);
+  });
+});
+
+describe('world store preset replace', () => {
+  it('swaps the whole meadow for the preset in one notification', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.placeScenery('tree', NEXT_CELL, 0);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.applyPreset(cozyOval());
+
+    expect(store.pieces()).toEqual(cozyOval().pieces);
+    expect(store.scenery()).toEqual(cozyOval().scenery);
+    expect(store.train()).toBe('steam');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('arms single-undo: one undo restores pieces, scenery, train, and deliveries', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    expect(store.placeScenery('station', NEXT_CELL, 0)).toBe('placed');
+    const stationId = store.scenery()[0]?.id;
+    if (!stationId) throw new Error('fixture failed');
+    store.deliverCrate(stationId);
+    store.selectTrain('diesel');
+    const beforePieces = store.pieces();
+    const beforeScenery = store.scenery();
+
+    store.applyPreset(cozyOval());
+    expect(store.canUndo()).toBe(true);
+    expect(store.pieces()).toEqual(cozyOval().pieces);
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toEqual(beforePieces);
+    expect(store.scenery()).toEqual(beforeScenery);
+    expect(store.train()).toBe('diesel');
+    expect(store.deliveryCount(stationId)).toBe(1);
+    expect(store.canUndo()).toBe(false);
+  });
+
+  it('replaces in-progress edit undo instead of stacking', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+
+    store.applyPreset(cozyOval());
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toHaveLength(1);
+    expect(store.pieces()[0]?.type).toBe('straight');
+    expect(store.undo()).toBe(false);
+  });
+
+  it('keeps reset empty with steam selected after a preset', () => {
+    const store = createWorldStore();
+    store.applyPreset(stationVillage());
+
+    store.reset();
+
+    expect(store.pieces()).toEqual([]);
+    expect(store.scenery()).toEqual([]);
+    expect(store.train()).toBe('steam');
+    expect(store.canUndo()).toBe(false);
   });
 });

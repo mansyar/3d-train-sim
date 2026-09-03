@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 /**
  * Build-to-ride flow & toybox clarity: riding hides the build tools and
  * returns them on stop, the drawer shows five tabs with a swipeable
@@ -57,6 +59,7 @@ test('riding hides the build tools and stopping returns them', async ({ page }) 
   await page.goto('/');
   await ready(page);
   await devWorld(page);
+  await clearMeadow(page);
 
   await place(page, 'straight', { x: 2, y: 1 }, 0);
   await place(page, 'straight', { x: 2, y: 2 }, 0);
@@ -142,6 +145,7 @@ test('first piece invites, loop closure pops, slots are all pictures', async ({ 
   await page.goto('/');
   await ready(page);
   await devWorld(page);
+  await clearMeadow(page);
 
   // Record celebration animations — the pop class is gone within half a
   // second, so observe rather than race it.

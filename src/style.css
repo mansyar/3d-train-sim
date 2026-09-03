@@ -611,6 +611,33 @@ body {
   }
 }
 
+/* ---- Starter gallery (parent-gated preset tray) ------------------------ */
+
+.preset-tray {
+  display: flex;
+  gap: 10px;
+  left: calc(12px + env(safe-area-inset-left));
+  position: absolute;
+  top: calc(88px + env(safe-area-inset-top));
+  z-index: 30;
+}
+
+.preset-tray[hidden] {
+  display: none;
+}
+
+.preset-pick {
+  background: var(--toy-cream);
+  border: 3px solid var(--toy-brown);
+  border-radius: 18px;
+  box-shadow: 0 3px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 30px;
+  line-height: 1;
+  min-height: 64px;
+  min-width: 64px;
+}
+
 /* ---- Narrow screens (phones ≥360px): the rail wraps, drawers clear it ---- */
 @media (max-width: 540px) {
   .toybox-rail {

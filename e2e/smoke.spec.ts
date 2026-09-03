@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 test('app boots on a tablet with a clean console and zero external requests', async ({ page }) => {
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
@@ -143,6 +145,8 @@ test('track and scenery survive a reload through local autosave', async ({ page 
   await page.goto('/');
   await page.waitForTimeout(1500);
 
+  await clearMeadow(page);
+
   await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -223,6 +227,7 @@ test('pressing play rides the train along the placed track', async ({ page }) =>
   await page.waitForTimeout(1500);
 
   // Lay a two-piece straight via the dev-only world handle, then ride it.
+  await clearMeadow(page);
   await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -269,6 +274,7 @@ test('riding a loop with a station stops at it and rolls on cleanly', async ({ p
   await page.waitForTimeout(1500);
 
   // A four-corner loop with a station beside one cell, via the dev handle.
+  await clearMeadow(page);
   await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -407,6 +413,7 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
   await page.waitForTimeout(1500);
 
   // Deterministically place a straight piece at a known cell.
+  await clearMeadow(page);
   const placed = await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -458,6 +465,8 @@ test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ pa
 
   await page.goto('/');
   await page.waitForTimeout(1500);
+
+  await clearMeadow(page);
 
   await page.evaluate(() => {
     const world = (
@@ -520,6 +529,8 @@ test('drag-to-trash still deletes a lifted toy over the rail', async ({ page }) 
 
   await page.goto('/');
   await page.waitForTimeout(1500);
+
+  await clearMeadow(page);
 
   await page.evaluate(() => {
     const world = (
@@ -756,6 +767,7 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
     );
 
   // A 2x2 corner loop to ride, via the dev handle.
+  await clearMeadow(page);
   await page.evaluate(() => {
     const world = (
       window as unknown as {
@@ -845,6 +857,7 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
   await page.goto('/');
   // Let the render loop and GLB loads settle before interacting.
   await page.waitForTimeout(1500);
+  await clearMeadow(page);
 
   // The toybox starts closed; the 🧸 toggle opens it on the Rails tab.
   await expect(page.locator('.toy-drawer')).toBeHidden();
@@ -1044,6 +1057,7 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
   );
 
   // Two disjoint 2×2 corner loops, far apart, via the dev handle.
+  await clearMeadow(page);
   await page.evaluate(() => {
     const world = (
       window as unknown as {
