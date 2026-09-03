@@ -3,7 +3,7 @@
 Chore track — no logic-bearing code, so no TDD tasks; verification is
 gates + smoke + checkpoints per `workflow.md`.
 
-## Phase 1 - Changelog & Version Bump
+## Phase 1 - Changelog & Version Bump [checkpoint: 18a3969]
 
 - [x] Task: Update `CHANGELOG.md` for v0.6.0 (c497578)
   - Acceptance: `## [Unreleased]` is empty; new dated `## [0.6.0] -
@@ -27,7 +27,14 @@ gates + smoke + checkpoints per `workflow.md`.
   - Notes: Single-line version bump; verified no other in-repo version
     references needed changing (remaining `0.5.0` strings are history,
     compare links, and archive docs). Files: `package.json` only.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (18a3969)
+  - Verification Report (2026-09-03): automated `pnpm check` green —
+    biome clean (after formatting-only fix to
+    `e2e/ride-toybox-flow.spec.ts`, 18a3969), `tsc --noEmit` clean,
+    508/508 vitest pass. Scope is docs/data only (no logic-bearing
+    files), so no new unit tests required. Manual: user eyeballed the
+    new `## [0.6.0]` section, compare links, and version bump —
+    confirmed yes.
 
 ## Phase 2 - Local Pre-Tag Verification
 
