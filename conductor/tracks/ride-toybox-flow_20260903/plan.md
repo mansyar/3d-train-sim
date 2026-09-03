@@ -128,3 +128,12 @@ icons + e2e/docs. One phase at a time, sequential tasks.
     Manual — `pnpm dev` phone-width: 12 SVGs readable, Adventure swipes
     with peek, small panels centered one row; confirmed by user 2026-09-03.
   - [checkpoint: d33f798870243226a358789ef6dc2af352c9714d]
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions (be20907)
+  - Notes: (1) `ride-ready.ts find` loop is now assertion-free — unknown
+    roots terminate instead of casting; (2) `WHEEL` const-arrow is now
+    `function wheel()` per the TS guide. Gates after fix: tsc clean,
+    biome clean, 508 unit pass, ride-ready 95.65% stmts / 100% lines,
+    trains 100%.
