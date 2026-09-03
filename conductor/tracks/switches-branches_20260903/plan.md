@@ -126,7 +126,7 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     review.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 - Asset, Mounting & Scene Riding
+## Phase 2 - Asset, Mounting & Scene Riding [checkpoint: ef76e15]
 
 - [x] Task: Switch asset in Blender (house rules from `tech-stack.md`) [ecdfd21]
   - [x] Measure kit straight/curve GLBs first (module span, rail line,
@@ -205,6 +205,25 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - Wired in `init-scene.ts`: the ride's `onSwitchRoad` calls
     `tracks.setSwitchRoad`, so blades flip exactly when the ridden road
     changes. 476/476 tests, tsc + biome clean.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 2):
+  - Automated: `CI=true pnpm test` → 476/476 passing (32 files,
+    ride-motion 19/19); `pnpm exec tsc --noEmit` clean;
+    `pnpm exec biome check` clean after one format fix. No new
+    core-logic files, so no coverage gate (scene-only changes).
+  - Diff 21f2b15..ef76e15: switch.glb 60748 B, blender-switch.py,
+    ride-motion.ts/ride-motion.test.ts, track-renderer.ts,
+    init-scene.ts — reviewed fully, no strays.
+  - Acceptance: switch mounts on the kit straight anchor, wheels on
+    rails; stem→branch rides the SE-pivot arc with no pause; blades
+    ease 0 ↔ -0.21 over 180 ms, reduced-motion snaps, stem merges
+    keep last branch, rAF only during tweens.
+  - Manual smoke: `pnpm dev`, build a Y, Go alternates north/east
+    laps with blade flips, wagons follow, console clean, reload
+    restores.
+  - User confirmation: YES — phase-gate question confirmed
+    2026-09-03; proceeding to Phase 3.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - E2E, Docs & Final Gates
