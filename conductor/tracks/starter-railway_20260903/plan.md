@@ -8,7 +8,9 @@ Execution follows `conductor/workflow.md`: logic-bearing code
 criteria and is verified by smoke tests + manual tablet checks. Every phase
 ends with the workflow's Phase Verification & Checkpoint protocol.
 
-## Phase 1 — Preset builders (pure core)
+## Phase 1 — Preset builders (pure core) [checkpoint: 227f3cb273d4b4e66d4e55d8eae3fce195857ec0]
+
+- Verification Report: automated `pnpm test` → 34 files / 515 tests green, 100% coverage on `src/core/starters.ts`, `tsc` + `biome` clean. Manual: app boots unchanged (no UI wiring yet — correct), no console errors. User confirmed 2026-09-03.
 
 - [x] Task: Failing tests for `src/core/starters.ts` (`d05664f`)
   - [x] Three builders return `WorldData` (pieces, scenery, train `steam`, deliveries `{}`)
