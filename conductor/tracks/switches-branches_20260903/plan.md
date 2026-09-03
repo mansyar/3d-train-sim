@@ -276,3 +276,14 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
   - User confirmation: YES — phase-gate question confirmed
     2026-09-03; handing off to conductor-review.
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [2e1a8eb]
+
+  Notes:
+  - Hoisted the edge-inverse map to module-level `OPPOSITE_OF` in
+    `ride-motion.ts` (was rebuilt per `segmentForStep` call).
+  - `setSwitchRoad` in `track-renderer.ts` reuses the existing
+    `advancedEdge` mount helper for the yaw inverse instead of a
+    triple-`nextEdge` loop. Zero behavior change; tsc + biome + 476/476
+    green.
