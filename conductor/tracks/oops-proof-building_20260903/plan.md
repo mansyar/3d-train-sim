@@ -29,14 +29,23 @@ sequential within its phase.
 
 ## Phase 2: Rail UI + feedback (glue — `src/ui/app.ts`, `src/ui/style.css`, audio registry)
 
-- [ ] Task: Undo button affordance (acceptance, no unit tests)
-- [ ] ↩️ SVG slot in the rail, ≥64px, icon-only; hidden when `!canUndo`, pops in <100ms after a mutation; hides after undo / reload / reset
-- [ ] Tap restores via `store.undo()` + pop-bounce + happy ding (existing placement ding, mute-respecting); subscribes to world for show/hide
-- [ ] Hidden/dimmed state never blocks ▶ / ⏹ / 🎺; 48px tolerance kept
-- [ ] Task: Invalid-drop tuning (acceptance)
-- [ ] Keep ghost tint + trash pulse; exaggerate wobble-home + distinct soft thunk vs. ding; bad drop creates no undo
-- [ ] Instant trash + ✕-chip unchanged (no confirm gates, no long-press)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Undo button affordance (acceptance, no unit tests)
+- [x] ↩️ SVG slot in the rail, ≥64px, icon-only; hidden when `!canUndo`, pops in <100ms after a mutation; hides after undo / reload / reset
+- [x] Tap restores via `store.undo()` + pop-bounce + happy ding (existing placement ding, mute-respecting); subscribes to world for show/hide
+- [x] Hidden/dimmed state never blocks ▶ / ⏹ / 🎺; 48px tolerance kept
+- [x] Task: Invalid-drop tuning (acceptance)
+- [x] Keep ghost tint + trash pulse; exaggerate wobble-home + distinct soft thunk vs. ding; bad drop creates no undo
+- [x] Instant trash + ✕-chip unchanged (no confirm gates, no long-press)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Phase 2 Notes
+
+- Deviation (noted, not a spec change): ↩️ is an emoji glyph like its rail siblings (🎥/🗑️/🔊), not an inline SVG — an SVG would break the rail's visual consistency. Icon-only, 72px, no reading involved.
+- `thunk()` is TDD'd logic (Red: 2 fail / 28 pass; Green: 30/30): the rotation `click` voice at 0.55 rate, baseline restored on end — no new audio downloads (whistle-echo precedent), mute-respecting, capped at the click voice level.
+- Undo tap diffs before/after toy maps (defensive copies from the store make this safe): restored toy pings at its return cell, taken-back placement pings where it vanished, same-cell rotate is ding-only. Bad drops never touch the store, so no undo is armed.
+- Wobble-home grew 48px → 72px with a wider swing; reduced-motion still hides ping/wobble entirely. Ghost tint + trash pulse + silent trash + ✕-chip untouched.
+- Gates: full suite 494/494, `tsc --noEmit` clean, `biome check` clean. No tech-stack deviation.
+- Code SHA: `d4643dd`.
 
 ## Phase 3: Integration, smoke + docs
 
