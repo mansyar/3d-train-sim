@@ -36,7 +36,7 @@ gates + smoke + checkpoints per `workflow.md`.
     new `## [0.6.0]` section, compare links, and version bump —
     confirmed yes.
 
-## Phase 2 - Local Pre-Tag Verification
+## Phase 2 - Local Pre-Tag Verification [checkpoint: 6e96cb5]
 
 - [x] Task: Run the full local gate suite (bac1e25)
   - Acceptance: `pnpm check` green and the full Playwright e2e suite
@@ -72,11 +72,16 @@ gates + smoke + checkpoints per `workflow.md`.
     smoke all as specified: `/` 200 html no-cache; `/sw.js` no-cache;
     manifest no-cache; hashed JS immutable; unknown route → index.html
     200 no-cache. Container stopped/removed.
-  - [ ] `docker build` the image locally
-  - [ ] Run container; verify app loads, SPA fallback, cache headers
+  - [x] `docker build` the image locally
+  - [x] Run container; verify app loads, SPA fallback, cache headers
         (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed
         assets)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (6e96cb5)
+  - Verification Report (2026-09-03): `pnpm check` green (biome incl.
+    edited `style.css`, tsc, 508 vitest); full Playwright suite 77/77
+    at `--workers=2`; container smoke green. Scope since Phase 1
+    checkpoint is CSS-only + docs — no new unit tests required.
+    Manual: user confirmed the phase meets expectations — yes.
 
 ## Phase 3 - Tag & Ship
 
