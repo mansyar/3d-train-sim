@@ -8,16 +8,24 @@ sequential within its phase.
 
 ## Phase 1: Undo core (logic — `src/state/world.ts`, `src/state/world.test.ts`)
 
-- [ ] Task: Red — single-step undo model tests
-- [ ] Place piece/scenery success arms undo; failed place (occupied / water / out-of-bounds / capacity) arms nothing
-- [ ] Remove captures snapshot + index; unknown id arms nothing
-- [ ] Relocate/rotate captures from cell + rotation; not-found arms nothing
-- [ ] Undo restores exact toy (same id / type / kind / cell / rotation / index), notifies once, returns true; empty undo returns false with no notify
-- [ ] Second mutation overwrites first (single-step); successful undo clears; hydrate + reset clear pending undo; selectTrain / deliverCrate neither arm nor clear
-- [ ] Task: Green — implement `canUndo()` / `undo()` in `createWorldStore` (in-memory inverse closure, defensive copies, no save-schema change)
-- [ ] Inverse closures: place → remove id; remove → splice snapshot back at index; relocate → relocate back to from cell + rotation (covers same-cell rotate)
-- [ ] Coverage >80% on new logic (`CI=true pnpm test -- --coverage`)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Red — single-step undo model tests
+- [x] Place piece/scenery success arms undo; failed place (occupied / water / out-of-bounds / capacity) arms nothing
+- [x] Remove captures snapshot + index; unknown id arms nothing
+- [x] Relocate/rotate captures from cell + rotation; not-found arms nothing
+- [x] Undo restores exact toy (same id / type / kind / cell / rotation / index), notifies once, returns true; empty undo returns false with no notify
+- [x] Second mutation overwrites first (single-step); successful undo clears; hydrate + reset clear pending undo; selectTrain / deliverCrate neither arm nor clear
+- [x] Task: Green — implement `canUndo()` / `undo()` in `createWorldStore` (in-memory inverse closure, defensive copies, no save-schema change)
+- [x] Inverse closures: place → remove id; remove → splice snapshot back at index; relocate → relocate back to from cell + rotation (covers same-cell rotate)
+- [x] Coverage >80% on new logic (`CI=true pnpm test -- --coverage`)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Phase 1 Notes
+
+- Red: 16 new tests failed as expected (`store.canUndo is not a function`), 46 existing passed.
+- Green: `canUndo()` / `undo()` via in-memory inverse closures; inverses never touch the delivery ledger (undo of a placement preserves crates earned after it; undo of a removal restores its crate count).
+- Test fix during Green: split the failed-placement test in three (an armed undo from the setup place polluted the assertions) — no spec change.
+- Gates: full suite 492/492, `world.ts` coverage 93% stmts / 99% lines, `tsc --noEmit` clean, `biome check` clean. No tech-stack deviation.
+- Code SHA: `02ac50f`.
 
 ## Phase 2: Rail UI + feedback (glue — `src/ui/app.ts`, `src/ui/style.css`, audio registry)
 
