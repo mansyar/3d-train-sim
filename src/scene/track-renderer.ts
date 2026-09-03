@@ -416,8 +416,7 @@ export function startTrackRenderer(
     // World exit -> model exit (yaw 0 frame): model north = through,
     // model east = diverge. Invert the yaw advance applied at mount.
     const steps = item.rotation / 90;
-    let modelExit: Edge = exit;
-    for (let i = 0; i < (4 - steps) % 4; i++) modelExit = nextEdge(nextEdge(nextEdge(modelExit)));
+    const modelExit = advancedEdge(exit, (4 - steps) % 4);
     const target =
       modelExit === 'north' ? BLADE_THROUGH_Y : modelExit === 'east' ? BLADE_DIVERGE_Y : null;
     if (target === null) return; // a branch→stem merge keeps the last branch

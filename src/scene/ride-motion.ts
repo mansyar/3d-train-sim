@@ -96,6 +96,14 @@ function edgeMidpoint(cell: Cell, edge: Edge): { x: number; z: number } {
   return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
 }
 
+/** The edge opposite each compass edge — a switch leg is straight exactly then. */
+const OPPOSITE_OF: Record<Edge, Edge> = {
+  north: 'south',
+  south: 'north',
+  east: 'west',
+  west: 'east',
+};
+
 /**
  * The world path one ride step takes through its piece: either a straight run
  * or a quarter-arc pivoting on the cell centre (matching how the corner
@@ -108,13 +116,7 @@ export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
   // leaves by an adjacent edge (the diverging branch) — the authored GLB's
   // diverging road is the kit corner's own quarter-arc, so the ride pivots
   // the cell corner shared by the two edges, tangent-perpendicular to both.
-  const opposite: Record<Edge, Edge> = {
-    north: 'south',
-    south: 'north',
-    east: 'west',
-    west: 'east',
-  };
-  if ((piece.type === 'corner' || piece.type === 'switch') && step.to !== opposite[step.from]) {
+  if ((piece.type === 'corner' || piece.type === 'switch') && step.to !== OPPOSITE_OF[step.from]) {
     // The corner model's arc pivots on the cell corner shared by its two
     // open edges; its ends sit on the edge midpoints, tangent-
     // perpendicular to each edge (collinear with the straights' rails).
