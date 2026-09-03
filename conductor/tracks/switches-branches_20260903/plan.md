@@ -184,12 +184,27 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
     stays on rails <0.02 engine/<0.03 wagon, onSwitchRoad alternates
     north/east with no repeat/chatter). 19/19 ride-motion, 476/476
     full suite, tsc clean.
-- [ ] Task: Renderer mounting + blade animation
-  - [ ] `switch.glb` registered (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`);
+- [x] Task: Renderer mounting + blade animation [ef76e15]
+  - [x] `switch.glb` registered (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`);
         wheels sit on rails; materials match the kit
-  - [ ] Blades visibly flip to the chosen branch on alternation (short
+  - [x] Blades visibly flip to the chosen branch on alternation (short
         tween; instant snap under `prefers-reduced-motion`); event-driven,
         no per-frame cost outside the tween
+
+  Notes:
+  - `PIECE_URLS.switch` now points at `/assets/train-kit/switch.glb`
+    (60748 B, precached with the kit); `BASE_YAW.switch = 0` and
+    `KIT_ANCHORS.switch = [0,-1,2]` confirmed — the GLB is authored on
+    the kit straight mount, so no new math.
+  - New `TrackRenderer.setSwitchRoad(pieceId, exit)` maps the world exit
+    back to model space by inverting the cell yaw (3x `nextEdge`), then
+    eases `switch_blades.rotation.y` 0 (through) ↔ -0.21 (diverge, Blender
+    +z arrives as glTF +y) over 180 ms cubic ease-out; stem merges keep
+    the last branch; no-chatter guard; reduced-motion/disposed snaps
+    instantly; rAF only runs during a tween.
+  - Wired in `init-scene.ts`: the ride's `onSwitchRoad` calls
+    `tracks.setSwitchRoad`, so blades flip exactly when the ridden road
+    changes. 476/476 tests, tsc + biome clean.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - E2E, Docs & Final Gates
