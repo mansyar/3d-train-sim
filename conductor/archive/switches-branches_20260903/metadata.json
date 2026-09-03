@@ -1,0 +1,11 @@
+{
+  "id": "switches-branches_20260903",
+  "title": "Track Switches & Branches",
+  "type": "feature",
+  "status": "in progress",
+  "branch": "track/switches-branches_20260903",
+  "created": "2026-09-03",
+  "updated": "2026-09-03",
+  "spec": "conductor/tracks/switches-branches_20260903/spec.md",
+  "plan": "conductor/tracks/switches-branches_20260903/plan.md"
+}

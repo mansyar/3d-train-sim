@@ -11,6 +11,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ### Added
 
+- **Switches! The track can split in two.** A chunky new Y-junction piece
+  joins the track toybox: one way in, two ways out. Build two loops sharing
+  one junction, a little side track to nowhere, or chain switches together
+  — the train picks a branch each time through and keeps rolling, and the
+  switch's little point blades visibly flip to the road it chose. Switches
+  snap and turn like any track, ride at normal speed with no pauses at the
+  points, and old saved railways open exactly as before.
 - **Hills! The meadow gains real elevation.** Three chunky new pieces join
   the track toybox: a rising slope, a grassy hilltop, and a falling slope.
   Line them up and the train puffs its way up, cruises across the top of

@@ -1,4 +1,4 @@
-/** The piece catalog. The bridge spans the river; the tunnel rides under the hill; the hill run climbs it. */
+/** The piece catalog. The bridge spans the river; the tunnel rides under the hill; the hill run climbs it; the switch splits it. */
 export const PIECE_TYPES = [
   'straight',
   'corner',
@@ -8,6 +8,7 @@ export const PIECE_TYPES = [
   'slope-up',
   'hill',
   'slope-down',
+  'switch',
 ] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
@@ -52,6 +53,10 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   'slope-up': ['north', 'south'],
   hill: ['north', 'south'],
   'slope-down': ['north', 'south'],
+  // The Y-junction: stem on south, straight-through branch on north, curved
+  // diverging branch on east (right of the through-road). Routing is the
+  // switches module's job — connectivity just sees three open ends.
+  switch: ['north', 'east', 'south'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

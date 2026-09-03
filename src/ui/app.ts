@@ -29,6 +29,7 @@ const PIECE_LABELS: Record<PieceType, string> = {
   'slope-up': 'Rising slope track piece',
   hill: 'Hilltop track piece',
   'slope-down': 'Falling slope track piece',
+  switch: 'Switch track piece',
 };
 
 /** Emoji stand-ins until the toys get their GLB thumbnails. */
@@ -140,6 +141,25 @@ const PIECE_ICONS: Record<PieceType, string> = {
       <line x1="4" y1="12" x2="44" y2="40"
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
       <line x1="4" y1="17" x2="44" y2="45"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  // The switch: a straight through-road with a curved branch peeling off
+  // to the right — the Y a train takes a different way each pass.
+  switch: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 46 L24 2" fill="none"
+            stroke="var(--toy-brown)" stroke-width="22" stroke-linecap="round"/>
+      <path d="M24 27 Q35 25 44 9" fill="none"
+            stroke="var(--toy-brown)" stroke-width="18" stroke-linecap="round"/>
+      <path d="M24 46 L24 2" fill="none"
+            stroke="var(--toy-cream)" stroke-width="15" stroke-linecap="round"/>
+      <path d="M24 27 Q35 25 44 9" fill="none"
+            stroke="var(--toy-cream)" stroke-width="11" stroke-linecap="round"/>
+      <line x1="20.5" y1="44" x2="20.5" y2="4"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="27.5" y1="44" x2="27.5" y2="4"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <path d="M24 27 Q35 25 44 9" fill="none"
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`,
 };

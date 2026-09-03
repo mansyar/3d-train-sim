@@ -605,6 +605,216 @@ describe('solveRidePaths — one path per connected component', () => {
   });
 });
 
+describe('solvePath — switch pieces (Y topologies)', () => {
+  /**
+   * The choreography checks for switch paths: consecutive steps are either a
+   * physical hop onto the neighbouring piece or a dead-end reversal (same
+   * piece, retracing), the cycle closes on its own start state, and each
+   * switch's stem entries alternate their exits.
+   */
+  function expectCycleRides(pieces: readonly PlacedPiece[], path: ReturnType<typeof solvePath>) {
+    expect(path.closed).toBe(true);
+    expect(path.steps.length).toBeGreaterThan(0);
+    for (let i = 1; i < path.steps.length; i++) {
+      const prev = path.steps[i - 1];
+      const cur = path.steps[i];
+      if (!prev || !cur) throw new Error('step missing from traversal');
+      if (cur.pieceId === prev.pieceId) {
+        // Dead-end reversal: the train re-enters the piece it just left.
+        expect(cur.from).toBe(prev.to);
+        continue;
+      }
+      const prevPlaced = placedOf(pieces, prev.pieceId);
+      const curPlaced = placedOf(pieces, cur.pieceId);
+      expect(neighbourOf(prevPlaced.cell, prev.to)).toEqual(curPlaced.cell);
+      expect(neighbourOf(curPlaced.cell, cur.from)).toEqual(prevPlaced.cell);
+    }
+    // The cycle wraps onto itself: the state after the last step (same piece,
+    // same entry, same counters) is the state the first step rides from.
+    const first = path.steps[0];
+    const last = path.steps[path.steps.length - 1];
+    if (!first || !last) throw new Error('cycle incomplete');
+    if (first.pieceId === last.pieceId) {
+      expect(first.from).toBe(last.to);
+    } else {
+      const lastPlaced = placedOf(pieces, last.pieceId);
+      const firstPlaced = placedOf(pieces, first.pieceId);
+      expect(neighbourOf(lastPlaced.cell, last.to)).toEqual(firstPlaced.cell);
+      expect(neighbourOf(firstPlaced.cell, first.from)).toEqual(lastPlaced.cell);
+    }
+  }
+
+  /** The stem exits of one switch, in cycle order — these must alternate. */
+  function stemExits(path: ReturnType<typeof solvePath>, pieceId: string, stem: string) {
+    return path.steps.filter((s) => s.pieceId === pieceId && s.from === stem).map((s) => s.to);
+  }
+
+  function expectAlternating(exits: readonly string[]): void {
+    expect(exits.length).toBeGreaterThanOrEqual(2);
+    for (let i = 1; i < exits.length; i++) {
+      const prev = exits[i - 1];
+      const cur = exits[i];
+      if (prev && cur) expect(cur).not.toBe(prev);
+    }
+  }
+
+  it('rides a lone switch as a closed out-and-back cycle over both branches', () => {
+    const pieces = [piece('sw', 'switch', 2, 2, 0)];
+
+    const path = solvePath(pieces);
+
+    // The periodic cycle: straight through, back, diverge, back — forever.
+    expectCycleRides(pieces, path);
+    expect(path.steps).toEqual([
+      { pieceId: 'sw', from: 'south', to: 'north', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'north', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'south', to: 'east', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'east', to: 'south', entryHeight: 0, exitHeight: 0 },
+    ]);
+    expect(solvePath(pieces)).toEqual(path);
+  });
+
+  it('covers both branches of a Y whose stem and straight branch dead-end', () => {
+    // sw (2,2) rot 0: stem south → line to a dead end; straight branch north
+    // → line to a dead end; diverging branch east → open edge.
+    const pieces = [
+      piece('north-line', 'straight', 2, 1, 0),
+      piece('sw', 'switch', 2, 2, 0),
+      piece('stem-line', 'straight', 2, 3, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    // Both branch roads get ridden (the alternation is the point): each lap
+    // of the cycle takes the straight branch once and the diverging branch
+    // once, and branch entries merge through the stem.
+    expect(stemExits(path, 'sw', 'south')).toEqual(['north', 'east']);
+    const switchSteps = path.steps.filter((s) => s.pieceId === 'sw');
+    expect(switchSteps).toContainEqual({
+      pieceId: 'sw',
+      from: 'north',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+    expect(switchSteps).toContainEqual({
+      pieceId: 'sw',
+      from: 'east',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+    const reversals = path.steps.filter(
+      (s, i) => i > 0 && path.steps[i - 1]?.pieceId === s.pieceId,
+    );
+    expect(reversals.length).toBeGreaterThan(0);
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('alternates laps around a figure-8: two loops joined by two switches', () => {
+    // The classic double oval: sw1 (2,2) and sw2 (2,6) join a west inner loop
+    // and an east outer loop over a shared main line; the outer loop crosses
+    // the inner loop and the main line at two crossings.
+    const pieces = [
+      piece('sw1', 'switch', 2, 2, 0), // stem S, straight N, diverge E
+      piece('a21', 'corner', 2, 1, 180), // inner loop
+      piece('a11', 'corner', 1, 1, 90),
+      piece('a12', 'straight', 1, 2, 0),
+      piece('a13', 'straight', 1, 3, 0),
+      piece('a14', 'straight', 1, 4, 0),
+      piece('cx15', 'crossing', 1, 5, 0), // inner N–S; outer E–W
+      piece('cx16', 'crossing', 1, 6, 0), // inner N–S; outer W–E
+      piece('a17', 'corner', 1, 7, 0),
+      piece('a27', 'corner', 2, 7, 270),
+      piece('a23', 'straight', 2, 3, 0), // main line
+      piece('a24', 'straight', 2, 4, 0),
+      piece('cx25', 'crossing', 2, 5, 0), // main N–S; outer E–W
+      piece('sw2', 'switch', 2, 6, 180), // stem N, straight S, diverge W
+      piece('b32', 'straight', 3, 2, 90), // outer loop
+      piece('b42', 'corner', 4, 2, 180),
+      piece('b43', 'straight', 4, 3, 0),
+      piece('b44', 'straight', 4, 4, 0),
+      piece('b45', 'straight', 4, 5, 0),
+      piece('b35', 'straight', 3, 5, 90),
+      piece('c05', 'corner', 0, 5, 90),
+      piece('c06', 'corner', 0, 6, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    // Every piece is ridden — nothing is dead scenery (spec FR3).
+    expect(new Set(path.steps.map((s) => s.pieceId))).toEqual(new Set(pieces.map((p) => p.id)));
+    // Each switch alternates its stem exits: one lap takes the straight
+    // branch, the next the diverging branch.
+    expectAlternating(stemExits(path, 'sw1', 'south'));
+    expectAlternating(stemExits(path, 'sw2', 'north'));
+    // Branch entries merge through the stem on both switches.
+    for (const to of stemExits(path, 'sw1', 'north')) expect(to).toBe('south');
+    for (const to of stemExits(path, 'sw2', 'south')) expect(to).toBe('north');
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('bounces a chained-switch line across every branch and still terminates', () => {
+    // sw1 — line — sw2, every branch ending in a dead end: the ride shuttles
+    // back and forth, alternating through both switches, and the walk still
+    // finds its cycle (finite state space, guaranteed termination).
+    const pieces = [
+      piece('tip', 'straight', 2, 1, 0), // dead end north of sw1's straight branch
+      piece('sw1', 'switch', 2, 2, 0),
+      piece('mid', 'straight', 2, 3, 0),
+      piece('sw2', 'switch', 2, 4, 180), // stem N (toward mid), straight S, diverge W
+      piece('tail', 'straight', 2, 5, 0), // dead end south of sw2's straight branch
+      piece('spur', 'straight', 1, 4, 90), // dead end west of sw2's diverge
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    expect(new Set(path.steps.map((s) => s.pieceId))).toEqual(new Set(pieces.map((p) => p.id)));
+    expectAlternating(stemExits(path, 'sw1', 'south'));
+    expectAlternating(stemExits(path, 'sw2', 'north'));
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('keeps a switch flat: heights stay 0 through every switch step', () => {
+    const pieces = [
+      piece('north-line', 'straight', 2, 1, 0),
+      piece('sw', 'switch', 2, 2, 0),
+      piece('stem-line', 'straight', 2, 3, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    for (const step of path.steps) expect(step.entryHeight).toBe(0);
+    for (const step of path.steps) expect(step.exitHeight).toBe(0);
+  });
+
+  it('gives a switch component its own ride next to plain tracks', () => {
+    const pieces = [
+      ...[
+        piece('nw', 'corner', 0, 0, 90),
+        piece('ne', 'corner', 1, 0, 180),
+        piece('se', 'corner', 1, 1, 270),
+        piece('sw', 'corner', 0, 1, 0),
+      ],
+      piece('lone-switch', 'switch', 5, 5, 0),
+    ];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(2);
+    expect(paths[0]?.closed).toBe(true);
+    expect(paths[0]?.steps.every((s) => s.pieceId !== 'lone-switch')).toBe(true);
+    expect(paths[1]?.steps.every((s) => s.pieceId === 'lone-switch')).toBe(true);
+    expect(paths[1]?.closed).toBe(true);
+  });
+});
+
 describe('selectRideComponents — rank and cap concurrent rides', () => {
   const component = (id: string, size: number, anchor: string): RideComponent => ({
     pieceIds: Array.from({ length: size }, (_, i) => `${id}-${i}`),

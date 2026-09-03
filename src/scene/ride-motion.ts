@@ -96,6 +96,14 @@ function edgeMidpoint(cell: Cell, edge: Edge): { x: number; z: number } {
   return { x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 };
 }
 
+/** The edge opposite each compass edge — a switch leg is straight exactly then. */
+const OPPOSITE_OF: Record<Edge, Edge> = {
+  north: 'south',
+  south: 'north',
+  east: 'west',
+  west: 'east',
+};
+
 /**
  * The world path one ride step takes through its piece: either a straight run
  * or a quarter-arc pivoting on the cell centre (matching how the corner
@@ -104,7 +112,11 @@ function edgeMidpoint(cell: Cell, edge: Edge): { x: number; z: number } {
 export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
   const entry = edgeMidpoint(piece.cell, step.from);
   const exit = edgeMidpoint(piece.cell, step.to);
-  if (piece.type === 'corner') {
+  // Corners always curve; a switch curves exactly when its chosen road
+  // leaves by an adjacent edge (the diverging branch) — the authored GLB's
+  // diverging road is the kit corner's own quarter-arc, so the ride pivots
+  // the cell corner shared by the two edges, tangent-perpendicular to both.
+  if ((piece.type === 'corner' || piece.type === 'switch') && step.to !== OPPOSITE_OF[step.from]) {
     // The corner model's arc pivots on the cell corner shared by its two
     // open edges; its ends sit on the edge midpoints, tangent-
     // perpendicular to each edge (collinear with the straights' rails).
@@ -169,6 +181,8 @@ export function createRideMotion(
   onTunnelChange?: (inside: boolean) => void,
   /** Announces the station cargo duty at each stop (load ⇄ deliver). */
   onStationCargo?: (stationId: string) => void,
+  /** Announces which road a switch just set as the engine reaches its cell. */
+  onSwitchRoad?: (pieceId: string, exit: Edge) => void,
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -224,6 +238,21 @@ export function createRideMotion(
   let forwardEntry: number[] = [];
   let backwardEntry: number[] = [];
 
+  /**
+   * Switch choreography (built once per ride): the road each segment's step
+   * takes through a switch piece (null elsewhere), announced event-driven as
+   * the engine reaches the cell; and the path distances where the cycle's
+   * dead-end reversals park the train for a beat — the turnaround pauses.
+   * A switch cycle is always closed, so the seam itself may be a turnaround.
+   */
+  let switchRoads: ({ pieceId: string; exit: Edge } | null)[] = [];
+  let turnarounds: number[] = [];
+  let turnaroundIndex = 0;
+  let wrapTurnaround = false;
+  let pauseFlipsDirection = true;
+  let pauseResumesAtZero = false;
+  let lastRoadKey = '';
+
   function beginRide(state: RideState): void {
     const byId = new Map(world.pieces().map((piece) => [piece.id, piece]));
     const flags = tunnelFlagsForPath(world.pieces(), state.path);
@@ -276,6 +305,41 @@ export function createRideMotion(
     total = 0;
     for (const segment of segments) total += segment.length;
     closed = state.path.closed;
+    // Switch choreography: per-segment road announcements, and the turnaround
+    // pauses where a step re-enters the piece it just left (the solved cycle
+    // bounces at dead ends exactly where the ride layer's shuttle would).
+    switchRoads = [];
+    turnarounds = [];
+    wrapTurnaround = false;
+    turnaroundIndex = 0;
+    pauseFlipsDirection = true;
+    pauseResumesAtZero = false;
+    lastRoadKey = '';
+    let travelled = 0;
+    for (let i = 0; i < kept.length; i++) {
+      const cur = kept[i];
+      if (!cur) continue;
+      switchRoads.push(
+        cur.piece.type === 'switch' ? { pieceId: cur.piece.id, exit: cur.step.to } : null,
+      );
+      const prev = kept[i - 1];
+      if (
+        prev &&
+        cur.step.pieceId === prev.step.pieceId &&
+        cur.step.from === prev.step.to &&
+        cur.step.to === prev.step.from
+      ) {
+        turnarounds.push(travelled); // the boundary before this re-entry
+      }
+      travelled += segments[i]?.length ?? 0;
+    }
+    if (
+      kept.length > 1 &&
+      kept[0]?.step.pieceId === kept[kept.length - 1]?.step.pieceId &&
+      kept[0]?.step.from === kept[kept.length - 1]?.step.to
+    ) {
+      wrapTurnaround = true; // the cycle's seam is itself a dead-end bounce
+    }
     // The stations standing beside the rails become pause points: the point
     // on the rails closest to each station, so the train rests AT the station
     // rather than at the entry to its cell (spec FR4).
@@ -457,11 +521,44 @@ export function createRideMotion(
     }
   }
 
+  /**
+   * True when the forward step from `prev` to `distance` reaches the next
+   * turnaround in the solved cycle; parks the train there for the dead-end
+   * beat and returns the clamp distance (the caller writes the pose). Never
+   * fires while shuttling back — switch cycles are closed and only ridden
+   * forward.
+   */
+  function turnaroundWithin(prev: number, distance: number): number | null {
+    while (
+      turnaroundIndex < turnarounds.length &&
+      (turnarounds[turnaroundIndex] ?? 0) <= prev + 1e-6
+    ) {
+      turnaroundIndex += 1; // already behind us (a resumed ride starts mid-cycle)
+    }
+    const at = turnarounds[turnaroundIndex];
+    if (at === undefined || at > distance) return null;
+    turnaroundIndex += 1;
+    distance = at;
+    pauseTimer = END_PAUSE_SECONDS;
+    pauseFlipsDirection = false; // the cycle continues onward after the beat
+    setPaused(true);
+    armAll(); // the next leg owes every station again
+    return distance;
+  }
+
   /** One pose write for the whole little train: engine plus wagons. */
   function poseTrain(d: number): void {
     const segmentIndex = poseAt(d);
     // An overhang past the path ends keeps its last under/over-hill verdict.
     if (segmentIndex >= 0) setInsideTunnel(tunnelSteps[segmentIndex] === true);
+    // The road the engine just reached a switch by — announced once per
+    // change, never per frame (the blade-flip listener is scene-side).
+    const road = segmentIndex >= 0 ? (switchRoads[segmentIndex] ?? null) : null;
+    const roadKey = road ? `${road.pieceId}|${road.exit}` : '';
+    if (roadKey !== lastRoadKey) {
+      lastRoadKey = roadKey;
+      if (road) onSwitchRoad?.(road.pieceId, road.exit);
+    }
     poseFollowers();
   }
 
@@ -525,7 +622,19 @@ export function createRideMotion(
       if (brakeTarget !== null) {
         // Braking for a station: the ease above pulls the speed down while
         // the train coasts the last stretch to the station cell (spec FR4).
+        const prev = distance;
         distance += travelDirection * RIDE_SPEED * speedScale * dt;
+        if (travelDirection === 1) {
+          const at = turnaroundWithin(prev, distance);
+          if (at !== null) {
+            // The turnaround comes first: drop the brake, park, and let the
+            // next leg owe the station again (it was re-armed by the pause).
+            distance = at;
+            brakeTarget = null;
+            pendingStationId = null;
+            return poseTrain(distance);
+          }
+        }
         const arrived = travelDirection === 1 ? distance >= brakeTarget : distance <= brakeTarget;
         if (arrived || speedScale <= 0) {
           const stationId = pendingStationId;
@@ -550,7 +659,15 @@ export function createRideMotion(
       if (pauseTimer > 0) {
         pauseTimer -= dt;
         if (pauseTimer <= 0) {
-          travelDirection = travelDirection === 1 ? -1 : 1;
+          if (pauseFlipsDirection) travelDirection = travelDirection === 1 ? -1 : 1;
+          if (pauseResumesAtZero) {
+            // A switch cycle whose seam is a dead-end bounce: resume from
+            // the top of the cycle, not by flipping travel direction.
+            distance = 0;
+            pauseResumesAtZero = false;
+            turnaroundIndex = 0;
+          }
+          pauseFlipsDirection = true;
           setPaused(false); // Rolling again — the chug returns to full tempo.
         }
         return;
@@ -563,6 +680,17 @@ export function createRideMotion(
           if (getState()?.path.closed) {
             // Closed loops finish the lap, then roll on from the top.
             if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
+            if (wrapTurnaround) {
+              // The seam bounces: park at the top, then restart the cycle.
+              distance = total;
+              if (brakeForStopsInWindow(prev, total)) return poseTrain(distance);
+              pauseTimer = END_PAUSE_SECONDS;
+              pauseFlipsDirection = false;
+              pauseResumesAtZero = true;
+              setPaused(true);
+              armAll();
+              return poseTrain(distance);
+            }
             distance %= total;
             armAll();
             if (brakeForStopsInWindow(0, distance)) return poseTrain(distance);
@@ -573,6 +701,8 @@ export function createRideMotion(
             setPaused(true);
             armAll(); // The way back owes every station again.
           }
+        } else if (turnaroundWithin(prev, distance) !== null) {
+          return poseTrain(distance);
         } else if (brakeForStopsInWindow(prev, distance)) {
           return poseTrain(distance);
         }

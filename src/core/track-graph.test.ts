@@ -94,6 +94,14 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'slope-down')).toBeNull();
   });
 
+  it('rejects the switch on river water — dry-land toy like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'switch')).toBe('water');
+  });
+
+  it('accepts a switch on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch')).toBeNull();
+  });
+
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {
     expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
     const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];
@@ -147,6 +155,48 @@ describe('endpointEdgesFor — crossing', () => {
           .sort(),
       ).toEqual(atZero);
     }
+  });
+});
+
+describe('endpointEdgesFor — switch', () => {
+  it('bridges north, east, and south cell edges at 0° (stem south, branches north and east)', () => {
+    expect(endpointEdgesFor(piece('s', 'switch', 2, 3, 0))).toEqual([
+      '2,2|2,3', // north — straight-through branch
+      '2,3|3,3', // east — diverging branch
+      '2,3|2,4', // south — stem
+    ]);
+  });
+
+  it('walks the Y clockwise through all rotations, base order with advanced labels', () => {
+    expect(endpointEdgesFor(piece('s', 'switch', 2, 3, 90))).toEqual([
+      '2,3|3,3', // east (rotated north)
+      '2,3|2,4', // south (rotated east)
+      '1,3|2,3', // west (rotated south — the stem)
+    ]);
+    expect(endpointEdgesFor(piece('s', 'switch', 2, 3, 180))).toEqual([
+      '2,3|2,4', // south (rotated north)
+      '1,3|2,3', // west (rotated east)
+      '2,2|2,3', // north (rotated south — the stem)
+    ]);
+    expect(endpointEdgesFor(piece('s', 'switch', 2, 3, 270))).toEqual([
+      '1,3|2,3', // west (rotated north)
+      '2,2|2,3', // north (rotated east)
+      '2,3|3,3', // east (rotated south — the stem)
+    ]);
+  });
+
+  it('connects a switch to neighbors on its three sides like any endpoint set', () => {
+    const pieces = [
+      piece('s', 'switch', 2, 3, 0),
+      piece('n', 'straight', 2, 2, 0), // meets the straight-through branch
+      piece('e', 'straight', 3, 3, 90), // meets the diverging branch
+      piece('stem', 'straight', 2, 4, 0), // meets the stem
+    ];
+    const connections = connectionsFor(pieces).map((c) => [c.a, c.b, c.via]);
+    expect(connections).toHaveLength(3);
+    expect(connections).toContainEqual(['s', 'n', '2,2|2,3']);
+    expect(connections).toContainEqual(['s', 'e', '2,3|3,3']);
+    expect(connections).toContainEqual(['s', 'stem', '2,3|2,4']);
   });
 });
 

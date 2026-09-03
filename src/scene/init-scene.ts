@@ -27,6 +27,7 @@ import {
 } from '../core/sky-palette';
 import {
   type Cell,
+  type Edge,
   MEADOW_CELLS,
   neighbourOf,
   type PieceType,
@@ -478,6 +479,7 @@ export function initScene(
       wagons,
       (inside) => setRigInTunnel(rig, inside),
       (stationId) => handleStationCargo(rig, stationId),
+      (pieceId: string, exit: Edge) => tracks.setSwitchRoad(pieceId, exit),
     );
     return rig;
   };
