@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 /**
  * Tunnel smoke: the hill drags in like any track piece, loads its own GLB,
  * and a ride through it stays clean — the toddler's classic anticipation
@@ -40,6 +42,7 @@ test('a placed tunnel loads its GLB and the train rides through it cleanly', asy
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+  await clearMeadow(page);
   // Straight → tunnel → straight on dry land, via the dev handle.
   await placeLine(page, [
     ['straight', { x: 2, y: 6 }],
@@ -85,6 +88,7 @@ test('a run of tunnels rides as one hill and survives a reload', async ({ page }
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+  await clearMeadow(page);
   // A three-tunnel run flanked by straights — portals only at the ends.
   await placeLine(page, [
     ['straight', { x: 2, y: 5 }],

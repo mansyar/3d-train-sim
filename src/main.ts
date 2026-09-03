@@ -4,11 +4,13 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
-import { deserializeWorld } from './core/save';
+import { deserializeWorld, serializeWorld } from './core/save';
+import { cozyOval } from './core/starters';
 import { initScene, type SceneHandle } from './scene/init-scene';
 import {
   loadWorldSnapshot,
   restoreMutePreference,
+  saveWorldSnapshot,
   watchMutePersistence,
   watchWorldPersistence,
 } from './state/persistence';
@@ -26,13 +28,30 @@ if (root) {
   const audio = createAudioController(createHowlerVoice());
   let restoring = true;
   void loadWorldSnapshot().then((snapshot) => {
-    if (snapshot) world.hydrate(deserializeWorld(snapshot));
+    if (snapshot) {
+      world.hydrate(deserializeWorld(snapshot));
+    } else {
+      // First run: seed a rideable cozy oval so the meadow invites one tap.
+      world.hydrate(cozyOval());
+    }
     // The sound preference rides in the snapshot; apply it before the
     // persistence watchers attach so boot hydration never rewrites storage.
     restoreMutePreference(snapshot, audio);
     restoring = false;
     watchWorldPersistence(world, () => audio.isMuted());
     watchMutePersistence(audio, world);
+    if (!snapshot) {
+      // The watchers only save on change — persist the seeded starter once.
+      void saveWorldSnapshot(
+        serializeWorld(
+          world.pieces(),
+          world.scenery(),
+          world.train(),
+          audio.isMuted(),
+          world.deliveries(),
+        ),
+      );
+    }
   });
   let scene: SceneHandle | null = null;
   // The scene binds after the app mounts — queue subscription listeners until

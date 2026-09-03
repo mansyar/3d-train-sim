@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 /**
  * Hill smoke: the hill run drags in like any track piece, loads its own
  * GLBs, and a ride over the crest stays clean — the train climbs, crosses,
@@ -42,6 +44,7 @@ test('a placed hill run loads its GLBs and the train rides over the crest cleanl
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+  await clearMeadow(page);
   // slope-up → hill → slope-down on dry land, via the dev handle.
   await placeLine(page, [
     ['slope-up', { x: 2, y: 6 }],
@@ -89,6 +92,7 @@ test('a hill run survives a reload', async ({ page }) => {
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+  await clearMeadow(page);
   // A hill run flanked by straights — climb, crest, descent, at grade.
   await placeLine(page, [
     ['straight', { x: 2, y: 5 }],

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { clearMeadow } from './helpers';
+
 /**
  * Oops-proof building smoke: the ↩️ take-back joins the rail after a change,
  * reverses it, then hides — and a reload restores the exact world with no ↩️
@@ -38,6 +40,7 @@ test('taking back a placement removes the toy and hides the undo', async ({ page
 
   await page.goto('/');
   await ready(page);
+  await clearMeadow(page);
 
   await page.evaluate(() => {
     const world = (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld;
@@ -83,6 +86,7 @@ test('a trashed toy comes back, and a reload keeps the world with no undo', asyn
 
   await page.goto('/');
   await ready(page);
+  await clearMeadow(page);
 
   await page.evaluate(() => {
     const world = (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld;

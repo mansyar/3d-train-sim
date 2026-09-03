@@ -3,6 +3,7 @@ import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import { closesLoop } from '../core/ride-ready';
 import { isWater } from '../core/river';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
+import { STARTER_PRESETS } from '../core/starters';
 import {
   type Cell,
   MAX_PIECES,
@@ -340,6 +341,14 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
             aria-label="Parent gate — press and hold to reset the world">
       <span class="gate-icon" aria-hidden="true">♻️</span>
     </button>
+    <div class="preset-tray" role="group" aria-label="Starter railways" hidden>
+      <button class="preset-pick" type="button" data-preset="cozy-oval"
+              aria-label="Build the cozy oval starter railway">${PIECE_ICONS.corner}</button>
+      <button class="preset-pick" type="button" data-preset="station-village"
+              aria-label="Build the station village starter railway">${SCENERY_ICONS.station}</button>
+      <button class="preset-pick" type="button" data-preset="river-crossing"
+              aria-label="Build the river crossing starter railway">${PIECE_ICONS.bridge}</button>
+    </div>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Toybox"
               aria-expanded="false" data-drawer="toys">🧸</button>
@@ -944,6 +953,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   if (!parentGate) {
     throw new Error('parent gate missing from app frame');
   }
+  const presetTray = root.querySelector<HTMLDivElement>('.preset-tray');
+  if (!presetTray) {
+    throw new Error('preset tray missing from app frame');
+  }
 
   const HOLD_MS = 2000;
   const DRIFT_PX = 48;
@@ -971,6 +984,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     suppressNextClick = true;
     parentGate.classList.add('is-confirm');
     parentGate.setAttribute('aria-label', CONFIRM_LABEL);
+    presetTray.hidden = false;
   };
 
   const disarmConfirm = () => {
@@ -978,6 +992,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     confirmArmed = false;
     parentGate.classList.remove('is-confirm');
     parentGate.setAttribute('aria-label', HOLD_LABEL);
+    presetTray.hidden = true;
   };
 
   parentGate.addEventListener('pointerdown', (event) => {
@@ -1024,6 +1039,20 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     options.audio.ding();
   });
 
+  // ---- Starter gallery: three icon-only presets inside the parent gate --
+  // The tray only opens with the armed confirm step, so kid taps can never
+  // reach it. A pick lands as ONE undoable mutation — the ↩️ chip appears
+  // and one tap restores the prior build.
+  for (const pick of presetTray.querySelectorAll<HTMLButtonElement>('.preset-pick')) {
+    pick.addEventListener('click', () => {
+      const preset = STARTER_PRESETS.find((entry) => entry.id === pick.dataset.preset);
+      if (!preset) return;
+      disarmConfirm();
+      options.world.applyPreset(preset.build());
+      options.audio.ding();
+    });
+  }
+
   // Any press anywhere is toddler activity: it dismisses the attract drift
   // instantly and keeps the idle clock at arm's length.
   window.addEventListener('pointerdown', () => options.notifyActivity());
@@ -1031,7 +1060,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // A tap anywhere outside the armed gate dismisses it silently.
   window.addEventListener('pointerdown', (event) => {
     if (!confirmArmed) return;
-    if (event.target instanceof Element && event.target.closest('.parent-gate')) return;
+    if (event.target instanceof Element && event.target.closest('.parent-gate, .preset-tray'))
+      return;
     disarmConfirm();
   });
 
