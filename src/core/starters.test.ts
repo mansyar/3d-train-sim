@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { rideComponentsOf } from './pathing';
 import { hasCycle, isRideable } from './ride-ready';
 import { isWater } from './river';
 import type { WorldData } from './save';
@@ -20,6 +21,12 @@ function expectValidStarter(data: WorldData): void {
   expect(toys).toBeLessThanOrEqual(20);
   expect(isRideable(data.pieces)).toBe(true);
   expect(hasCycle(data.pieces)).toBe(true);
+  // The train's own solver must see one closed ride covering every piece —
+  // weaker checks (any cycle exists) would let a dangling layout pass.
+  const components = rideComponentsOf(data.pieces);
+  expect(components).toHaveLength(1);
+  expect(components[0]?.path.closed).toBe(true);
+  expect(components[0]?.path.steps).toHaveLength(data.pieces.length);
   const ids = [...data.pieces.map((p) => p.id), ...data.scenery.map((s) => s.id)];
   expect(new Set(ids).size).toBe(ids.length);
   const cells = [...data.pieces.map((p) => p.cell), ...data.scenery.map((s) => s.cell)];

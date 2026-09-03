@@ -296,8 +296,17 @@ export function startTrackRenderer(
     const yaw = -(item.rotation * Math.PI) / 180 + baseYawOf(kind);
     const { x, z } = cellToWorld(item.cell);
     let model = rendered.get(item.id);
+    // Whole-world swaps (preset gallery, snapshot restores) reuse ids across
+    // kinds — a clone of another kind must leave, never just move and re-yaw.
+    if (model && model.userData.renderedKind !== kind) {
+      scene.remove(model);
+      rendered.delete(item.id);
+      bladeTweens.delete(item.id);
+      model = undefined;
+    }
     if (!model) {
       model = template.clone(true);
+      model.userData.renderedKind = kind;
       scene.add(model);
       rendered.set(item.id, model);
     }
