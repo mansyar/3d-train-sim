@@ -49,11 +49,19 @@ sequential within its phase.
 
 ## Phase 3: Integration, smoke + docs
 
-- [ ] Task: Ride / persist / gate interplay (acceptance + smoke)
-- [ ] Undo notifies → existing soft-stop of touched rides + autosave fires (no `ride.ts` change expected)
-- [ ] Parent-gate reset clears undo; reload hydrates exact world with no ↩️
-- [ ] Playwright smoke via `window.__tinyTracksWorld`: place → undo → assert gone; trash → undo → assert back; bad drop → no undo; clean console
-- [ ] Tablet manual: 360px phone + iPad widths, touch-only, reduced-motion respected
-- [ ] Task: Docs + gates (biome + tsc + vitest + e2e)
-- [ ] CHANGELOG `Unreleased` note (parent-facing); no tech-stack change (no new deps)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Ride / persist / gate interplay (acceptance + smoke)
+- [x] Undo notifies → existing soft-stop of touched rides + autosave fires (no `ride.ts` change expected)
+- [x] Parent-gate reset clears undo; reload hydrates exact world with no ↩️
+- [x] Playwright smoke via `window.__tinyTracksWorld`: place → undo → assert gone; trash → undo → assert back; bad drop → no undo; clean console
+- [x] Tablet manual: 360px phone + iPad widths, touch-only, reduced-motion respected
+- [x] Task: Docs + gates (biome + tsc + vitest + e2e)
+- [x] CHANGELOG `Unreleased` note (parent-facing); no tech-stack change (no new deps)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Phase 3 Notes
+
+- Ride interplay needs no `ride.ts` change: `undo()` funnels through the same `notify()` as every other mutation, and soft-stop-on-edit is already unit-covered (`ride.test.ts`: remove → soft-stop). Reset/hydrate clearing is unit-covered (Phase 1).
+- New `e2e/undo.spec.ts` (tablet + phone projects, 4/4 green): place → ↩️ visible → tap → gone + hidden; refused double-placement arms nothing new; trash → undo → back; reload → world kept with no ↩️; clean console throughout.
+- Tablet manual steps for the user (touch-only, 360px + iPad): place a track (↩️ pops in <100ms) → tap ↩️ (pop + ding, button hides) → drag a toy to nowhere (big wobble + soft knock, no ↩️) → trash a toy → ↩️ → back; mute → all silent; reduced-motion → still feedback, no animation.
+- Gates: full unit suite 494/494, `tsc --noEmit` clean, `biome check` clean (one format autofix on the new spec), undo e2e 4/4. No tech-stack deviation (no new deps, no new audio files).
+- Code SHAs: `d4643dd` (UI + audio), `cd819b2` (e2e + CHANGELOG).
