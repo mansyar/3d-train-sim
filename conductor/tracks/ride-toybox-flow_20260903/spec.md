@@ -63,7 +63,8 @@ all icon-only, no reading, no new gestures.
     bridge/tunnel/slope-up/hill/slope-down/switch → `adventure`.
   - Tab icon `adventure` = 🌉, aria `Adventure toys`. Order: rails,
     adventure, nature, town, critter.
-  - Each panel holds ≤6 toys; single row on ≥360px viewports.
+  - Each panel holds ≤6 toys in a single row; on narrow viewports the row
+    scrolls sideways (swipe) instead of wrapping over the meadow.
 - **FR3 — Chunky SVG icons:**
   - New inline SVGs for tree, bush, rock, house, cottage, station, pig,
     sheep, pug + three locomotives, matching `PIECE_ICONS` construction
@@ -102,7 +103,7 @@ all icon-only, no reading, no new gestures.
   meadow moves nothing and never stops the train; ⏹/whistle/mute still work;
   stop → tools return, world exact.
 - **AC2:** Drawer shows 5 tabs in order; Rails holds 3, Adventure holds 6;
-  each panel fits one row at 360px; no meadow-covering wrap.
+  panels stay one row at 360px (Adventure swipes sideways); no wrap.
 - **AC3:** No emoji glyphs in toybox/train drawer; SVGs crisp at arm's
   length, contrast-kept, targets ≥64px.
 - **AC4:** Place first piece → ride button pulses; close an oval → one ding

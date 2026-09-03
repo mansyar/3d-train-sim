@@ -282,9 +282,18 @@ body {
 
 .drawer-panel {
   display: flex;
-  flex-wrap: wrap; /* Five+ track toys wrap to a second row on phones. */
+  flex-wrap: nowrap; /* One scrollable row: the 6-toy Adventure panel swipes
+     sideways on phones instead of wrapping over the meadow. Drags starting
+     on a toy still place it (slots keep touch-action: none); swipes starting
+     on the gaps scroll. */
   gap: 16px;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-inline: auto;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+  width: max-content;
 }
 
 .drawer-panel[hidden] {
@@ -323,12 +332,16 @@ body {
   border-radius: 20px;
   box-shadow: 0 4px 0 var(--toy-brown);
   cursor: grab;
-  font-size: 40px;
-  line-height: 1;
   min-height: 72px;
   min-width: 72px;
   padding: 10px;
   touch-action: none;
+}
+
+.scenery-slot svg {
+  display: block;
+  height: 44px;
+  width: 44px;
 }
 
 .scenery-slot.is-dimmed {
@@ -365,11 +378,16 @@ body {
   border-radius: 20px;
   box-shadow: 0 4px 0 var(--toy-brown);
   cursor: pointer;
-  font-size: 40px;
   min-height: 72px;
   min-width: 72px;
   padding: 10px;
   touch-action: manipulation;
+}
+
+.train-slot svg {
+  display: block;
+  height: 44px;
+  width: 44px;
 }
 
 .train-slot[aria-pressed='true'] {

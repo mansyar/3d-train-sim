@@ -33,17 +33,109 @@ const PIECE_LABELS: Record<PieceType, string> = {
   switch: 'Switch track piece',
 };
 
-/** Emoji stand-ins until the toys get their GLB thumbnails. */
+/** Chunky inline SVGs in the PIECE_ICONS construction: 48×48 viewBox,
+ * `var(--toy-*)` fills, brown outlines, steel accents. No emoji in kid UI. */
 const SCENERY_ICONS: Record<SceneryKind, string> = {
-  tree: '🌳',
-  bush: '🌿',
-  rock: '🪨',
-  house: '🏠',
-  cottage: '🛖',
-  station: '🚉',
-  pig: '🐷',
-  sheep: '🐑',
-  pug: '🐶',
+  // A round-canopy tree on a stubby trunk.
+  tree: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="21" y="28" width="6" height="14" rx="2" fill="var(--toy-brown)"/>
+      <circle cx="24" cy="18" r="14" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="13" r="4" fill="var(--toy-cream)" opacity=".5"/>
+    </svg>`,
+  // A low garden bush — all canopy, no trunk.
+  bush: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="24" cy="30" rx="17" ry="12" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="17" cy="27" r="3.5" fill="var(--toy-cream)" opacity=".5"/>
+    </svg>`,
+  // A chunky boulder with a sunlit edge.
+  rock: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M8 40 L14 20 L30 14 L42 26 L39 40 Z" fill="var(--toy-steel)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <line x1="17" y1="24" x2="28" y2="20" stroke="var(--toy-cream)"
+            stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    </svg>`,
+  // A gabled house with an orange roof and a brown door.
+  house: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="12" y="20" width="24" height="20" rx="2" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M6 22 L24 6 L42 22 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="21" y="29" width="6" height="11" rx="1" fill="var(--toy-brown)"/>
+    </svg>`,
+  // The cottage: round walls, mossy roof, porthole window.
+  cottage: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="11" y="22" width="26" height="18" rx="8" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M5 24 Q24 4 43 24 Z" fill="var(--toy-green)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="24" cy="31" r="5" fill="var(--toy-steel)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
+  // The station: orange signboard, clock face, steel platform.
+  station: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="10" y="14" width="28" height="18" rx="2" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <rect x="6" y="8" width="36" height="7" rx="3" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="24" cy="23" r="5" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <rect x="10" y="32" width="28" height="6" rx="2" fill="var(--toy-steel)"
+            stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
+  // A round piggy: orange head, cream snout, perky ears.
+  pig: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M14 15 L10 5 L21 10 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M34 15 L38 5 L27 10 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="24" cy="26" r="15" fill="var(--toy-orange)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="21" r="2" fill="var(--toy-brown)"/>
+      <circle cx="30" cy="21" r="2" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="30" rx="6" ry="5" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="22" cy="30" r="1.2" fill="var(--toy-brown)"/>
+      <circle cx="26" cy="30" r="1.2" fill="var(--toy-brown)"/>
+    </svg>`,
+  // A woolly sheep: cream puffs around a brown face.
+  sheep: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="15" cy="19" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="24" cy="14" r="8" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="33" cy="19" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="17" cy="28" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="31" cy="28" r="7" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <ellipse cx="24" cy="32" rx="7" ry="6" fill="var(--toy-brown)"/>
+      <circle cx="22" cy="31" r="1.2" fill="var(--toy-cream)"/>
+      <circle cx="26" cy="31" r="1.2" fill="var(--toy-cream)"/>
+    </svg>`,
+  // A pug: orange crunch-face, cream muzzle, floppy brown ears.
+  pug: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="13" cy="22" rx="5" ry="9" fill="var(--toy-brown)"/>
+      <ellipse cx="35" cy="22" rx="5" ry="9" fill="var(--toy-brown)"/>
+      <circle cx="24" cy="24" r="14" fill="var(--toy-orange)"
+              stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="18" cy="20" r="1.8" fill="var(--toy-brown)"/>
+      <circle cx="30" cy="20" r="1.8" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="30" rx="7" ry="6" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="24" cy="27" r="2.2" fill="var(--toy-brown)"/>
+    </svg>`,
 };
 
 const PIECE_ICONS: Record<PieceType, string> = {
@@ -285,7 +377,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     button.dataset.train = kind;
     button.setAttribute('aria-label', trainAria(kind));
     button.setAttribute('aria-pressed', String(options.world.train() === kind));
-    button.textContent = trainIcon(kind);
+    button.innerHTML = trainIcon(kind);
     trainDrawer.append(button);
   }
   root.append(trainDrawer);
