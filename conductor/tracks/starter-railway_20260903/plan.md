@@ -45,15 +45,17 @@ ends with the workflow's Phase Verification & Checkpoint protocol.
 
 ## Phase 3 — Boot seed + parent-gated gallery (UI glue)
 
-- [ ] Task: Record observable acceptance criteria in this plan before implementing
+- [x] Task: Record observable acceptance criteria in this plan before implementing (confirmed by user 2026-09-03)
   - [ ] Null snapshot → Cozy Oval hydrated, saved, ▶ rides instantly with pulse + ding
   - [ ] Picker reachable only inside the gate's armed-confirm step; 3 icon-only choices, ≥64px targets
   - [ ] Gallery apply → undo chip appears; one ↩️ restores prior build
   - [ ] Reset → empty; mute → silent; reduced-motion → still
-- [ ] Task: Wire `main.ts` first-run seed (null snapshot → starter hydrate; never overwrite existing snapshots)
-- [ ] Task: Extend the parent gate in `src/ui/app.ts` with the icon-only preset picker + apply path
-- [ ] Task: Smoke + manual tablet verification of the recorded criteria
+- [x] Task: Wire `main.ts` first-run seed (null snapshot → starter hydrate; never overwrite existing snapshots) [SHA: 402575f]
+- [x] Task: Extend the parent gate in `src/ui/app.ts` with the icon-only preset picker + apply path [SHA: 402575f]
+- [~] Task: Smoke + manual tablet verification of the recorded criteria (smoke e2e green 2026-09-03; tablet checklist awaiting user confirm)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+> Notes (Phase 3, code SHA 402575f): `main.ts` hydrates `cozyOval()` on null snapshot + one explicit `saveWorldSnapshot(serializeWorld(...))` (the watcher only saves on later notifications). Gate tray: 3 icon-only buttons ≥64px reusing existing SVG icons, visible only in the armed-confirm step; pick → `disarmConfirm()` → `applyPreset()` → ding; the existing undo subscription shows the ↩️ chip. `reset()` path untouched (still empties). Fall-out fixed: fixed-layout specs now start from `clearMeadow(page)` (`e2e/helpers.ts`); smoke 40/40, switches 4/4, hills/tunnel/undo/ride-toybox/cargo/river/prod/phone-shell green (2 earlier failures were env flakes — WebGL-null/goto-timeout — passing on retry; switches `toBe(3)` was a real count assertion, fixed).
 
 ## Phase 4 — E2E + gates
 
