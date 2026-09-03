@@ -14,9 +14,7 @@ async function boot(page: Page): Promise<void> {
   await page.evaluate(() => window.indexedDB.deleteDatabase('tiny-tracks'));
   await page.reload();
   await page.waitForSelector('canvas');
-  await page.waitForFunction(
-    () => (window as unknown as DevWorld).__tinyTracksReady === true,
-  );
+  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
   await page.waitForTimeout(2000); // Starter GLB clones land + first frame settles.
 }
 
@@ -122,9 +120,7 @@ test('apply, undo, reload, reset round-trip', async ({ page }) => {
   await page.waitForTimeout(2500);
   await page.reload();
   await page.waitForSelector('canvas');
-  await page.waitForFunction(
-    () => (window as unknown as DevWorld).__tinyTracksReady === true,
-  );
+  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
   await page.waitForTimeout(2000);
   expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
 

@@ -9,9 +9,8 @@ import type { Page } from '@playwright/test';
  */
 export async function clearMeadow(page: Page): Promise<void> {
   await page.evaluate(() => {
-    const world = (
-      window as unknown as { __tinyTracksWorld?: { reset: () => void } }
-    ).__tinyTracksWorld;
+    const world = (window as unknown as { __tinyTracksWorld?: { reset: () => void } })
+      .__tinyTracksWorld;
     if (!world) throw new Error('dev world handle missing');
     world.reset();
   });
