@@ -67,6 +67,8 @@ const BASE_YAW: Record<PieceType, number> = {
   'slope-up': 0,
   hill: 0,
   'slope-down': 0,
+  // Placeholder until the switch model lands (Phase 2): rides like a straight.
+  switch: 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -112,6 +114,9 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   'slope-up': [0, -1, 2],
   hill: [0, -1, 2],
   'slope-down': [0, -1, 2],
+  // Placeholder until the switch model lands (Phase 2): same anchor as the
+  // straight it will mirror (authored on the kit's straight mount).
+  switch: [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -129,6 +134,8 @@ const PIECE_URLS: Record<PieceType, string> = {
   'slope-up': '/assets/train-kit/hill-slope-up.glb',
   hill: '/assets/train-kit/hill-hill.glb',
   'slope-down': '/assets/train-kit/hill-slope-down.glb',
+  // Placeholder until the Blender-authored Y-junction lands (Phase 2).
+  switch: '/assets/train-kit/railroad-straight.glb',
 };
 
 /**

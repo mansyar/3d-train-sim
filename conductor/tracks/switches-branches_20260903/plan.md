@@ -8,7 +8,7 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Switch Semantics & Y-Topology Solver (TDD)
 
-- [ ] Task: Add the `switch` piece type (tests first in `pieces.test.ts`,
+- [~] Task: Add the `switch` piece type (tests first in `pieces.test.ts`,
       `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`)
   - [ ] `PIECE_TYPES` gains `'switch'`; `BASE_ENDPOINTS` = `['north',
         'east', 'south']` (yaw 0: stem south, straight branch north,

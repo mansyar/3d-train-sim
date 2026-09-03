@@ -11,7 +11,7 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, and the hill run', () => {
+  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, and the switch', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
       'corner',
@@ -20,6 +20,7 @@ describe('piece catalog', () => {
       'slope-down',
       'slope-up',
       'straight',
+      'switch',
       'tunnel',
     ]);
   });
@@ -76,6 +77,24 @@ describe('hill run piece geometry', () => {
       for (const rotation of ALL_ROTATIONS) {
         expect(endpointsFor(type, rotation)).toHaveLength(2);
       }
+    }
+  });
+});
+
+describe('switch piece geometry', () => {
+  it('joins three edges at yaw 0: stem south, straight branch north, diverging branch east', () => {
+    expect(endpointsFor('switch', 0)).toEqual(['north', 'east', 'south']);
+  });
+
+  it('walks the Y clockwise through all rotations, canonical order kept', () => {
+    expect(endpointsFor('switch', 90)).toEqual(['east', 'south', 'west']);
+    expect(endpointsFor('switch', 180)).toEqual(['north', 'south', 'west']);
+    expect(endpointsFor('switch', 270)).toEqual(['north', 'east', 'west']);
+  });
+
+  it('gives the switch exactly three endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch', rotation)).toHaveLength(3);
     }
   });
 });

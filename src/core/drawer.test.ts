@@ -9,7 +9,7 @@ describe('drawerTabs', () => {
     expect(drawerTabs().map((tab) => tab.id)).toEqual(['rails', 'nature', 'town', 'critter']);
   });
 
-  it('holds the eight track pieces on the Rails tab, in piece order', () => {
+  it('holds the nine track pieces on the Rails tab, in piece order', () => {
     const rails = drawerTabs().find((tab) => tab.id === 'rails');
     expect(rails?.kinds).toEqual<PieceType[]>([
       'straight',
@@ -20,6 +20,7 @@ describe('drawerTabs', () => {
       'slope-up',
       'hill',
       'slope-down',
+      'switch',
     ]);
   });
 
@@ -32,7 +33,7 @@ describe('drawerTabs', () => {
 
   it('covers every catalog kind exactly once across all tabs', () => {
     const all = drawerTabs().flatMap((tab) => tab.kinds);
-    expect(all).toHaveLength(SCENERY_KINDS.length + 8); // + 8 track pieces
+    expect(all).toHaveLength(SCENERY_KINDS.length + 9); // + 9 track pieces
     expect(new Set(all).size).toBe(all.length);
   });
 
@@ -54,6 +55,7 @@ describe('tabForKind', () => {
     expect(tabForKind('slope-up')).toBe('rails');
     expect(tabForKind('hill')).toBe('rails');
     expect(tabForKind('slope-down')).toBe('rails');
+    expect(tabForKind('switch')).toBe('rails');
   });
 
   it('maps each scenery kind to its catalog category tab', () => {

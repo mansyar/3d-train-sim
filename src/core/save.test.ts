@@ -299,6 +299,62 @@ describe('hill snapshots — additive piece types', () => {
   });
 });
 
+describe('switch snapshots — additive piece types', () => {
+  const switchPiece: PlacedPiece = {
+    id: 'piece-s1',
+    type: 'switch',
+    cell: { x: 3, y: 5 },
+    rotation: 90,
+  };
+
+  it('round-trips a snapshot carrying a switch like any other piece', () => {
+    const snapshot = serializeWorld([switchPiece], [], 'steam');
+
+    expect(snapshot.version).toBe(3); // additive types: no version bump
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [switchPiece],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
+  });
+
+  it('restores a persisted pre-switch v3 snapshot verbatim — old worlds load untouched', () => {
+    const preSwitch = {
+      version: 3 as const,
+      pieces: [
+        { id: 'piece-1', type: 'straight', cell: { x: 2, y: 3 }, rotation: 0 },
+        { id: 'piece-2', type: 'hill', cell: { x: 2, y: 4 }, rotation: 0 },
+      ],
+      scenery: [],
+      train: 'diesel' as const,
+    };
+
+    expect(deserializeWorld(preSwitch)).toEqual({
+      pieces: preSwitch.pieces,
+      scenery: [],
+      train: 'diesel',
+      deliveries: {},
+    });
+  });
+
+  it('round-trips switches at every rotation', () => {
+    const rotated: PlacedPiece[] = [
+      { id: 'piece-r1', type: 'switch', cell: { x: 1, y: 1 }, rotation: 0 },
+      { id: 'piece-r2', type: 'switch', cell: { x: 2, y: 1 }, rotation: 90 },
+      { id: 'piece-r3', type: 'switch', cell: { x: 3, y: 1 }, rotation: 180 },
+      { id: 'piece-r4', type: 'switch', cell: { x: 4, y: 1 }, rotation: 270 },
+    ];
+
+    expect(deserializeWorld(serializeWorld(rotated, [], 'steam'))).toEqual({
+      pieces: rotated,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+    });
+  });
+});
+
 describe('delivery snapshots — per-station crate counts', () => {
   const station: PlacedScenery = {
     id: 'scenery-1',
