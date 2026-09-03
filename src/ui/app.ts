@@ -1,5 +1,6 @@
 import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
+import { closesLoop } from '../core/ride-ready';
 import { isWater } from '../core/river';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import {
@@ -714,6 +715,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     rideToggle.classList.toggle('is-riding', riding);
     rideToggle.innerHTML = riding ? RIDE_ICONS.stop : RIDE_ICONS.play;
     rideToggle.setAttribute('aria-label', riding ? 'Stop the train' : 'Ride the train');
+    // The invitation is spent once trains roll, and moot on an empty meadow.
+    if (riding || empty) rideToggle.classList.remove('is-ready-pulse');
   };
 
   // The ▶/⏹ face follows the real ride state pushed by the scene: scoped
@@ -742,6 +745,33 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // Any world edit refreshes the empty-meadow dim.
   options.world.subscribe(() => refreshRide());
   refreshRide();
+
+  // ---- Ride-ready invitation: ▶ pulses when the meadow turns rideable,
+  // and pops with a happy ding when a drop closes a loop ------------------
+  // Edit-time only — closesLoop's union-find never touches the render loop.
+  // The ding is mute-respecting by construction; reduced-motion hands get
+  // the ding but no motion.
+  const prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let prevPieces = options.world.pieces();
+  rideToggle.addEventListener('animationend', () => rideToggle.classList.remove('pop'));
+  options.world.subscribe(() => {
+    const after = options.world.pieces();
+    if (!riding) {
+      if (prevPieces.length === 0 && after.length > 0 && !prefersStill) {
+        rideToggle.classList.add('is-ready-pulse');
+      }
+      if (closesLoop(prevPieces, after)) {
+        options.audio.ding();
+        if (!prefersStill) {
+          // Restart the pop when loops close back-to-back.
+          rideToggle.classList.remove('pop');
+          void rideToggle.offsetWidth;
+          rideToggle.classList.add('pop');
+        }
+      }
+    }
+    prevPieces = after;
+  });
 
   // ---- Undo: joins the rail after a change, takes back the last one -----
   // Session-only by construction: a reload restores the exact world but arms

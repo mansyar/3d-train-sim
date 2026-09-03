@@ -94,6 +94,41 @@ body {
   background: var(--toy-orange);
 }
 
+/* The ▶ button's invitation — a gentle breathing pulse once the meadow turns
+   rideable, and a one-shot happy pop when a drop closes a loop. */
+.ride-toggle.is-ready-pulse {
+  animation: ride-pulse 1.2s ease-in-out infinite;
+}
+
+.ride-toggle.pop {
+  animation: ride-pop 0.45s ease-out;
+}
+
+@keyframes ride-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes ride-pop {
+  0% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
 .ride-toggle.is-dimmed {
   opacity: 0.4;
 }
@@ -583,6 +618,12 @@ body {
   .rotate-bounce {
     animation: none;
     display: none;
+  }
+
+  /* The invitation stays still — and never hides the ▶ button itself. */
+  .ride-toggle.is-ready-pulse,
+  .ride-toggle.pop {
+    animation: none;
   }
 
   /* The bin may still grow, but it never pulses. */
