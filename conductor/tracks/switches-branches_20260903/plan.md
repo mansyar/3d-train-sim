@@ -128,14 +128,40 @@ geometry). Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 2 - Asset, Mounting & Scene Riding
 
-- [ ] Task: Switch asset in Blender (house rules from `tech-stack.md`)
-  - [ ] Measure kit straight/curve GLBs first (module span, rail line,
+- [x] Task: Switch asset in Blender (house rules from `tech-stack.md`) [ecdfd21]
+  - [x] Measure kit straight/curve GLBs first (module span, rail line,
         joint crowns); author the Y-junction on kit measurements —
         through-road from the kit straight's warped rails/sleepers,
         curved diverging road, grassy base
-  - [ ] Named blade node (`switch_blades` contract) so the scene can flip
+  - [x] Named blade node (`switch_blades` contract) so the scene can flip
         the points; deterministic recipe `scripts/blender-switch.py`;
         export + verify GLB JSON chunk + render checks (target ≤ ~60 KB)
+
+  Notes:
+  - Measured first (headless Blender probes): the kit straight mounts
+    natively in the recipe frame (x ±0.5, y −4..0, crown −0.9); the kit
+    corner-small natively connects north↔west edge midpoints pivoting
+    the NW corner (radius 2) — a 180° turn about the cell centre maps it
+    exactly onto the solver's south→east quarter-arc (pivot SE corner),
+    so the diverging road IS the kit corner's own rails, rigidly
+    rotated: gauge and arc guaranteed.
+  - Deviation from the plan wording: no grassy base — the kit's track
+    pieces are bare sleepers + rails resting on the meadow mat, and the
+    switch keeps that look; the two roads interlace at the points like
+    a real turnout.
+  - Node contract (verified in the exported GLB JSON chunk):
+    `switch_through`, `switch_diverge`, `switch_blades` (empty at the
+    heel) + `switch_blade_-1/1` bars; materials `colormap` ×2 (kit) +
+    `switch_steel`. Blade rotation: 0 = closed for the through road,
+    NEGATIVE z rotation angles them east toward the diverge. 60,748 B.
+  - Render checks: top view (Y reads clearly, ends land on the edge
+    midpoints), three-quarter, and a fit shot with the kit locomotive
+    (×1.6) standing mid-arc on the diverge — wheels at the mat plane,
+    matching the KIT_ANCHOR mount convention; no clipping.
+  - Headless-Blender gotcha (for future recipes): the default startup
+    scene ships a Cube/Camera/Light — `blender-switch.py` purges them
+    before the render checks; the hills recipe never hit this because it
+    ran inside an interactive session.
 - [ ] Task: Ride through the branch (extend `ride-motion.test.ts` where
       logic-bearing; manual criteria otherwise)
   - [ ] Within-piece geometry for the switch: stem edge → branch point →
