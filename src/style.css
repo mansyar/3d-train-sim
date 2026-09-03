@@ -626,6 +626,18 @@ body {
   .train-drawer {
     bottom: calc(200px + env(safe-area-inset-bottom));
   }
+
+  /* Five 92px tabs cannot fit 360px: share the row evenly so every toy
+     group stays one tap away (tall 64px targets kept, no swipe needed). */
+  .drawer-tabs {
+    gap: 6px;
+  }
+
+  .drawer-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 10px 4px;
+  }
 }
 
 /* Gentle motion only — reduced-motion users get instant, still feedback. */

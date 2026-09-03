@@ -34,11 +34,14 @@ const place = (
   cell: { x: number; y: number },
   rotation: number,
 ) =>
-  page.evaluate(([t, c, r]) => {
-    const world = (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld;
-    if (!world) throw new Error('dev world handle missing');
-    if (world.place(t, c, r) !== 'placed') throw new Error(`placement failed: ${t}`);
-  }, [type, cell, rotation] as const);
+  page.evaluate(
+    ([t, c, r]) => {
+      const world = (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld;
+      if (!world) throw new Error('dev world handle missing');
+      if (world.place(t, c, r) !== 'placed') throw new Error(`placement failed: ${t}`);
+    },
+    [type, cell, rotation] as const,
+  );
 
 const watchConsole = (page: import('@playwright/test').Page) => {
   const consoleErrors: string[] = [];
