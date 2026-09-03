@@ -48,6 +48,10 @@ export interface WorldStore {
   relocateScenery(id: string, cell: Cell, rotation: Rotation): PlacementResult;
   /** Returns a scenery toy to the drawer. Unknown ids are ignored. */
   removeScenery(id: string): void;
+  /** Whether the last toybox change can be taken back. */
+  canUndo(): boolean;
+  /** Reverses the last undoable change; false when there is nothing to undo. */
+  undo(): boolean;
   /** Delivered-crate count for one station (0 for unknown ids). */
   deliveryCount(stationId: string): number;
   /** Records one delivery to a station; returns its new, capped count. */
@@ -83,6 +87,27 @@ export function createWorldStore(): WorldStore {
 
   const meadowCount = () => placed.length + scenery.length;
 
+  // Single-step undo: every successful toybox mutation replaces the pending
+  // inverse. Inverses only move toys — they never touch the delivery ledger —
+  // so undoing a placement cannot destroy crates earned after it.
+  let pendingUndo: (() => void) | null = null;
+
+  const takePiece = (id: string) => {
+    const index = placed.findIndex((p) => p.id === id);
+    if (index === -1) return undefined;
+    const taken = placed.splice(index, 1)[0];
+    if (!taken) return undefined;
+    return { piece: { ...taken, cell: { ...taken.cell } }, index };
+  };
+
+  const takeScenery = (id: string) => {
+    const index = scenery.findIndex((s) => s.id === id);
+    if (index === -1) return undefined;
+    const taken = scenery.splice(index, 1)[0];
+    if (!taken) return undefined;
+    return { item: { ...taken, cell: { ...taken.cell } }, index };
+  };
+
   return {
     train: () => selectedTrain,
 
@@ -106,7 +131,11 @@ export function createWorldStore(): WorldStore {
       if (holderOf(cell)) return 'occupied';
       if (terrainErrorFor(type, cell)) return 'water';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
-      placed.push({ id: `piece-${nextId++}`, type, cell: { ...cell }, rotation });
+      const id = `piece-${nextId++}`;
+      placed.push({ id, type, cell: { ...cell }, rotation });
+      pendingUndo = () => {
+        takePiece(id);
+      };
       notify();
       return 'placed';
     },
@@ -118,16 +147,26 @@ export function createWorldStore(): WorldStore {
       const holder = holderOf(cell);
       if (holder && holder !== piece) return 'occupied';
       if (terrainErrorFor(piece.type, cell)) return 'water';
+      const from = { ...piece.cell };
+      const fromRotation = piece.rotation;
       piece.cell = { x: cell.x, y: cell.y };
       piece.rotation = rotation;
+      pendingUndo = () => {
+        const back = placed.find((p) => p.id === id);
+        if (!back) return;
+        back.cell = from;
+        back.rotation = fromRotation;
+      };
       notify();
       return 'placed';
     },
 
     remove(id) {
-      const index = placed.findIndex((p) => p.id === id);
-      if (index === -1) return;
-      placed.splice(index, 1);
+      const taken = takePiece(id);
+      if (!taken) return;
+      pendingUndo = () => {
+        placed.splice(Math.min(taken.index, placed.length), 0, taken.piece);
+      };
       notify();
     },
 
@@ -140,7 +179,11 @@ export function createWorldStore(): WorldStore {
       // Scenery is a land toy — the riverbed is no place for a tree.
       if (isWater(cell)) return 'water';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
-      scenery.push({ id: `scenery-${nextId++}`, kind, cell: { ...cell }, rotation });
+      const id = `scenery-${nextId++}`;
+      scenery.push({ id, kind, cell: { ...cell }, rotation });
+      pendingUndo = () => {
+        takeScenery(id);
+      };
       notify();
       return 'placed';
     },
@@ -152,17 +195,29 @@ export function createWorldStore(): WorldStore {
       const holder = holderOf(cell);
       if (holder && holder !== item) return 'occupied';
       if (isWater(cell)) return 'water';
+      const from = { ...item.cell };
+      const fromRotation = item.rotation;
       item.cell = { x: cell.x, y: cell.y };
       item.rotation = rotation;
+      pendingUndo = () => {
+        const back = scenery.find((s) => s.id === id);
+        if (!back) return;
+        back.cell = from;
+        back.rotation = fromRotation;
+      };
       notify();
       return 'placed';
     },
 
     removeScenery(id) {
-      const index = scenery.findIndex((s) => s.id === id);
-      if (index === -1) return;
-      scenery.splice(index, 1);
+      const taken = takeScenery(id);
+      if (!taken) return;
+      const crates = deliveries[id];
       delete deliveries[id];
+      pendingUndo = () => {
+        scenery.splice(Math.min(taken.index, scenery.length), 0, taken.item);
+        if (crates !== undefined) deliveries[id] = crates;
+      };
       notify();
     },
 
@@ -200,6 +255,7 @@ export function createWorldStore(): WorldStore {
       nextId = 1;
       for (const piece of placed) advanceId(piece.id);
       for (const item of scenery) advanceId(item.id);
+      pendingUndo = null;
       notify();
     },
 
@@ -212,7 +268,19 @@ export function createWorldStore(): WorldStore {
       scenery.splice(0, scenery.length);
       deliveries = {};
       nextId = 1;
+      pendingUndo = null;
       notify();
+    },
+
+    canUndo: () => pendingUndo !== null,
+
+    undo() {
+      const reverse = pendingUndo;
+      if (!reverse) return false;
+      pendingUndo = null;
+      reverse();
+      notify();
+      return true;
     },
 
     subscribe(listener) {
