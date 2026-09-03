@@ -341,6 +341,125 @@ describe('createRideMotion — riding the hill run carries the train up and over
   });
 });
 
+describe('segmentForStep — the switch rides its chosen road', () => {
+  it('rides the through-road (south to north) as a straight line', () => {
+    const segment = segmentForStep(piece('switch', 8, 8), step('south', 'north'));
+
+    expect(segment.kind).toBe('line');
+    expect(segment.length).toBe(CELL_SIZE);
+  });
+
+  it('rides the diverging branch (south to east) on the SE-pivot quarter-arc', () => {
+    const segment = segmentForStep(piece('switch', 8, 8), step('south', 'east'));
+
+    // The authored GLB's diverging road is exactly this arc: pivot on the
+    // cell's south-east corner, radius half a cell — kit corner geometry.
+    expect(segment.kind).toBe('arc');
+    expect(segment.r).toBeCloseTo(CELL_SIZE / 2);
+    expect(segment.cx).toBeCloseTo(CENTER.x + CELL_SIZE / 2);
+    expect(segment.cz).toBeCloseTo(CENTER.z + CELL_SIZE / 2);
+  });
+
+  it('rides a north-to-east diverge on the NE-pivot arc at rotation 180', () => {
+    // Rotated 180°, the switch's stem faces north and its diverge branch
+    // east: stem north (entering) to branch east stays an arc.
+    const segment = segmentForStep(piece('switch', 8, 8, 180), step('north', 'east'));
+
+    expect(segment.kind).toBe('arc');
+    expect(segment.cx).toBeCloseTo(CENTER.x + CELL_SIZE / 2);
+    expect(segment.cz).toBeCloseTo(CENTER.z - CELL_SIZE / 2);
+  });
+});
+
+describe('createRideMotion — riding the Y layout alternates through the switch', () => {
+  /**
+   * The solver-test Y: a dead-end line north of the switch, a dead-end line
+   * south of its stem, and the diverging branch opening at the switch's east
+   * edge. The solved ride is a closed choreography cycle that bounces the
+   * train between the dead ends and takes the diverge every other pass.
+   */
+  function yLayoutWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 1 }, 0)).toBe('placed');
+    expect(world.place('switch', { x: 2, y: 2 }, 0)).toBe('placed');
+    expect(world.place('straight', { x: 2, y: 3 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the Y layout must solve to one ride component');
+    expect(component.path.closed).toBe(true);
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  /** The cell-centre of the switch at (2, 2) — dry land, off the river. */
+  const SW = {
+    x: -GROUND_SIZE / 2 + 2.5 * CELL_SIZE,
+    z: -GROUND_SIZE / 2 + 2.5 * CELL_SIZE,
+  };
+
+  it('stays on the rails through both branches, reversals included', () => {
+    const { world, state } = yLayoutWorld();
+    const run = startRide(world, state, 1);
+    const segments = segmentsFor(world, state);
+    const wagon = run.followers[0];
+    if (!wagon) throw new Error('missing follower wagon');
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    let pausedAtRest = false;
+    for (let i = 0; i < 90; i += 1) {
+      run.motion.update(0.5);
+      // Every pose — engine and wagon — sits on the solved cycle, including
+      // across the in-place dead-end reversals.
+      expect(distanceToPath(segments, run.engine.position.x, run.engine.position.z)).toBeLessThan(
+        0.02,
+      );
+      expect(distanceToPath(segments, wagon.position.x, wagon.position.z)).toBeLessThan(0.03);
+      maxX = Math.max(maxX, run.engine.position.x);
+      minZ = Math.min(minZ, run.engine.position.z);
+      maxZ = Math.max(maxZ, run.engine.position.z);
+      pausedAtRest = pausedAtRest || run.paused.includes(true);
+    }
+    // The straight branch rode north of the switch, the stem line south,
+    // and the diverging branch curved out to the switch's east edge.
+    expect(minZ).toBeLessThan(SW.z - CELL_SIZE / 2 + 0.1);
+    expect(maxZ).toBeGreaterThan(SW.z + CELL_SIZE / 2 - 0.1);
+    expect(maxX).toBeGreaterThan(SW.x + CELL_SIZE / 2 - 0.1);
+    expect(pausedAtRest).toBe(true); // turnarounds rest the train, like dead ends
+    run.motion.dispose();
+  });
+
+  it('announces the road each pass, alternating exits, without chatter', () => {
+    const { world, state } = yLayoutWorld();
+    const engine = new Object3D();
+    const roads: { pieceId: string; exit: Edge }[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      undefined,
+      undefined,
+      [],
+      undefined,
+      undefined,
+      (pieceId, exit) => roads.push({ pieceId, exit }),
+    );
+    motion.begin(state);
+    for (let i = 0; i < 90; i += 1) motion.update(0.5);
+    // Both roads get announced, and the train alternates between them —
+    // never repeating an announcement back to back (no per-frame chatter).
+    const exits = roads.map((r) => r.exit);
+    expect(exits).toContain('north');
+    expect(exits).toContain('east');
+    for (let i = 1; i < roads.length; i += 1) {
+      const prev = roads[i - 1];
+      const cur = roads[i];
+      if (prev && cur) {
+        expect(cur.exit).not.toBe(prev.exit);
+      }
+    }
+    motion.dispose();
+  });
+});
+
 describe('createRideMotion — riding under the hill reports tunnel coverage', () => {
   /**
    * A three-cell open line: straight → tunnel → straight, ridden south. The
