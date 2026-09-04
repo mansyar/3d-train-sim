@@ -158,11 +158,13 @@ e2e runs, gates, and checkpoints per `workflow.md`.
 
 ## Phase 3 - CI: E2E on PRs + Parallel Gates + Caching + Path Filters [checkpoint: TBD]
 
-- [ ] Task: Update `tech-stack.md` CI description first
+- [x] Task: Update `tech-stack.md` CI description first (7eb4cea)
   - Per workflow principle #2: document the new pipeline shape before
-    implementation — parallel jobs (biome+typecheck / vitest / e2e), e2e on
+    implementation - parallel jobs (biome+typecheck / vitest / e2e), e2e on
     PRs, cached Playwright browsers, docs-only path filtering
   - Acceptance: tech-stack.md reflects the target pipeline
+  - Notes: target CI shape documented in `conductor/tech-stack.md` before
+    any workflow edits (commit precedes fde6f2c).
 - [x] Task: Rework `.github/workflows/ci.yml` (fde6f2c)
   - Parallel `check` (biome+tsc), `vitest`, and `e2e` jobs on PRs + main
     pushes; e2e = Playwright install (cached, keyed on locked version) +
@@ -182,15 +184,29 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     now `needs: [check, vitest, e2e]`. Dry-run semantics untouched
     (`push: github.event_name == 'push'` guard, dispatch defaults dry).
     Live dry-run validation is the next task.
-- [~] Task: Validate with a release dry run
+- [x] Task: Validate with a release dry run (3f1ccdb)
   - `workflow_dispatch` with `dry_run: true`: gates green, image builds,
     nothing published/deployed
   - Acceptance: dry run green end-to-end
-  - Notes: branch pushed to origin (`track/e2e-stability_20260904`);
-    dispatching release.yml against it.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: dispatched against the branch ref. First dispatch
+    (`33882162868`) - all three gates green on ubuntu (hill-pace
+    `expect.poll` + cargo poll widening held), but `publish` failed on a
+    latent pre-existing bug the branch dispatch exposed: the Docker tag is
+    `${GITHUB_REF_NAME#v}`, and a branch ref (`track/...`) contains `/`,
+    which is invalid in a Docker reference (tags/main never hit it). Fixed
+    in `3f1ccdb` (slash-containing refs collapse to a fixed `dry-run` tag;
+    real tags keep the stripped version). Second dispatch
+    (`33883562061`) - **green end-to-end**: check/vitest/e2e success,
+    image built and pushed nowhere (push guarded on the tag event).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-04): PR CI on ubuntu green (all three
+    parallel gates, run `33882128727`, incl. e2e on PRs - the new tripwire
+    is live); release dry run green end-to-end (run `33883562061`, on
+    `3f1ccdb`); two latent CI bugs surfaced and fixed en route
+    (hill-pace fixed-window sampling → `expect.poll`, cargo delivery poll
+    budget → 90s). Checkpoint SHA `3f1ccdb`.
 
-## Phase 4 - Acceptance Runs & Wrap-Up
+## Phase 4 - Acceptance Runs & Wrap-Up [checkpoint: pending]
 
 - [x] Task: Three consecutive clean suite runs on Windows headless (2026-09-04)
   - Full Playwright suite at `--workers=2`, three back-to-back runs, zero
@@ -201,8 +217,18 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     23:30, run 3 **7.9m** 23:39. Only the benign `PCFSoftShadowMap`
     deprecation warning appeared. (Plus the earlier single-pass verification
     run in Phase 1: 99/99 in 8.0m — four consecutive clean runs today.)
-- [ ] Task: Local gates + wrap-up
+- [x] Task: Local gates + wrap-up (4ca03e3 era; gates re-verified on 3f1ccdb)
   - `pnpm check` green; confirm docs-only commit skips heavy jobs (acceptance
     #4); verify no `src/**` changes exist on the branch (N1)
   - Acceptance: all acceptance criteria checked off against spec.md
+  - Notes: (1) `pnpm check` green (biome clean, tsc clean, 592/592 vitest -
+    seen on every e2e-only change; no src changes since). (2) Docs-only skip
+    observed: the branch history interleaves md/conductor-only commits
+    (`8dac80f`, `7eb4cea`, the conductor(plan) markers) between code pushes;
+    `paths-ignore` (`**/*.md`, `conductor/**`, `.gitignore`) produced zero
+    CI runs for all of them, while every code push fired the three-gate run.
+    (3) N1 verified: `git diff --name-only 52e74a1..HEAD -- src/` is empty.
+    Acceptance scorecard: #1 3/3 Windows runs ✅; #2 PR CI green incl. prod
+    project ✅; #3 dry run green ✅; #4 docs-only skip ✅; #5 `pnpm check`
+    green ✅; #6 injected-error guardrail proof ✅ (Phase 1).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
