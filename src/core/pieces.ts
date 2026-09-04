@@ -25,7 +25,9 @@ export type CornerPieceType = 'corner' | 'corner-up' | 'hill-corner' | 'corner-d
 
 /** True for the flat corner and every leg of the elevated corner run. */
 export function isCornerPiece(type: PieceType): type is CornerPieceType {
-  return type === 'corner' || type === 'corner-up' || type === 'hill-corner' || type === 'corner-down';
+  return (
+    type === 'corner' || type === 'corner-up' || type === 'hill-corner' || type === 'corner-down'
+  );
 }
 
 /** A piece type that humps gently at half height (the bump run). */

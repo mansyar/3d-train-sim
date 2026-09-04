@@ -1,8 +1,8 @@
 import type { Object3D } from 'three';
 import { easedHeightAt, HILL_HALF_HEIGHT, type RideSpan } from '../core/elevation';
 import { easePaceRamp, gradePaceFactor, PACE_EASE_SECONDS, personalityPace } from '../core/pace';
-import { isBumpPiece, isCornerPiece } from '../core/pieces';
 import type { PathStep } from '../core/pathing';
+import { isBumpPiece, isCornerPiece } from '../core/pieces';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import { isSwitchPiece } from '../core/switches';
 import type { Edge } from '../core/track-graph';

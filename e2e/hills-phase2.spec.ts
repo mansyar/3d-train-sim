@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Hills Phase 2 smoke: the bump half-run and the elevated corner run drag
@@ -28,14 +28,7 @@ const placeLine = (
     }
   }, cells);
 
-const collectConsole = (page: import('@playwright/test').Page): string[] => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
-  return consoleErrors;
-};
+const collectConsole = watchConsoleErrors;
 
 const boot = async (page: import('@playwright/test').Page): Promise<void> => {
   await page.goto('/');
@@ -74,8 +67,7 @@ test('the bump run loads its GLBs and rides up and over cleanly', async ({ page 
 
   for (const glb of ['hill-bump-up.glb', 'hill-hill-half.glb', 'hill-bump-down.glb']) {
     await page.waitForFunction(
-      (name) =>
-        performance.getEntriesByType('resource').some((entry) => entry.name.includes(name)),
+      (name) => performance.getEntriesByType('resource').some((entry) => entry.name.includes(name)),
       glb,
     );
   }
@@ -97,8 +89,7 @@ test('the elevated corner run loads its GLBs and banks through cleanly', async (
 
   for (const glb of ['hill-corner-up.glb']) {
     await page.waitForFunction(
-      (name) =>
-        performance.getEntriesByType('resource').some((entry) => entry.name.includes(name)),
+      (name) => performance.getEntriesByType('resource').some((entry) => entry.name.includes(name)),
       glb,
     );
   }
