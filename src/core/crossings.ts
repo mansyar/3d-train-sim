@@ -64,14 +64,19 @@ function distanceTo(crossing: Cell, train: { x: number; y: number }): number {
 /**
  * Advance one crossing's motion by `dt` under the trains' current cell-space
  * positions. Deterministic and total; each crossing is advanced with its own
- * cell, so any number of gates run independently.
+ * cell, so any number of gates run independently. When `out` is given it is
+ * overwritten and returned — the per-frame scene loop reuses one motion per
+ * crossing instead of allocating (and may pass the same object as `prev`:
+ * every branch reads `prev` before writing `out`).
  */
 export function advanceCrossing(
   prev: CrossingMotion,
   crossing: Cell,
   trains: readonly { x: number; y: number }[],
   dt: number,
+  out?: CrossingMotion,
 ): CrossingMotion {
+  const next = out ?? { phase: 'idle' as CrossingPhase, progress: 0 };
   const step = Math.max(0, dt);
   let nearest = Number.POSITIVE_INFINITY;
   for (const train of trains) {
@@ -83,22 +88,40 @@ export function advanceCrossing(
     // Up or rising: a train inside the exit guard re-closes a rising gate;
     // from idle the warning distance starts the swing.
     const trigger = prev.phase === 'idle' ? CROSSING_WARNING_DISTANCE : CROSSING_EXIT_DISTANCE;
-    if (nearest <= trigger) return { phase: 'closing', progress: 0 };
+    if (nearest <= trigger) {
+      next.phase = 'closing';
+      next.progress = 0;
+      return next;
+    }
     if (prev.phase === 'lifting') {
       const progress = prev.progress + step / CROSSING_LIFT_SECONDS;
-      return progress >= 1 ? idleCrossing() : { phase: 'lifting', progress };
+      next.phase = progress >= 1 ? 'idle' : 'lifting';
+      next.progress = progress >= 1 ? 0 : progress;
+      return next;
     }
-    return idleCrossing();
+    next.phase = 'idle';
+    next.progress = 0;
+    return next;
   }
 
   // Gates down (closing or active): they hold while any train remains inside
   // the hold distance — the last train out governs, so a queue of trains
   // never flaps the gate.
-  if (nearest > CROSSING_HOLD_DISTANCE) return { phase: 'lifting', progress: 0 };
-  if (nearest <= CROSSING_OCCUPY_DISTANCE) return { phase: 'active', progress: 1 };
-  if (prev.phase === 'closing') {
-    const progress = Math.min(1, prev.progress + step / CROSSING_CLOSE_SECONDS);
-    return { phase: 'closing', progress };
+  if (nearest > CROSSING_HOLD_DISTANCE) {
+    next.phase = 'lifting';
+    next.progress = 0;
+    return next;
   }
-  return { phase: 'active', progress: 1 };
+  if (nearest <= CROSSING_OCCUPY_DISTANCE) {
+    next.phase = 'active';
+    next.progress = 1;
+    return next;
+  }
+  next.phase = 'closing';
+  next.progress = Math.min(1, prev.progress + step / CROSSING_CLOSE_SECONDS);
+  if (prev.phase !== 'closing') {
+    next.phase = 'active';
+    next.progress = 1;
+  }
+  return next;
 }

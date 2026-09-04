@@ -35,6 +35,14 @@ describe('advanceCrossing', () => {
     });
   });
 
+  it('writes into the given out object instead of allocating a fresh motion', () => {
+    const out = idleCrossing();
+    const farY = 8.5 + CROSSING_WARNING_DISTANCE + 0.25;
+    const next = advanceCrossing(out, GATE, [trainAt(farY)], 1 / 60, out);
+    expect(next).toBe(out);
+    expect(next.phase).toBe('idle');
+  });
+
   it('stays idle with no trains around', () => {
     const state = advanceCrossing(idleCrossing(), GATE, [], 1 / 60);
     expect(state).toEqual({ phase: 'idle', progress: 0 });
