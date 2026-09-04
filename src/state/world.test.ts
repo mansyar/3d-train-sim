@@ -350,6 +350,22 @@ describe('world store wagon consist', () => {
     expect(store.consistFor('tram')).toBe('classic');
   });
 
+  it('stays silent when the preset is unchanged', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.selectConsist('steam', 'classic')).toBe(true);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('returns a consist copy callers cannot mutate', () => {
+    const store = createWorldStore();
+    store.consist().steam = 'coal';
+
+    expect(store.consistFor('steam')).toBe('classic');
+  });
+
   it('hydrates and resets the consist with the world', () => {
     const store = createWorldStore();
     store.hydrate({
