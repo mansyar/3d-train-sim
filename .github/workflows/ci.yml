@@ -1,13 +1,27 @@
 name: CI
 
+# Three parallel gate jobs (tech-stack.md "CI (ci.yml)"): style+types,
+# unit/integration, and the full e2e suite (tablet · phone · prod profiles).
+# PR e2e is an upstream tripwire — the release pipeline's ubuntu e2e run
+# stays the release authority. Docs-only commits run no jobs.
 on:
   push:
     branches: [main, master]
+    paths-ignore:
+      - '**/*.md'
+      - 'conductor/**'
+      - '.gitignore'
   pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'conductor/**'
+      - '.gitignore'
 
 jobs:
   check:
+    name: Gate · biome + typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,5 +38,70 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Full gate (biome + typecheck + vitest)
-        run: pnpm check
+      - name: Style gate
+        run: pnpm exec biome check .
+
+      - name: Type gate
+        run: pnpm exec tsc --noEmit
+
+  vitest:
+    name: Gate · vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit & integration suite
+        run: pnpm test
+
+  e2e:
+    name: Gate · e2e (tablet · phone · prod)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Browsers are pinned by the lockfile, so the lockfile hash is the
+      # cache key — a bumped Playwright version gets a fresh install.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers (WebKit for the iPad profile)
+        run: pnpm exec playwright install --with-deps
+
+      # The `prod` e2e project serves the static build via `vite preview`,
+      # so dist/ must exist before the suite boots its web servers.
+      - name: Build for prod e2e project
+        run: pnpm build
+
+      - name: E2E suite
+        run: pnpm exec playwright test
