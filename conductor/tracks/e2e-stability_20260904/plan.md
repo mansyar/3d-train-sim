@@ -133,15 +133,25 @@ e2e runs, gates, and checkpoints per `workflow.md`.
 
 ## Phase 2 - Stability Documentation
 
-- [ ] Task: Write `e2e/README.md` — the stability runbook
+- [x] Task: Write `e2e/README.md` — the stability runbook (8dac80f)
   - The `blob:`/headless-GPU mechanism, the allowlist (what it covers, how to
     extend it), the `--workers=2` rerun convention (v0.5.0/v0.6.0/v0.7.0
     lessons), and "ubuntu e2e is the release authority"
   - Acceptance: doc covers mechanism, convention, and authority rule
-- [ ] Task: Cross-link from `tech-stack.md` Testing section
+  - Notes: `e2e/README.md` covers running (2-worker cap with collapse
+    mechanism, foreground-vs-background-shell caveat from Task 1 runs,
+    no local soak stacks), the allowlisted WebKit `blob:` signature
+    verbatim, allowlist extension rules (field-recorded evidence cited in
+    helpers.ts; pageerrors never allowlisted; colormap variant kept
+    failing), the rerun convention, and ubuntu-as-release-authority.
+    Engine correction carried over: profiles run WebKit, not Chromium.
+- [x] Task: Cross-link from `tech-stack.md` Testing section (8dac80f)
   - Point the Testing section's e2e row at the runbook so the convention is
     discoverable from the source of truth
   - Acceptance: link in place; no other tech-stack wording changed yet
+  - Notes: single row edit in the Testing table pointing at
+    `e2e/README.md`; CI-description wording changes are deliberately
+    deferred to Phase 3's dedicated task. Biome clean on the repo.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - CI: E2E on PRs + Parallel Gates + Caching + Path Filters
