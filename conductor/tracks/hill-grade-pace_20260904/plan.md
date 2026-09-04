@@ -132,4 +132,21 @@ and tablet verification.
     failure a load flake (all 7 green on retry, incl. the done-track
     `wagon-workshop` reload spec this track never touches). No
     source-code fix resulted; behavior asserts held in all runs.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 3):
+  - Scope: `e2e/hill-pace.spec.ts` (new, 4 tests), `trainPace` dev hook
+    + board-with-locomotive `setKind` fix (`init-scene.ts`), CHANGELOG
+    "Hills with heartbeat" entry, plan notes. No save/UI/asset/product
+    changes — diff `main...HEAD` would show only these + Phase 1/2.
+  - Auto: `pnpm check` green (biome + tsc + vitest 592/592); pace.ts
+    coverage 100% funcs/lines; new spec 8/8 tablet+phone; full suite 91
+    passed, 7 load-flakes all green on retry (incl. untouched
+    done-track specs) — 0 source fixes, 0 retries of product code.
+  - Manual: user-accepted with tablet hill-ride script deferred to
+    pre-review (steam labor/breeze, diesel zip, station dock/resume,
+    reload restores). Explicit "Accept & continue" recorded.
+  - Guidelines: autonomous-only (no buttons/sliders), icon-only UI
+    untouched, gentle audio unchanged (filmed-train chug, capped),
+    autosave/silent/reload stable, privacy (zero external requests
+    asserted per test).
