@@ -273,6 +273,59 @@ describe('tunnel snapshots', () => {
   });
 });
 
+describe('crossing-gate snapshots — additive piece types', () => {
+  const crossing: PlacedPiece[] = [
+    { id: 'piece-x1', type: 'crossing-gate', cell: { x: 6, y: 5 }, rotation: 0 },
+  ];
+
+  it('round-trips a snapshot carrying the crossing gate like any other piece', () => {
+    const snapshot = serializeWorld(crossing, [], 'steam');
+
+    expect(snapshot.version).toBe(3); // additive type: no version bump
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: crossing,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('restores a persisted pre-crossing v3 snapshot verbatim — old worlds load untouched', () => {
+    const preCrossing = {
+      version: 3 as const,
+      pieces: [{ id: 'piece-1', type: 'straight', cell: { x: 2, y: 3 }, rotation: 0 }],
+      scenery: [],
+      train: 'tram' as const,
+    };
+
+    expect(deserializeWorld(preCrossing)).toEqual({
+      pieces: preCrossing.pieces,
+      scenery: [],
+      train: 'tram',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('round-trips the crossing gate at every rotation', () => {
+    const rotated: PlacedPiece[] = [0, 90, 180, 270].map((rotation, index) => ({
+      id: `piece-r${index}`,
+      type: 'crossing-gate' as const,
+      cell: { x: index, y: 1 },
+      rotation: rotation as 0 | 90 | 180 | 270,
+    }));
+
+    expect(deserializeWorld(serializeWorld(rotated, [], 'steam'))).toEqual({
+      pieces: rotated,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+});
+
 describe('hill snapshots — additive piece types', () => {
   const hillRun: PlacedPiece[] = [
     { id: 'piece-h1', type: 'slope-up', cell: { x: 4, y: 4 }, rotation: 0 },

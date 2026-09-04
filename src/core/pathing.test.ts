@@ -88,6 +88,32 @@ describe('solvePath — closed loops', () => {
     expect(new Set(path.steps.map((s) => s.pieceId))).toEqual(new Set(pieces.map((p) => p.id)));
   });
 
+  it('rides the crossing gate as the plain straight it mirrors — flat, through both ends', () => {
+    const pieces = [
+      piece('nw', 'corner', 0, 0, 90),
+      piece('top', 'straight', 1, 0, 90),
+      piece('ne', 'corner', 2, 0, 180),
+      piece('gate', 'crossing-gate', 2, 1, 0),
+      piece('se', 'corner', 2, 2, 270),
+      piece('bottom', 'straight', 1, 2, 90),
+      piece('sw', 'corner', 0, 2, 0),
+      piece('west', 'straight', 0, 1, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expect(path.closed).toBe(true);
+    const gateStep = path.steps.find((s) => s.pieceId === 'gate');
+    if (!gateStep) throw new Error('step missing from traversal');
+    const gate = placedOf(pieces, 'gate');
+    expect([gateStep.from, gateStep.to].sort()).toEqual(
+      [...endpointsFor(gate.type, gate.rotation)].sort(),
+    );
+    // Flat ride: no elevation, no pause, no slowdown — the road just crosses.
+    expect(gateStep.entryHeight).toBe(0);
+    expect(gateStep.exitHeight).toBe(0);
+  });
+
   it('is deterministic: same input, same traversal (start rule, not array luck)', () => {
     const pieces = [
       piece('nw', 'corner', 0, 0, 90),
