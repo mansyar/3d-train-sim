@@ -79,7 +79,7 @@ Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 2 - Asset, Mounting & Scene Riding
 
-- [ ] Task: Mirror asset in Blender (house rules from `tech-stack.md`)
+- [x] Task: Mirror asset in Blender (house rules from `tech-stack.md`) — commit `2257525`
   - [ ] Mirror the `blender-switch.py` recipe (e.g.
         `scripts/blender-switch-mirror.py`) on kit measurements —
         through-road from the kit straight, mirrored curved diverging
@@ -87,22 +87,63 @@ Phase 3 closes with e2e, docs, and final gates.
   - [ ] Same named blade node contract (`switch_blades`) so the scene
         reuses the flip path; deterministic recipe; export + verify GLB
         JSON chunk + render checks (target ≤ ~60 KB)
-- [ ] Task: Ride through the mirror branch (extend
-  `ride-motion.test.ts` where logic-bearing; manual criteria otherwise)
+- [x] Task: Ride through the mirror branch (extend
+  `ride-motion.test.ts` where logic-bearing; manual criteria otherwise) — commit `2257525`
   - [ ] Within-piece geometry for the mirror: stem edge → branch point
         → chosen exit edge midpoint (straight or mirrored curved leg),
         matching the solver's `to` edge; no pause or slowdown
   - [ ] Runtime alternation: the ride advances the mirror counter at
         each stem entry and rides the chosen branch; wagons/crates
         follow through either branch
-- [ ] Task: Renderer mounting + blade animation
+- [x] Task: Renderer mounting + blade animation — commit `2257525`
   - [ ] `switch-mirror.glb` registered
         (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`); wheels sit on rails;
         materials match the kit
   - [ ] Blades visibly flip to the chosen branch on alternation (short
         tween; instant snap under `prefers-reduced-motion`);
         event-driven, no per-frame cost outside the tween
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — commit `PHASE2_CHECKPOINT`
+  - Verification Report (Phase 2): scope = recipe + GLB + renderer +
+    ride tests; no new logic files. `CI=true pnpm test -- --coverage`
+    → 34 files / 542 pass, 0 fixes needed. `tsc` + `biome` clean.
+    Manual tablet gate (left-branch rails, blade flip, smooth ride, icon
+    match) confirmed by the user.
+  - [checkpoint: PHASE2_CHECKPOINT]
+
+  Notes (Phase 2 implementation — commit `2257525`):
+  - Asset: `scripts/blender-switch-mirror.py` — standalone deterministic
+    recipe mirroring `blender-switch.py`. Through-road = kit straight
+    unmoved; diverge = kit corner-small with a y-only flip (x-mirror of
+    the right switch's x+y flip) onto the SW-pivot quarter-arc, ends on
+    the south + west edge midpoints. Blades symmetric (shared verbatim);
+    node names identical (`switch_blades` contract). Export +
+    `verify_glb`: `switch-mirror.glb`, 63,264 bytes (~+4% vs the right
+    switch's 60,748 — same uncompressed export path, float entropy),
+    nodes + materials verified, 3 render checks produced
+    (top / quarter / diverge-fit with the loco posed mid-arc at
+    (-0.59, -2.59) and blades at +0.21).
+  - Mounting: `PIECE_URLS['switch-mirror']` now points at the real
+    `switch-mirror.glb` (same yaw 0, same `[0, -1, 2]` anchor — authored
+    on the straight mount); stale "reuses the right-hand GLB" comments
+    updated.
+  - Blades: new `BLADE_DIVERGE_Y` per-hand record (`switch`: -0.21,
+    `switch-mirror`: +0.21 — Blender +z arrives as glTF +y via
+    export_yup, mirrored sign verified in the fit render); `setSwitchRoad`
+    selects by `item.type`, merges still keep the last branch.
+  - Ride: `ride-motion.ts` needed NO changes this phase — Phase 1's
+    `isSwitchPiece` generalization already routes the mirror through the
+    generic corner-style arc + `onSwitchRoad` choreography. Locked with
+    5 new tests in `ride-motion.test.ts`: through line, SW-pivot diverge
+    arc (r = CELL/2, pivot SW corner), rot-180 NW-pivot arc, plus a
+    mirrored-Y alternation ride (poses on rails incl. reversals, west
+    leg reached, announcements alternate north/west without chatter).
+  - Gates: `tsc --noEmit` clean, `biome check` clean,
+    `CI=true pnpm test -- --coverage` → 34 files / 542 tests pass
+    (537 + 5 new); `switches.ts` stays 100/100/100/100. Scope
+    (`git diff --name-only f2efbc8..HEAD`): recipe script, new GLB,
+    `track-renderer.ts`, `ride-motion.test.ts` — no new logic-bearing
+    files (renderer is scene/non-logic per workflow, verified via
+    tests-where-logic-bearing + manual/e2e).
 
 ## Phase 3 - E2E, Docs & Final Gates
 
