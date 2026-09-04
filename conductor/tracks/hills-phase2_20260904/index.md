@@ -1,7 +1,7 @@
 # Track: Hills Phase 2 - Bumps, Corners & Half-Height Cruises
 
 - **ID:** `hills-phase2_20260904`
-- **Type:** Feature · **Status:** new · **Branch:** `track/hills-phase2_20260904`
+- **Type:** Feature · **Status:** in-progress · **Branch:** `track/hills-phase2_20260904`
 
 ## Artifacts
 
