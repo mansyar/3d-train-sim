@@ -32,6 +32,7 @@ const PIECE_LABELS: Record<PieceType, string> = {
   hill: 'Hilltop track piece',
   'slope-down': 'Falling slope track piece',
   switch: 'Switch track piece',
+  'switch-mirror': 'Mirror switch track piece',
 };
 
 /** Chunky inline SVGs in the PIECE_ICONS construction: 48×48 viewBox,
@@ -254,6 +255,25 @@ const PIECE_ICONS: Record<PieceType, string> = {
       <line x1="27.5" y1="44" x2="27.5" y2="4"
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
       <path d="M24 27 Q35 25 44 9" fill="none"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  // The mirror switch: the same Y flipped — the curved branch peels off
+  // to the left, so toddlers can tell the two switches apart in the tray.
+  'switch-mirror': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 46 L24 2" fill="none"
+            stroke="var(--toy-brown)" stroke-width="22" stroke-linecap="round"/>
+      <path d="M24 27 Q13 25 4 9" fill="none"
+            stroke="var(--toy-brown)" stroke-width="18" stroke-linecap="round"/>
+      <path d="M24 46 L24 2" fill="none"
+            stroke="var(--toy-cream)" stroke-width="15" stroke-linecap="round"/>
+      <path d="M24 27 Q13 25 4 9" fill="none"
+            stroke="var(--toy-cream)" stroke-width="11" stroke-linecap="round"/>
+      <line x1="20.5" y1="44" x2="20.5" y2="4"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="27.5" y1="44" x2="27.5" y2="4"
+            stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+      <path d="M24 27 Q13 25 4 9" fill="none"
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`,
 };

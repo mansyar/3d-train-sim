@@ -14,6 +14,7 @@ Registry of active development tracks.
 | [ride-toybox-flow_20260903](archive/ride-toybox-flow_20260903/index.md) | Build-to-Ride Flow & Toybox Clarity | Feature | done |
 | [release-v0.6.0_20260903](archive/release-v0.6.0_20260903/index.md) | Release v0.6.0 | Chore | done |
 | [starter-railway_20260903](archive/starter-railway_20260903/index.md) | Starter Railway Magic | Feature | done |
+| [mirror-switch_20260904](archive/mirror-switch_20260904/index.md) | Mirror Switch | Feature | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,

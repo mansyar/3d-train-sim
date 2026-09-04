@@ -2,6 +2,7 @@ import type { Object3D } from 'three';
 import { easedHeightAt, type RideSpan } from '../core/elevation';
 import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
+import { isSwitchPiece } from '../core/switches';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf, type PlacedPiece } from '../core/track-graph';
 import { tunnelFlagsForPath } from '../core/tunnels';
@@ -116,7 +117,10 @@ export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
   // leaves by an adjacent edge (the diverging branch) — the authored GLB's
   // diverging road is the kit corner's own quarter-arc, so the ride pivots
   // the cell corner shared by the two edges, tangent-perpendicular to both.
-  if ((piece.type === 'corner' || piece.type === 'switch') && step.to !== OPPOSITE_OF[step.from]) {
+  if (
+    (piece.type === 'corner' || isSwitchPiece(piece.type)) &&
+    step.to !== OPPOSITE_OF[step.from]
+  ) {
     // The corner model's arc pivots on the cell corner shared by its two
     // open edges; its ends sit on the edge midpoints, tangent-
     // perpendicular to each edge (collinear with the straights' rails).
@@ -320,7 +324,7 @@ export function createRideMotion(
       const cur = kept[i];
       if (!cur) continue;
       switchRoads.push(
-        cur.piece.type === 'switch' ? { pieceId: cur.piece.id, exit: cur.step.to } : null,
+        isSwitchPiece(cur.piece.type) ? { pieceId: cur.piece.id, exit: cur.step.to } : null,
       );
       const prev = kept[i - 1];
       if (

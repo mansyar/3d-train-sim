@@ -781,6 +781,88 @@ describe('solvePath — switch pieces (Y topologies)', () => {
     expect(solvePath([...pieces].reverse())).toEqual(path);
   });
 
+  it('rides a lone mirror switch as a closed out-and-back cycle over both its branches', () => {
+    const pieces = [piece('sw', 'switch-mirror', 2, 2, 0)];
+
+    const path = solvePath(pieces);
+
+    // The periodic cycle: west merge in, straight through, back, diverge,
+    // back — forever. The phase starts at the west end because the walk's
+    // deterministic start rule enters through the lowest-key open end (the
+    // same rule that starts the right switch through its north end); it is
+    // the same 4-step periodic ride, array order never matters.
+    expectCycleRides(pieces, path);
+    expect(path.steps).toEqual([
+      { pieceId: 'sw', from: 'west', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'south', to: 'north', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'north', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'sw', from: 'south', to: 'west', entryHeight: 0, exitHeight: 0 },
+    ]);
+    expect(solvePath(pieces)).toEqual(path);
+  });
+
+  it('covers both branches of a mirrored Y whose stem and straight branch dead-end', () => {
+    // sw (2,2) rot 0: stem south → line to a dead end; straight branch north
+    // → line to a dead end; diverging branch west → open edge.
+    const pieces = [
+      piece('north-line', 'straight', 2, 1, 0),
+      piece('sw', 'switch-mirror', 2, 2, 0),
+      piece('stem-line', 'straight', 2, 3, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    // Both branch roads get ridden: each lap of the cycle takes the straight
+    // branch once and the diverging (west) branch once, and branch entries
+    // merge through the stem.
+    expect(stemExits(path, 'sw', 'south')).toEqual(['north', 'west']);
+    const switchSteps = path.steps.filter((s) => s.pieceId === 'sw');
+    expect(switchSteps).toContainEqual({
+      pieceId: 'sw',
+      from: 'north',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+    expect(switchSteps).toContainEqual({
+      pieceId: 'sw',
+      from: 'west',
+      to: 'south',
+      entryHeight: 0,
+      exitHeight: 0,
+    });
+    const reversals = path.steps.filter(
+      (s, i) => i > 0 && path.steps[i - 1]?.pieceId === s.pieceId,
+    );
+    expect(reversals.length).toBeGreaterThan(0);
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('bounces a right-plus-mirror chained line across every branch and still terminates', () => {
+    // sw1 (right) — line — sw2 (mirror, 180°: stem N, straight S, diverge E),
+    // every branch ending in a dead end: the ride shuttles back and forth,
+    // alternating through both switches, and the walk still finds its cycle.
+    const pieces = [
+      piece('tip', 'straight', 2, 1, 0), // dead end north of sw1's straight branch
+      piece('sw1', 'switch', 2, 2, 0),
+      piece('mid', 'straight', 2, 3, 0),
+      piece('sw2', 'switch-mirror', 2, 4, 180), // stem N (toward mid), straight S, diverge E
+      piece('tail', 'straight', 2, 5, 0), // dead end south of sw2's straight branch
+      piece('spur', 'straight', 3, 4, 90), // dead end east of sw2's diverge
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    expect(new Set(path.steps.map((s) => s.pieceId))).toEqual(new Set(pieces.map((p) => p.id)));
+    expectAlternating(stemExits(path, 'sw1', 'south'));
+    expectAlternating(stemExits(path, 'sw2', 'north'));
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
   it('keeps a switch flat: heights stay 0 through every switch step', () => {
     const pieces = [
       piece('north-line', 'straight', 2, 1, 0),

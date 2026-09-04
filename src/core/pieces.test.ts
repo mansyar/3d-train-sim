@@ -11,7 +11,7 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, and the switch', () => {
+  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, and both switches', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
       'corner',
@@ -21,6 +21,7 @@ describe('piece catalog', () => {
       'slope-up',
       'straight',
       'switch',
+      'switch-mirror',
       'tunnel',
     ]);
   });
@@ -95,6 +96,24 @@ describe('switch piece geometry', () => {
   it('gives the switch exactly three endpoints at every rotation', () => {
     for (const rotation of ALL_ROTATIONS) {
       expect(endpointsFor('switch', rotation)).toHaveLength(3);
+    }
+  });
+});
+
+describe('switch-mirror piece geometry', () => {
+  it('joins three edges at yaw 0: stem south, straight branch north, diverging branch west', () => {
+    expect(endpointsFor('switch-mirror', 0)).toEqual(['north', 'south', 'west']);
+  });
+
+  it('walks the mirrored Y clockwise through all rotations, canonical order kept', () => {
+    expect(endpointsFor('switch-mirror', 90)).toEqual(['north', 'east', 'west']);
+    expect(endpointsFor('switch-mirror', 180)).toEqual(['north', 'east', 'south']);
+    expect(endpointsFor('switch-mirror', 270)).toEqual(['east', 'south', 'west']);
+  });
+
+  it('gives the mirror exactly three endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch-mirror', rotation)).toHaveLength(3);
     }
   });
 });

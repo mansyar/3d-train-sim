@@ -66,12 +66,13 @@ public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
                      # pieces (tunnel.glb, station.glb, crate.glb, the
                      # hill run hill-slope-up/hill-hill/hill-slope-down.glb +
-                     # their hill-snow-*.glb crowns, and the Y-junction
-                     # switch.glb) authored in Blender
+                     # their hill-snow-*.glb crowns, and the Y-junctions
+                     # switch.glb + switch-mirror.glb) authored in Blender
 scripts/             # Blender build recipes for original assets — deterministic
                      # and re-runnable in any Blender session (e.g.
                      # blender-tunnel.py, blender-station.py,
-                     # blender-hill-snow.py, blender-switch.py)
+                     # blender-hill-snow.py, blender-switch.py,
+                     # blender-switch-mirror.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
@@ -87,7 +88,9 @@ the hill run (`scripts/blender-hill-snow.py` → `hill-slope-up.glb`,
 `hill-hill.glb`, `hill-slope-down.glb` + the `hill-snow-*.glb` winter
 crowns, whose named `hill_snow_*` nodes toggle like the tunnel's snow cap),
 and the Y-switch (`scripts/blender-switch.py` → `switch.glb`, whose named
-`switch_blades` node the scene eases 0 ↔ −0.21 to flip the points)
+`switch_blades` node the scene eases 0 ↔ −0.21 to flip the points) and its
+left-hand twin (`scripts/blender-switch-mirror.py` → `switch-mirror.glb`,
+same node contract, eased 0 ↔ +0.21 toward the west branch)
 are the reference implementations. Original pieces are **not hand-sculpted**: each asset has a
 deterministic, checked-in Python recipe that builds and exports it, so a
 reset Blender session (or a new machine) can regenerate the asset exactly.
