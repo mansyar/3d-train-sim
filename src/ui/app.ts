@@ -27,6 +27,7 @@ const PIECE_LABELS: Record<PieceType, string> = {
   straight: 'Straight track piece',
   corner: 'Corner track piece',
   crossing: 'Crossing track piece',
+  'crossing-gate': 'Railway crossing gate piece',
   bridge: 'Bridge track piece',
   tunnel: 'Tunnel track piece',
   'slope-up': 'Rising slope track piece',
@@ -181,6 +182,30 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
       <line x1="8" y1="24" x2="40" y2="24"
             stroke="var(--toy-steel)" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+  // The railway crossing gate: the straight rail crossed by a grey road,
+  // with a red-and-white crossbuck post and two lifted barrier arms.
+  'crossing-gate': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="14" y="3" width="20" height="42" rx="5"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="19" y1="4" x2="19" y2="44"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="29" y1="4" x2="29" y2="44"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <rect x="2" y="19" width="44" height="10" rx="3"
+            fill="var(--toy-steel)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="6" y1="24" x2="12" y2="24" stroke="var(--toy-cream)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="16" y1="24" x2="22" y2="24" stroke="var(--toy-cream)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="26" y1="24" x2="32" y2="24" stroke="var(--toy-cream)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="36" y1="24" x2="42" y2="24" stroke="var(--toy-cream)" stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="14" y1="21" x2="14" y2="9"
+            stroke="var(--toy-brown)" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="14" cy="7" r="3" fill="var(--toy-red)" stroke="var(--toy-brown)" stroke-width="2"/>
+      <line x1="30" y1="9" x2="40" y2="5"
+            stroke="var(--toy-red)" stroke-width="4" stroke-linecap="round"/>
+      <line x1="33" y1="10.5" x2="37" y2="8.7"
+            stroke="var(--toy-cream)" stroke-width="4" stroke-linecap="round" opacity=".85"/>
     </svg>`,
   // The trestle: a plank deck on stilt legs reaching down into the water.
   bridge: `

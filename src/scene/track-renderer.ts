@@ -58,6 +58,10 @@ const BASE_YAW: Record<PieceType, number> = {
   corner: -Math.PI / 2,
   // 4-fold symmetric: every yaw looks identical, so rotation is a no-op.
   crossing: 0,
+  // The crossing gate rides like the straight it mirrors; its road lies
+  // across the rail at yaw 0 (north–south road ends east–west) — the
+  // authored GLB carries the same frame as the straight, so no extra yaw.
+  'crossing-gate': 0,
   // Placeholder until the trestle model lands (Phase 2): rides like a straight.
   bridge: 0,
   // The tunnel rides like the straight it mirrors; the dome is yaw-symmetric.
@@ -108,6 +112,10 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // model-space point as the straight's rail midpoint: x=0, underside y=−1,
   // mid-length z=2 — the cell centre the graph pivots rides around.
   crossing: [0, -1, 2],
+  // The crossing gate: authored on the straight's mount (the rail half IS
+  // the kit straight), so the same anchor lands the rails flush with
+  // neighbours until the dedicated GLB replaces the placeholder.
+  'crossing-gate': [0, -1, 2],
   // Placeholder until the trestle model lands (Phase 2): same anchor as the
   // straight it mirrors.
   bridge: [0, -1, 2],
@@ -134,6 +142,9 @@ const PIECE_URLS: Record<PieceType, string> = {
   straight: '/assets/train-kit/railroad-straight.glb',
   corner: '/assets/train-kit/railroad-corner-small.glb',
   crossing: '/assets/train-kit/railroad-crossing.glb',
+  // Placeholder until the crossing-gate model lands (Phase 2): the kit
+  // straight it rides like.
+  'crossing-gate': '/assets/train-kit/railroad-straight.glb',
   // Placeholder until the trestle model lands (Phase 2).
   bridge: '/assets/train-kit/railroad-straight.glb',
   // The Blender-authored dome: named nodes carry the portal arches and the
