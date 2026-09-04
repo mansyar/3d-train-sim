@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [e2e-stability_20260904](tracks/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | new |
 | [switches-branches_20260903](archive/switches-branches_20260903/index.md) | Track Switches & Branches | Feature | done |
 | [release-v0.5.0_20260902](archive/release-v0.5.0_20260902/index.md) | Release v0.5.0 | Chore | done |
 | [wagon-teleport-lap-wrap_20260831](archive/wagon-teleport-lap-wrap_20260831/index.md) | Wagon Teleport at the Lap Wrap (Bridge After Curve) | Bug | done |
