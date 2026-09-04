@@ -10,6 +10,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 ## [Unreleased]
 
 ### Added
+- **Gentle bumps and banked corners for the hills.** Six new chunky
+  pieces join the Rails tab: a low hump run (up, cruise, down) for a
+  softer dip, and corners that climb, cruise high, and descend out of
+  the bend. Trains ride every one at normal speed, easing gently where
+  heights meet, and each crest earns one soft celebratory pop. In
+  winter the new hilltops wear snow crowns that melt away with the
+  snow. Older saved railways open unchanged.
 - A left-hand switch for the toy box: a new track piece shaped like a Y
   that branches to the left, so little engineers can build loops that
   turn both ways. Trains roll through at normal speed, taking each way

@@ -67,7 +67,7 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 
 ## Phase 4 — E2E, docs & final gates
 
-- [ ] Task: Playwright smoke (`e2e/hills-phase2.spec.ts`) — ride each piece + reload, clean console
+- [~] Task: Playwright smoke (`e2e/hills-phase2.spec.ts`) — ride each piece + reload, clean console
 - [ ] Task: Docs — CHANGELOG Unreleased note, strike elevation leftovers in `product.md`
 - [ ] Task: Final gates — `biome check`, `tsc --noEmit`, `vitest`, tablet manual check
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
