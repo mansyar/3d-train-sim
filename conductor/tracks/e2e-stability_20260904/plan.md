@@ -131,7 +131,7 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     Phase 2 runbook review). Checkpoint SHA `e0735ce` (final Phase 1 code
     commit).
 
-## Phase 2 - Stability Documentation
+## Phase 2 - Stability Documentation [checkpoint: 8dac80f]
 
 - [x] Task: Write `e2e/README.md` — the stability runbook (8dac80f)
   - The `blob:`/headless-GPU mechanism, the allowlist (what it covers, how to
@@ -152,28 +152,42 @@ e2e runs, gates, and checkpoints per `workflow.md`.
   - Notes: single row edit in the Testing table pointing at
     `e2e/README.md`; CI-description wording changes are deliberately
     deferred to Phase 3's dedicated task. Biome clean on the repo.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-04): docs-only phase — biome clean; no code
+    paths touched. User approved checkpoint. Checkpoint SHA `8dac80f`.
 
-## Phase 3 - CI: E2E on PRs + Parallel Gates + Caching + Path Filters
+## Phase 3 - CI: E2E on PRs + Parallel Gates + Caching + Path Filters [checkpoint: TBD]
 
 - [ ] Task: Update `tech-stack.md` CI description first
   - Per workflow principle #2: document the new pipeline shape before
     implementation — parallel jobs (biome+typecheck / vitest / e2e), e2e on
     PRs, cached Playwright browsers, docs-only path filtering
   - Acceptance: tech-stack.md reflects the target pipeline
-- [ ] Task: Rework `.github/workflows/ci.yml`
+- [x] Task: Rework `.github/workflows/ci.yml` (fde6f2c)
   - Parallel `check` (biome+tsc), `vitest`, and `e2e` jobs on PRs + main
     pushes; e2e = Playwright install (cached, keyed on locked version) +
     `pnpm build` + full suite; docs-only paths skip heavy jobs
   - Acceptance: ci.yml matches the documented shape
-- [ ] Task: Mirror the structure in `release.yml` gates
+  - Notes: exactly the tech-stack "CI (ci.yml)" shape — job timeouts
+    (10/10/30 min), browsers cached under
+    `playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}`,
+    `--with-deps` install kept (idempotent, cheap on cache hit), docs-only
+    ignore list = `**/*.md` + `conductor/**` + `.gitignore` (deliberately
+    NOT `public/**` — new pieces/assets must always run e2e).
+- [x] Task: Mirror the structure in `release.yml` gates (5ff384c)
   - Parallel gate jobs + the same browser cache; ubuntu e2e stays the release
     authority
   - Acceptance: release.yml mirrors ci.yml job structure + cache
-- [ ] Task: Validate with a release dry run
+  - Notes: `gates` job split into the same three named jobs; `publish`
+    now `needs: [check, vitest, e2e]`. Dry-run semantics untouched
+    (`push: github.event_name == 'push'` guard, dispatch defaults dry).
+    Live dry-run validation is the next task.
+- [~] Task: Validate with a release dry run
   - `workflow_dispatch` with `dry_run: true`: gates green, image builds,
     nothing published/deployed
   - Acceptance: dry run green end-to-end
+  - Notes: branch pushed to origin (`track/e2e-stability_20260904`);
+    dispatching release.yml against it.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 - Acceptance Runs & Wrap-Up
