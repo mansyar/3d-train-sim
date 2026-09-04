@@ -3,7 +3,7 @@
 Chore track — no logic-bearing code, so no TDD tasks; verification is repeated
 e2e runs, gates, and checkpoints per `workflow.md`.
 
-## Phase 1 - Flake Fix: Targeted Allowlist
+## Phase 1 - Flake Fix: Targeted Allowlist [checkpoint: e0735ce]
 
 - [x] Task: Reproduce the flake and capture the exact console-error fingerprint
   - Run the wagon-workshop tablet/phone spec repeatedly on Windows headless
@@ -113,7 +113,7 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     **still failed**. Proof spec deleted after the run — nothing added to
     the permanent suite. Guardrail armed and surgical (spec A4, acceptance
     criterion #6).
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
   - Progress (2026-09-04): automated — `pnpm check` green (biome clean,
     `tsc --noEmit` clean, 592/592 vitest); full Playwright suite **99/99
     passed in 8.0m** at the new config default (2 workers, allowlist
@@ -126,6 +126,10 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     eyeball `e2e/helpers.ts` allowlist comment for accuracy/readability,
     and (optional) run `pnpm exec playwright test e2e/wagon-workshop.spec.ts`
     personally to see it green.
+  - Verification Report (2026-09-04): automated results above all green;
+    user approved checkpoint (manual eyeball of helper comment waived into
+    Phase 2 runbook review). Checkpoint SHA `e0735ce` (final Phase 1 code
+    commit).
 
 ## Phase 2 - Stability Documentation
 
