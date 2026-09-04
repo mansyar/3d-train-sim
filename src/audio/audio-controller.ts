@@ -77,6 +77,8 @@ export interface AudioController {
   thunk(): void;
   /** One critter chirp for a passing train (a voice id from the catalog). Silent while muted. */
   chirp(voice: string): void;
+  /** Rings the crossing bell while any crossing's gates are down. Idempotent. */
+  setCrossingBell(ringing: boolean): void;
   /** Observes state changes (mute or chug). Returns an unsubscribe fn. */
   subscribe(listener: () => void): () => void;
   /** Observes chug beats while the chug is active. Returns an unsubscribe fn. */
@@ -111,6 +113,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   const beatListeners = new Set<() => void>();
   let muted = false;
   let chugging = false;
+  let bellRinging = false;
   let softened = false;
   let chugRate = ROLLING_RATE;
   let suspended = false;
@@ -137,6 +140,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   /** A chug that was requested while muted speaks up as soon as we unmute. */
   function speakIfDue(): void {
     if (chugging && !muted) sound('chug').play();
+    if (bellRinging && !muted) sound('crossing-bell').play();
   }
 
   options.subscribeToChugBeat?.(notifyChugBeat);
@@ -250,6 +254,19 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       sound(voice).play();
     },
 
+    setCrossingBell: (next) => {
+      if (next === bellRinging || disposed) return;
+      bellRinging = next;
+      if (bellRinging) {
+        // Like the chug: a bell asked for while muted still counts — it
+        // waits in silence and speaks on the next unmute (speakIfDue).
+        if (!muted) sound('crossing-bell').play();
+      } else {
+        sound('crossing-bell').fade(); // rings die out gently, never cut
+      }
+      notify();
+    },
+
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -276,10 +293,10 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     resume: () => {
       if (!suspended) return;
       suspended = false;
-      if (chugging) {
-        startChugBeatClock?.();
-        speakIfDue(); // Resumes the paused chug (respects mute); one-shots are discarded.
-      }
+      if (chugging) startChugBeatClock?.();
+      // Resumes the paused chug — and any ringing bell — while one-shots
+      // are discarded, never replayed.
+      speakIfDue();
       notify();
     },
 
@@ -288,6 +305,10 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       beatListeners.clear();
       listeners.clear();
       chugging = false;
+      if (bellRinging) {
+        bellRinging = false;
+        sound('crossing-bell').fade(); // no bell left ringing at teardown
+      }
       disposed = true;
     },
   };
