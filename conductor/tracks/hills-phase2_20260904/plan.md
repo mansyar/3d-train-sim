@@ -48,15 +48,22 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 
 ## Phase 3 — Ride, camera, audio, toybox (smoke + manual)
 
-- [ ] Task: Ride integration (elevated corners route, half-height blending, shuttle parity)
-  - [ ] Acceptance: forward + reverse rides, no pops, composes with switches/tunnels/bridges
-- [ ] Task: Follow-camera over new elevation
-  - [ ] Acceptance: camera eases over bumps/corners like hills, no cuts or shakes
-- [ ] Task: Crest pop reusing soft voice (mute-respecting, capped)
-  - [ ] Acceptance: audible only when unmuted, never startling
-- [ ] Task: Rails-tab entries + drawer wiring (≥64px, icon-only)
-  - [ ] Acceptance: tap/drag placement on touch emulation
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Ride integration (elevated corners route, half-height blending, shuttle parity) [8dbd15d]
+  - [x] Acceptance: forward + reverse rides, no pops, composes with switches/tunnels/bridges
+  - Notes: Elevated corners ride the flat corner's quarter-arc pivot via new core `isCornerPiece` predicate (TDD: catalog test + arc-pivot test per type); arc + `easedHeightAt` compose through the existing orthogonal pose path, so no hill branching was needed. Bump `heightAt` profiles + type-aware `lowEdgeOf` came from Phase 1 — reverse/shuttle parity free. Unit proof: 4 crest-detector tests (ding once per visit each way, silent over full hills and flats). Smoke proof: tmp e2e probe rides a bump run 6s+ on phone + tablet, still riding, screenshots differ, console clean.
+- [x] Task: Follow-camera over new elevation [8dbd15d]
+  - [x] Acceptance: camera eases over bumps/corners like hills, no cuts or shakes
+  - Notes: No code change needed — `updateCamera` (init-scene.ts) copies the engine model's full 3D position (Y included) with exponential ease and `lookAt`; reduced-motion keeps the fixed overview. Verified by the 6s+ riding smoke (frames differ = camera gliding) + manual check below.
+- [x] Task: Crest pop reusing soft voice (mute-respecting, capped) [8dbd15d]
+  - [x] Acceptance: audible only when unmuted, never startling
+  - Notes: Height-triggered detector in `poseTrain` (new optional `onBumpCrest` callback, wired to a single `audio.ding()`): fires once climbing past `HILL_HALF_HEIGHT − 0.05` on bump-family segments only (new `isBumpPiece` predicate), re-arms below 0.15 or off bump pieces — full-height hills stay silent. `ding()` is already mute-respecting and capped; single pop (not the station ding-ding). No deviation from spec FR3.
+- [x] Task: Rails-tab entries + drawer wiring (≥64px, icon-only) [8dbd15d]
+  - [x] Acceptance: tap/drag placement on touch emulation
+  - Notes: Done as Phase 1 head-start (`TAB_FOR_KIND` + labels + 6 icon-only SVGs); phone + tablet probe placements all went through the touch-capable dev handle onto dry cells. Icon-only, no emoji — matches toybox conventions.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report: automated gates green — 588/588 tests pass (`CI=true pnpm test`); new core code at 100% coverage (`pieces.ts` 100/100/100/100; logic gate >80% holds — scene files excluded per workflow); `tsc --noEmit` clean; `biome check` clean. Scope: 7 files since checkpoint `63b5eb2` (2 core logic + tests, 2 scene + tests, 1 scene wiring, 1 tmp e2e probe, plan). E2E smoke (tmp probe, phone + tablet): 6 GLBs load, bump run rides 6s+ still riding with differing frames, console clean.
+  - Manual verification confirmed by user with explicit "yes" (Rails-tab placement, crest pop muted/unmuted, chase camera, banked corners, clean console).
+  - Checkpoint: [checkpoint:8dbd15d]
 
 ## Phase 4 — E2E, docs & final gates
 
