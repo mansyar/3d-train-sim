@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Hill-grade pace: the climb labors, the descent breezes, and each
@@ -57,11 +57,7 @@ const samplePace = async (page: Page, samples: number, gapMs: number): Promise<n
 };
 
 const trackActivity = (page: Page) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
   return { consoleErrors, requestUrls };

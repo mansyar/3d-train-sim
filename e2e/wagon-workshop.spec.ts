@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 /**
  * Wagon workshop flow: a tap dresses the selected locomotive's pair, each
  * train keeps its own preset, cargo still loads and delivers behind the new
@@ -69,11 +71,7 @@ const buildCargoLoop = (page: import('@playwright/test').Page) =>
 test('per-train presets ride, deliver cargo, and survive a reload', async ({ page }) => {
   // The delivery poll below allows 45s, so the test must outlive it.
   test.setTimeout(120_000);
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -150,11 +148,7 @@ test('per-train presets ride, deliver cargo, and survive a reload', async ({ pag
 
 test('the chosen pair rides a switch shuttle without a ripple', async ({ page }) => {
   test.setTimeout(90_000);
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));

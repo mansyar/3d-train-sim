@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Build-to-ride flow & toybox clarity: riding hides the build tools and
@@ -45,14 +45,7 @@ const place = (
     [type, cell, rotation] as const,
   );
 
-const watchConsole = (page: import('@playwright/test').Page) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
-  return consoleErrors;
-};
+const watchConsole = (page: import('@playwright/test').Page) => watchConsoleErrors(page);
 
 test('riding hides the build tools and stopping returns them', async ({ page }) => {
   const consoleErrors = watchConsole(page);
