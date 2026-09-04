@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { type Edge, endpointsFor, FOOTPRINT_CELLS, PIECE_TYPES, type Rotation } from './pieces';
+import {
+  type Edge,
+  endpointsFor,
+  FOOTPRINT_CELLS,
+  isBumpPiece,
+  isCornerPiece,
+  PIECE_TYPES,
+  type PieceType,
+  type Rotation,
+} from './pieces';
 
 const ALL_ROTATIONS: Rotation[] = [0, 90, 180, 270];
 
@@ -34,6 +43,47 @@ describe('piece catalog', () => {
 
   it('gives every piece a 1-cell footprint', () => {
     expect(FOOTPRINT_CELLS).toBe(1);
+  });
+
+  it('knows the corner family: the flat corner plus the elevated corner run', () => {
+    const corners: PieceType[] = ['corner', 'corner-up', 'hill-corner', 'corner-down'];
+    for (const type of corners) expect(isCornerPiece(type)).toBe(true);
+    const others: PieceType[] = [
+      'straight',
+      'crossing',
+      'bridge',
+      'tunnel',
+      'slope-up',
+      'hill',
+      'slope-down',
+      'bump-up',
+      'hill-half',
+      'bump-down',
+      'switch',
+      'switch-mirror',
+    ];
+    for (const type of others) expect(isCornerPiece(type)).toBe(false);
+  });
+
+  it('knows the bump family: the gentle half-height hump run', () => {
+    const bumps: PieceType[] = ['bump-up', 'hill-half', 'bump-down'];
+    for (const type of bumps) expect(isBumpPiece(type)).toBe(true);
+    const others: PieceType[] = [
+      'straight',
+      'corner',
+      'crossing',
+      'bridge',
+      'tunnel',
+      'slope-up',
+      'hill',
+      'slope-down',
+      'corner-up',
+      'hill-corner',
+      'corner-down',
+      'switch',
+      'switch-mirror',
+    ];
+    for (const type of others) expect(isBumpPiece(type)).toBe(false);
   });
 });
 

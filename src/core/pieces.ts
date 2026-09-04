@@ -20,6 +20,22 @@ export const PIECE_TYPES = [
 
 export type PieceType = (typeof PIECE_TYPES)[number];
 
+/** A piece type that rides the quarter-arc (flat or banked). */
+export type CornerPieceType = 'corner' | 'corner-up' | 'hill-corner' | 'corner-down';
+
+/** True for the flat corner and every leg of the elevated corner run. */
+export function isCornerPiece(type: PieceType): type is CornerPieceType {
+  return type === 'corner' || type === 'corner-up' || type === 'hill-corner' || type === 'corner-down';
+}
+
+/** A piece type that humps gently at half height (the bump run). */
+export type BumpPieceType = 'bump-up' | 'hill-half' | 'bump-down';
+
+/** True for every leg of the bump run. */
+export function isBumpPiece(type: PieceType): type is BumpPieceType {
+  return type === 'bump-up' || type === 'hill-half' || type === 'bump-down';
+}
+
 /** Clockwise yaw in 90° steps. Zero points the piece's base toward north. */
 export type Rotation = 0 | 90 | 180 | 270;
 

@@ -1,5 +1,6 @@
 import type { Object3D } from 'three';
-import { easedHeightAt, type RideSpan } from '../core/elevation';
+import { easedHeightAt, HILL_HALF_HEIGHT, type RideSpan } from '../core/elevation';
+import { isBumpPiece, isCornerPiece } from '../core/pieces';
 import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import { isSwitchPiece } from '../core/switches';
@@ -35,6 +36,14 @@ const MODEL_YAW_OFFSET = Math.PI;
  * good four units of rail plus a slack beat.
  */
 const FOLLOWER_GAP = 4.2;
+/**
+ * Ride height that counts as cresting a bump-run hump: just under the
+ * half-height crest, so the pop lands at the top of the climb. The re-arm
+ * floor sits near grade with hysteresis — descending past it re-arms the
+ * detector for the next visit (including the shuttle way back).
+ */
+const BUMP_CREST_TRIGGER = HILL_HALF_HEIGHT - 0.05;
+const BUMP_CREST_REARM = 0.15;
 
 /**
  * Parked default pose: wagons rest in a straight line behind the engine's
@@ -113,12 +122,13 @@ const OPPOSITE_OF: Record<Edge, Edge> = {
 export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
   const entry = edgeMidpoint(piece.cell, step.from);
   const exit = edgeMidpoint(piece.cell, step.to);
-  // Corners always curve; a switch curves exactly when its chosen road
-  // leaves by an adjacent edge (the diverging branch) — the authored GLB's
-  // diverging road is the kit corner's own quarter-arc, so the ride pivots
-  // the cell corner shared by the two edges, tangent-perpendicular to both.
+  // Corners always curve — flat or banked; a switch curves exactly when its
+  // chosen road leaves by an adjacent edge (the diverging branch) — the
+  // authored GLB's diverging road is the kit corner's own quarter-arc, so the
+  // ride pivots the cell corner shared by the two edges,
+  // tangent-perpendicular to both.
   if (
-    (piece.type === 'corner' || isSwitchPiece(piece.type)) &&
+    (isCornerPiece(piece.type) || isSwitchPiece(piece.type)) &&
     step.to !== OPPOSITE_OF[step.from]
   ) {
     // The corner model's arc pivots on the cell corner shared by its two
@@ -187,6 +197,8 @@ export function createRideMotion(
   onStationCargo?: (stationId: string) => void,
   /** Announces which road a switch just set as the engine reaches its cell. */
   onSwitchRoad?: (pieceId: string, exit: Edge) => void,
+  /** Announces the engine cresting a bump-run hump (one soft pop per visit). */
+  onBumpCrest?: () => void,
 ): RideMotion {
   let segments: Segment[] = [];
   let total = 0;
@@ -256,6 +268,8 @@ export function createRideMotion(
   let pauseFlipsDirection = true;
   let pauseResumesAtZero = false;
   let lastRoadKey = '';
+  /** False between a bump-crest pop and the descent that re-arms it. */
+  let crestArmed = true;
 
   function beginRide(state: RideState): void {
     const byId = new Map(world.pieces().map((piece) => [piece.id, piece]));
@@ -319,6 +333,7 @@ export function createRideMotion(
     pauseFlipsDirection = true;
     pauseResumesAtZero = false;
     lastRoadKey = '';
+    crestArmed = true; // A fresh ride may crest immediately.
     let travelled = 0;
     for (let i = 0; i < kept.length; i++) {
       const cur = kept[i];
@@ -553,6 +568,24 @@ export function createRideMotion(
   /** One pose write for the whole little train: engine plus wagons. */
   function poseTrain(d: number): void {
     const segmentIndex = poseAt(d);
+    // Bump-crest detector: while bump-run pieces are under the engine, the
+    // first climb past the trigger pops once; leaving the bump family (or
+    // descending near grade) re-arms for the next visit. Full-height hills
+    // never arm it — their segments are not bump pieces.
+    if (segmentIndex >= 0) {
+      const span = spans[segmentIndex];
+      const height = activeModel.position.y;
+      if (span && isBumpPiece(span.type)) {
+        if (crestArmed && height >= BUMP_CREST_TRIGGER) {
+          crestArmed = false;
+          onBumpCrest?.();
+        } else if (height < BUMP_CREST_REARM) {
+          crestArmed = true;
+        }
+      } else {
+        crestArmed = true;
+      }
+    }
     // An overhang past the path ends keeps its last under/over-hill verdict.
     if (segmentIndex >= 0) setInsideTunnel(tunnelSteps[segmentIndex] === true);
     // The road the engine just reached a switch by — announced once per
@@ -725,6 +758,7 @@ export function createRideMotion(
     dispose() {
       setPaused(false); // End-of-motion report: nothing stays softened.
       setInsideTunnel(false); // ...and nothing stays under the hill.
+      crestArmed = true; // ...and no crest stays disarmed.
       segments = [];
       total = 0;
       stops = [];
