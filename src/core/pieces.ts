@@ -9,6 +9,7 @@ export const PIECE_TYPES = [
   'hill',
   'slope-down',
   'switch',
+  'switch-mirror',
 ] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
@@ -57,6 +58,9 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   // diverging branch on east (right of the through-road). Routing is the
   // switches module's job — connectivity just sees three open ends.
   switch: ['north', 'east', 'south'],
+  // The mirror Y: stem south, straight north, diverging branch west (left of
+  // the through-road). Same alternation as the right switch, mirrored.
+  'switch-mirror': ['north', 'west', 'south'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

@@ -29,6 +29,7 @@ import {
   sceneryUrl,
   sceneryVoice,
 } from '../core/scenery';
+import { isSwitchPiece, type SwitchPieceType } from '../core/switches';
 import {
   type Cell,
   type Edge,
@@ -70,7 +71,10 @@ const BASE_YAW: Record<PieceType, number> = {
   // The switch rides like the straight it mirrors in yaw: stem south,
   // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
   // correctly with no extra base yaw (verified in the render checks).
+  // The mirror shares the yaw frame with diverge west; its mirrored GLB
+  // rides the same mount.
   switch: 0,
+  'switch-mirror': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -120,7 +124,10 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // through-road is the kit straight's own rails, diverge is the kit
   // corner's rails rotated onto the SE-pivot arc), so the same anchor
   // lands both roads' ends on their edge midpoints flush with neighbours.
+  // The mirror shares the mount — its GLB (blender-switch-mirror.py) is
+  // authored on the same straight mount with the diverge x-mirrored.
   switch: [0, -1, 2],
+  'switch-mirror': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -141,7 +148,10 @@ const PIECE_URLS: Record<PieceType, string> = {
   // Blender-authored Y-junction (blender-switch.py): kit straight rails
   // for the through-road + kit corner rails for the diverging road on the
   // kit mount, with a named `switch_blades` node the renderer flips.
+  // The mirror loads its own mirrored GLB (blender-switch-mirror.py —
+  // same mount, same blades contract, branch peeling west).
   switch: '/assets/train-kit/switch.glb',
+  'switch-mirror': '/assets/train-kit/switch-mirror.glb',
 };
 
 /**
@@ -383,17 +393,21 @@ export function startTrackRenderer(
 
   /**
    * Point blades flip to the road the train will take: 0 (through) or
-   * -0.21 rad (diverge) about the blades node's local Y — the Blender
+   * ±0.21 rad (diverge — negative tips east on the right switch, positive
+   * tips west on the mirror) about the blades node's local Y — the Blender
    * +z angle from blender-switch.py arrives as glTF +y via export_yup
    * (verified: -0.21 in the render checks reads as diverge). Stem merges
    * (world exit = stem) keep the last branch — only stem entries
-   * alternate, so only north/east-model exits move the blades.
+   * alternate, so only north/diverge-model exits move the blades.
    * Event-driven (ride-motion onSwitchRoad): a short ease-out tween,
    * instant snap under prefers-reduced-motion, no per-frame cost outside
    * the tween.
    */
   const BLADE_THROUGH_Y = 0;
-  const BLADE_DIVERGE_Y = -0.21;
+  const BLADE_DIVERGE_Y: Record<SwitchPieceType, number> = {
+    switch: -0.21,
+    'switch-mirror': 0.21,
+  };
   const BLADE_TWEEN_MS = 180;
   const bladeTweens = new Map<
     string,
@@ -417,17 +431,23 @@ export function startTrackRenderer(
 
   function setSwitchRoad(pieceId: string, exit: Edge): void {
     const item = tracked.get(pieceId);
-    if (!item || !isPiece(item) || item.type !== 'switch') return;
+    if (!item || !isPiece(item) || !isSwitchPiece(item.type)) return;
     const model = rendered.get(pieceId);
     if (!model) return;
     const blades = model.getObjectByName('switch_blades');
     if (!blades) return;
     // World exit -> model exit (yaw 0 frame): model north = through,
-    // model east = diverge. Invert the yaw advance applied at mount.
+    // model east = diverge on the right switch, model west = diverge on
+    // the mirror. Invert the yaw advance applied at mount.
     const steps = item.rotation / 90;
     const modelExit = advancedEdge(exit, (4 - steps) % 4);
+    const divergeEdge = item.type === 'switch' ? 'east' : 'west';
     const target =
-      modelExit === 'north' ? BLADE_THROUGH_Y : modelExit === 'east' ? BLADE_DIVERGE_Y : null;
+      modelExit === 'north'
+        ? BLADE_THROUGH_Y
+        : modelExit === divergeEdge
+          ? BLADE_DIVERGE_Y[item.type]
+          : null;
     if (target === null) return; // a branch→stem merge keeps the last branch
     if (Math.abs(blades.rotation.y - target) < 1e-4 && !bladeTweens.has(pieceId)) return;
     if (reducedMotion || disposed) {

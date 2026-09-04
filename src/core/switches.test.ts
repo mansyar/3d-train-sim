@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Edge, endpointsFor, type Rotation } from './pieces';
+import { endpointsFor, type Rotation } from './pieces';
 import { nextBranch, routeSwitch } from './switches';
 
 const ALL_ROTATIONS: Rotation[] = [0, 90, 180, 270];
@@ -61,9 +61,49 @@ describe('routeSwitch', () => {
   it('stays total and self-consistent: every entry at every rotation exits by a different open end with a 0|1 counter', () => {
     for (const rotation of ALL_ROTATIONS) {
       const ends = endpointsFor('switch', rotation);
-      for (const from of ends as Edge[]) {
+      for (const from of ends) {
         for (const counter of [0, 1]) {
           const routed = routeSwitch(counter, rotation, from);
+          expect(ends).toContain(routed.exit);
+          expect(routed.exit).not.toBe(from);
+          expect([0, 1]).toContain(routed.counter);
+        }
+      }
+    }
+  });
+});
+
+describe('routeSwitch — mirror handedness', () => {
+  it('takes the straight branch first and the west diverge next, advancing the counter', () => {
+    expect(routeSwitch(0, 0, 'south', 'switch-mirror')).toEqual({ exit: 'north', counter: 1 });
+    expect(routeSwitch(1, 0, 'south', 'switch-mirror')).toEqual({ exit: 'west', counter: 0 });
+  });
+
+  it('merges both mirror branches through the stem without advancing the counter', () => {
+    expect(routeSwitch(0, 0, 'north', 'switch-mirror')).toEqual({ exit: 'south', counter: 0 });
+    expect(routeSwitch(1, 0, 'north', 'switch-mirror')).toEqual({ exit: 'south', counter: 1 });
+    expect(routeSwitch(0, 0, 'west', 'switch-mirror')).toEqual({ exit: 'south', counter: 0 });
+    expect(routeSwitch(1, 0, 'west', 'switch-mirror')).toEqual({ exit: 'south', counter: 1 });
+  });
+
+  it('rotates the mirrored Y with the piece — stem, straight, and west diverge follow', () => {
+    // 90°: stem west, straight east, diverge north.
+    expect(routeSwitch(0, 90, 'west', 'switch-mirror')).toEqual({ exit: 'east', counter: 1 });
+    expect(routeSwitch(1, 90, 'west', 'switch-mirror')).toEqual({ exit: 'north', counter: 0 });
+    // 180°: stem north, straight south, diverge east.
+    expect(routeSwitch(0, 180, 'north', 'switch-mirror')).toEqual({ exit: 'south', counter: 1 });
+    expect(routeSwitch(1, 180, 'north', 'switch-mirror')).toEqual({ exit: 'east', counter: 0 });
+    // 270°: stem east, straight west, diverge south.
+    expect(routeSwitch(0, 270, 'east', 'switch-mirror')).toEqual({ exit: 'west', counter: 1 });
+    expect(routeSwitch(1, 270, 'east', 'switch-mirror')).toEqual({ exit: 'south', counter: 0 });
+  });
+
+  it('stays total and self-consistent for the mirror at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      const ends = endpointsFor('switch-mirror', rotation);
+      for (const from of ends) {
+        for (const counter of [0, 1]) {
+          const routed = routeSwitch(counter, rotation, from, 'switch-mirror');
           expect(ends).toContain(routed.exit);
           expect(routed.exit).not.toBe(from);
           expect([0, 1]).toContain(routed.counter);

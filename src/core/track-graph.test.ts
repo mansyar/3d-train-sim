@@ -102,6 +102,14 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch')).toBeNull();
   });
 
+  it('rejects the mirror switch on river water — dry-land toy like its right hand', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'switch-mirror')).toBe('water');
+  });
+
+  it('accepts a mirror switch on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-mirror')).toBeNull();
+  });
+
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {
     expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
     const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];
@@ -196,6 +204,48 @@ describe('endpointEdgesFor — switch', () => {
     expect(connections).toHaveLength(3);
     expect(connections).toContainEqual(['s', 'n', '2,2|2,3']);
     expect(connections).toContainEqual(['s', 'e', '2,3|3,3']);
+    expect(connections).toContainEqual(['s', 'stem', '2,3|2,4']);
+  });
+});
+
+describe('endpointEdgesFor — mirror switch', () => {
+  it('bridges north, west, and south cell edges at 0° (stem south, branches north and west)', () => {
+    expect(endpointEdgesFor(piece('s', 'switch-mirror', 2, 3, 0))).toEqual([
+      '2,2|2,3', // north — straight-through branch
+      '1,3|2,3', // west — diverging branch
+      '2,3|2,4', // south — stem
+    ]);
+  });
+
+  it('walks the mirrored Y clockwise through all rotations, base order with advanced labels', () => {
+    expect(endpointEdgesFor(piece('s', 'switch-mirror', 2, 3, 90))).toEqual([
+      '2,3|3,3', // east (rotated north)
+      '2,2|2,3', // north (rotated west)
+      '1,3|2,3', // west (rotated south — the stem)
+    ]);
+    expect(endpointEdgesFor(piece('s', 'switch-mirror', 2, 3, 180))).toEqual([
+      '2,3|2,4', // south (rotated north)
+      '2,3|3,3', // east (rotated west)
+      '2,2|2,3', // north (rotated south — the stem)
+    ]);
+    expect(endpointEdgesFor(piece('s', 'switch-mirror', 2, 3, 270))).toEqual([
+      '1,3|2,3', // west (rotated north)
+      '2,3|2,4', // south (rotated west)
+      '2,3|3,3', // east (rotated south — the stem)
+    ]);
+  });
+
+  it('connects a mirror switch to neighbors on its three sides like any endpoint set', () => {
+    const pieces = [
+      piece('s', 'switch-mirror', 2, 3, 0),
+      piece('n', 'straight', 2, 2, 0), // meets the straight-through branch
+      piece('w', 'straight', 1, 3, 90), // meets the diverging branch
+      piece('stem', 'straight', 2, 4, 0), // meets the stem
+    ];
+    const connections = connectionsFor(pieces).map((c) => [c.a, c.b, c.via]);
+    expect(connections).toHaveLength(3);
+    expect(connections).toContainEqual(['s', 'n', '2,2|2,3']);
+    expect(connections).toContainEqual(['s', 'w', '1,3|2,3']);
     expect(connections).toContainEqual(['s', 'stem', '2,3|2,4']);
   });
 });

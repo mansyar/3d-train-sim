@@ -13,15 +13,27 @@
  * each placed switch starts fresh, on the straight branch.
  */
 
-import type { Edge, Rotation } from './pieces';
+import type { Edge, PieceType, Rotation } from './pieces';
 
 /** The two roads through the switch, named from the through-driver's view. */
 export type SwitchBranch = 'straight' | 'diverge';
 
+/** A piece type that routes like a Y-junction (right or mirror). */
+export type SwitchPieceType = 'switch' | 'switch-mirror';
+
+/** True for either handedness of the Y-junction. */
+export function isSwitchPiece(type: PieceType): type is SwitchPieceType {
+  return type === 'switch' || type === 'switch-mirror';
+}
+
 /** Base-frame legs at yaw 0 (edges advance one compass step per 90° yaw). */
 const STEM_EDGE: Edge = 'south';
 const STRAIGHT_EDGE: Edge = 'north';
-const DIVERGE_EDGE: Edge = 'east';
+/** The right switch diverges east; the mirror diverges west (same alternation). */
+const DIVERGE_EDGE: Record<SwitchPieceType, Edge> = {
+  switch: 'east',
+  'switch-mirror': 'west',
+};
 
 const CANONICAL_EDGES: readonly Edge[] = ['north', 'east', 'south', 'west'];
 
@@ -45,20 +57,24 @@ export function nextBranch(counter: number): SwitchBranch {
 /**
  * Route one pass through the switch: `from` is the world-oriented entry
  * edge at the piece's rotation, `counter` its alternation state (0 = next
- * stem entry takes the straight branch). Returns the world-oriented exit
+ * stem entry takes the straight branch). `type` selects the handedness —
+ * the mirror diverges west where the right switch diverges east, with the
+ * same stem→alternating / branch→stem rule. Returns the world-oriented exit
  * edge and the counter after the pass — advanced only when the entry came
  * from the stem, and always folded back to 0|1 so the state stays a
- * two-state machine. Pure and total.
+ * two-state machine. Pure and total. Defaults to the right switch so older
+ * callers keep their routing byte for byte.
  */
 export function routeSwitch(
   counter: number,
   rotation: Rotation,
   from: Edge,
+  type: SwitchPieceType = 'switch',
 ): { exit: Edge; counter: number } {
   const fromBase = unrotateEdge(from, rotation);
   if (fromBase === STEM_EDGE) {
     const branch = nextBranch(counter);
-    const exitBase = branch === 'straight' ? STRAIGHT_EDGE : DIVERGE_EDGE;
+    const exitBase = branch === 'straight' ? STRAIGHT_EDGE : DIVERGE_EDGE[type];
     return { exit: rotateEdge(exitBase, rotation), counter: (counter + 1) % 2 };
   }
   return { exit: rotateEdge(STEM_EDGE, rotation), counter: counter % 2 };
