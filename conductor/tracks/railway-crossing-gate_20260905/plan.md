@@ -10,32 +10,51 @@ final gates.
 
 ## Phase 1 — Core: Crossing Piece, Proximity Semantics & Save (TDD)
 
-- [ ] Task: Add the `crossing-gate` piece type (tests first in
+- [x] Task: Add the `crossing-gate` piece type (tests first in
   `pieces.test.ts`, `save.test.ts`, `drawer.test.ts`)
-  - [ ] `PIECE_TYPES` gains `'crossing-gate'`; `BASE_ENDPOINTS` =
+  - [x] `PIECE_TYPES` gains `'crossing-gate'`; `BASE_ENDPOINTS` =
         `['north', 'south']` (straight through-road)
-  - [ ] Terrain rule: dry land only (ghost red over water, via existing
+  - [x] Terrain rule: dry land only (ghost red over water, via existing
         `validatePlacement`)
-  - [ ] Save round-trip: snapshot containing a crossing-gate; pre-feature
+  - [x] Save round-trip: snapshot containing a crossing-gate; pre-feature
         snapshots load unchanged; no version bump
-  - [ ] Catalog ripple: `drawer.ts` Rails tab entry; renderer placeholder
+  - [x] Catalog ripple: `drawer.ts` Rails tab entry; renderer placeholder
         maps (→ straight GLB until Phase 2); hand-drawn SVG icon in
         `ui/app.ts`
-- [ ] Task: Pure proximity state machine in `src/core/crossings.ts`
+  - **Notes:** Red phase = 9 failing tests across 5 files (terrain tests
+    passed pre-implementation — rules are type-agnostic). Green commits:
+    `28cfeac` (catalog + drawer + icon + renderer placeholder maps),
+    `16a4cc7` (terrain, ride, additive-save coverage). TDD gotcha: the
+    new pathing loop test initially used an E-W straight on the west
+    side — fixed to N-S (`rotation 0`).
+- [x] Task: Pure proximity state machine in `src/core/crossings.ts`
   (TDD: `crossings.test.ts`)
-  - [ ] Per-crossing states: idle → closing → active(gates closed) →
+  - [x] Per-crossing states: idle → closing → active(gates closed) →
         lifting → idle; eased timings as pure data
-  - [ ] Warning distance (approach) and exit distance (cleared) per
+  - [x] Warning distance (approach) and exit distance (cleared) per
         crossing; multiple trains on one crossing's line don't flap the
         gate (gate stays closed until the *last* train clears)
-  - [ ] Crossings are independent; up to 4 concurrent trains handled;
+  - [x] Crossings are independent; up to 4 concurrent trains handled;
         state is runtime-derived only — never serialized
-- [ ] Task: Ride/pathing coverage — crossing rides as a plain straight
+  - **Notes:** `1838b83`. Constants (cells): warning 2.25, hold 2.25,
+    exit 1.25, occupy 0.75; closing 0.6 s, lifting 0.8 s. No-flap: once
+    down, `hold` distance (≥ exit) keeps gates closed until the last
+    train clears; re-close guard during lifting at ≤ exit distance.
+    Pure + allocation-light (one motion object per step).
+- [x] Task: Ride/pathing coverage — crossing rides as a plain straight
   (extend `pathing.test.ts` if the existing rail-crossing type shares
   code)
-  - [ ] Trains roll through at normal speed; wagons/crates follow; no
+  - [x] Trains roll through at normal speed; wagons/crates follow; no
         pause, no slowdown
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Notes:** Covered in `16a4cc7`: 8-piece closed loop with a
+    crossing-gate rides closed; step `from/to` = the gate's endpoints;
+    entry/exit heights 0 (flat).
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - **Notes:** Gates at `1838b83`: Vitest 613/613 across 36 files,
+    `tsc --noEmit` clean, `biome check src` clean. Manual verification
+    deferred to Phase 2 (visuals/audio land there; core-only phase has
+    no scene output).
+- [checkpoint: 1838b83]
 
 ## Phase 2 — Asset, Sound & Scene Animation
 
