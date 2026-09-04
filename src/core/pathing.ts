@@ -1,6 +1,6 @@
 import { stepHeights } from './elevation';
 import { baseEndpointsFor } from './pieces';
-import { routeSwitch } from './switches';
+import { isSwitchPiece, routeSwitch } from './switches';
 import {
   boundaryKey,
   type Cell,
@@ -221,11 +221,16 @@ function walkSimple(ids: readonly string[], graph: TrackGraph): TrainPath {
     // rides its frozen straight-through routing (cap fallback only — live
     // components take the alternating walk below).
     const placed = pieceOf(curId);
+    // A local for the guard: narrowing `placed.type` directly would not
+    // survive into the `find` closure below, so the handedness rides along.
+    const placedType = placed.type;
     const exitEnd = invariant(
       ends.length === 2
         ? ends.find((end) => end.key !== entryEnd.key)
-        : placed.type === 'switch'
-          ? ends.find((end) => end.edge === routeSwitch(0, placed.rotation, curEntry).exit)
+        : isSwitchPiece(placedType)
+          ? ends.find(
+              (end) => end.edge === routeSwitch(0, placed.rotation, curEntry, placedType).exit,
+            )
           : ends.find((end) => end.edge === OPPOSITE_EDGE[curEntry]),
       ends.length === 2
         ? `piece ${curId} has a single end`
@@ -310,7 +315,7 @@ const SWITCH_WALK_STEP_CAP = 4096;
 function walkAlternating(ids: readonly string[], graph: TrackGraph): TrainPath | null {
   const { pieceOf, endsOfPiece, partnerOf } = graph;
   const start = startOf(ids, graph);
-  const switchIds = ids.filter((id) => pieceOf(id).type === 'switch');
+  const switchIds = ids.filter((id) => isSwitchPiece(pieceOf(id).type));
   const counters = new Map<string, number>();
   const stateKey = (pieceId: string, entry: Edge) =>
     `${pieceId}|${entry}|${switchIds.map((id) => counters.get(id) ?? 0).join(',')}`;
@@ -333,12 +338,12 @@ function walkAlternating(ids: readonly string[], graph: TrackGraph): TrainPath |
       `piece ${curId} has no ${curEntry} end`,
     );
     let routed: ReturnType<typeof routeSwitch> | null = null;
-    if (placed.type === 'switch') {
-      routed = routeSwitch(counters.get(curId) ?? 0, placed.rotation, curEntry);
+    if (isSwitchPiece(placed.type)) {
+      routed = routeSwitch(counters.get(curId) ?? 0, placed.rotation, curEntry, placed.type);
       counters.set(curId, routed.counter);
     }
     const exitEnd = invariant(
-      placed.type === 'switch'
+      isSwitchPiece(placed.type)
         ? ends.find((end) => end.edge === (routed?.exit ?? curEntry))
         : ends.length === 2
           ? ends.find((end) => end.key !== entryEnd.key)
@@ -371,7 +376,7 @@ function walkAlternating(ids: readonly string[], graph: TrackGraph): TrainPath |
  * frozen routing only past the step cap. The solver never fails.
  */
 function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
-  if (!ids.some((id) => graph.pieceOf(id).type === 'switch')) return walkSimple(ids, graph);
+  if (!ids.some((id) => isSwitchPiece(graph.pieceOf(id).type))) return walkSimple(ids, graph);
   return walkAlternating(ids, graph) ?? walkSimple(ids, graph);
 }
 

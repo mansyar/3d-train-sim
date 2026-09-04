@@ -29,6 +29,7 @@ import {
   sceneryUrl,
   sceneryVoice,
 } from '../core/scenery';
+import { isSwitchPiece } from '../core/switches';
 import {
   type Cell,
   type Edge,
@@ -70,7 +71,10 @@ const BASE_YAW: Record<PieceType, number> = {
   // The switch rides like the straight it mirrors in yaw: stem south,
   // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
   // correctly with no extra base yaw (verified in the render checks).
+  // The mirror shares the yaw frame with diverge west; Phase 2 authors its
+  // mirrored GLB on the same mount.
   switch: 0,
+  'switch-mirror': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -120,7 +124,9 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // through-road is the kit straight's own rails, diverge is the kit
   // corner's rails rotated onto the SE-pivot arc), so the same anchor
   // lands both roads' ends on their edge midpoints flush with neighbours.
+  // The mirror shares the mount until Phase 2 lands its mirrored GLB.
   switch: [0, -1, 2],
+  'switch-mirror': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -141,7 +147,10 @@ const PIECE_URLS: Record<PieceType, string> = {
   // Blender-authored Y-junction (blender-switch.py): kit straight rails
   // for the through-road + kit corner rails for the diverging road on the
   // kit mount, with a named `switch_blades` node the renderer flips.
+  // The mirror reuses the right-hand GLB until Phase 2 authors its mirrored
+  // geometry (same mount, same blades contract).
   switch: '/assets/train-kit/switch.glb',
+  'switch-mirror': '/assets/train-kit/switch.glb',
 };
 
 /**
@@ -417,17 +426,19 @@ export function startTrackRenderer(
 
   function setSwitchRoad(pieceId: string, exit: Edge): void {
     const item = tracked.get(pieceId);
-    if (!item || !isPiece(item) || item.type !== 'switch') return;
+    if (!item || !isPiece(item) || !isSwitchPiece(item.type)) return;
     const model = rendered.get(pieceId);
     if (!model) return;
     const blades = model.getObjectByName('switch_blades');
     if (!blades) return;
     // World exit -> model exit (yaw 0 frame): model north = through,
-    // model east = diverge. Invert the yaw advance applied at mount.
+    // model east = diverge on the right switch, model west = diverge on
+    // the mirror. Invert the yaw advance applied at mount.
     const steps = item.rotation / 90;
     const modelExit = advancedEdge(exit, (4 - steps) % 4);
+    const divergeEdge = item.type === 'switch' ? 'east' : 'west';
     const target =
-      modelExit === 'north' ? BLADE_THROUGH_Y : modelExit === 'east' ? BLADE_DIVERGE_Y : null;
+      modelExit === 'north' ? BLADE_THROUGH_Y : modelExit === divergeEdge ? BLADE_DIVERGE_Y : null;
     if (target === null) return; // a branch→stem merge keeps the last branch
     if (Math.abs(blades.rotation.y - target) < 1e-4 && !bladeTweens.has(pieceId)) return;
     if (reducedMotion || disposed) {
