@@ -17,7 +17,7 @@ Registry of active development tracks.
 | [wagon-workshop_20260904](archive/wagon-workshop_20260904/index.md) | Wagon Workshop | Feature | done |
 | [mirror-switch_20260904](archive/mirror-switch_20260904/index.md) | Mirror Switch | Feature | done |
 | [headlight-front_20260904](archive/headlight-front_20260904/index.md) | Headlight Front | Bug | done |
-| [release-v0.7.0_20260904](tracks/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | in progress |
+| [release-v0.7.0_20260904](tracks/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,

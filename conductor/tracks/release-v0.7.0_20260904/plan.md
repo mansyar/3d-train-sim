@@ -93,16 +93,32 @@ gates + smoke + checkpoints per `workflow.md`.
     Container `tiny-tracks:0.7.0` (72MB) smoke green on all six curl
     checks per `nginx.conf`. Manual: user confirmed yes to ship.
 
-## Phase 3 - Tag & Ship
+## Phase 3 - Tag & Ship [checkpoint: CLOSEOUT]
 
-- [ ] Task: Push branch, open PR "Release v0.7.0", merge to `main`
-  - Acceptance: PR merges cleanly into `main` with CI gates green.
-- [ ] Task: Tag `v0.7.0` on the release merge commit and push the tag
-  - Acceptance: `v0.7.0` tag points at the merge commit and the Release
-    workflow starts.
-- [ ] Task: Watch the Release workflow to green
-  - [ ] Gates pass in CI
-  - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.7.0` +
-        `:latest`
-  - [ ] Coolify webhook fired; production serves the new build
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Push branch, open PR "Release v0.7.0", merge to `main` (4ece74d)
+  - Notes: PR #39, CI green, squash-merged as `4ece74d`.
+- [x] Task: Tag `v0.7.0` on the release merge commit and push the tag (4050e6e)
+  - Notes: First tag on `4ece74d` triggered release run 33848476412,
+    which FAILED gates: Linux e2e 87/91 (starter-railway tablet
+    fresh-boot + phone gallery, wagon-workshop tablet + phone
+    per-train). Root cause (not Windows-environmental as first
+    thought): the specs' own reloads tear down a live WebGL page and
+    headless Chromium reports the doomed context's fetch fallout as
+    uncaught errors. Fix on branch
+    `track/e2e-settle-before-reload_20260904` (PR #40, merged as
+    `4050e6e`): two-phase clean-console asserts — assert everything
+    before the reload, drain the teardown window, assert the fresh
+    load + interactions. No app code touched. Linux dry_run gates
+    green, then tag moved (`git tag -f`, old tag pointed at a run
+    that published nothing) and pushed.
+- [x] Task: Watch the Release workflow to green (33855984060)
+  - [x] Gates pass in CI (biome + tsc + vitest + full e2e)
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.7.0` +
+        `:latest` (digest `sha256:2f5534cb…`)
+  - [x] Coolify webhook fired; prod deploy triggered (family-device
+        verification: cold-load, loop, play, whistle — manual, user)
+- [x] Task: Phase Verification & Checkpoint (CLOSEOUT)
+  - Verification Report (2026-09-04): release run 33855984060 fully
+    green; image pushed; webhook fired. Follow-up candidate (out of
+    scope): e2e-stability chore to systematize the reload pattern
+    across remaining specs.
