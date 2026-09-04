@@ -11,11 +11,12 @@ observable acceptance criteria + Playwright smoke for scene/UI.
 
 ## Phase 1 - Core: Consist Model & Persistence (TDD)
 
-- [ ] Task: Wagon preset type + per-train consist state (logic)
-  - [ ] Write failing tests: preset union (classic/coal/tank/container), per-train mapping defaulting to classic, unknown-input forgiveness
-  - [ ] Implement minimum pure model in `src/core/` to green
-  - [ ] Refactor for clarity; rerun tests
-  - [ ] Verify coverage >80% for new core code
+- [x] Task: Wagon preset type + per-train consist state (logic) d31551d
+  - [x] Write failing tests: preset union (classic/coal/tank/container), per-train mapping defaulting to classic, unknown-input forgiveness
+  - [x] Implement minimum pure model in `src/core/` to green
+  - [x] Refactor for clarity; rerun tests
+  - [x] Verify coverage >80% for new core code
+  - Notes: 16/16 vitest pass (9 new Red→Green); wagons.ts 100% stmts/branch/funcs/lines; biome clean after import sort; tsc clean. Classic preset reuses today's lumber+box URLs so existing catalog tests untouched.
 - [ ] Task: Save round-trip + persistence (logic)
   - [ ] Write failing tests: additive field serializes per-train, pre-workshop saves load as classic, workshop worlds round-trip, corrupt/unknown preset forgives to classic
   - [ ] Implement `src/core/save.ts` additive shape (no version bump) + `src/state/` wiring to green
