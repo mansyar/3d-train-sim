@@ -5,7 +5,15 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 1 - Changelog & Version Bump
 
-- [ ] Task: Backfill + promote `CHANGELOG.md` for v0.7.0
+- [x] Task: Backfill + promote `CHANGELOG.md` for v0.7.0 (2446910)
+  - Notes: Backfilled the missing Starter Railway entry (fresh-install
+    Cozy Oval + parent-gate 3-preset gallery, single-undo apply) in the
+    v0.6.0 parent-readable voice; moved mirror-switch + wagon-workshop
+    notes verbatim under new dated `## [0.7.0] - 2026-09-04`; added a
+    `### Fixed` note for the headlight-front fix (never noted in
+    Unreleased); `## [Unreleased]` left empty; compare links refreshed
+    (`v0.6.0...v0.7.0` added, Unreleased → `v0.7.0...HEAD`, all on
+    `mansyar/3d-train-sim`). Files: `CHANGELOG.md` only.
   - Acceptance: `## [Unreleased]` holds starter-gallery, mirror-switch,
     and wagon-workshop notes (starter backfilled — it never landed in
     Unreleased); new dated `## [0.7.0] - 2026-09-04` section holds the
@@ -15,7 +23,12 @@ gates + smoke + checkpoints per `workflow.md`.
   - [ ] Move `## [Unreleased]` notes verbatim into `## [0.7.0] - 2026-09-04`
   - [ ] Refresh compare links (`v0.6.0...v0.7.0`, Unreleased →
         `v0.7.0...HEAD`); keep them on `mansyar/3d-train-sim`
-- [ ] Task: Bump `package.json` version to `0.7.0`
+- [x] Task: Bump `package.json` version to `0.7.0` (b88851e)
+  - Notes: Single-line version bump; verified no other in-repo version
+    references needed changing (no `0.6.0` strings in `src/`,
+    `package.json`, `index.html`, or `vite.config.ts` — remaining hits
+    are history, compare links, and archive docs). Files: `package.json`
+    only.
   - Acceptance: `package.json` version reads `0.7.0`, matching the
     eventual `v0.7.0` tag.
   - [ ] Single-line version bump; verify no other in-repo version
