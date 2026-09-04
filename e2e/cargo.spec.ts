@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 /**
  * Cargo smoke: the station moment end to end — wagons load at the first
  * stop, deliver at the next with the station platform gaining a crate, and
@@ -32,14 +34,11 @@ const resetAndBuild = (page: import('@playwright/test').Page) =>
   });
 
 test('wagons load, deliver, and the station keeps the count across a reload', async ({ page }) => {
-  // The poll below allows 45s, so the test itself must outlive it: on loaded
-  // CI runners the 30s default kills the test before a slow first lap lands.
-  test.setTimeout(90_000);
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  // The poll below allows 90s, so the test itself must outlive it: on loaded
+  // CI runners the sim crawls (software rendering) and a first lap has taken
+  // over 45s of riding before its delivery lands.
+  test.setTimeout(150_000);
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -75,7 +74,7 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
             ).__tinyTracksWorld?.deliveryCount(id),
           [stationId] as const,
         )) ?? 0,
-      { timeout: 45000, intervals: [2000] },
+      { timeout: 90000, intervals: [1000] },
     )
     .toBeGreaterThanOrEqual(1);
 
@@ -108,11 +107,7 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
 });
 
 test('a train with no station never shows cargo and rides exactly as before', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>

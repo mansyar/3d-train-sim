@@ -1,5 +1,7 @@
 import { expect, type Page, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 type DevWorld = {
   __tinyTracksReady?: boolean;
   __tinyTracksWorld?: {
@@ -65,10 +67,7 @@ async function rideForAWhile(page: Page): Promise<void> {
 }
 
 test('fresh boot shows the cozy oval and rides with a clean console', async ({ page }) => {
-  const errors: string[] = [];
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
+  const errors = watchConsoleErrors(page);
   const external: string[] = [];
   page.on('request', (req) => {
     const url = req.url();
@@ -87,10 +86,7 @@ test('fresh boot shows the cozy oval and rides with a clean console', async ({ p
 
 test('each gallery preset applies behind the gate and rides', async ({ page }) => {
   test.setTimeout(120_000);
-  const errors: string[] = [];
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
+  const errors = watchConsoleErrors(page);
   await boot(page, () => {
     errors.length = 0;
   });

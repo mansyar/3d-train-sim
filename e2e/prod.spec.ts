@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 /**
  * Production-build assertions (run only on the `prod` project against the
  * `vite preview` server). The full smoke suite depends on the dev-only
@@ -7,11 +9,7 @@ import { expect, test } from '@playwright/test';
  * lean spec here.
  */
 test('production build mounts no debug grid toggle and keeps the shell', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
 

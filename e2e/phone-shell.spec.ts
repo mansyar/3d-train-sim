@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 test('phone viewport: shell fits without horizontal clipping', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   // The phone project uses an iPhone viewport; pad it to assert the ≥360px floor.
   await page.setViewportSize({ width: 360, height: 780 });

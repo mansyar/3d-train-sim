@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Mirror-switch smoke: the left-hand Y drags in like any track piece, loads
@@ -43,11 +43,7 @@ const MIRRORED_Y_LAYOUT: [string, { x: number; y: number }][] = [
 test('a placed mirror switch loads its GLB and the train rides both branches cleanly', async ({
   page,
 }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -90,11 +86,7 @@ test('a placed mirror switch loads its GLB and the train rides both branches cle
 });
 
 test('a mirrored Y layout survives a reload', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>

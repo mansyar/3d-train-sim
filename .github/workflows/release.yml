@@ -27,9 +27,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  gates:
+  # Gates mirror ci.yml's parallel job shape (tech-stack.md) — the ubuntu
+  # e2e run below is the release authority.
+  check:
+    name: Gate · biome + typecheck
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,8 +49,62 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Full gate (biome + typecheck + vitest)
-        run: pnpm check
+      - name: Style gate
+        run: pnpm exec biome check .
+
+      - name: Type gate
+        run: pnpm exec tsc --noEmit
+
+  vitest:
+    name: Gate · vitest
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit & integration suite
+        run: pnpm test
+
+  e2e:
+    name: Gate · e2e (tablet · phone · prod)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Browsers are pinned by the lockfile, so the lockfile hash is the
+      # cache key — a bumped Playwright version gets a fresh install.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
@@ -61,7 +118,7 @@ jobs:
         run: pnpm exec playwright test
 
   publish:
-    needs: gates
+    needs: [check, vitest, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -73,7 +130,14 @@ jobs:
 
       - name: Resolve image tags
         id: tags
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          # Real releases: v1.2.3 → 1.2.3. Dry runs dispatched from a branch
+          # ref carry the branch name, and "/" is invalid in Docker tags —
+          # collapse to a fixed tag; the image is never pushed on dry runs
+          # (push is guarded on the tag event below).
+          version=${GITHUB_REF_NAME#v}
+          if [[ "$version" == *"/"* ]]; then version=dry-run; fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

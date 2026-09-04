@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Oops-proof building smoke: the ↩️ take-back joins the rail after a change,
@@ -32,11 +32,7 @@ const pieceCount = (page: import('@playwright/test').Page) =>
   );
 
 test('taking back a placement removes the toy and hides the undo', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await ready(page);
@@ -78,11 +74,7 @@ test('taking back a placement removes the toy and hides the undo', async ({ page
 });
 
 test('a trashed toy comes back, and a reload keeps the world with no undo', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await ready(page);
