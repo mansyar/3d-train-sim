@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
+import { defaultConsist } from '../core/wagons';
 import {
   loadWorldSnapshot,
   restoreMutePreference,
@@ -22,6 +23,7 @@ const NEXT_CELL = { x: 1, y: 0 };
 const data: WorldData = {
   train: 'diesel',
   deliveries: {},
+  consist: defaultConsist(),
   pieces: [{ id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 }],
   scenery: [{ id: 'scenery-41', kind: 'tree', cell: NEXT_CELL, rotation: 90 }],
 };
@@ -172,6 +174,7 @@ describe('mute preference', () => {
       pieces: [],
       scenery: [{ id: 'scenery-41', kind: 'station', cell: NEXT_CELL, rotation: 0 }],
       deliveries: { 'scenery-41': 3 },
+      consist: defaultConsist(),
     });
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     watchWorldPersistence(store, () => false, save);
@@ -179,6 +182,19 @@ describe('mute preference', () => {
     store.place('straight', ORIGIN, 0);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save.mock.calls[0]?.[0]).toMatchObject({ deliveries: { 'scenery-41': 3 } });
+  });
+
+  it('carries the wagon consist into world-mutation saves', () => {
+    const store = createWorldStore();
+    store.selectConsist('diesel', 'coal');
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      consist: { ...defaultConsist(), diesel: 'coal' },
+    });
   });
 
   it('carries the current mute preference into world-mutation saves', () => {

@@ -16,6 +16,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   in turn, and the little point blades flip to show the chosen road —
   just like the right-hand switch. Older saved railways open unchanged.
 
+- **Wagon workshop: dress each train's wagons.** The train drawer gains a
+  wagon row under the locomotives - four chunky pictures (classic
+  lumber-and-box, coal pair, tanker pair, red-and-blue containers). One tap
+  dresses the selected engine's pair with a happy pop, each of the three
+  trains keeps its own choice, and the choice is remembered after a reload.
+  The wagons still haul crates exactly as before.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added
