@@ -1,4 +1,4 @@
-/** The piece catalog. The bridge spans the river; the tunnel rides under the hill; the hill run climbs it; the switch splits it. */
+/** The piece catalog. The bridge spans the river; the tunnel rides under the hill; the hill run climbs it; the bump run humps it gently; the elevated corners bank it; the switch splits it. */
 export const PIECE_TYPES = [
   'straight',
   'corner',
@@ -8,6 +8,12 @@ export const PIECE_TYPES = [
   'slope-up',
   'hill',
   'slope-down',
+  'bump-up',
+  'hill-half',
+  'bump-down',
+  'corner-up',
+  'hill-corner',
+  'corner-down',
   'switch',
   'switch-mirror',
 ] as const;
@@ -54,6 +60,18 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   'slope-up': ['north', 'south'],
   hill: ['north', 'south'],
   'slope-down': ['north', 'south'],
+  // The bump run is the hill run's gentle sibling at half height — bump-up
+  // humps south→north at yaw 0, hill-half cruises the low crest, bump-down
+  // settles back to grade. Same straight-like riding, same dry-land rule.
+  'bump-up': ['north', 'south'],
+  'hill-half': ['north', 'south'],
+  'bump-down': ['north', 'south'],
+  // The elevated corner run banks the turn: corner-up climbs into the bend,
+  // hill-corner cruises the high bend, corner-down descends out of it.
+  // Connectivity mirrors the corner; only the height profile differs.
+  'corner-up': ['north', 'east'],
+  'hill-corner': ['north', 'east'],
+  'corner-down': ['north', 'east'],
   // The Y-junction: stem on south, straight-through branch on north, curved
   // diverging branch on east (right of the through-road). Routing is the
   // switches module's job — connectivity just sees three open ends.

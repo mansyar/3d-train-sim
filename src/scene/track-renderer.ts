@@ -68,6 +68,14 @@ const BASE_YAW: Record<PieceType, number> = {
   'slope-up': 0,
   hill: 0,
   'slope-down': 0,
+  // The bump run rides like the straight it mirrors (half-height humps).
+  'bump-up': 0,
+  'hill-half': 0,
+  'bump-down': 0,
+  // The elevated corner run rides like the corner it mirrors (banked bend).
+  'corner-up': -Math.PI / 2,
+  'hill-corner': -Math.PI / 2,
+  'corner-down': -Math.PI / 2,
   // The switch rides like the straight it mirrors in yaw: stem south,
   // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
   // correctly with no extra base yaw (verified in the render checks).
@@ -120,6 +128,14 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   'slope-up': [0, -1, 2],
   hill: [0, -1, 2],
   'slope-down': [0, -1, 2],
+  // Phase-1 stand-ins on the same mounts (Phase 2 authors the real GLBs):
+  // the bump run on the straight mount, the elevated corners on the corner mount.
+  'bump-up': [0, -1, 2],
+  'hill-half': [0, -1, 2],
+  'bump-down': [0, -1, 2],
+  'corner-up': [0, -1, 2],
+  'hill-corner': [0, -1, 2],
+  'corner-down': [0, -1, 2],
   // The switch: authored on the straight's mount (blender-switch.py —
   // through-road is the kit straight's own rails, diverge is the kit
   // corner's rails rotated onto the SE-pivot arc), so the same anchor
@@ -145,6 +161,15 @@ const PIECE_URLS: Record<PieceType, string> = {
   'slope-up': '/assets/train-kit/hill-slope-up.glb',
   hill: '/assets/train-kit/hill-hill.glb',
   'slope-down': '/assets/train-kit/hill-slope-down.glb',
+  // Phase-1 stand-ins (Phase 2 authors the real GLBs via deterministic
+  // Blender recipes): the bump run reuses the hill run's embankments, the
+  // elevated corners reuse the corner's rails until their banked GLBs land.
+  'bump-up': '/assets/train-kit/hill-slope-up.glb',
+  'hill-half': '/assets/train-kit/hill-hill.glb',
+  'bump-down': '/assets/train-kit/hill-slope-down.glb',
+  'corner-up': '/assets/train-kit/railroad-corner-small.glb',
+  'hill-corner': '/assets/train-kit/railroad-corner-small.glb',
+  'corner-down': '/assets/train-kit/railroad-corner-small.glb',
   // Blender-authored Y-junction (blender-switch.py): kit straight rails
   // for the through-road + kit corner rails for the diverging road on the
   // kit mount, with a named `switch_blades` node the renderer flips.

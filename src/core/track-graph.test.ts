@@ -110,6 +110,30 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-mirror')).toBeNull();
   });
 
+  it('rejects the bump run on river water — dry-land toys like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-up')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill-half')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-down')).toBe('water');
+  });
+
+  it('accepts the bump run on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bump-up')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'hill-half')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bump-down')).toBeNull();
+  });
+
+  it('rejects the elevated corner run on river water — dry-land toys like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'corner-up')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill-corner')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'corner-down')).toBe('water');
+  });
+
+  it('accepts the elevated corner run on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'corner-up')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'hill-corner')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'corner-down')).toBeNull();
+  });
+
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {
     expect(validatePlacement([], { x: -1, y: row }, 'bridge')).toBe('out-of-bounds');
     const pieces = [piece('a', 'straight', (water ?? { x: 8, y: 8 }).x, row, 0)];

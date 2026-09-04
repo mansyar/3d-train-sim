@@ -32,6 +32,12 @@ const PIECE_LABELS: Record<PieceType, string> = {
   'slope-up': 'Rising slope track piece',
   hill: 'Hilltop track piece',
   'slope-down': 'Falling slope track piece',
+  'bump-up': 'Gentle bump-up track piece',
+  'hill-half': 'Low hilltop track piece',
+  'bump-down': 'Gentle bump-down track piece',
+  'corner-up': 'Uphill corner track piece',
+  'hill-corner': 'Hilltop corner track piece',
+  'corner-down': 'Downhill corner track piece',
   switch: 'Switch track piece',
   'switch-mirror': 'Mirror switch track piece',
 };
@@ -238,6 +244,62 @@ const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
       <line x1="4" y1="17" x2="44" y2="45"
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  // The bump run: the hill run's gentle sibling at half height — a shallow
+  // wedge up, a low dome, a shallow wedge down.
+  'bump-up': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 42 L46 28 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="4" y1="40" x2="44" y2="28"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="4" y1="45" x2="44" y2="33"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  'hill-half': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 30 Q24 20 46 30 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M4 28 Q24 19 44 28" fill="none"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M4 34 Q24 25 44 34" fill="none"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  'bump-down': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 28 L46 42 L46 44 L2 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="4" y1="28" x2="44" y2="40"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="4" y1="33" x2="44" y2="45"
+            stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
+    </svg>`,
+  // The elevated corner run: the corner's bend on a grassy bank — climbing
+  // in, cruising high, rolling back down.
+  'corner-up': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 44 L2 30 Q2 20 14 20 L46 20 L46 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M22 4 Q24 26 46 24" fill="none"
+            stroke="var(--toy-steel)" stroke-width="5" stroke-linecap="round"/>
+    </svg>`,
+  'hill-corner': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 44 L2 24 Q24 10 46 20 L46 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-brown)" stroke-width="22" stroke-linecap="round"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-cream)" stroke-width="16" stroke-linecap="round"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-steel)" stroke-width="5" stroke-linecap="round"/>
+    </svg>`,
+  'corner-down': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M2 44 L2 20 L34 20 Q44 20 46 30 L46 44 Z"
+            fill="var(--toy-cream)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M22 2 Q24 26 46 24" fill="none"
+            stroke="var(--toy-steel)" stroke-width="5" stroke-linecap="round"/>
     </svg>`,
   // The switch: a straight through-road with a curved branch peeling off
   // to the right — the Y a train takes a different way each pass.

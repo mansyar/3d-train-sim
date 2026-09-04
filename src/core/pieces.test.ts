@@ -11,12 +11,18 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, and both switches', () => {
+  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, both switches, the bump half-run, and the elevated corner run', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
+      'bump-down',
+      'bump-up',
       'corner',
+      'corner-down',
+      'corner-up',
       'crossing',
       'hill',
+      'hill-corner',
+      'hill-half',
       'slope-down',
       'slope-up',
       'straight',
@@ -75,6 +81,56 @@ describe('hill run piece geometry', () => {
 
   it('gives each hill piece exactly two endpoints at every rotation', () => {
     for (const type of ['slope-up', 'hill', 'slope-down'] as const) {
+      for (const rotation of ALL_ROTATIONS) {
+        expect(endpointsFor(type, rotation)).toHaveLength(2);
+      }
+    }
+  });
+});
+
+describe('bump half-run piece geometry', () => {
+  it('joins opposite edges exactly like a straight — at every rotation', () => {
+    expect(endpointsFor('bump-up', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('bump-up', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('bump-up', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('bump-up', 270)).toEqual(['east', 'west']);
+    expect(endpointsFor('hill-half', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('hill-half', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('hill-half', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('hill-half', 270)).toEqual(['east', 'west']);
+    expect(endpointsFor('bump-down', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('bump-down', 90)).toEqual(['east', 'west']);
+    expect(endpointsFor('bump-down', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('bump-down', 270)).toEqual(['east', 'west']);
+  });
+
+  it('gives each bump piece exactly two endpoints at every rotation', () => {
+    for (const type of ['bump-up', 'hill-half', 'bump-down'] as const) {
+      for (const rotation of ALL_ROTATIONS) {
+        expect(endpointsFor(type, rotation)).toHaveLength(2);
+      }
+    }
+  });
+});
+
+describe('elevated corner run piece geometry', () => {
+  it('joins adjacent edges exactly like a corner — at every rotation', () => {
+    expect(endpointsFor('corner-up', 0)).toEqual(['north', 'east']);
+    expect(endpointsFor('corner-up', 90)).toEqual(['east', 'south']);
+    expect(endpointsFor('corner-up', 180)).toEqual(['south', 'west']);
+    expect(endpointsFor('corner-up', 270)).toEqual(['north', 'west']);
+    expect(endpointsFor('hill-corner', 0)).toEqual(['north', 'east']);
+    expect(endpointsFor('hill-corner', 90)).toEqual(['east', 'south']);
+    expect(endpointsFor('hill-corner', 180)).toEqual(['south', 'west']);
+    expect(endpointsFor('hill-corner', 270)).toEqual(['north', 'west']);
+    expect(endpointsFor('corner-down', 0)).toEqual(['north', 'east']);
+    expect(endpointsFor('corner-down', 90)).toEqual(['east', 'south']);
+    expect(endpointsFor('corner-down', 180)).toEqual(['south', 'west']);
+    expect(endpointsFor('corner-down', 270)).toEqual(['north', 'west']);
+  });
+
+  it('gives each elevated corner exactly two endpoints at every rotation', () => {
+    for (const type of ['corner-up', 'hill-corner', 'corner-down'] as const) {
       for (const rotation of ALL_ROTATIONS) {
         expect(endpointsFor(type, rotation)).toHaveLength(2);
       }
