@@ -9,6 +9,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- A left-hand switch for the toy box: a new track piece shaped like a Y
+  that branches to the left, so little engineers can build loops that
+  turn both ways. Trains roll through at normal speed, taking each way
+  in turn, and the little point blades flip to show the chosen road —
+  just like the right-hand switch. Older saved railways open unchanged.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added
