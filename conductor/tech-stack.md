@@ -145,12 +145,28 @@ Rules of the house (learned the hard way on the tunnel):
    `__tinyTracksWorld` handle), asserts its GLB loads, and requires a clean
    console — see `e2e/tunnel.spec.ts`.
 
+## CI (ci.yml)
+
+Every PR and push to `main` runs three parallel gate jobs:
+
+| Job | What it runs |
+|---|---|
+| check | `pnpm exec biome check .` + `pnpm exec tsc --noEmit` |
+| vitest | `pnpm test` — the unit/integration suite |
+| e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml`) + `pnpm build` + the full e2e suite (tablet · phone · prod profiles) |
+
+- Docs-only commits (markdown, `conductor/**`, `.gitignore`) trigger no jobs.
+- PR e2e is an upstream tripwire for the release gates — the ubuntu e2e run
+  in the release pipeline remains the release authority (stability
+  conventions live in `e2e/README.md`).
+
 ## Build & Deployment Pipeline
 
 ```
 git tag v1.2.3 && git push --tags
   → GitHub Actions release.yml (tag-triggered):
-      1. Gates: pnpm check (biome + typecheck + vitest) + Playwright e2e
+      1. Gates (parallel, same shape as ci.yml): biome + typecheck /
+         vitest / Playwright e2e (browsers cached on the lockfile key)
       2. Docker build (multi-stage: node:24-alpine/pnpm build →
          nginx:alpine serving dist/, PWA-aware cache rules)
       3. Push image to ghcr.io/mansyar/tiny-tracks:1.2.3 + :latest
