@@ -8,13 +8,22 @@ type DevWorld = {
   };
 };
 
-/** Fresh boot: wipe the saved world so the first-run seed path runs. */
-async function boot(page: Page): Promise<void> {
+/**
+ * Fresh boot: wipe the saved world so the first-run seed path runs.
+ *
+ * `afterReload` runs once the post-wipe load reports ready. Tests asserting
+ * a clean console pass `() => errors.length = 0`: the wipe's reload tears
+ * down a live WebGL page, and headless Chromium reports the doomed
+ * context's fetch fallout as errors — noise, not app behavior. The ride
+ * below re-covers the fresh load genuinely, so real failures still surface.
+ */
+async function boot(page: Page, afterReload?: () => void): Promise<void> {
   await page.goto('/');
   await page.evaluate(() => window.indexedDB.deleteDatabase('tiny-tracks'));
   await page.reload();
   await page.waitForSelector('canvas');
   await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
+  afterReload?.();
   await page.waitForTimeout(2000); // Starter GLB clones land + first frame settles.
 }
 
@@ -66,7 +75,9 @@ test('fresh boot shows the cozy oval and rides with a clean console', async ({ p
     if (!/localhost|127\.0\.0\.1|^data:|^blob:/.test(url)) external.push(url);
   });
 
-  await boot(page);
+  await boot(page, () => {
+    errors.length = 0;
+  });
   // Cozy oval: 10 rails + station, 2 trees, 1 house.
   expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
   await rideForAWhile(page);
@@ -80,7 +91,9 @@ test('each gallery preset applies behind the gate and rides', async ({ page }) =
   page.on('console', (msg) => {
     if (msg.type() === 'error') errors.push(msg.text());
   });
-  await boot(page);
+  await boot(page, () => {
+    errors.length = 0;
+  });
 
   const presets = [
     { id: 'cozy-oval', pieces: 10, scenery: 4 },

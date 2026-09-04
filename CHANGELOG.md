@@ -9,7 +9,18 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-04
+
 ### Added
+- **A cozy first railway for every new train table.** A fresh install now
+  opens on a ready-to-ride oval with a station, trees, and a house — one
+  tap of ▶ and the train is off, so little engineers get the big moment
+  right away. Grown-ups also find a picture gallery behind the parent
+  gate with three starters (a cozy oval, a station village, and a river
+  crossing); picking one swaps the whole meadow in a single move that ↩️
+  can take right back. Starters are ordinary worlds from the moment they
+  land: autosaved, editable, and trashable like anything the kid builds.
+
 - A left-hand switch for the toy box: a new track piece shaped like a Y
   that branches to the left, so little engineers can build loops that
   turn both ways. Trains roll through at normal speed, taking each way
@@ -30,6 +41,12 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   personality, too: the diesel is zippier than the tram, and the steam
   engine takes hills slow and steady. Nothing new to learn - no buttons,
   no sliders, just watch and listen.
+
+### Fixed
+- **The night headlight shines from the front of the engine again.** It
+  had slipped to riding at the back of the engine; now the lamp and its
+  soft beam sit at the engine's nose on all three locomotives, lighting
+  the track ahead as the train chugs through the night.
 
 ## [0.6.0] - 2026-09-03
 
@@ -174,7 +191,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mansyar/3d-train-sim/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/mansyar/3d-train-sim/compare/v0.3.0...v0.4.0
