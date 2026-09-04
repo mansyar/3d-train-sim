@@ -1,7 +1,7 @@
 # Track: Headlight Front
 
 - **ID:** `headlight-front_20260904`
-- **Type:** Bug · **Status:** new · **Branch:** `track/headlight-front_20260904`
+- **Type:** Bug · **Status:** in-progress · **Branch:** `track/headlight-front_20260904`
 
 ## Artifacts
 
