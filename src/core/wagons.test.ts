@@ -9,6 +9,8 @@ import {
   WAGON_COUNT,
   WAGON_PRESETS,
   wagonModelUrl,
+  wagonPresetAria,
+  wagonPresetIcon,
   wagonPresetUrls,
   wagonSlots,
   withConsistPreset,
@@ -92,6 +94,20 @@ describe('wagon workshop presets', () => {
       lead: '/assets/train-kit/train-carriage-container-red.glb',
       rear: '/assets/train-kit/train-carriage-container-blue.glb',
     });
+  });
+
+  it('gives every preset a chunky icon and a distinct label', () => {
+    const labels = new Set<string>();
+    for (const preset of WAGON_PRESETS) {
+      const icon = wagonPresetIcon(preset);
+      expect(icon).toContain('<svg');
+      expect(icon).toContain('viewBox="0 0 48 48"');
+      expect(wagonPresetIcon(preset)).toBe(icon);
+      const aria = wagonPresetAria(preset);
+      expect(aria.length).toBeGreaterThan(0);
+      labels.add(aria);
+    }
+    expect(labels.size).toBe(WAGON_PRESETS.length);
   });
 
   it('sets one train without touching the others', () => {

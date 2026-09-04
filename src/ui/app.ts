@@ -12,6 +12,12 @@ import {
   terrainErrorFor,
 } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
+import {
+  WAGON_PRESETS,
+  type WagonPreset,
+  wagonPresetAria,
+  wagonPresetIcon,
+} from '../core/wagons';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 
@@ -389,6 +395,27 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     button.innerHTML = trainIcon(kind);
     trainDrawer.append(button);
   }
+  // The wagon row: one chunky pair-preset per button, dressing the selected
+  // locomotive. It lives inside the train drawer, so it hides mid-ride and
+  // on drawer close with the loco slots — no separate visibility logic.
+  const wagonRow = document.createElement('div');
+  wagonRow.className = 'wagon-row';
+  wagonRow.setAttribute('role', 'group');
+  wagonRow.setAttribute('aria-label', 'Wagon styles');
+  for (const preset of WAGON_PRESETS) {
+    const pick = document.createElement('button');
+    pick.className = 'wagon-slot';
+    pick.type = 'button';
+    pick.dataset.wagon = preset;
+    pick.setAttribute('aria-label', wagonPresetAria(preset));
+    pick.setAttribute(
+      'aria-pressed',
+      String(options.world.consistFor(options.world.train()) === preset),
+    );
+    pick.innerHTML = wagonPresetIcon(preset);
+    wagonRow.append(pick);
+  }
+  trainDrawer.append(wagonRow);
   root.append(trainDrawer);
   if (!drawer || !toysSlot || !trainSlot) {
     throw new Error('toybox chrome missing from app frame');
@@ -454,13 +481,43 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       choice.setAttribute('aria-pressed', String(choice.dataset.train === options.world.train()));
     }
   };
+  // The row always shows the selected locomotive's pair, so loco switches,
+  // restores, and undos re-aim it through the same subscription.
+  const refreshWagonChoices = () => {
+    const consist = options.world.consistFor(options.world.train());
+    for (const pick of trainDrawer.querySelectorAll<HTMLButtonElement>('[data-wagon]')) {
+      pick.setAttribute('aria-pressed', String(pick.dataset.wagon === consist));
+    }
+  };
   trainDrawer.addEventListener('click', (event) => {
+    if (options.isReady && !options.isReady()) return;
+    // A wagon tap dresses the selected locomotive's pair; the pressed states
+    // follow the newly selected loco, so switching locos re-aims the row.
+    const wagon = (event.target as Element).closest<HTMLButtonElement>('[data-wagon]');
+    if (wagon) {
+      options.world.selectConsist(options.world.train(), wagon.dataset.wagon as WagonPreset);
+      refreshWagonChoices();
+      // The newly dressed pair pops with the happy ding — still hands get
+      // the ding but no motion, mirroring the loop-closing pop.
+      options.audio.ding();
+      if (!prefersStill) {
+        wagon.classList.remove('pop');
+        void wagon.offsetWidth;
+        wagon.classList.add('pop');
+      }
+      return;
+    }
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-train]');
-    if (!button || (options.isReady && !options.isReady())) return;
+    if (!button) return;
     options.world.selectTrain(button.dataset.train as TrainKind);
     refreshTrainChoices();
+    refreshWagonChoices();
+  });
+  wagonRow.addEventListener('animationend', (event) => {
+    (event.target as HTMLElement).classList.remove('pop');
   });
   options.world.subscribe(refreshTrainChoices);
+  options.world.subscribe(refreshWagonChoices);
 
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or
