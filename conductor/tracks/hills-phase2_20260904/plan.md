@@ -23,11 +23,28 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 
 ## Phase 2 — Blender assets + renderer wiring (smoke)
 
-- [ ] Task: Deterministic Blender recipes for new pieces + snow shells
-  - [ ] Author on kit measurements (4-unit module, z-up, `export_yup=True`), named-node contract, < ~150 KB
-- [ ] Task: Renderer wiring (`PIECE_URLS`, `BASE_YAW`, `KIT_ANCHORS`)
-  - [ ] Acceptance: each GLB loads via dev handle with clean console
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Deterministic Blender recipes for new pieces + snow shells [63b5eb2]
+  - [x] Author on kit measurements (4-unit module, z-up, `export_yup=True`), named-node contract, < ~150 KB
+  - Notes: `scripts/blender-hills-phase2.py` (`build|renders|export|verify|all`) warps kit straight rails onto half-height
+    smoothstep bumps (0→0.55→0) and kit corner-small rails onto banked corner climbs (0→1.1→0, arc progress from the
+    NW-corner radius-2 survey); grass mounds lofted per ring row, snow shells where lift ≥60% of own crest. 12 GLBs,
+    largest 58,924 bytes (<150KB NFR ✓), node contract `bump_up_rails|_mound` + `hill_snow_<type underscores>` verified.
+    Render-verified via true east-side profile (composites mislead: end-on foreshortening + a rails/mound slot-stagger
+    bug in the check layout, both fixed). Debug scripts (`inspect-corner.py`, TEMP PNGs) deleted, not committed.
+- [x] Task: Renderer wiring (`PIECE_URLS`, `BASE_YAW`, `KIT_ANCHORS`) [63b5eb2]
+  - [x] Acceptance: each GLB loads via dev handle with clean console
+  - Notes: `PIECE_URLS` points at the 6 real GLBs (Phase-1 stand-ins retired); `HILL_SNOW_URLS` gains 6 shells; fixed a
+    latent snow-crown lookup (`hill_snow_${type}` → `type.replaceAll('-','_')`) that also restores invisible slope-up /
+    slope-down crowns — shared-path fix, no spec change. Attach path generic, untouched. Temp probe
+    `e2e/phase2-tmp.spec.ts` (untracked, deleted before merge): all 6 place on dry land, all 6 GLBs load, console clean.
+    Earlier `openEdges.map` TypeError traced to a stale preview server (old dist without the 6 types); current
+    `world.place` validates before push+notify so subscribers never see unknown types — no app change needed.
+- [x] Task: Phase Verification & Checkpoint (Phase 2) [63b5eb2]
+  - Verification Report (Phase 2): automated — 581/581 unit tests pass, tsc + biome clean, temp e2e probe green
+    (6/6 place, 6/6 GLBs load, console clean), largest GLB 58,924 bytes (<150KB NFR ✓); scope `d9d00f7..63b5eb2`
+    (renderer + recipe + 12 GLBs). Manual check (Rails-tab tiles, dry-land snap/blend, ▶ ride-over, clean console)
+    confirmed by user.
+  - Checkpoint: [checkpoint:63b5eb2]
 
 ## Phase 3 — Ride, camera, audio, toybox (smoke + manual)
 
