@@ -48,11 +48,15 @@ observable acceptance criteria + Playwright smoke for scene/UI.
 
 ## Phase 4 - E2E, Docs & Final Gates
 
-- [ ] Task: Playwright e2e — workshop flow
-  - [ ] Spec: pick Coal preset → ride loop/shuttle/switch → assert consist → reload restores per-train → cargo still loads/delivers → zero external requests, clean console, tablet + phone viewports
-- [ ] Task: Docs
-  - [ ] `CHANGELOG.md` parent-voice entry; `product.md` roadmap strike ("colors/other variants"); `tech-stack.md` asset list if new GLBs wired
-- [ ] Task: Final gates
-  - [ ] `pnpm check` green (biome + `tsc --noEmit` + vitest), coverage on new core logic, full Playwright run
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Playwright e2e — workshop flow
+  - [x] Spec: pick Coal preset → ride loop/shuttle/switch → assert consist → reload restores per-train → cargo still loads/delivers → zero external requests, clean console, tablet + phone viewports
+  - Notes: `e2e/wagon-workshop.spec.ts` (test commit) — 2 tests × tablet/phone, all functional assertions green in every run (taps, re-aim, delivery, reload restore, pressed state). One real bug found and fixed: store methods must be probed in-page (evaluate serializes the handle). A post-reload settle-wait theory was tried and REVERTED (disproven — wait passed, noise persisted).
+- [x] Task: Docs
+  - [x] `CHANGELOG.md` parent-voice entry; `product.md` roadmap strike ("colors/other variants"); `tech-stack.md` asset list if new GLBs wired
+  - Notes: CHANGELOG Unreleased entry + product.md wagon-workshop strike done. tech-stack.md untouched — no new GLBs wired (all 8 preset models were already on disk under the existing `**/*.glb` precache rule).
+- [x] Task: Final gates
+  - [x] `pnpm check` green (biome + `tsc --noEmit` + vitest), coverage on new core logic, full Playwright run
+  - Notes: `pnpm check` fully green (biome+tsc clean, 34 files/543 unit tests pass). Full Playwright: 85/87 at --workers=2 (83/87 at default workers) — the only red is the workshop per-train test tripping on INTERMITTENT WebKit console noise (`Fetch API cannot load blob:…`, plus once `colormap.png`), with every functional assertion passing. Same noise flakes untouched specs across runs (undo, starter-railway fresh-boot/gallery). A/B proof it's not this track: fresh-boot 3/3 main vs 3/3 branch; cargo 3/3 main vs 3/3 branch (cargo exercises the same loop+delivery+console assertions incl. the 8-GLB boot preload). Verdict: environmental dev-server/WebKit load flake, not a wagon regression. Follow-up candidate (separate chore, NOT this track): e2e stability — retries or worker cap for the suite.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification report: scope = test/docs commits + `style(drawer)` import-sort fix. `CI=true pnpm test` 34/543 pass, 0 fixes. Tablet/phone workshop spec 4/4 green standalone. Full-suite company runs flake ONLY on the environmental console noise documented above (all functional assertions green in every run). No manual tablet steps beyond the established flow — drawer taps/ride/reload are covered by the spec. Checkpoint: plan commit for this update.
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
