@@ -53,7 +53,19 @@ and tablet verification.
   loops — 4 concurrent loops fight the gentle/capped audio guideline);
   mute-respecting, no pitch jumps; acceptance: diesel chugs faster than
   steam on the same oval
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 2 — accepted 2026-09-04):
+  - Scope: `ride-motion.ts` + tests, `audio-controller.ts` + tests,
+    `pace.ts` ramp rework + tests, `init-scene.ts` wiring, spec FR4
+    amendment (filmed-train chug decision), plan notes. No save/UI/
+    product/asset changes — matches plan, no drift.
+  - Auto: vitest 592/592 green (incl. 11 new); `tsc --noEmit` clean;
+    `biome check` clean (1 auto-fix, within the 2-fix budget).
+  - Manual tablet: deferred — no visual/audio proof at this phase;
+    covered by Phase 3 e2e (headless browser) + tablet pass.
+    Explicit user yes to continue.
+  - Checkpoint: `bd034ad`.
 
   Notes (Phase 2 implementation — uncommitted):
   - Motion (`src/scene/ride-motion.ts`): `setKind()` + `pace()` on the
