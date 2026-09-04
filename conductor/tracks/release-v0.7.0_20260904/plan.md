@@ -3,7 +3,7 @@
 Chore track — no logic-bearing code, so no TDD tasks; verification is
 gates + smoke + checkpoints per `workflow.md`.
 
-## Phase 1 - Changelog & Version Bump
+## Phase 1 - Changelog & Version Bump [checkpoint: b3ddc0a]
 
 - [x] Task: Backfill + promote `CHANGELOG.md` for v0.7.0 (2446910)
   - Notes: Backfilled the missing Starter Railway entry (fresh-install
@@ -31,10 +31,16 @@ gates + smoke + checkpoints per `workflow.md`.
     only.
   - Acceptance: `package.json` version reads `0.7.0`, matching the
     eventual `v0.7.0` tag.
-  - [ ] Single-line version bump; verify no other in-repo version
+  - [x] Single-line version bump; verify no other in-repo version
         references need changing (remaining `0.6.0` strings are history,
         compare links, and archive docs)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (b3ddc0a)
+  - Verification Report (2026-09-04): automated `pnpm check` green —
+    biome clean, `tsc --noEmit` clean, 566/566 vitest pass. Scope is
+    docs/data only (`CHANGELOG.md`, `package.json`, `conductor/` — no
+    logic-bearing files), so no new unit tests required. Manual: user
+    eyeballed the new `## [0.7.0]` section, compare links, and version
+    bump — confirmed yes.
 
 ## Phase 2 - Local Pre-Tag Verification
 
