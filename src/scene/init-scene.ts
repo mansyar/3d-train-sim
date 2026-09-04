@@ -36,7 +36,7 @@ import {
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { type PortalGlow, portalGlowAt, tunnelRunsOf } from '../core/tunnels';
 import { createVisibilityController } from '../core/visibility-controller';
-import { wagonSlots } from '../core/wagons';
+import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
 import {
   createWeatherClock,
   intensityOf,
@@ -325,13 +325,37 @@ export function initScene(
   const rigs = new Map<string, TrainRig>(); // assigned, keyed by ride anchor
   const spares: TrainRig[] = []; // built rigs resting between rides
   const locomotiveTemplates = new Map<TrainKind, Object3D>();
-  const wagonTemplates: (Object3D | null)[] = []; // by slot index, cloned per rig
+  // Wagon templates by preset, each pair in slot (pulling) order — clones per rig.
+  const wagonTemplates = new Map<WagonPreset, (Object3D | null)[]>();
   let crateTemplate: Object3D | null = null; // the wagon-load delivery crate
+
+  /** The cached template pair for one preset, created on first use. */
+  const templatesFor = (preset: WagonPreset): (Object3D | null)[] => {
+    let pair = wagonTemplates.get(preset);
+    if (!pair) {
+      pair = wagonSlots().map(() => null);
+      wagonTemplates.set(preset, pair);
+    }
+    return pair;
+  };
+
+  /** Clones of one kind's chosen wagon pair, added to the scene in pulling order. */
+  const clonePresetWagons = (kind: TrainKind): Object3D[] => {
+    const clones: Object3D[] = [];
+    for (const template of templatesFor(world.consistFor(kind))) {
+      if (!template) continue;
+      const clone = template.clone(true);
+      scene.add(clone);
+      clones.push(clone);
+    }
+    return clones;
+  };
 
   let spinTarget: Object3D | null = crate.mesh;
   let disposed = false;
   let visibleSteamPuffs = 0;
   let loadedTrain: TrainKind | null = null;
+  let loadedPreset: WagonPreset | null = null;
 
   /** What the chase camera films: one riding train, or the whole meadow. */
   type FilmedTarget = { kind: 'train'; anchor: string } | { kind: 'overview' };
@@ -440,13 +464,7 @@ export function initScene(
     if (!template) return null; // assets not ready — ride on without visuals
     const model = template.clone(true);
     scene.add(model);
-    const wagons = wagonTemplates
-      .filter((wagon): wagon is Object3D => wagon !== null)
-      .map((wagon) => {
-        const clone = wagon.clone(true);
-        scene.add(clone);
-        return clone;
-      });
+    const wagons = clonePresetWagons(kind);
     const puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(puffs.group);
     const headlight = attachHeadlight(model);
@@ -527,6 +545,25 @@ export function initScene(
       rig.cargoPop = 0; // The next frames pop them up to full size.
       for (const crate of cratesOf(rig)) crate.scale.setScalar(0.01);
     }
+  };
+
+  /**
+   * Re-dresses one rig's wagons from its kind's chosen preset. The engine,
+   * the ride, and the cargo state stay — only the wagon meshes change. The
+   * array refills in place so the ride motion (which holds the reference)
+   * keeps posing the new wagons with today's spacing; a riding train's
+   * wagons re-pose on the next tick, a spare re-parks behind its engine.
+   */
+  const dressRigWagons = (rig: TrainRig): void => {
+    for (const old of rig.wagons) scene.remove(old);
+    rig.wagons.length = 0;
+    for (const wagon of clonePresetWagons(rig.kind)) {
+      attachCrateToWagon(wagon);
+      rig.wagons.push(wagon);
+    }
+    // New meshes arrive with hidden crates — restore whatever was aboard.
+    setCargoLoaded(rig, rig.cargo !== 'empty');
+    if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
   };
 
   /**
@@ -673,34 +710,28 @@ export function initScene(
       // Crate asset unavailable — trains ride without cargo visuals.
     });
 
-  for (const [index, slot] of wagonSlots().entries()) {
-    loadWagon(slot)
-      .then((wagon) => {
-        if (disposed) {
-          disposeObject(wagon);
-          return;
-        }
-        wagonTemplates[index] = wagon; // Slot order — pulling order preserved.
-        // Rigs built before the wagons arrived (the parked opener train) get
-        // their cargo now; a riding train's wagons re-pose on the next tick.
-        for (const rig of [...rigs.values(), ...spares]) {
-          if (rig.wagons.length >= wagonSlots().length) continue;
-          for (const old of rig.wagons) scene.remove(old);
-          rig.wagons.length = 0;
-          for (const template of wagonTemplates) {
-            if (!template) continue;
-            const clone = template.clone(true);
-            scene.add(clone);
-            attachCrateToWagon(clone);
-            rig.wagons.push(clone);
+  for (const preset of WAGON_PRESETS) {
+    const urls = wagonPresetUrls(preset);
+    for (const [index, slot] of wagonSlots().entries()) {
+      loadWagon(urls[slot])
+        .then((wagon) => {
+          if (disposed) {
+            disposeObject(wagon);
+            return;
           }
-          if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
-        }
-        syncRigs(rides.rides());
-      })
-      .catch(() => {
-        // Wagon asset unavailable — the train chugs on without it.
-      });
+          templatesFor(preset)[index] = wagon; // Slot order — pulling order preserved.
+          // Rigs pulling this preset gain their new wagons now (the parked
+          // opener included); a riding train's wagons re-pose on the next tick.
+          for (const rig of [...rigs.values(), ...spares]) {
+            if (world.consistFor(rig.kind) !== preset) continue;
+            dressRigWagons(rig);
+          }
+          syncRigs(rides.rides());
+        })
+        .catch(() => {
+          // Wagon asset unavailable — the train chugs on without it.
+        });
+    }
   }
 
   const unsubscribeBeat = audio.onChugBeat(() => {
@@ -741,9 +772,16 @@ export function initScene(
 
   const unsubscribeTrain = world.subscribe(() => {
     const kind = world.train();
-    if (kind === loadedTrain) return;
+    const preset = world.consistFor(kind);
+    if (kind === loadedTrain && preset === loadedPreset) return;
+    const kindChanged = kind !== loadedTrain;
+    const presetChanged = preset !== loadedPreset;
     loadedTrain = kind;
-    for (const rig of [...rigs.values(), ...spares]) swapRigKind(rig, kind);
+    loadedPreset = preset;
+    for (const rig of [...rigs.values(), ...spares]) {
+      if (kindChanged) swapRigKind(rig, kind);
+      if (presetChanged) dressRigWagons(rig);
+    }
   });
 
   // In tall viewports the square meadow's far corners slip out of frame. Pull
@@ -969,10 +1007,12 @@ export function initScene(
       spares.length = 0;
       for (const model of locomotiveTemplates.values()) disposeObject(model);
       locomotiveTemplates.clear();
-      for (const wagon of wagonTemplates) {
-        if (wagon) disposeObject(wagon);
+      for (const pair of wagonTemplates.values()) {
+        for (const wagon of pair) {
+          if (wagon) disposeObject(wagon);
+        }
       }
-      wagonTemplates.length = 0;
+      wagonTemplates.clear();
       for (const dispose of disposables) dispose();
       ambience.dispose();
       babble.dispose();
