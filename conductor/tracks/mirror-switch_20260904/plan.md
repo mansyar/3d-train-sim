@@ -9,7 +9,7 @@ Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 1 - Core: Mirror Type, Semantics & Solver (TDD)
 
-- [ ] Task: Add the `switch-mirror` piece type (tests first in
+- [~] Task: Add the `switch-mirror` piece type (tests first in
   `pieces.test.ts`, `track-graph.test.ts`, `save.test.ts`,
   `drawer.test.ts`)
   - [ ] `PIECE_TYPES` gains `'switch-mirror'`; `BASE_ENDPOINTS` =
