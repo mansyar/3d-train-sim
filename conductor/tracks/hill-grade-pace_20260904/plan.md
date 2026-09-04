@@ -8,7 +8,7 @@ and tablet verification.
 
 ## Phase 1 - Pure Pace Model (TDD)
 
-- [ ] Task: `pace.test.ts` Red — grade −35% / +25%, eased ramp,
+- [~] Task: `pace.test.ts` Red — grade −35% / +25%, eased ramp,
   never-stall floor, symmetric reverse (via `rideHeightAt` /
   `stepHeights` / `isReversedSpan`), personalities
   steam 0.9 / tram 1.0 / diesel 1.2, flat identity (= 1.0 exactly)
