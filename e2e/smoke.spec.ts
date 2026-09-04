@@ -1,13 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 test('app boots on a tablet with a clean console and zero external requests', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -61,11 +57,7 @@ test('selected train survives a reload through local autosave', async ({ page, c
 });
 
 test('drag-placing a track piece renders it in the world', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -98,11 +90,7 @@ test('drag-placing a track piece renders it in the world', async ({ page }) => {
 });
 
 test('drag-placing scenery decorates the meadow', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -136,11 +124,7 @@ test('drag-placing scenery decorates the meadow', async ({ page }) => {
 });
 
 test('track and scenery survive a reload through local autosave', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForTimeout(1500);
@@ -186,11 +170,7 @@ test('track and scenery survive a reload through local autosave', async ({ page 
 });
 
 test('the sound box mounts: toot, mute flip, silent console', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   // Let the render loop and asset loads settle.
@@ -213,11 +193,7 @@ test('the sound box mounts: toot, mute flip, silent console', async ({ page }) =
 });
 
 test('pressing play rides the train along the placed track', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -260,11 +236,7 @@ test('pressing play rides the train along the placed track', async ({ page }) =>
 });
 
 test('riding a loop with a station stops at it and rolls on cleanly', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -315,11 +287,7 @@ test('riding a loop with a station stops at it and rolls on cleanly', async ({ p
 });
 
 test('ambient day/weather cycles keep the meadow alive with a clean console', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -344,11 +312,7 @@ test('ambient day/weather cycles keep the meadow alive with a clean console', as
 });
 
 test('tablet emulation keeps an ambient frame rate with a clean console', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>
@@ -379,11 +343,7 @@ test('tablet emulation keeps an ambient frame rate with a clean console', async 
 });
 
 test('the sound choice survives a reload through local autosave', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   // Let the render loop and asset loads settle.
@@ -403,11 +363,7 @@ test('the sound choice survives a reload through local autosave', async ({ page 
 });
 
 test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForTimeout(1500);
@@ -457,11 +413,7 @@ test('a quick tap on a placed toy rotates it 90 degrees in place', async ({ page
 });
 
 test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForTimeout(1500);
@@ -521,11 +473,7 @@ test('lifting a placed toy shows a ✕ chip that deletes it on tap', async ({ pa
 });
 
 test('drag-to-trash still deletes a lifted toy over the rail', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForTimeout(1500);
@@ -585,11 +533,7 @@ test('drag-to-trash still deletes a lifted toy over the rail', async ({ page }) 
 });
 
 test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -681,11 +625,7 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
 });
 
 test('steam puffs emit during rides, stop cleanly, and cover the fleet', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>
@@ -744,11 +684,7 @@ test('steam puffs emit during rides, stop cleanly, and cover the fleet', async (
 });
 
 test('cargo wagons ride along, survive a train switch and a reload', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -845,11 +781,7 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
 });
 
 test('tabbed toybox walkthrough: place a critter and a station, then ride', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -986,11 +918,7 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
 });
 
 test('whistle toots puff steam at the chimney, then dissipate', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>
@@ -1042,11 +970,7 @@ test('whistle toots puff steam at the chimney, then dissipate', async ({ page })
 });
 
 test('two disjoint loops ride two trains and the 🎥 button cycles them', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));

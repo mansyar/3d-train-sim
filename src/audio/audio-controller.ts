@@ -60,6 +60,13 @@ export interface AudioController {
   stopChug(): void;
   /** Dips the chug while the train pauses, restores it when rolling again. */
   setChugSoftened(softened: boolean): void;
+  /**
+   * Rides the chug loop's tempo with the filmed train's live pace
+   * (personality × grade). Clamped to a gentle band; silent while muted or
+   * parked — the rate waits for the chug to speak. A fresh ride starts at
+   * full voice.
+   */
+  setChugRate(rate: number): void;
   /** One toot, anytime. Inside a tunnel run it trails a soft echo. Silent while muted. */
   whistle(train?: TrainKind, echo?: boolean): void;
   /** One happy blip for a successful drop. Silent while muted. */
@@ -86,6 +93,9 @@ export interface AudioController {
 const SOFTEN_RATE = 0.85;
 /** Full-steam-ahead tempo. */
 const ROLLING_RATE = 1;
+/** The chug never drones below this or squeaks above it — gentle band. */
+const CHUG_RATE_MIN = 0.5;
+const CHUG_RATE_MAX = 1.5;
 /** A slowed tick reads as a soft wooden knock. */
 const THUNK_RATE = 0.55;
 /** Echo tail on inside whistles: two quick, quiet replays of the same voice. */
@@ -102,6 +112,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   let muted = false;
   let chugging = false;
   let softened = false;
+  let chugRate = ROLLING_RATE;
   let suspended = false;
   let disposed = false;
 
@@ -129,6 +140,12 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
   }
 
   options.subscribeToChugBeat?.(notifyChugBeat);
+
+  /** The loop's live tempo: the filmed train's pace, dipped while it pauses. */
+  function applyChugRate(): void {
+    if (!chugging) return;
+    sound('chug').rate(chugRate * (softened ? SOFTEN_RATE : 1));
+  }
 
   function applyMuted(next: boolean): void {
     if (next === muted) return;
@@ -165,6 +182,7 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
       if (!chugging) return;
       chugging = false;
       softened = false;
+      chugRate = ROLLING_RATE; // a fresh ride starts at full voice
       stopChugBeatClock?.();
       sound('chug').fade();
       notify();
@@ -173,8 +191,15 @@ export function createAudioController(options: AudioControllerOptions): AudioCon
     setChugSoftened: (next) => {
       if (next === softened) return;
       softened = next;
-      if (!chugging) return;
-      sound('chug').rate(softened ? SOFTEN_RATE : ROLLING_RATE);
+      applyChugRate();
+    },
+
+    setChugRate: (rate) => {
+      if (!Number.isFinite(rate)) return;
+      const clamped = Math.min(CHUG_RATE_MAX, Math.max(CHUG_RATE_MIN, rate));
+      if (clamped === chugRate) return;
+      chugRate = clamped;
+      applyChugRate();
     },
 
     whistle: (train = 'steam', echo = false) => {

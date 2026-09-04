@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
+import { watchConsoleErrors } from './helpers';
+
 /**
  * River & bridge end-to-end: the water-only trestle, the v1→v2 save
  * migration, and a long clean idle with the river active. Dev-only handles
@@ -16,12 +18,8 @@ interface WorldHandle {
 }
 
 const consoleAndRequests = (page: Page): { consoleErrors: string[]; requestUrls: string[] } => {
-  const consoleErrors: string[] = [];
+  const consoleErrors = watchConsoleErrors(page);
   const requestUrls: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
   page.on('request', (request) => requestUrls.push(request.url()));
   return { consoleErrors, requestUrls };
 };

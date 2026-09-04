@@ -2,6 +2,12 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
+  // Two workers is the ceiling, not a suggestion: more workers hammer the
+  // single shared dev server until it stops accepting connections and the
+  // whole run goes red with "Could not connect" noise (observed with the
+  // 10-worker local default; track e2e-stability_20260904). This also bakes
+  // the historical --workers=2 rerun convention into the config.
+  workers: 2,
   reporter: 'list',
   // Tablet-first with a phone project: the small-screen shell is first-class
   // at ≥360px, so both form factors are smoke-tested here. The `prod` project

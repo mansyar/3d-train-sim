@@ -18,7 +18,13 @@ const SOUNDS: Record<string, { base: string; loop: boolean; volume: number }> = 
 
 /** How long a stop eases the chug out. */
 const FADE_MS = 600;
-/** Fixed visual rhythm: two readable puffs per second while rolling. */
+/**
+ * The seam's beat length. No production code subscribes to the beat today
+ * (steam puffs moved to per-rig scene accumulators), so while riding this
+ * clock ticks to an empty room — one no-op per 500 ms. It stays as the
+ * reserved rhythm for future beat consumers; the scene's CHUG_BEAT_SECONDS
+ * is the live puff rhythm now.
+ */
 const CHUG_BEAT_MS = 500;
 
 /**

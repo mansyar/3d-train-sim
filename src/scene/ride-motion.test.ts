@@ -296,17 +296,38 @@ describe('createRideMotion — riding the hill run carries the train up and over
     return { world, state: { ...component, direction: 1 } };
   }
 
-  it('climbs onto the crest and back down to grade (wheels on the rails)', () => {
+  it('labors up the climb and breezes back down (wheels on the rails)', () => {
     const { world, state } = hillRunWorld();
     const run = startRide(world, state, 0);
     // The ride starts at the run's north dead end (the slope-down's low edge)
     // at grade.
     expect(run.engine.position.y).toBeCloseTo(0, 5);
-    // One cell of travel puts the engine on the hill crest at HILL_HEIGHT.
-    run.motion.update(3.75 / 2.2 + 0.2);
+    // Climb to the crest in small ticks, never stalling: every tick moves the
+    // engine, but the climb takes clearly longer than one flat cell at full
+    // chug (≈ 17 ticks of 0.1 s) — the hill labors.
+    let climbTicks = 0;
+    let lastX = run.engine.position.x;
+    let lastZ = run.engine.position.z;
+    for (; climbTicks < 200; climbTicks += 1) {
+      run.motion.update(0.1);
+      if (run.engine.position.y >= 1.05) break;
+      const moved = Math.hypot(run.engine.position.x - lastX, run.engine.position.z - lastZ);
+      expect(moved).toBeGreaterThan(0); // laboring, never stalled
+      lastX = run.engine.position.x;
+      lastZ = run.engine.position.z;
+    }
     expect(run.engine.position.y).toBeCloseTo(1.1, 1);
-    // And the descent returns it to grade.
-    run.motion.update(7.5 / 2.2);
+    expect(climbTicks).toBeGreaterThan(19);
+    // Ride on until the descent reads the breeze (≈ 1.25×), then all the way
+    // home: the run still ends at grade at the far dead end.
+    for (let i = 0; i < 60 && run.engine.position.y > 0.35; i += 1) {
+      run.motion.update(0.1);
+    }
+    expect(run.motion.pace()).toBeCloseTo(1.25, 1);
+    for (let i = 0; i < 300 && !run.paused.includes(true); i += 1) {
+      run.motion.update(0.1);
+    }
+    expect(run.paused).toContain(true);
     expect(run.engine.position.y).toBeCloseTo(0, 1);
     run.motion.dispose();
   });
@@ -346,6 +367,144 @@ describe('createRideMotion — riding the hill run carries the train up and over
       expect(run.followers[0]?.position.y).toBe(0);
     }
     run.motion.dispose();
+  });
+});
+
+describe('createRideMotion — hill-grade pace keeps each locomotive’s tempo', () => {
+  /** The hill run ridden south to north, with a per-kind motion. */
+  function hillRunWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('slope-up', { x: 2, y: 4 }, 0)).toBe('placed');
+    expect(world.place('hill', { x: 2, y: 3 }, 0)).toBe('placed');
+    expect(world.place('slope-down', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the hill run must solve to one ride component');
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  /** One flat cell: personality pace with no grade under the wheels. */
+  function flatWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone straight must solve to one ride component');
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  /** Ticks until the engine first pauses at the dead end (cap 400). */
+  function ticksToDeadEnd(motion: { update(dt: number): void }, paused: boolean[]): number {
+    let ticks = 0;
+    for (; ticks < 400; ticks += 1) {
+      motion.update(0.1);
+      if (paused.includes(true)) break;
+    }
+    return ticks;
+  }
+
+  it('rides flats at exactly the locomotive’s personality pace', () => {
+    for (const [kind, expected] of [
+      ['steam', 0.9],
+      ['tram', 1.0],
+      ['diesel', 1.2],
+    ] as const) {
+      const { world, state } = flatWorld();
+      const run = startRide(world, state, 0);
+      run.motion.setKind(kind);
+      for (let i = 0; i < 8; i += 1) run.motion.update(0.1);
+      expect(run.motion.pace()).toBeCloseTo(expected, 5);
+      run.motion.dispose();
+    }
+  });
+
+  it('defaults to tram pace — flat rides stay byte-identical', () => {
+    const { world, state } = flatWorld();
+    const run = startRide(world, state, 0);
+    for (let i = 0; i < 8; i += 1) run.motion.update(0.1);
+    expect(run.motion.pace()).toBe(1);
+    run.motion.dispose();
+  });
+
+  it('gives each locomotive its own climb pace on the same hill', () => {
+    for (const [kind, expected] of [
+      ['steam', 0.585], // 0.9 × 0.65 — steady
+      ['tram', 0.65], // 1.0 × 0.65 — middle
+      ['diesel', 0.78], // 1.2 × 0.65 — zippy even uphill
+    ] as const) {
+      const { world, state } = hillRunWorld();
+      const run = startRide(world, state, 0);
+      run.motion.setKind(kind);
+      // Eight ticks settles the ~0.5 s ease while still on the climb.
+      for (let i = 0; i < 8; i += 1) run.motion.update(0.1);
+      expect(run.engine.position.y).toBeGreaterThan(0.1); // still climbing
+      expect(run.engine.position.y).toBeLessThan(1.0);
+      expect(run.motion.pace()).toBeCloseTo(expected, 2);
+      run.motion.dispose();
+    }
+  });
+
+  it('races diesel to the dead end ahead of steam on the same run', () => {
+    const rides = (['steam', 'diesel'] as const).map((kind) => {
+      const { world, state } = hillRunWorld();
+      const run = startRide(world, state, 0);
+      run.motion.setKind(kind);
+      return run;
+    });
+    const ticks = rides.map((run) => ticksToDeadEnd(run.motion, run.paused));
+    expect(ticks[0]).toBeLessThan(400); // steam arrives — never stalls
+    expect(ticks[1]).toBeLessThan(400); // diesel arrives too
+    expect(ticks[1]).toBeLessThan(ticks[0] ?? 0); // ...clearly first
+    for (const run of rides) run.motion.dispose();
+  });
+
+  it('eases pace shifts instead of jumping', () => {
+    const { world, state } = hillRunWorld();
+    const run = startRide(world, state, 0);
+    let previous = run.motion.pace();
+    let maxJump = 0;
+    for (let i = 0; i < 400 && !run.paused.includes(true); i += 1) {
+      run.motion.update(0.1);
+      const current = run.motion.pace();
+      expect(current).toBeGreaterThan(0); // never stalls, never reverses
+      maxJump = Math.max(maxJump, Math.abs(current - previous));
+      previous = current;
+    }
+    expect(run.paused).toContain(true);
+    expect(maxJump).toBeLessThan(0.15); // a gentle shift, never a pop
+    run.motion.dispose();
+  });
+
+  it('yields the descent boost to the station brake and docks exactly', () => {
+    const { world, state } = hillRunWorld();
+    // A station flanking the descent cell: the brake glide overlaps the
+    // downhill, so the boost must yield while the train still docks.
+    expect(world.placeScenery('station', { x: 3, y: 4 }, 0)).toBe('placed');
+    const engine = new Object3D();
+    const paused: boolean[] = [];
+    const stops: string[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      (value) => paused.push(value),
+      (stationId) => stops.push(stationId),
+      [],
+    );
+    motion.begin(state);
+    const segments = segmentsFor(world, state);
+    for (let i = 0; i < 400 && stops.length === 0; i += 1) motion.update(0.1);
+    // Docked: the ding-ding fired once, on the rails, mid-descent.
+    expect(stops.length).toBe(1);
+    expect(distanceToPath(segments, engine.position.x, engine.position.z)).toBeLessThan(0.02);
+    expect(engine.position.y).toBeGreaterThan(0.1);
+    expect(engine.position.y).toBeLessThan(1.0);
+    // The chug softened through the brake, and the boost yielded toward the
+    // gentle stop instead of riding at full 1.25×.
+    expect(paused).toContain(true);
+    expect(motion.pace()).toBeLessThan(1.25);
+    // The 2 s rest ends and the little train rolls on downhill.
+    for (let i = 0; i < 60 && !paused.includes(false); i += 1) motion.update(0.1);
+    expect(paused).toContain(false);
+    motion.dispose();
   });
 });
 

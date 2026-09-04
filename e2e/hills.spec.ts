@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow } from './helpers';
+import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Hill smoke: the hill run drags in like any track piece, loads its own
@@ -30,11 +30,7 @@ const placeLine = (
 test('a placed hill run loads its GLBs and the train rides over the crest cleanly', async ({
   page,
 }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));
@@ -81,11 +77,7 @@ test('a placed hill run loads its GLBs and the train rides over the crest cleanl
 });
 
 test('a hill run survives a reload', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
-  page.on('pageerror', (error) => consoleErrors.push(String(error)));
+  const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await page.waitForFunction(() =>

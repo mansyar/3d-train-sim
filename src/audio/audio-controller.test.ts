@@ -158,6 +158,63 @@ describe('createAudioController', () => {
     expect(handle?.calls.filter((c) => c.startsWith('rate:'))).toHaveLength(2);
   });
 
+  it('setChugRate rides the filmed train’s live pace', () => {
+    const { controller, handles } = makeWired();
+    controller.startChug();
+    controller.setChugRate(0.585); // steam laboring uphill
+
+    expect(handles.get('chug')?.calls).toContain('rate:0.585');
+  });
+
+  it('setChugRate clamps to a gentle band, dedupes, and ignores nonsense', () => {
+    const { controller, handles } = makeWired();
+    controller.startChug();
+    controller.setChugRate(9);
+    controller.setChugRate(9);
+    controller.setChugRate(-2);
+    controller.setChugRate(Number.NaN);
+
+    expect(handles.get('chug')?.calls.filter((c) => c.startsWith('rate:'))).toEqual([
+      'rate:1.5',
+      'rate:0.5',
+    ]);
+  });
+
+  it('setChugRate multiplies with the pause dip instead of fighting it', () => {
+    const { controller, handles } = makeWired();
+    controller.startChug();
+    controller.setChugRate(1.2);
+    controller.setChugSoftened(true);
+    controller.setChugSoftened(false);
+
+    const rates = (handles.get('chug')?.calls ?? [])
+      .filter((c) => c.startsWith('rate:'))
+      .map((c) => Number(c.slice('rate:'.length)));
+    expect(rates).toHaveLength(3);
+    expect(rates[0]).toBeCloseTo(1.2, 6);
+    expect(rates[1]).toBeCloseTo(1.2 * 0.85, 6); // the dip rides on top of pace
+    expect(rates[2]).toBeCloseTo(1.2, 6);
+  });
+
+  it('stopChug resets the pace — a fresh ride starts at full voice', () => {
+    const { controller, handles } = makeWired();
+    controller.startChug();
+    controller.setChugRate(0.585);
+    controller.stopChug();
+    controller.startChug();
+    controller.setChugRate(1); // already full voice — nothing to apply
+
+    expect(handles.get('chug')?.calls.filter((c) => c.startsWith('rate:'))).toEqual(['rate:0.585']);
+  });
+
+  it('setChugRate while parked stores silently — no handle, no sound', () => {
+    const { controller, handles, created } = makeWired();
+    controller.setChugRate(0.585);
+
+    expect(created).toEqual([]);
+    expect(handles.size).toBe(0);
+  });
+
   it('one-shots play whistle and ding sounds', () => {
     const { controller, handles } = makeWired();
     controller.whistle();

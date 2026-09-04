@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [e2e-stability_20260904](archive/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | done |
 | [switches-branches_20260903](archive/switches-branches_20260903/index.md) | Track Switches & Branches | Feature | done |
 | [release-v0.5.0_20260902](archive/release-v0.5.0_20260902/index.md) | Release v0.5.0 | Chore | done |
 | [wagon-teleport-lap-wrap_20260831](archive/wagon-teleport-lap-wrap_20260831/index.md) | Wagon Teleport at the Lap Wrap (Bridge After Curve) | Bug | done |
@@ -18,6 +19,8 @@ Registry of active development tracks.
 | [mirror-switch_20260904](archive/mirror-switch_20260904/index.md) | Mirror Switch | Feature | done |
 | [headlight-front_20260904](archive/headlight-front_20260904/index.md) | Headlight Front | Bug | done |
 | [hills-phase2_20260904](tracks/hills-phase2_20260904/index.md) | Hills Phase 2 - Bumps, Corners & Half-Height Cruises | Feature | in-progress |
+| [hill-grade-pace_20260904](archive/hill-grade-pace_20260904/index.md) | Hill-Grade Pace | Feature | done |
+| [release-v0.7.0_20260904](archive/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
@@ -31,4 +34,5 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `release-v0.4.0_20260831`, `wagon-teleport-lap-wrap_20260831`, `tunnels_20260831`,
 `cargo-pickups_20260902`, `release-v0.5.0_20260902`, `hills-ramps_20260903`,
 `switches-branches_20260903`,
-`ride-toybox-flow_20260903`, `release-v0.6.0_20260903`.
+`ride-toybox-flow_20260903`, `release-v0.6.0_20260903`,
+`e2e-stability_20260904`.

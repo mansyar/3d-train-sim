@@ -84,6 +84,8 @@ const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 const CAMERA_EASE = 2.5;
 /** How long the wagon crates take to pop aboard at a station load. */
 const CARGO_POP_SECONDS = 0.25;
+/** One chug-beat at full voice — per-train puff accumulators spend this. */
+const CHUG_BEAT_SECONDS = 0.5;
 /** The breath between the two dings of a station welcome. */
 const STATION_DING_GAP_MS = 350;
 /** Inactivity before the meadow comes alive with a slow camera drift. */
@@ -113,6 +115,8 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
+  /** Debug aid: the filmed (or primary) train's live pace factor. */
+  trainPace(): number;
   /** The toddler's big toot: the answering train whistles (echoing inside
    *  tunnels) and puffs steam. No-op before a train shows. */
   tootWhistle(): void;
@@ -315,6 +319,8 @@ export function initScene(
     cargo: CargoLoad;
     /** Load pop-in progress, 1 = settled. Sits at 1 unless animating. */
     cargoPop: number;
+    /** Per-train chug-beat accumulator — each engine puffs to its own pace. */
+    puffAcc: number;
     motion: RideMotion;
     /** The ride state the motion last began with — a new state ⇒ re-begin. */
     begunWith: RideState | null;
@@ -486,6 +492,7 @@ export function initScene(
       wagons,
       cargo: 'empty',
       cargoPop: 1,
+      puffAcc: 0,
       puffs,
       headlight,
       motion: null as unknown as RideMotion,
@@ -669,6 +676,10 @@ export function initScene(
       // ride keeps its exact state object, so its train never loses progress.
       if (rig.begunWith !== ride) {
         rig.begunWith = ride;
+        // The pace personality boards with the locomotive — a fresh or
+        // reused rig always rides at its own kind's tempo from the first
+        // tick (no tram-default first leg).
+        rig.motion.setKind(rig.kind);
         rig.motion.begin(ride, rig.startNear ?? undefined);
         rig.startNear = null;
       }
@@ -740,10 +751,6 @@ export function initScene(
     }
   }
 
-  const unsubscribeBeat = audio.onChugBeat(() => {
-    if (rides.mode() !== 'riding') return;
-    for (const rig of rigs.values()) rig.puffs.emit();
-  });
   const unsubscribeRides = rides.subscribe((mode, ridesList) => {
     syncFilmed(ridesList);
     syncRigs(ridesList);
@@ -772,8 +779,10 @@ export function initScene(
     scene.add(rig.puffs.group);
     rig.puffs.setEmitting(rides.mode() === 'riding');
     // The motion re-poses the new engine (and its wagons) exactly where the
-    // old one stood — same path distance, same direction, no restart.
+    // old one stood — same path distance, same direction, no restart — and
+    // the pace personality follows the new locomotive.
     rig.motion.setModel(model);
+    rig.motion.setKind(kind);
   };
 
   const unsubscribeTrain = world.subscribe(() => {
@@ -878,8 +887,25 @@ export function initScene(
         rig.motion.update(dt);
         rig.puffs.update(dt);
         if (rig.cargoPop < 1) advanceCargoPop(rig, dt);
+        // Per-train tempo: each riding engine puffs to its own live pace — a
+        // laboring climber puffs slow and deep, a breezing descender quick
+        // and light. Parked trains hold their breath (no saved-up burst).
+        if (rigState(rig)) {
+          rig.puffAcc += dt * rig.motion.pace();
+          while (rig.puffAcc >= CHUG_BEAT_SECONDS) {
+            rig.puffAcc -= CHUG_BEAT_SECONDS;
+            rig.puffs.emit();
+          }
+        } else {
+          rig.puffAcc = 0;
+        }
         visibleSteamPuffs += rig.puffs.activeCount();
       }
+      // One capped chug loop, riding the filmed train's live pace — the
+      // camera's train sets the tempo. The rate glides with the pace ramp
+      // (never a jump) and waits silently while muted or parked.
+      const voice = filmedRig() ?? primaryRig();
+      audio.setChugRate(voice?.motion.pace() ?? 1);
       confetti.update(dt);
       // Critters idle always and hop while a riding train passes close.
       // Parked spares report null — hops read as passing, not presence.
@@ -962,6 +988,9 @@ export function initScene(
     wagonCount: () =>
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     steamPuffCount: () => visibleSteamPuffs,
+    // Dev/e2e witness: the filmed (or primary) train's live pace factor —
+    // personality × grade, eased. Lets specs prove labor/breeze directly.
+    trainPace: () => (filmedRig() ?? primaryRig())?.motion.pace() ?? 1,
     tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
       // does; before any ride, the parked opener train answers. Inside a
@@ -996,7 +1025,6 @@ export function initScene(
       unsubscribeAttract();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
-      unsubscribeBeat();
       unsubscribeRides();
       unsubscribeTrain();
       unsubscribePortals();
