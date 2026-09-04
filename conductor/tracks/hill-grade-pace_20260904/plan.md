@@ -150,3 +150,17 @@ and tablet verification.
     untouched, gentle audio unchanged (filmed-train chug, capped),
     autosave/silent/reload stable, privacy (zero external requests
     asserted per test).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions a0ecb56
+
+  Notes: two review Lows, both applied — (1) e2e allowlist scoped to the
+  re-ride (strict `expectClean` + console reset after the pre-reload
+  settle; first ride zero-tolerance again); (2) orphaned chug-beat clock
+  documented at `CHUG_BEAT_MS` (reserved rhythm, scene's
+  `CHUG_BEAT_SECONDS` is the live puff rhythm). Bonus find while
+  verifying: the station test sat on the 30 s cliff (31.5 s on tablet) —
+  added `test.setTimeout(120_000)` per the wagon-workshop reload
+  precedent. Gates after fixes: biome clean, `pnpm check` green
+  (592/592), hill-pace spec 8/8 tablet+phone.
