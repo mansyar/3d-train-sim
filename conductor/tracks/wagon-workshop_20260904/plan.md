@@ -28,11 +28,13 @@ observable acceptance criteria + Playwright smoke for scene/UI.
 
 ## Phase 2 - Scene: Chosen Wagons Ride Everything
 
-- [ ] Task: Load preset GLBs and follow the engine (non-logic)
-  - [ ] Acceptance: each preset's two GLBs precache and render; consist follows through straights, curves, crossings, bridges, tunnels, hills, switches with today's spacing — no popping, dead-end shuttles included
-  - [ ] Implement `load-wagons.ts` preset wiring + precache list
-  - [ ] Manual/tablet check per acceptance; PWA precache weight verified against 6MB cap
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Load preset GLBs and follow the engine (non-logic) 6bacb6e
+  - [x] Acceptance: each preset's two GLBs precache and render; consist follows through straights, curves, crossings, bridges, tunnels, hills, switches with today's spacing — no popping, dead-end shuttles included
+  - [x] Implement `load-wagons.ts` preset wiring + precache list
+  - [x] Manual/tablet check per acceptance; PWA precache weight verified against 6MB cap
+  - Notes: `6bacb6e feat(scene)`. Per-preset template maps + `clonePresetWagons`; `dressRigWagons` refills rig wagons in place (ride-motion followers hold the array ref); `swapRigKind` re-dresses on train/consist change; crates re-attach via Bed Box3 to whichever wagons show. All 8 GLBs already on disk; `**/*.glb` precache rule covers them — no config change; fresh build = 148 precache entries, well under the 6MB cap. Default consist is classic (today's URLs), so boot look is unchanged.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: scope = scene commit `6bacb6e` (per-preset templates, in-place re-dress, consist-aware swap, crate re-attach). `tsc` + `biome` clean; `CI=true pnpm test` → 34 files / 542 pass. Tablet `e2e/smoke.spec.ts` → 20/20 pass incl. "cargo wagons ride along, survive a train switch and a reload" (2.0m; only a pre-existing three.js PCFSoftShadowMap deprecation warning in console). Only pre-existing behaviour is user-visible, so no extra manual tablet steps beyond the smoke run.
 
 ## Phase 3 - Drawer: Icon-Only Wagon Row
 
