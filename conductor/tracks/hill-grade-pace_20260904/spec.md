@@ -32,10 +32,12 @@ own personality pace. No buttons, no slider, no save change — the same
   Open-shuttle reverse rides the same slope symmetrically
   (climb becomes descent on the way back). Camera follow, tunnels,
   bridges, switches, `END_PAUSE` / `STOP_EASE` unchanged.
-- **FR4 — Sound + puffs follow:** chug interval and steam-puff emission
-  rate scale with live speed, per-train tempo (up to 4 concurrent),
-  mute-respecting, no pitch jumps or loud shifts. Shared-chug replaced
-  by per-train voices so diesel + steam stay truthful side by side.
+- **FR4 — Sound + puffs follow:** steam-puff emission keeps per-train
+  tempo (each engine puffs to its own live pace, up to 4 concurrent);
+  ONE capped chug loop rides the filmed train's live pace (the camera's
+  train sets the tempo). Mute-respecting, no pitch jumps or loud shifts.
+  (Decision 2026-09-04: per-train chug loops would fight the
+  gentle/capped audio guideline — the single loop follows the star.)
 - **FR5 — Composition:** composes with loops, shuttles, tunnels
   (chug-duck/echo), hills auto-blend, switches alternation,
   river-bridge, cargo 8-crate flow, day/weather ambience. Ephemeral —

@@ -56,14 +56,16 @@ export function livePaceFactor(kind: TrainKind, entryHeight: number, exitHeight:
 }
 
 /**
- * Ease the live factor toward its target over PACE_EASE_SECONDS with a gentle
- * s-curve. dt <= 0 holds current; dt past the window lands on target. Pure.
+ * S-curve ramp from `from` toward `target` at progress 0..1 (clamped to the
+ * ends). The scene restarts the ramp from the live factor whenever the grade
+ * under the wheels changes, so pace always lands exactly ~0.5 s later —
+ * a gentle shift, never a pop, never an endless approach. Pure.
  */
-export function easePaceFactor(current: number, target: number, dt: number): number {
-  if (!Number.isFinite(current) || !Number.isFinite(target)) return current;
-  if (!(dt > 0)) return current;
-  if (dt >= PACE_EASE_SECONDS) return target;
-  const u = dt / PACE_EASE_SECONDS;
+export function easePaceRamp(from: number, target: number, progress: number): number {
+  if (!Number.isFinite(from) || !Number.isFinite(target)) return from;
+  if (!(progress > 0)) return from;
+  if (progress >= 1) return target;
+  const u = Math.min(1, Math.max(0, progress));
   const s = u * u * (3 - 2 * u);
-  return current + (target - current) * s;
+  return from + (target - from) * s;
 }

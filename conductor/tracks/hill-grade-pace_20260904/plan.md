@@ -15,7 +15,7 @@ and tablet verification.
 - [x] Task: `pace.ts` Green + refactor — pure, total, no three.js,
   no alloc; coverage >80%; `tsc --noEmit` + `biome check` clean
 
-  Notes (Phase 1 implementation — commit `ee67db6`):
+  Notes (Phase 1 implementation — commit `ee67db6`, plus ramp rework below):
   - Red: `pace.test.ts` (14 tests) failed on missing `./pace` module;
     Green: new `src/core/pace.ts` (`gradePaceFactor`, `personalityPace`,
     `livePaceFactor`, `easePaceFactor` + `PACE_CLIMB/DESCENT/MIN/EASE`
@@ -24,6 +24,13 @@ and tablet verification.
     (>80% gate holds). `tsc --noEmit` clean; `biome check` clean
     (one import-sort + one format fix via `--write`, tests re-green).
   - Full unit suite: 35 files / 580 tests green, zero regressions.
+  - Rework (during Phase 2, uncommitted at the time): the per-frame
+    `easePaceFactor(current, target, dt)` converges exponentially — ~42%
+    of the gap still open after 0.5 s, muting the Moderate grade. Replaced
+    with a true timed ramp: pure `easePaceRamp(from, target, progress)`
+    in core + ramp state (`paceFrom`/`paceRamp`/`paceLastTarget`) in the
+    motion, so pace always lands exactly ~0.5 s after a grade change.
+    Core tests updated (15 tests); motion tests settle exactly.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
   Verification Report (Phase 1):
@@ -36,14 +43,43 @@ and tablet verification.
 
 ## Phase 2 - Scene Ride + Audio Wiring
 
-- [~] Task: `ride-motion.ts` live speed — `RIDE_SPEED × personality ×
+- [x] Task: `ride-motion.ts` live speed — `RIDE_SPEED × personality ×
   grade` in `update()`, eased ~0.5s, brake protection (boost eases out
   before `BRAKE_DISTANCE`), station 2s / cargo / confetti untouched,
   no per-frame alloc, camera follow unchanged
-- [ ] Task: Per-train chug tempo + puff rate — scale with live speed,
-  per-train voices (up to 4), mute-respecting, no pitch jumps;
-  acceptance: diesel chugs faster than steam on the same oval
+- [x] Task: Per-train chug tempo + puff rate — per-train puff tempo via
+  per-rig accumulators; ONE capped chug loop riding the filmed train's
+  live pace (user decision 2026-09-04: replaces spec FR4's per-train
+  loops — 4 concurrent loops fight the gentle/capped audio guideline);
+  mute-respecting, no pitch jumps; acceptance: diesel chugs faster than
+  steam on the same oval
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Notes (Phase 2 implementation — uncommitted):
+  - Motion (`src/scene/ride-motion.ts`): `setKind()` + `pace()` on the
+    `RideMotion` interface; per-segment natural heights (`gradeEntry` /
+    `gradeExit`) built in `beginRide`; timed ramp in `update()` restarts
+    on target change; both advance sites use
+    `RIDE_SPEED × paceFactor × speedScale`; brake glide targets
+    personality only (boost yields directionally through the short
+    0.66-unit glide; docking exactness still via distance snap).
+    Default kind tram ⇒ flat rides byte-identical (only the hill-climb
+    timing test changed, rewritten pace-aware).
+  - Motion tests (+6 its): flat personality pace per kind, default tram
+    identity, per-kind climb pace (0.585 / 0.65 / 0.78), diesel-vs-steam
+    dead-end race (diesel first, both arrive), max pace jump < 0.15,
+    downhill-into-station docks exactly (ding-ding, on-rails, softened,
+    pace < 1.25, resumes after 2 s).
+  - Audio (`src/audio/audio-controller.ts`, TDD +5 tests): `setChugRate`
+    clamped [0.5, 1.5], multiplies with the pause dip, silent while
+    parked/muted, `stopChug` resets to full voice.
+  - Scene (`src/scene/init-scene.ts`): `TrainRig.puffAcc` accumulator per
+    rig (emit every 0.5 s of *paced* time, parked rigs reset); global
+    `onChugBeat` puff loop removed; frame loop drives
+    `audio.setChugRate(filmed ?? primary pace)`; `swapRigKind` forwards
+    `setKind`. No per-frame alloc (locals only).
+  - Gates: 592/592 vitest green, `tsc --noEmit` clean, `biome check`
+    clean (1 auto-fix).
 
 ## Phase 3 - E2E, Gates & Tablet Verification
 

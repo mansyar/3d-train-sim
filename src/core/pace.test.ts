@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { HILL_HEIGHT } from './elevation';
 import {
-  easePaceFactor,
+  easePaceRamp,
   gradePaceFactor,
   livePaceFactor,
   PACE_CLIMB_FACTOR,
@@ -84,25 +84,30 @@ describe('livePaceFactor — personality × grade', () => {
   });
 });
 
-describe('easePaceFactor — ~0.5s gentle ramp, never a jump', () => {
-  it('holds current at dt <= 0 and lands on target past the window', () => {
-    expect(easePaceFactor(1, 0.65, 0)).toBe(1);
-    expect(easePaceFactor(1, 0.65, -1)).toBe(1);
-    expect(easePaceFactor(1, 0.65, PACE_EASE_SECONDS)).toBeCloseTo(0.65, 6);
-    expect(easePaceFactor(1, 0.65, PACE_EASE_SECONDS + 2)).toBeCloseTo(0.65, 6);
+describe('easePaceRamp — ~0.5s gentle ramp, never a jump', () => {
+  it('holds the start at progress <= 0 and lands on target at 1', () => {
+    expect(easePaceRamp(1, 0.65, 0)).toBe(1);
+    expect(easePaceRamp(1, 0.65, -1)).toBe(1);
+    expect(easePaceRamp(1, 0.65, 1)).toBe(0.65);
+    expect(easePaceRamp(1, 0.65, 2)).toBe(0.65);
   });
 
-  it('eases monotonically between current and target', () => {
-    const quarter = easePaceFactor(1, 0.65, PACE_EASE_SECONDS / 4);
-    const half = easePaceFactor(1, 0.65, PACE_EASE_SECONDS / 2);
+  it('eases monotonically between start and target', () => {
+    const quarter = easePaceRamp(1, 0.65, 0.25);
+    const half = easePaceRamp(1, 0.65, 0.5);
     expect(quarter).toBeLessThan(1);
     expect(quarter).toBeGreaterThan(half);
     expect(half).toBeGreaterThan(0.65);
   });
 
   it('eases upward identically (descent boost never pops)', () => {
-    const half = easePaceFactor(1, 1.25, PACE_EASE_SECONDS / 2);
+    const half = easePaceRamp(1, 1.25, 0.5);
     expect(half).toBeGreaterThan(1);
     expect(half).toBeLessThan(1.25);
+  });
+
+  it('advances a 0.5 s scene ramp to exactly settled (the PACE_EASE_SECONDS contract)', () => {
+    // Five 0.1 s ticks complete the ramp — the motion lands exactly.
+    expect(easePaceRamp(1, 0.65, 5 * (0.1 / PACE_EASE_SECONDS))).toBe(0.65);
   });
 });
