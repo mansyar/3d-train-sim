@@ -62,7 +62,9 @@ test('a placed mirror switch loads its GLB and the train rides both branches cle
   // The mirror's own GLB arrives only when a mirror switch is placed —
   // the right-hand switch.glb must NOT be fetched for it.
   await page.waitForFunction(() =>
-    performance.getEntriesByType('resource').some((entry) => entry.name.includes('switch-mirror.glb')),
+    performance
+      .getEntriesByType('resource')
+      .some((entry) => entry.name.includes('switch-mirror.glb')),
   );
 
   await page.click('.ride-toggle');
