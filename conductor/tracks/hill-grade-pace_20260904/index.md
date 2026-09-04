@@ -1,7 +1,7 @@
 # Track: Hill-Grade Pace
 
 - **ID:** `hill-grade-pace_20260904`
-- **Type:** Feature · **Status:** in-progress · **Branch:** `track/hill-grade-pace_20260904`
+- **Type:** Feature · **Status:** done · **Branch:** `track/hill-grade-pace_20260904`
 
 ## Artifacts
 
