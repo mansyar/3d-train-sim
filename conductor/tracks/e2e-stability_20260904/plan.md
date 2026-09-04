@@ -5,18 +5,82 @@ e2e runs, gates, and checkpoints per `workflow.md`.
 
 ## Phase 1 - Flake Fix: Targeted Allowlist
 
-- [ ] Task: Reproduce the flake and capture the exact console-error fingerprint
+- [x] Task: Reproduce the flake and capture the exact console-error fingerprint
   - Run the wagon-workshop tablet/phone spec repeatedly on Windows headless
     (suite + single-spec reruns) until the failure reproduces; record the exact
     error message text and URL signature in `plan.md`
   - Acceptance: fingerprint captured; confirmed all functional assertions pass
     when it trips
+  - Progress (2026-09-04, run 1 — `--repeat-each=6`, default 10 workers,
+    24 runs): 8/24 passed, 16 failed — but **zero** occurrences of the
+    historical `blob:` fingerprint. Every failure is dev-server collapse: with
+    10 Playwright workers hammering the single shared Vite dev server
+    (:5199), it stops accepting connections mid-run. Failure signatures:
+    `page.goto: Could not connect to server`; `WebSocket connection to
+    'ws://localhost:5199/?token=…' failed: WebSocket network error: error
+    code 56`; `Failed to load resource: Could not connect to server` (×many);
+    collateral `THREE.GLTFLoader: Couldn't load texture Textures/colormap.png`.
+    Key finding: `playwright.config.ts` sets **no `workers` cap**, so local
+    default = core count — the suite only survives at low worker counts. All
+    8 runs that started before the collapse passed clean (incl. both tests,
+    both projects) — the spec itself is stable at sane concurrency.
+    Next: rerun at the historically accurate `--workers=2` (`--repeat-each=4`)
+    to chase the real `blob:` fingerprint.
+  - Progress (2026-09-04, run 2 — wagon spec only, `--repeat-each=4`,
+    `--workers=2`, 16 runs): **16/16 passed**, zero blob: occurrences. Asset
+    audit explains the flake's habitat: exactly 7 GLBs carry embedded PNGs
+    (GLTFLoader's `blob:`-URL texture path) — `hill-hill`, `hill-slope-up`,
+    `hill-slope-down`, `railroad-crossing`, `switch.glb`, `switch-mirror.glb`;
+    every Kenney kit GLB uses the external `Textures/colormap.png` http path
+    instead. The isolated wagon spec only exercises the blob path in the
+    switch-shuttle test (switch.glb), so the historical full-suite context is
+    the right reproduction condition. Escalating: full suite,
+    `--repeat-each=2`, `--workers=2` (≈178 runs, all embedded-PNG specs in
+    play). Run-1 side finding stands as a fix target: no `workers` cap in
+    `playwright.config.ts` — 10-worker default melts the shared dev server
+    (new failure mode, distinct from the blob: flake).
+  - Progress (2026-09-04, runs 3-4): run 3 (full suite, `--repeat-each=2`,
+    `--workers=2`, ≈178 runs, 10.4m) — 56 passed / 142 failed, **zero blob:
+    occurrences**; all failures are the soak collapse again: both servers
+    (dev 5199 + prod preview 5198) stop accepting connections ~minutes in,
+    every later test fails with `page.goto: Could not connect to server`.
+    Run 4 (full suite, single pass, `--workers=2`, 99 tests, 8.1m,
+    foreground): **99/99 passed**, zero blob: occurrences. Confound noted:
+    both collapses ran inside background-managed shells, the clean pass ran
+    foreground — background shell throttling is the likely collapse trigger,
+    a runbook-worthy lesson (long soaks + managed/background shells kill the
+    shared servers; single-pass runs are robust).
+  - Resolution: live reproduction exhausted (~130 clean runs today: 16
+    isolated wagon + 24 soak-wagon + 99 full-suite) — the flake is too rare
+    to catch on demand. **Fingerprint captured from the historical record
+    instead**, which recorded it verbatim: wagon-workshop_20260904 archive
+    (`conductor/archive/wagon-workshop_20260904/plan.md`): `Fetch API cannot
+    load blob:…` WebKit console noise (+ once `colormap.png`), tripping only
+    the zero-console assertion while every functional assertion passed;
+    flaked untouched specs too (undo, starter-railway); verdict "environmental
+    dev-server/WebKit load flake"; release-v0.7.0_20260904 archive confirms
+    (`conductor/archive/release-v0.7.0_20260904/plan.md`): tablet+phone
+    wagon-workshop, zero-console only, functional assertions pass, flaky
+    across projects, pre-existing on main. **Engine correction:** the
+    tablet/phone projects run headless **WebKit** (`iPad Mini` / `iPhone 13`
+    profiles), not Chromium — spec.md Overview/A2/Out-of-scope corrected in
+    this commit. Functional-assertions-pass proof: both archives assert it;
+    live confirmation unnecessary.
 - [ ] Task: Implement the targeted allowlist in the e2e harness
   - Shared helper in `e2e/` (single place); exact-message fingerprint match;
     comment cites this track + the `blob:`/access-control mechanism; all other
     console errors still fail the suite (spec A4)
   - Acceptance: allowlist active; suite green on Windows headless at default
     workers
+- [ ] Task: Cap Playwright workers in `playwright.config.ts`
+  - Discovered failure mode (Task 1 runs): the config sets no `workers`
+    limit, so local default = core count — 10 workers on this machine melts
+    the shared dev servers, turning the suite red with connection errors.
+    Set a sane default (`workers: 2`) with a comment citing the collapse
+    mechanism and this track; the historical `--workers=2` convention becomes
+    the enforced default instead of tribal memory.
+  - Acceptance: local runs use 2 workers by default; full suite still green
+    without explicit `--workers=2`
 - [ ] Task: Prove the guardrail stays armed
   - Temporary test: inject a real console error, confirm the suite fails;
     remove the injection after the proof

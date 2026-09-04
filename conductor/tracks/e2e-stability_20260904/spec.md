@@ -4,9 +4,10 @@
 
 ## Overview
 
-The wagon-workshop tablet/phone Playwright spec flakes on Windows headless
-Chromium: `blob:` texture fetches get blocked by access-control checks and trip
-the zero-console-errors assertion, while all functional assertions pass. This
+The wagon-workshop tablet/phone Playwright spec flakes on headless WebKit
+(the `iPad Mini` / `iPhone 13` device profiles): `blob:` texture fetches get
+blocked by access-control checks and trip the zero-console-errors assertion,
+while all functional assertions pass. This
 noise has survived three releases (v0.5.0–v0.7.0), repeatedly forcing
 release-day judgment calls. Related: e2e runs only at release time, browsers
 re-download every run, gates run sequentially, and docs-only commits trigger
@@ -21,9 +22,10 @@ release day.
 - **A1.** Keep the zero-console-errors guardrail strict everywhere; do not
   remove or weaken any assertion.
 - **A2.** Allowlist only the exact known-environmental console-error signature
-  (the `blob:` texture fetch blocked by access-control checks as seen in
-  Windows headless Chromium), matched by message fingerprint — not a blanket
-  "ignore all errors."
+  (the WebKit `blob:` texture fetch rejection — verbatim fingerprint from the
+  wagon-workshop archive: `Fetch API cannot load blob:… due to access control
+  checks`), matched by message fingerprint — not a blanket "ignore all
+  errors."
 - **A3.** The allowlist lives in the e2e harness in one place (e.g., a shared
   helper in `e2e/`), with a comment citing this track and the failure
   mechanism.
@@ -82,6 +84,6 @@ release day.
 ## Out of Scope
 
 - Any change to product runtime code, assets, or app behavior.
-- Root-cause fixes to blob:/CORS semantics of headless Chromium.
+- Root-cause fixes to blob:/CORS semantics of headless WebKit.
 - Auditing every e2e spec for latent flakes beyond the known one.
 - Branch protections / repo settings changes.
