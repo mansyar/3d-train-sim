@@ -42,7 +42,7 @@ gates + smoke + checkpoints per `workflow.md`.
     eyeballed the new `## [0.7.0]` section, compare links, and version
     bump — confirmed yes.
 
-## Phase 2 - Local Pre-Tag Verification
+## Phase 2 - Local Pre-Tag Verification [checkpoint: 24a249b]
 
 - [x] Task: Run the full local gate suite (6c76953)
   - Acceptance: `pnpm check` green and the full Playwright e2e suite
@@ -82,10 +82,16 @@ gates + smoke + checkpoints per `workflow.md`.
     `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
     back to `index.html` — all per `nginx.conf`.
   - [ ] `docker build` the image locally
-  - [ ] Run container; verify app loads, SPA fallback, cache headers
+  - [x] Run container; verify app loads, SPA fallback, cache headers
         (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed
         assets)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (24a249b)
+  - Verification Report (2026-09-04): `pnpm check` green (biome, tsc,
+    566/566 vitest). E2e 89/91; the 2 failures are the known
+    Windows-local blob-noise in `wagon-workshop` (functional assertions
+    pass; user confirmed proceeding with Linux CI as authority).
+    Container `tiny-tracks:0.7.0` (72MB) smoke green on all six curl
+    checks per `nginx.conf`. Manual: user confirmed yes to ship.
 
 ## Phase 3 - Tag & Ship
 
