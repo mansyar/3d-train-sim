@@ -12,12 +12,7 @@ import {
   terrainErrorFor,
 } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
-import {
-  WAGON_PRESETS,
-  type WagonPreset,
-  wagonPresetAria,
-  wagonPresetIcon,
-} from '../core/wagons';
+import { WAGON_PRESETS, type WagonPreset, wagonPresetAria, wagonPresetIcon } from '../core/wagons';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 
