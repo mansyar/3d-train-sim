@@ -38,11 +38,13 @@ observable acceptance criteria + Playwright smoke for scene/UI.
 
 ## Phase 3 - Drawer: Icon-Only Wagon Row
 
-- [ ] Task: Wagon row in the train drawer (non-logic)
-  - [ ] Acceptance: 4 chunky preset icons under the loco picker, ≥64px targets, one tap applies to the selected loco with pop+ding <100ms (silent when muted), row hidden mid-ride with the drawer, reduced-motion safe, tablet + phone layouts
-  - [ ] Implement drawer UI in `src/ui/` (hand SVG icons, parent-facing labels only)
-  - [ ] Manual/tablet verification per acceptance
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Wagon row in the train drawer (non-logic) f1fc780
+  - [x] Acceptance: 4 chunky preset icons under the loco picker, ≥64px targets, one tap applies to the selected loco with pop+ding <100ms (silent when muted), row hidden mid-ride with the drawer, reduced-motion safe, tablet + phone layouts
+  - [x] Implement drawer UI in `src/ui/` (hand SVG icons, parent-facing labels only)
+  - [x] Manual/tablet verification per acceptance
+  - Notes: `f1fc780 feat(drawer)`. Core `wagonPresetIcon`/`wagonPresetAria` (TDD Red→Green, 17/17 wagons tests); `.wagon-row` inside `.train-drawer` inherits mid-ride hiding; pressed state re-aims on loco switch/restore/undo; pop reuses `ride-pop` keyframes, disabled under reduced-motion; row wraps on 360px phones. Screenshot-verified the open drawer (3 locos + 4 distinct pair icons, classic pressed by default); preview server + scratch files removed afterwards.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes: scope = `f1fc780` (icons, drawer row, styles). `tsc` + `biome` clean; `CI=true pnpm test` → 34 files / 543 pass. Tablet `e2e/smoke.spec.ts` → 20/20 pass (2.0m; only the pre-existing three.js PCFSoftShadowMap deprecation warning). Hands-on tablet check of tap feel still open — proposed with the Phase 4 e2e (workshop-flow spec exercises the row on tablet + phone).
 
 ## Phase 4 - E2E, Docs & Final Gates
 
