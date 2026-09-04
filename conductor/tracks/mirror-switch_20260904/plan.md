@@ -176,7 +176,7 @@ Phase 3 closes with e2e, docs, and final gates.
     of two (drawer count 6 → 7). Manual tablet gate (7th toy, snap /
     red ghost, alternation + blade flips, reload, old saves)
     confirmed by the user.
-  - [checkpoint: PHASE3_SHA]
+  - [checkpoint: 3fc37f7]
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
 
   Notes (Phase 3 implementation — commits `3433767`, `210a90b`,
