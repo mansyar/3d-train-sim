@@ -192,10 +192,15 @@ e2e runs, gates, and checkpoints per `workflow.md`.
 
 ## Phase 4 - Acceptance Runs & Wrap-Up
 
-- [ ] Task: Three consecutive clean suite runs on Windows headless
+- [x] Task: Three consecutive clean suite runs on Windows headless (2026-09-04)
   - Full Playwright suite at `--workers=2`, three back-to-back runs, zero
     failures — the spec's statistical bar (acceptance #1)
   - Acceptance: 3/3 clean runs recorded in plan.md
+  - Notes: all three runs at the config default (2 workers, allowlist
+    active), foreground, 99/99 each: run 1 **8.0m** 23:22, run 2 **7.9m**
+    23:30, run 3 **7.9m** 23:39. Only the benign `PCFSoftShadowMap`
+    deprecation warning appeared. (Plus the earlier single-pass verification
+    run in Phase 1: 99/99 in 8.0m — four consecutive clean runs today.)
 - [ ] Task: Local gates + wrap-up
   - `pnpm check` green; confirm docs-only commit skips heavy jobs (acceptance
     #4); verify no `src/**` changes exist on the branch (N1)
