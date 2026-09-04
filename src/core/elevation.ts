@@ -14,6 +14,7 @@
  */
 
 import type { Edge, PieceType, Rotation } from './pieces';
+import { isCornerPiece } from './pieces';
 
 /** Hill crest height above the flat rail plane (kit rail line, from the GLBs). */
 export const HILL_HEIGHT = 1.1;
@@ -75,9 +76,7 @@ const COMPASS: readonly Edge[] = ['north', 'east', 'south', 'west'];
 
 /** Corner-like pieces whose base-start leg is the north leg at yaw 0. */
 function isCornerLike(type: PieceType): boolean {
-  return (
-    type === 'corner' || type === 'corner-up' || type === 'hill-corner' || type === 'corner-down'
-  );
+  return isCornerPiece(type);
 }
 
 /**

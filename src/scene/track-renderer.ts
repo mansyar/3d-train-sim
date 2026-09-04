@@ -128,8 +128,7 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   'slope-up': [0, -1, 2],
   hill: [0, -1, 2],
   'slope-down': [0, -1, 2],
-  // Phase-1 stand-ins on the same mounts (Phase 2 authors the real GLBs):
-  // the bump run on the straight mount, the elevated corners on the corner mount.
+  // The bump run on the straight mount, the elevated corners on the corner mount.
   'bump-up': [0, -1, 2],
   'hill-half': [0, -1, 2],
   'bump-down': [0, -1, 2],
