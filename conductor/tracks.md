@@ -17,6 +17,7 @@ Registry of active development tracks.
 | [wagon-workshop_20260904](archive/wagon-workshop_20260904/index.md) | Wagon Workshop | Feature | done |
 | [mirror-switch_20260904](archive/mirror-switch_20260904/index.md) | Mirror Switch | Feature | done |
 | [headlight-front_20260904](archive/headlight-front_20260904/index.md) | Headlight Front | Bug | done |
+| [hill-grade-pace_20260904](archive/hill-grade-pace_20260904/index.md) | Hill-Grade Pace | Feature | done |
 | [release-v0.7.0_20260904](archive/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):

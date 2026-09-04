@@ -1,10 +1,12 @@
 import type { Object3D } from 'three';
 import { easedHeightAt, type RideSpan } from '../core/elevation';
+import { easePaceRamp, gradePaceFactor, PACE_EASE_SECONDS, personalityPace } from '../core/pace';
 import type { PathStep } from '../core/pathing';
 import { closestPointFraction, stationStopSteps } from '../core/station-stops';
 import { isSwitchPiece } from '../core/switches';
 import type { Edge } from '../core/track-graph';
 import { type Cell, MEADOW_CELLS, neighbourOf, type PlacedPiece } from '../core/track-graph';
+import type { TrainKind } from '../core/trains';
 import { tunnelFlagsForPath } from '../core/tunnels';
 import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
@@ -85,6 +87,14 @@ export interface RideMotion {
   begin(state: RideState, startNear?: { x: number; z: number }): void;
   /** Re-target a swapped locomotive model, snapping it to the train's pose. */
   setModel(next: Object3D): void;
+  /**
+   * Tells the motion which locomotive pulls — the pace personality follows
+   * (steam steady, tram middle, diesel zippy). Defaults to tram, today's
+   * speed; a swap eases in over ~0.5 s, never a jump.
+   */
+  setKind(next: TrainKind): void;
+  /** The live eased pace factor (personality × grade) — the chug's tempo. */
+  pace(): number;
   /** Advance the animation by dt seconds. Allocates nothing per frame. */
   update(dt: number): void;
   dispose(): void;
@@ -209,6 +219,20 @@ export function createRideMotion(
   /** Eases 0 (parked) ⇄ 1 (riding) so stops and starts stay gentle. */
   let speedScale = 0;
 
+  /** Which locomotive pulls — the pace personality (tram: today's speed). */
+  let paceKind: TrainKind = 'tram';
+  /** The live eased pace factor: personality × grade, eased toward its target. */
+  let paceFactor = 1;
+  /** The factor the live ramp started from — restarts wherever it stands. */
+  let paceFrom = 1;
+  /** Ramp progress 0..1 (1 = settled); advances by dt over PACE_EASE_SECONDS. */
+  let paceRamp = 1;
+  /** The target the live ramp heads for — a change restarts it, never a jump. */
+  let paceLastTarget = Number.NaN;
+  /** Natural path-direction heights per segment — the grade under the wheels. */
+  let gradeEntry: number[] = [];
+  let gradeExit: number[] = [];
+
   /** Reports dead-end pauses upward so the chug softens with the motion. */
   let paused = false;
   const setPaused = (next: boolean): void => {
@@ -285,6 +309,8 @@ export function createRideMotion(
     reverseSpans = [];
     forwardEntry = [];
     backwardEntry = [];
+    gradeEntry = [];
+    gradeExit = [];
     const last = kept.length - 1;
     for (let i = 0; i <= last; i++) {
       const cur = kept[i];
@@ -305,6 +331,8 @@ export function createRideMotion(
             : cur.step.entryHeight,
       );
       backwardEntry.push(next ? next.step.entryHeight : cur.step.exitHeight);
+      gradeEntry.push(cur.step.entryHeight);
+      gradeExit.push(cur.step.exitHeight);
     }
     total = 0;
     for (const segment of segments) total += segment.length;
@@ -368,6 +396,10 @@ export function createRideMotion(
     pendingStationId = null;
     setPaused(false); // A fresh ride always rolls at full voice.
     speedScale = 1; // ▶ starts the chug immediately.
+    paceFactor = 1; // ...and the pace eases in from today's speed.
+    paceFrom = 1;
+    paceRamp = 1;
+    paceLastTarget = Number.NaN;
     poseTrain(0);
   }
 
@@ -402,6 +434,37 @@ export function createRideMotion(
   /** A fresh pass owes every stop again (loop lap or shuttle leg). */
   function armAll(): void {
     for (let i = 0; i < stops.length; i++) armed.add(i);
+  }
+
+  /** The segment index under path distance `d` (-1 when there is no path). */
+  function segmentIndexAt(d: number): number {
+    if (segments.length === 0) return -1;
+    const clamped = Math.min(Math.max(d, 0), total);
+    let remaining = clamped;
+    let index = 0;
+    for (const candidate of segments) {
+      if (remaining <= candidate.length) return index;
+      remaining -= candidate.length;
+      index += 1;
+    }
+    return segments.length - 1;
+  }
+
+  /**
+   * The pace target under the wheels: personality × grade, symmetric in
+   * travel direction (a climb shuttled back reads as a descent). While
+   * braking for a station the grade yields to the gentle stop — the descent
+   * boost eases out over the brake glide so the 2 s ding-ding lands exactly.
+   */
+  function paceTarget(): number {
+    const personality = personalityPace(paceKind);
+    if (brakeTarget !== null) return personality;
+    const index = segmentIndexAt(distance);
+    const entry = gradeEntry[index];
+    const exit = gradeExit[index];
+    if (entry === undefined || exit === undefined) return personality;
+    const forward = travelDirection === 1;
+    return personality * gradePaceFactor(forward ? entry : exit, forward ? exit : entry);
   }
 
   /** The locomotive the motion poses — swapped in place on kind changes. */
@@ -601,8 +664,35 @@ export function createRideMotion(
       if (total > 0) poseTrain(distance);
     },
 
+    /**
+     * Re-targets the pace personality when the locomotive swaps — the new
+     * pace eases in over ~0.5 s, never a jump.
+     */
+    setKind(next: TrainKind): void {
+      paceKind = next;
+    },
+
+    /** The live eased pace factor — chug tempo and puff rate follow this. */
+    pace(): number {
+      return paceFactor;
+    },
+
     update(dt: number) {
       if (total <= 0) return;
+      // Hill-grade pace: ramp the live factor toward the grade under the
+      // wheels — climbs labor, descents breeze, flats ride exactly as before.
+      // A changed target restarts the ramp wherever it stands, so the factor
+      // always lands ~0.5 s later: a gentle shift, never a pop.
+      const target = paceTarget();
+      if (target !== paceLastTarget) {
+        paceFrom = paceFactor;
+        paceRamp = 0;
+        paceLastTarget = target;
+      }
+      if (paceRamp < 1) {
+        paceRamp = Math.min(1, paceRamp + dt / PACE_EASE_SECONDS);
+        paceFactor = easePaceRamp(paceFrom, target, paceRamp);
+      }
       const stopping = stationStopTimer > 0;
       const active = getState() !== null;
       const targetScale = active && !stopping ? 1 : 0;
@@ -627,7 +717,7 @@ export function createRideMotion(
         // Braking for a station: the ease above pulls the speed down while
         // the train coasts the last stretch to the station cell (spec FR4).
         const prev = distance;
-        distance += travelDirection * RIDE_SPEED * speedScale * dt;
+        distance += travelDirection * RIDE_SPEED * paceFactor * speedScale * dt;
         if (travelDirection === 1) {
           const at = turnaroundWithin(prev, distance);
           if (at !== null) {
@@ -678,7 +768,7 @@ export function createRideMotion(
       }
 
       const prev = distance;
-      distance += travelDirection * RIDE_SPEED * speedScale * dt;
+      distance += travelDirection * RIDE_SPEED * paceFactor * speedScale * dt;
       if (travelDirection === 1) {
         if (distance >= total) {
           if (getState()?.path.closed) {
@@ -733,6 +823,12 @@ export function createRideMotion(
       reverseSpans = [];
       forwardEntry = [];
       backwardEntry = [];
+      gradeEntry = [];
+      gradeExit = [];
+      paceFactor = 1;
+      paceFrom = 1;
+      paceRamp = 1;
+      paceLastTarget = Number.NaN;
       armed.clear();
       stationStopTimer = 0;
       brakeTarget = null;
