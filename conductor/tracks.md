@@ -20,7 +20,7 @@ Registry of active development tracks.
 | [headlight-front_20260904](archive/headlight-front_20260904/index.md) | Headlight Front | Bug | done |
 | [hill-grade-pace_20260904](archive/hill-grade-pace_20260904/index.md) | Hill-Grade Pace | Feature | done |
 | [release-v0.7.0_20260904](archive/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
-| [railway-crossing-gate_20260905](tracks/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | new |
+| [railway-crossing-gate_20260905](tracks/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | in progress |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
