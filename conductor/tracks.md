@@ -15,6 +15,7 @@ Registry of active development tracks.
 | [release-v0.6.0_20260903](archive/release-v0.6.0_20260903/index.md) | Release v0.6.0 | Chore | done |
 | [starter-railway_20260903](archive/starter-railway_20260903/index.md) | Starter Railway Magic | Feature | done |
 | [mirror-switch_20260904](archive/mirror-switch_20260904/index.md) | Mirror Switch | Feature | done |
+| [headlight-front_20260904](tracks/headlight-front_20260904/index.md) | Headlight Front | Bug | new |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
