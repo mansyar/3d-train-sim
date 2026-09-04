@@ -58,12 +58,28 @@ final gates.
 
 ## Phase 2 — Asset, Sound & Scene Animation
 
-- [ ] Task: Crossing asset in Blender (house rules from `tech-stack.md`)
+- [x] Task: Crossing asset in Blender (house rules from `tech-stack.md`)
   — `scripts/blender-crossing-gate.py`
-  - [ ] Straight from the kit + road strip + crossbuck post; named node
+  - [x] Straight from the kit + road strip + crossbuck post; named node
         contract `crossing_gates` (two barrier arms) + `crossing_lantern`;
         winter snow-cap variant; deterministic recipe; export + verify
         GLB (target ≤ ~60 KB)
+  - **Notes:** `a199b3e`. Recipe mirrors `blender-switch.py`; ran headless
+    (Blender MCP unavailable). Fixed along the way: parent-local coords
+    for gate pivots + lantern lamps (world coords double-offset children),
+    material-slot assignment preserved via count-based face tracking +
+    append-only slots (clearing slots clamps material_index), loco fit
+    dz measured deterministically (wheels at −0.84 vs rail crowns
+    −0.82). Verified: top + three-quarter renders accepted; open-pose
+    arms numerically on the shoulder (x ±1.98, y ≈ −2.95); closed arms
+    span the road (y −2.99..−2.07). **Deviation:** GLB 84,456 bytes vs
+    the ~60 KB soft target (kit straight rails are ~30 KB of it) — within
+    the 150 KB house hard limit, accepted. Node contract:
+    `crossing_gates` root + `crossing_gate_east`/`crossing_gate_west`
+    pivots (arms authored closed, open = east −90°/west +90° about the
+    glTF Y axis), `crossing_lantern` + `crossing_lamp_0`/`_1` (separate
+    materials for alternating blink), `crossing_snow_cap` (hidden at
+    load, tunnel precedent). 12 nodes, 8 materials.
 - [ ] Task: Source & bundle the bell sound
   - [ ] Real railroad-crossing bell recording (CC0/public-domain
         preferred), softened + volume-capped; `public/audio/CREDITS.md`
