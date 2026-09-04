@@ -66,13 +66,28 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     profiles), not Chromium — spec.md Overview/A2/Out-of-scope corrected in
     this commit. Functional-assertions-pass proof: both archives assert it;
     live confirmation unnecessary.
-- [ ] Task: Implement the targeted allowlist in the e2e harness
+- [x] Task: Implement the targeted allowlist in the e2e harness (d7f0919)
   - Shared helper in `e2e/` (single place); exact-message fingerprint match;
     comment cites this track + the `blob:`/access-control mechanism; all other
     console errors still fail the suite (spec A4)
   - Acceptance: allowlist active; suite green on Windows headless at default
     workers
-- [ ] Task: Cap Playwright workers in `playwright.config.ts`
+  - Notes: `watchConsoleErrors(page)` + `isEnvironmentalConsoleNoise(message)`
+    added to `e2e/helpers.ts`. Fingerprint = three-substring conjunction
+    (`Fetch API cannot load` + `blob:` + `due to access control checks`) —
+    the verbatim WebKit field signature; narrower than a blanket blob: drop
+    (the once-seen `colormap.png` variant deliberately still fails). Applied
+    at collection time in the single shared collector; pageerrors never
+    filtered. All 14 spec files migrated (35 inline collectors + 3 local
+    wrapper helpers rewired: hill-pace `trackActivity`, river
+    `consoleAndRequests`, ride-toybox-flow `watchConsole`;
+    `starter-railway`'s variant collectors migrated by hand — it gains a
+    stricter pageerror listener, in scope since the archives show
+    starter-railway was flaked by this same noise). Array identity preserved
+    (`consoleErrors.length = 0` resets in wagon-workshop/hill-pace still
+    work). Net −102 lines across 15 files. Verified: biome clean,
+    `tsc --noEmit` clean, 592/592 vitest.
+- [x] Task: Cap Playwright workers in `playwright.config.ts` (e0735ce)
   - Discovered failure mode (Task 1 runs): the config sets no `workers`
     limit, so local default = core count — 10 workers on this machine melts
     the shared dev servers, turning the suite red with connection errors.
@@ -81,12 +96,36 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     the enforced default instead of tribal memory.
   - Acceptance: local runs use 2 workers by default; full suite still green
     without explicit `--workers=2`
-- [ ] Task: Prove the guardrail stays armed
+  - Notes: `workers: 2` in `playwright.config.ts` with collapse-mechanism
+    comment. Verified: full suite **99/99 passed in 8.0m** with NO
+    `--workers` flag — default cap active and green (also exercises the
+    allowlist on every zero-console assertion in the suite).
+- [x] Task: Prove the guardrail stays armed
   - Temporary test: inject a real console error, confirm the suite fails;
     remove the injection after the proof
   - Acceptance: injected error fails the suite; allowlist only silences the
     known signature
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes (2026-09-04): temporary `e2e/_guardrail-proof.spec.ts` with three
+    injections on the real harness (headless, default workers): (1) exact
+    allowlisted fingerprint → **filtered, test passed**; (2) ordinary real
+    error (`guardrail-proof: real error injection`) → **still failed** the
+    suite; (3) `colormap.png` variant (same WebKit wording, no `blob:`) →
+    **still failed**. Proof spec deleted after the run — nothing added to
+    the permanent suite. Guardrail armed and surgical (spec A4, acceptance
+    criterion #6).
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Progress (2026-09-04): automated — `pnpm check` green (biome clean,
+    `tsc --noEmit` clean, 592/592 vitest); full Playwright suite **99/99
+    passed in 8.0m** at the new config default (2 workers, allowlist
+    active); guardrail proof 3/3 as designed (allowlisted filtered, real
+    error + colormap variant still fail). Changed files (`git diff --name-only
+    52e74a1..HEAD`): `e2e/helpers.ts`, 14 `e2e/*.spec.ts`,
+    `playwright.config.ts`, `conductor/` artifacts — no `src/**` changes
+    (N1 holds). No logic-bearing code touched → no new unit tests required
+    (workflow non-logic path). Proposed manual verification for the user:
+    eyeball `e2e/helpers.ts` allowlist comment for accuracy/readability,
+    and (optional) run `pnpm exec playwright test e2e/wagon-workshop.spec.ts`
+    personally to see it green.
 
 ## Phase 2 - Stability Documentation
 
