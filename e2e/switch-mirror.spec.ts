@@ -60,7 +60,8 @@ test('a placed mirror switch loads its GLB and the train rides both branches cle
   await placeLine(page, MIRRORED_Y_LAYOUT);
 
   // The mirror's own GLB arrives only when a mirror switch is placed —
-  // the right-hand switch.glb must NOT be fetched for it.
+  // boot precaches every piece GLB, so this asserts the mirror's own
+  // asset is among the fetches.
   await page.waitForFunction(() =>
     performance
       .getEntriesByType('resource')
