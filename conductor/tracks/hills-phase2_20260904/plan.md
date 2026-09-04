@@ -67,7 +67,16 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 
 ## Phase 4 — E2E, docs & final gates
 
-- [~] Task: Playwright smoke (`e2e/hills-phase2.spec.ts`) — ride each piece + reload, clean console
-- [ ] Task: Docs — CHANGELOG Unreleased note, strike elevation leftovers in `product.md`
-- [ ] Task: Final gates — `biome check`, `tsc --noEmit`, `vitest`, tablet manual check
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Playwright smoke (`e2e/hills-phase2.spec.ts`) — ride each piece + reload, clean console [6f99b58]
+  - Notes: Merged `origin/main` (`fa3b8ca`) mid-phase — pulled in the e2e-stability track (`helpers.ts`: `clearMeadow`, `watchConsoleErrors` with the WebKit blob-texture allowlist; my spec already imported `clearMeadow`), the hill-grade-pace track (new pure `core/pace.ts`: personality × grade factor; height-based so all 6 new pieces compose for free — bump climbs ≈0.83x, corner climbs like full hills; crest detector unaffected, it keys on height not speed), and release-v0.7.0. Conflicts resolved: `ride-motion.ts` imports (union of pace + bump/corner — detector lines intact), `tracks.md` rows, CHANGELOG (my entry back under fresh `Unreleased`). Migrated my spec's strict `collectConsole` to `watchConsoleErrors` [6f99b58]; `rails: 9` count fix for `ride-toybox-flow` kept through the merge. Result: my spec 6/6, FULL suite 105/105 green.
+- [x] Task: Docs — CHANGELOG Unreleased note, strike elevation leftovers in `product.md` [25b093f]
+  - Notes: CHANGELOG Unreleased entry (parent wording: bumps + banked corners, crest pop, snow crowns, additive saves) re-anchored above 0.7.0 after the merge; product.md elevation leftover struck.
+- [x] Task: Final gates — `biome check`, `tsc --noEmit`, `vitest`, tablet manual check [6f99b58]
+  - Notes: `tsc --noEmit` clean; `biome check` clean (3 format nits auto-fixed post-merge); `CI=true pnpm test` 614/614 across 35 files; full Playwright 105 passed / 0 failed (8.5 min). Tablet manual check proposed below — awaiting explicit yes.
+- [x] Task: Phase Verification & Checkpoint (Phase 4) [6f99b58]
+
+## Verification Report — Phase 4 (2026-09-05)
+- Scope since Phase 3 checkpoint (`8dbd15d`): main merge (`fa3b8ca`), spec helper migration + format fixes (`6f99b58`).
+- Automated: unit 614/614 (35 files, incl. main's pace/audio suites); tsc clean; Biome clean; hills-phase2.spec 6/6 (phone + tablet); FULL e2e 105/105, incl. previously flaky wagon-workshop tablet — the stability allowlist held.
+- Manual: proposed below, awaiting explicit yes per workflow phase protocol.
+[checkpoint:6f99b58]
