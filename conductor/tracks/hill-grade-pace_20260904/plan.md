@@ -8,17 +8,35 @@ and tablet verification.
 
 ## Phase 1 - Pure Pace Model (TDD)
 
-- [~] Task: `pace.test.ts` Red — grade −35% / +25%, eased ramp,
+- [x] Task: `pace.test.ts` Red — grade −35% / +25%, eased ramp,
   never-stall floor, symmetric reverse (via `rideHeightAt` /
   `stepHeights` / `isReversedSpan`), personalities
   steam 0.9 / tram 1.0 / diesel 1.2, flat identity (= 1.0 exactly)
-- [ ] Task: `pace.ts` Green + refactor — pure, total, no three.js,
+- [x] Task: `pace.ts` Green + refactor — pure, total, no three.js,
   no alloc; coverage >80%; `tsc --noEmit` + `biome check` clean
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Notes (Phase 1 implementation — commit `ee67db6`):
+  - Red: `pace.test.ts` (14 tests) failed on missing `./pace` module;
+    Green: new `src/core/pace.ts` (`gradePaceFactor`, `personalityPace`,
+    `livePaceFactor`, `easePaceFactor` + `PACE_CLIMB/DESCENT/MIN/EASE`
+    constants) — 14/14 green.
+  - Coverage: `pace.ts` 100% lines/funcs, 92% stmts, 87% branches
+    (>80% gate holds). `tsc --noEmit` clean; `biome check` clean
+    (one import-sort + one format fix via `--write`, tests re-green).
+  - Full unit suite: 35 files / 580 tests green, zero regressions.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 1):
+  - Scope: pure `src/core/pace.ts` + `pace.test.ts` only — matches plan,
+    no scene/audio/save changes, no spec drift.
+  - Auto: vitest 580/580 green (incl. 14 new); biome + tsc clean.
+  - Manual tablet: N/A this phase — no visual/audio behavior changes
+    yet (scene unwired); tablet verification deferred to Phase 3 e2e.
+  - Checkpoint: `ee67db6`.
 
 ## Phase 2 - Scene Ride + Audio Wiring
 
-- [ ] Task: `ride-motion.ts` live speed — `RIDE_SPEED × personality ×
+- [~] Task: `ride-motion.ts` live speed — `RIDE_SPEED × personality ×
   grade` in `update()`, eased ~0.5s, brake protection (boost eases out
   before `BRAKE_DISTANCE`), station 2s / cargo / confetti untouched,
   no per-frame alloc, camera follow unchanged
