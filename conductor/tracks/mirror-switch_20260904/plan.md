@@ -147,20 +147,70 @@ Phase 3 closes with e2e, docs, and final gates.
 
 ## Phase 3 - E2E, Docs & Final Gates
 
-- [ ] Task: Playwright e2e (extend `e2e/switches.spec.ts` or new
-  `e2e/switch-mirror.spec.ts`)
-  - [ ] Tablet + phone profiles: place a symmetric mirrored
+- [x] Task: Playwright e2e (extend `e2e/switches.spec.ts` or new
+  `e2e/switch-mirror.spec.ts`) — commit `3433767`
+  - [x] Tablet + phone profiles: place a symmetric mirrored
         double-loop via the dev handle, ride, assert both branches
         ridden (alternation), reload restores the layout, zero external
         requests, clean console
-- [ ] Task: Docs — CHANGELOG (parent-voice), `product.md` roadmap
-  strike, `tech-stack.md` asset list + authoring reference
+- [x] Task: Docs — CHANGELOG (parent-voice), `product.md` roadmap
+  strike, `tech-stack.md` asset list + authoring reference — commit `210a90b`
   - [ ] CHANGELOG Unreleased: parent-voice mirror entry (left-hand Y,
         two ways out, blades flip, normal speed, old saves unchanged)
   - [ ] product.md: roadmap strikes left-mirror as shipped
   - [ ] tech-stack.md: asset tree + recipe list gain the mirror GLB /
         recipe; authoring notes keep the `switch_blades` contract
-- [ ] Task: Final gates — `pnpm check` (biome + tsc + vitest),
+- [x] Task: Final gates — `pnpm check` (biome + tsc + vitest),
   coverage report on new core logic, full Playwright run
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  (commits `3433767` e2e spec, `210a90b` docs, `eaeaa13` biome format,
+  `8b3788d` drawer-count ripple)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (Phase 3): scope = new e2e spec + drawer-count
+    ripple + docs; no new logic files. `pnpm check` → biome clean,
+    tsc clean, 34 files / 542 vitest pass. Coverage record from
+    Phase 1 stands (`switches.ts` + `pieces.ts` 100%, `pathing.ts`
+    lines 99.31 = baseline). Full Playwright (tablet + phone):
+    86 passed, 1 flaky-then-green with `--retries=1`, exit 0; the
+    flake class (parallel-load timing, rotating victims) was proven
+    pre-existing via a full-suite run on clean `main`. One fix used
+    of two (drawer count 6 → 7). Manual tablet gate (7th toy, snap /
+    red ghost, alternation + blade flips, reload, old saves)
+    confirmed by the user.
+  - [checkpoint: PHASE3_SHA]
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
+
+  Notes (Phase 3 implementation — commits `3433767`, `210a90b`,
+  `eaeaa13`, `8b3788d`):
+  - E2E: new `e2e/switch-mirror.spec.ts` (commit `3433767`) — mirrored-Y
+    double-loop via the dev handle, both branches asserted ridden
+    (alternation), reload restores the layout, zero external requests,
+    clean console; also asserts `switch-mirror.glb` IS fetched. A
+    negative assertion (right-hand `switch.glb` must NOT load) failed:
+    the renderer precaches a template for EVERY piece type at boot
+    (`track-renderer.ts` line ~712), so all GLBs always load — by design
+    (one precached GLB per type). Assertion corrected, not the code.
+  - Ripple: the adventure drawer now holds 7 toys, so the hardcoded
+    `adventure: 6` count in `e2e/ride-toybox-flow.spec.ts` was updated
+    to 7 (commit `8b3788d`); biome format fix in the new spec
+    (`eaeaa13`). One fix used of the two-fix budget.
+  - Flakes: full-suite runs showed single-victim timing flakes under
+    default parallel workers (ride-toybox, starter-railway, gallery,
+    smoke — a different victim each run, each passing in isolation).
+    Baseline proof: full suite on clean `main` (via a temporary
+    worktree, since removed) also flaked (smoke tablet). Pre-existing
+    suite flakiness, not a regression. Final gate run with
+    `--retries=1` (CLI flag only, no config change): 86 passed,
+    1 flaky-then-green, exit 0.
+  - Env incident: `node_modules/.bin` vanished mid-track (likely the
+    baseline worktree's junction teardown cascading into the repo, or
+    the parallel wagon-workshop session); recovered with a clean
+    `Remove-Item node_modules` + `pnpm install`. Lesson: never junction
+    `node_modules` into a worktree — run `pnpm install` there instead.
+  - Docs (commit `210a90b`): CHANGELOG Unreleased parent-voice entry,
+    product.md roadmap left-mirror shipped note, tech-stack.md asset
+    tree + recipe list + authoring reference (per-hand blade angles
+    −0.21 / +0.21).
+  - Gates: `pnpm check` fully green (biome + tsc + 34 files / 542
+    vitest). No new core-logic files this phase, so the Phase 1
+    coverage record stands (`switches.ts` + `pieces.ts` 100%,
+    `pathing.ts` lines 99.31 = pre-track baseline).
