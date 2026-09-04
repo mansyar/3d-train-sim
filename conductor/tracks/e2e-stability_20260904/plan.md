@@ -206,7 +206,7 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     (hill-pace fixed-window sampling → `expect.poll`, cargo delivery poll
     budget → 90s). Checkpoint SHA `3f1ccdb`.
 
-## Phase 4 - Acceptance Runs & Wrap-Up [checkpoint: pending]
+## Phase 4 - Acceptance Runs & Wrap-Up [checkpoint: 2512c30]
 
 - [x] Task: Three consecutive clean suite runs on Windows headless (2026-09-04)
   - Full Playwright suite at `--workers=2`, three back-to-back runs, zero
@@ -231,4 +231,7 @@ e2e runs, gates, and checkpoints per `workflow.md`.
     Acceptance scorecard: #1 3/3 Windows runs ✅; #2 PR CI green incl. prod
     project ✅; #3 dry run green ✅; #4 docs-only skip ✅; #5 `pnpm check`
     green ✅; #6 injected-error guardrail proof ✅ (Phase 1).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-05): full acceptance scorecard green (see
+    'Local gates + wrap-up'); user approved the final checkpoint. Track
+    complete. Checkpoint SHA `2512c30`.
