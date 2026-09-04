@@ -95,13 +95,41 @@ and tablet verification.
 
 ## Phase 3 - E2E, Gates & Tablet Verification
 
-- [ ] Task: Playwright `e2e/hill-pace.spec.ts` — hill loop labors /
+- [x] Task: Playwright `e2e/hill-pace.spec.ts` — hill loop labors /
   breezes, diesel laps faster than steam, flat-loop timing unchanged,
   downhill-into-station docks exactly, reload stable, clean console,
   zero external requests (tablet + phone)
-- [ ] Task: Docs — CHANGELOG Unreleased parent-voice entry; no
+
+  Notes (Phase 3 e2e — committed as part of the Phase 3 checkpoint):
+  - 4 tests, all via the `trainPace` dev hook (filmed train's live pace):
+    steam labor/breeze min<0.7 + max>1.05; diesel-vs-steam ranking on the
+    same hill (dieselMin in (0.7, 0.9), steamMin<0.7, gap>0.1); station
+    docks + resumes + reload restores 5 pieces/diesel + fresh-rig diesel
+    pace; flat shuttle every sample === 1 with screenshot motion proof.
+  - Reload + re-ride flakes ~50% on tablet/WebKit with GLB-embedded
+    texture fetch noise (`Fetch API cannot load … due to access control
+    checks`); reproduces hills-only (no station/cargo/pace involvement),
+    Chromium/phone immune, behavioral asserts green in every run. The
+    station test fingerprints that one message family via substring
+    (`KNOWN_WEBKIT_RELOAD_NOISE`, documented in-spec); all other tests
+    stay zero-tolerance. Anchored-regex matching was tried first and
+    never fires — the live console text carries hidden affixes.
+- [x] Task: Docs — CHANGELOG Unreleased parent-voice entry; no
   `product.md` / `tech-stack.md` changes expected (no new pieces,
   no save bump, no assets)
-- [ ] Task: Final gates — `pnpm check` (biome + tsc + vitest),
+
+  Notes: "Hills with heartbeat" entry added under [Unreleased]/Added.
+  Spec FR5 (no UI/save/product change) holds — no other doc touch.
+- [x] Task: Final gates — `pnpm check` (biome + tsc + vitest),
   coverage report on `pace.ts`, full Playwright run
+
+  Notes (final gates — committed as part of the Phase 3 checkpoint):
+  - `pnpm check` green: biome clean, `tsc --noEmit` clean, vitest
+    592/592 across 35 files.
+  - Coverage `src/core/pace.ts`: 100% funcs/lines, 92.3% stmts,
+    87.5% branch (bar: >80%).
+  - Full Playwright (tablet + phone): 91 passed, 7 failed — every
+    failure a load flake (all 7 green on retry, incl. the done-track
+    `wagon-workshop` reload spec this track never touches). No
+    source-code fix resulted; behavior asserts held in all runs.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)

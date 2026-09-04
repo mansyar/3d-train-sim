@@ -115,6 +115,8 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
+  /** Debug aid: the filmed (or primary) train's live pace factor. */
+  trainPace(): number;
   /** The toddler's big toot: the answering train whistles (echoing inside
    *  tunnels) and puffs steam. No-op before a train shows. */
   tootWhistle(): void;
@@ -668,6 +670,10 @@ export function initScene(
       // ride keeps its exact state object, so its train never loses progress.
       if (rig.begunWith !== ride) {
         rig.begunWith = ride;
+        // The pace personality boards with the locomotive — a fresh or
+        // reused rig always rides at its own kind's tempo from the first
+        // tick (no tram-default first leg).
+        rig.motion.setKind(rig.kind);
         rig.motion.begin(ride, rig.startNear ?? undefined);
         rig.startNear = null;
       }
@@ -976,6 +982,9 @@ export function initScene(
     wagonCount: () =>
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     steamPuffCount: () => visibleSteamPuffs,
+    // Dev/e2e witness: the filmed (or primary) train's live pace factor —
+    // personality × grade, eased. Lets specs prove labor/breeze directly.
+    trainPace: () => (filmedRig() ?? primaryRig())?.motion.pace() ?? 1,
     tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
       // does; before any ride, the parked opener train answers. Inside a

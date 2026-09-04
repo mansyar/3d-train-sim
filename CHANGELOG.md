@@ -23,6 +23,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   trains keeps its own choice, and the choice is remembered after a reload.
   The wagons still haul crates exactly as before.
 
+- **Hills with heartbeat: trains labor up and breeze down.** Hills are no
+  longer just scenery - little engines now slow down and chug harder on
+  the way up, then pick up speed rolling down the other side, easing
+  gently into stations exactly as before. Each engine keeps its own
+  personality, too: the diesel is zippier than the tram, and the steam
+  engine takes hills slow and steady. Nothing new to learn - no buttons,
+  no sliders, just watch and listen.
+
 ## [0.6.0] - 2026-09-03
 
 ### Added
