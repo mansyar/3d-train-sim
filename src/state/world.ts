@@ -12,6 +12,14 @@ import {
   terrainErrorFor,
 } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
+import {
+  DEFAULT_WAGON_PRESET,
+  defaultConsist,
+  isWagonPreset,
+  resolveWagonPreset,
+  type TrainConsist,
+  type WagonPreset,
+} from '../core/wagons';
 
 /** Outcome of a world mutation the kid UI can show gently (dim, wobble, snap). */
 export type PlacementResult =
@@ -36,6 +44,12 @@ export interface WorldStore {
   train(): TrainKind;
   /** Selects a locomotive; invalid values fall back to steam. */
   selectTrain(kind: unknown): boolean;
+  /** The wagon preset pair each locomotive pulls (a defensive copy). */
+  consist(): TrainConsist;
+  /** One train's wagon preset. */
+  consistFor(train: TrainKind): WagonPreset;
+  /** Switches one train's wagons; invalid presets fall back to classic. */
+  selectConsist(train: TrainKind, preset: unknown): boolean;
   /** The pieces currently on the meadow, in placement order. */
   pieces(): readonly PlacedPiece[];
   place(type: PieceType, cell: Cell, rotation: Rotation): PlacementResult;
@@ -66,11 +80,24 @@ export interface WorldStore {
   subscribe(listener: WorldListener): () => void;
 }
 
+/**
+ * Reads a consist forgivingly: every locomotive resolves to a curated
+ * preset, so hand-built or older worlds always yield a total mapping.
+ */
+function readConsist(value: TrainConsist | undefined): TrainConsist {
+  return {
+    steam: resolveWagonPreset(value?.steam),
+    diesel: resolveWagonPreset(value?.diesel),
+    tram: resolveWagonPreset(value?.tram),
+  };
+}
+
 export function createWorldStore(): WorldStore {
   const placed: PlacedPiece[] = [];
   const scenery: PlacedScenery[] = [];
   let deliveries: Record<string, number> = {};
   let selectedTrain: TrainKind = 'steam';
+  let consist: TrainConsist = defaultConsist();
   const listeners = new Set<WorldListener>();
   let nextId = 1;
 
@@ -121,6 +148,22 @@ export function createWorldStore(): WorldStore {
       const next = kind as TrainKind;
       if (next === selectedTrain) return true;
       selectedTrain = next;
+      notify();
+      return true;
+    },
+
+    /** A defensive copy — callers can never mutate the store's records. */
+    consist: () => ({ ...consist }),
+
+    consistFor: (train) => resolveWagonPreset(consist[train]),
+
+    selectConsist(train, preset) {
+      if (!isWagonPreset(preset)) {
+        consist = { ...consist, [train]: DEFAULT_WAGON_PRESET };
+        return false;
+      }
+      if (preset === consist[train]) return true;
+      consist = { ...consist, [train]: preset };
       notify();
       return true;
     },
@@ -238,6 +281,7 @@ export function createWorldStore(): WorldStore {
     hydrate(data) {
       selectedTrain = data.train;
       deliveries = { ...(data.deliveries ?? {}) };
+      consist = readConsist(data.consist);
       placed.splice(
         0,
         placed.length,
@@ -266,6 +310,7 @@ export function createWorldStore(): WorldStore {
       // through the usual world subscription, and persistence saves exactly
       // once — no per-item teardown cascades.
       selectedTrain = 'steam';
+      consist = defaultConsist();
       placed.splice(0, placed.length);
       scenery.splice(0, scenery.length);
       deliveries = {};
@@ -286,9 +331,11 @@ export function createWorldStore(): WorldStore {
       const priorScenery = copyScenery(scenery);
       const priorDeliveries = { ...deliveries };
       const priorTrain = selectedTrain;
+      const priorConsist = { ...consist };
       const priorNextId = nextId;
       selectedTrain = data.train;
       deliveries = { ...(data.deliveries ?? {}) };
+      consist = readConsist(data.consist);
       placed.splice(0, placed.length, ...copyPieces(data.pieces));
       scenery.splice(0, scenery.length, ...copyScenery(data.scenery));
       nextId = 1;
@@ -297,6 +344,7 @@ export function createWorldStore(): WorldStore {
       pendingUndo = () => {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };
+        consist = { ...priorConsist };
         placed.splice(0, placed.length, ...copyPieces(priorPieces));
         scenery.splice(0, scenery.length, ...copyScenery(priorScenery));
         nextId = priorNextId;

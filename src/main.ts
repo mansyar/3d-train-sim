@@ -49,6 +49,7 @@ if (root) {
           world.train(),
           audio.isMuted(),
           world.deliveries(),
+          world.consist(),
         ),
       );
     }

@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
 import { cozyOval, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
+import { TRAIN_KINDS } from '../core/trains';
+import { defaultConsist, withConsistPreset } from '../core/wagons';
 import { createWorldStore } from './world';
 
 const ORIGIN = { x: 0, y: 0 };
@@ -320,6 +322,66 @@ describe('world store train selection', () => {
   });
 });
 
+describe('world store wagon consist', () => {
+  it('defaults every locomotive to the classic pair', () => {
+    const store = createWorldStore();
+
+    expect(store.consist()).toEqual(defaultConsist());
+    for (const kind of TRAIN_KINDS) expect(store.consistFor(kind)).toBe('classic');
+  });
+
+  it('switches one train without touching the others and notifies once', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.selectConsist('diesel', 'coal')).toBe(true);
+    expect(store.consistFor('diesel')).toBe('coal');
+    expect(store.consistFor('steam')).toBe('classic');
+    expect(store.consistFor('tram')).toBe('classic');
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to classic for an invalid preset', () => {
+    const store = createWorldStore();
+    expect(store.selectConsist('tram', 'container')).toBe(true);
+
+    expect(store.selectConsist('tram', 'rocket')).toBe(false);
+    expect(store.consistFor('tram')).toBe('classic');
+  });
+
+  it('hydrates and resets the consist with the world', () => {
+    const store = createWorldStore();
+    store.hydrate({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: withConsistPreset(defaultConsist(), 'steam', 'tank'),
+    });
+    expect(store.consistFor('steam')).toBe('tank');
+
+    store.reset();
+    expect(store.consist()).toEqual(defaultConsist());
+  });
+
+  it('restores the prior consist on preset undo', () => {
+    const store = createWorldStore();
+    store.selectConsist('diesel', 'coal');
+    store.applyPreset({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+    expect(store.consistFor('diesel')).toBe('classic');
+
+    expect(store.undo()).toBe(true);
+    expect(store.consistFor('diesel')).toBe('coal');
+  });
+});
+
 describe('world reset', () => {
   it('clears every track piece and scenery toy in one notification', () => {
     const store = createWorldStore();
@@ -495,6 +557,7 @@ describe('station deliveries', () => {
       scenery: [{ id: 'scenery-1', kind: 'station', cell: ORIGIN, rotation: 0 }],
       train: 'steam',
       deliveries: { 'scenery-1': 5 },
+      consist: defaultConsist(),
     });
 
     expect(store.deliveryCount('scenery-1')).toBe(5);
@@ -677,7 +740,13 @@ describe('world store undo', () => {
     const store = createWorldStore();
     store.place('straight', ORIGIN, 0);
 
-    store.hydrate({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+    store.hydrate({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
     expect(store.canUndo()).toBe(false);
 
     store.place('straight', ORIGIN, 0);

@@ -10,6 +10,13 @@ import {
   type Rotation,
 } from './track-graph';
 import { TRAIN_KINDS, type TrainKind } from './trains';
+import {
+  DEFAULT_WAGON_PRESET,
+  defaultConsist,
+  resolveWagonPreset,
+  type TrainConsist,
+  type WagonPreset,
+} from './wagons';
 
 const SNAPSHOT_VERSION = 3;
 
@@ -27,6 +34,8 @@ export interface WorldSnapshot {
   train?: TrainKind;
   preferences?: DevicePreferences;
   deliveries?: Record<string, number>;
+  /** Per-train wagon presets; omitted when every train pulls classic. */
+  consist?: Partial<Record<TrainKind, WagonPreset>>;
 }
 
 export interface WorldData {
@@ -35,6 +44,8 @@ export interface WorldData {
   train: TrainKind;
   /** Delivered-crate counts, keyed by the station scenery's id. */
   deliveries: Record<string, number>;
+  /** The wagon preset pair each locomotive pulls. */
+  consist: TrainConsist;
 }
 
 export function serializeWorld(
@@ -43,6 +54,7 @@ export function serializeWorld(
   train: TrainKind = 'steam',
   muted = false,
   deliveries: Record<string, number> = {},
+  consist: TrainConsist = defaultConsist(),
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -64,6 +76,8 @@ export function serializeWorld(
   if (muted) snapshot.preferences = { muted: true };
   // Same for an empty delivery ledger.
   if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
+  // Same for an all-classic consist — the default needs no storage.
+  if (!isClassicConsist(consist)) snapshot.consist = { ...consist };
   return snapshot;
 }
 
@@ -97,6 +111,7 @@ export function deserializeWorld(value: unknown): WorldData {
     scenery: validScenery,
     train: isTrainKind(value.train) ? value.train : 'steam',
     deliveries: parseDeliveries(value.deliveries),
+    consist: parseConsist(value.consist),
   };
 }
 
@@ -115,6 +130,29 @@ function parseDeliveries(value: unknown): Record<string, number> {
     deliveries[id] = Math.min(count, MAX_DELIVERED_CRATES);
   }
   return deliveries;
+}
+
+/**
+ * Per-train wagon presets. Additive data, so it is read forgivingly: only
+ * the known locomotives are read (extra keys from hand-edited saves are
+ * ignored, so `__proto__` can never sneak in), unknown presets fall back to
+ * classic, and anything missing or malformed means an all-classic consist.
+ */
+function parseConsist(value: unknown): TrainConsist {
+  const consist = defaultConsist();
+  if (!isRecord(value)) return consist;
+  for (const kind of TRAIN_KINDS) {
+    consist[kind] = resolveWagonPreset(value[kind]);
+  }
+  return consist;
+}
+
+/** True when every locomotive pulls the default classic pair. */
+function isClassicConsist(consist: TrainConsist): boolean {
+  for (const kind of TRAIN_KINDS) {
+    if (consist[kind] !== DEFAULT_WAGON_PRESET) return false;
+  }
+  return true;
 }
 
 /**
@@ -189,5 +227,5 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function emptyWorld(): WorldData {
-  return { pieces: [], scenery: [], train: 'steam', deliveries: {} };
+  return { pieces: [], scenery: [], train: 'steam', deliveries: {}, consist: defaultConsist() };
 }

@@ -12,6 +12,7 @@
 import type { WorldData } from './save';
 import type { PlacedScenery, SceneryKind } from './scenery';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
+import { defaultConsist } from './wagons';
 
 export type StarterPresetId = 'cozy-oval' | 'station-village' | 'river-crossing';
 
@@ -41,7 +42,7 @@ function decor(entries: ReadonlyArray<readonly [SceneryKind, number, number]>): 
 }
 
 function starter(pieces: PlacedPiece[], scenery: PlacedScenery[]): WorldData {
-  return { pieces, scenery, train: 'steam', deliveries: {} };
+  return { pieces, scenery, train: 'steam', deliveries: {}, consist: defaultConsist() };
 }
 
 /** The first-run default: a 10-piece oval on the west bank + station and trees. */

@@ -3,6 +3,7 @@ import { deserializePreferences, serializeWorld, type WorldSnapshot } from '../c
 import type { PlacedScenery } from '../core/scenery';
 import type { PlacedPiece } from '../core/track-graph';
 import type { TrainKind } from '../core/trains';
+import type { TrainConsist } from '../core/wagons';
 
 const DATABASE_NAME = 'tiny-tracks';
 const DATABASE_VERSION = 1;
@@ -39,11 +40,19 @@ interface WorldReader {
   pieces(): readonly PlacedPiece[];
   scenery(): readonly PlacedScenery[];
   deliveries(): Record<string, number>;
+  consist(): TrainConsist;
   subscribe(listener: () => void): () => void;
 }
 
 function snapshotOf(world: WorldReader, muted: boolean): WorldSnapshot {
-  return serializeWorld(world.pieces(), world.scenery(), world.train(), muted, world.deliveries());
+  return serializeWorld(
+    world.pieces(),
+    world.scenery(),
+    world.train(),
+    muted,
+    world.deliveries(),
+    world.consist(),
+  );
 }
 
 export function watchWorldPersistence(

@@ -8,6 +8,7 @@ import {
 } from './save';
 import type { PlacedScenery } from './scenery';
 import type { PlacedPiece } from './track-graph';
+import { defaultConsist, withConsistPreset } from './wagons';
 
 const pieces: PlacedPiece[] = [
   { id: 'piece-4', type: 'corner', cell: { x: 2, y: 3 }, rotation: 90 },
@@ -28,7 +29,13 @@ describe('world snapshots', () => {
   it('round-trips tracks, scenery, and train without changing order or fields', () => {
     const snapshot = serializeWorld(pieces, scenery, 'tram');
 
-    expect(deserializeWorld(snapshot)).toEqual({ pieces, scenery, train: 'tram', deliveries: {} });
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery,
+      train: 'tram',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
   });
 
   it('restores steam for legacy snapshots without a train field', () => {
@@ -37,6 +44,7 @@ describe('world snapshots', () => {
       scenery,
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -46,6 +54,7 @@ describe('world snapshots', () => {
       scenery,
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -55,18 +64,21 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
     expect(deserializeWorld({ version: 4, pieces, scenery })).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
     expect(deserializeWorld({ version: 1, pieces: 'bad', scenery: [] })).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -82,6 +94,7 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -101,12 +114,19 @@ describe('world snapshots', () => {
       scenery: townAndCritters,
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
   it('loads a legacy world of only V1 kinds unchanged', () => {
     const legacy = serializeWorld(pieces, scenery, 'steam');
-    expect(deserializeWorld(legacy)).toEqual({ pieces, scenery, train: 'steam', deliveries: {} });
+    expect(deserializeWorld(legacy)).toEqual({
+      pieces,
+      scenery,
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
   });
 
   it('drops unknown scenery kinds but keeps the rest of the world', () => {
@@ -129,6 +149,7 @@ describe('world snapshots', () => {
       ],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -146,6 +167,7 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -162,6 +184,7 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -177,6 +200,7 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -194,6 +218,7 @@ describe('world snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 });
@@ -215,13 +240,20 @@ describe('tunnel snapshots', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
   it('restores a persisted v2 snapshot containing tunnels verbatim', () => {
     expect(
       deserializeWorld({ version: 2, pieces: [tunnelPiece], scenery: [], train: 'diesel' }),
-    ).toEqual({ pieces: [tunnelPiece], scenery: [], train: 'diesel', deliveries: {} });
+    ).toEqual({
+      pieces: [tunnelPiece],
+      scenery: [],
+      train: 'diesel',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
   });
 
   it('keeps rejecting unknown piece types — the tunnel is catalog-listed, anything else is not', () => {
@@ -231,7 +263,13 @@ describe('tunnel snapshots', () => {
         pieces: [{ id: 'piece-1', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 }],
         scenery: [],
       }),
-    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+    ).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
   });
 });
 
@@ -251,6 +289,7 @@ describe('hill snapshots — additive piece types', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -270,6 +309,7 @@ describe('hill snapshots — additive piece types', () => {
       scenery: [],
       train: 'tram',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -285,6 +325,7 @@ describe('hill snapshots — additive piece types', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -295,7 +336,13 @@ describe('hill snapshots — additive piece types', () => {
         pieces: [{ id: 'piece-1', type: 'rollercoaster', cell: { x: 0, y: 0 }, rotation: 0 }],
         scenery: [],
       }),
-    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+    ).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
   });
 });
 
@@ -316,6 +363,7 @@ describe('switch snapshots — additive piece types', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -335,6 +383,7 @@ describe('switch snapshots — additive piece types', () => {
       scenery: [],
       train: 'diesel',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -351,6 +400,7 @@ describe('switch snapshots — additive piece types', () => {
       scenery: [],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 });
@@ -381,6 +431,7 @@ describe('delivery snapshots — per-station crate counts', () => {
       scenery: [station],
       train: 'steam',
       deliveries: { 'scenery-1': 4 },
+      consist: defaultConsist(),
     });
   });
 
@@ -390,6 +441,7 @@ describe('delivery snapshots — per-station crate counts', () => {
       scenery: [station],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 
@@ -414,6 +466,7 @@ describe('delivery snapshots — per-station crate counts', () => {
       scenery: [station],
       train: 'steam',
       deliveries: { 'scenery-1': 3 },
+      consist: defaultConsist(),
     });
   });
 
@@ -430,6 +483,7 @@ describe('delivery snapshots — per-station crate counts', () => {
       scenery: [station],
       train: 'steam',
       deliveries: { 'scenery-1': 8 },
+      consist: defaultConsist(),
     });
   });
 
@@ -446,6 +500,7 @@ describe('delivery snapshots — per-station crate counts', () => {
       scenery: [station],
       train: 'steam',
       deliveries: {},
+      consist: defaultConsist(),
     });
   });
 });
@@ -565,6 +620,71 @@ describe('river migration — v1 snapshots load as v2 bridges', () => {
   it('still refuses broken v1 snapshots — migration never weakens validation', () => {
     expect(
       deserializeWorld({ version: 1, pieces: [{ id: 'x', type: 'nope' }], scenery: [] }),
-    ).toEqual({ pieces: [], scenery: [], train: 'steam', deliveries: {} });
+    ).toEqual({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+});
+
+describe('wagon consist snapshots — per-train presets', () => {
+  it('omits the consist when every train pulls classic', () => {
+    expect(serializeWorld(pieces, scenery, 'steam')).toEqual({
+      version: 3,
+      pieces,
+      scenery,
+      train: 'steam',
+    });
+  });
+
+  it('round-trips per-train presets', () => {
+    const consist = withConsistPreset(
+      withConsistPreset(defaultConsist(), 'diesel', 'coal'),
+      'tram',
+      'container',
+    );
+    const snapshot = serializeWorld(pieces, scenery, 'diesel', false, {}, consist);
+
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery,
+      train: 'diesel',
+      deliveries: {},
+      consist,
+    });
+  });
+
+  it('loads pre-workshop snapshots as all-classic', () => {
+    expect(deserializeWorld({ version: 3, pieces, scenery, train: 'tram' })).toEqual({
+      pieces,
+      scenery,
+      train: 'tram',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('forgives corrupt consist entries back to classic', () => {
+    const raw = JSON.parse(
+      JSON.stringify({
+        version: 3,
+        pieces,
+        scenery,
+        train: 'steam',
+        consist: { steam: 'coal', diesel: 'rocket', tram: null, rocket: 'tank' },
+      }),
+    );
+
+    expect(deserializeWorld(raw).consist).toEqual({ ...defaultConsist(), steam: 'coal' });
+  });
+
+  it('forgives a non-record consist field', () => {
+    expect(deserializeWorld({ version: 3, pieces, scenery, consist: 'coal duo' }).consist).toEqual(
+      defaultConsist(),
+    );
   });
 });
