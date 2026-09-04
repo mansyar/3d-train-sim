@@ -102,13 +102,13 @@ Phase 3 closes with e2e, docs, and final gates.
   - [ ] Blades visibly flip to the chosen branch on alternation (short
         tween; instant snap under `prefers-reduced-motion`);
         event-driven, no per-frame cost outside the tween
-- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — commit `PHASE2_CHECKPOINT`
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — commit `e7eb9be`
   - Verification Report (Phase 2): scope = recipe + GLB + renderer +
     ride tests; no new logic files. `CI=true pnpm test -- --coverage`
     → 34 files / 542 pass, 0 fixes needed. `tsc` + `biome` clean.
     Manual tablet gate (left-branch rails, blade flip, smooth ride, icon
     match) confirmed by the user.
-  - [checkpoint: PHASE2_CHECKPOINT]
+  - [checkpoint: e7eb9be]
 
   Notes (Phase 2 implementation — commit `2257525`):
   - Asset: `scripts/blender-switch-mirror.py` — standalone deterministic
