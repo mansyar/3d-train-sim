@@ -78,5 +78,5 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 ## Verification Report — Phase 4 (2026-09-05)
 - Scope since Phase 3 checkpoint (`8dbd15d`): main merge (`fa3b8ca`), spec helper migration + format fixes (`6f99b58`).
 - Automated: unit 614/614 (35 files, incl. main's pace/audio suites); tsc clean; Biome clean; hills-phase2.spec 6/6 (phone + tablet); FULL e2e 105/105, incl. previously flaky wagon-workshop tablet — the stability allowlist held.
-- Manual: proposed below, awaiting explicit yes per workflow phase protocol.
+- Manual: confirmed by user 2026-09-05 (tablet 5-step check passes).
 [checkpoint:6f99b58]
