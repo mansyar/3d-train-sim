@@ -80,3 +80,14 @@ Source of truth: `spec.md`. Workflow: `conductor/workflow.md` (TDD for `src/core
 - Automated: unit 614/614 (35 files, incl. main's pace/audio suites); tsc clean; Biome clean; hills-phase2.spec 6/6 (phone + tablet); FULL e2e 105/105, incl. previously flaky wagon-workshop tablet — the stability allowlist held.
 - Manual: confirmed by user 2026-09-05 (tablet 5-step check passes).
 [checkpoint:6f99b58]
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions [35552d4]
+  - Notes: 3 Low findings fixed — track-renderer stale stand-in comment removed,
+    isCornerLike delegates to isCornerPiece (single source of truth), CHANGELOG
+    "normal speed" reworded for hill-grade pacing. Gates after fix:
+    unit 614/614, tsc clean, biome clean.
+  - Verification Report (review fixes, 2026-09-05): scope `git diff 6f99b58..35552d4`
+    (3 files, comment + delegation + copy only); automated re-run
+    614/614 pass, tsc/Biome clean; no behavior change, no manual re-check needed.
+  [checkpoint:35552d4]
