@@ -1,104 +1,96 @@
-# Spec — Wagon Workshop (DRAFT)
+# Spec — Wagon Workshop
 
 **Track ID:** `wagon-workshop_20260904` · **Type:** Feature · **Branch:** `track/wagon-workshop_20260904`
-
-> DRAFT — created with the branch so work has a home. To be refined
-> through interactive spec questions before implementation. Do not
-> implement from this draft alone.
+**Status:** Confirmed — ready for planning.
 
 ## Overview
 
 Today every locomotive (`steam`, `diesel`, `tram` in `src/core/trains.ts`)
 pulls the same two bundled wagons (lead `train-carriage-lumber` + rear
 `train-carriage-box` per `src/core/wagons.ts:19-22`) through the same
-cargo loop (`src/core/cargo.ts`: load crates at first station, confetti
-deliver at next, up to 8 crates on the platform). The Kenney kit
-already ships ~20 unused wagon/train GLBs in `public/assets/train-kit/`
-(coal, tank, lumber, flatbed, container-red/green/blue, dirt, wood…)
-that never reach the meadow.
+cargo loop (`src/core/cargo.ts`: load crates at the first station,
+confetti-deliver at the next, platform keeps up to 8 crates persisted).
 
-Wagon Workshop gives kids an icon-only way to dress their freight:
-pick wagon looks per train (or globally) from the train drawer, ride
-with the chosen consist, keep today's cargo gameplay untouched. No
-reading, no fail states, no new controls while riding.
+The Kenney kit already ships the variety in-repo
+(`public/assets/train-kit/`): coal, tank, container-red/blue, and more —
+never reaching the meadow. Wagon Workshop unlocks that variety behind an
+icon-only wagon row in the train drawer so each kid can dress THEIR
+freight. Same autonomous ride, same cargo gameplay — purely cosmetic,
+no reading, no fail states, no new controls while riding.
 
-## Context & Evidence
+Closes the `product.md:53` roadmap remainder: "colors/other variants
+still roadmap" under the shipped cargo-wagons line.
 
-- `src/core/wagons.ts` — consist is fixed; wagon kinds are pure core
-  (good TDD seam).
-- `src/scene/load-wagons.ts` — loads the two wagon GLBs, follows the
-  engine through switches/tunnels/hills via `ride-motion.ts`.
-- `src/ui/app.ts` train drawer (`TRAIN_KINDS`, `trainAria/trainIcon`) —
-  natural home for a wagon picker; mid-ride drawers hide (`riding`
-  guard) so picks happen while building.
-- `src/core/save.ts` (`SNAPSHOT_VERSION=3`) + `src/state/persistence.ts`
-  — wagon choice must persist and round-trip; additive field only, no
-  version bump if possible; pre-workshop worlds load with today's
-  lumber+box default.
-- `product.md:54,57` roadmap explicitly lists "wagon colors/other
-  variants still roadmap" — this track closes it.
-- Guidelines: icon-only UI, ≥64px targets, instant <100ms feedback with
-  pop+ding, mute-respecting, nothing leaves the device, 60 FPS.
+## Confirmed Decisions
 
-## Open Questions (for spec refinement)
+- **Per-train consist:** each of the 3 locos remembers its own wagon
+  pair (celebrates "MY train", matches per-train whistle personalities,
+  composes with up-to-4 concurrent rides).
+- **Pair presets, 4 total:** one tap applies a curated lead+rear pair —
+  no invalid combos, fewest taps.
+- **V1 lineup:** Classic (lumber+box, the default) · Coal duo · Tank
+  duo · Container red+blue. Distinct silhouettes, all in-repo GLBs.
+- **Drawer home:** wagon row inside the train drawer (`src/ui/app.ts`
+  `TRAIN_KINDS` area), icon-only chunky SVGs, ≥64px targets, pop+ding
+  <100ms, mute-respecting, auto-hidden mid-ride with the drawer.
+- **Memory:** additive save field per-train, persisted across reloads;
+  pre-workshop worlds open as Classic; no version bump if the additive
+  shape allows.
+- **Cargo untouched:** crate load/deliver/confetti/8-crate platform
+  behavior identical regardless of wagon skin.
 
-1. Scope of choice: per-train consist (each of the 3 locos remembers its
-   own wagons) vs. one global wagon set for all trains? (Recommend:
-   per-train — celebrates "MY train".)
-2. Picker shape: wagon pair presets (e.g. coal+tensor, container duo)
-   vs. independent lead/rear slots? (Recommend: 4–6 curated pair
-   presets — fewer taps, no invalid combos.)
-3. Which kit GLBs make the cut (poly/size/look on tablet)? Need a
-   measured shortlist + precache + PWA weight check (6MB
-   `maximumFileSizeToCacheInBytes` cap in mind).
-4. Does wagon choice affect cargo crates (crate look/stacking in
-   `station_crate_1..8` nodes) or stay purely cosmetic?
+## Functional Requirements
 
-## Functional Requirements (proposed)
-
-- **FR1 — Curated wagon presets.** 4–6 icon-only presets join the train
-  drawer (chunky hand-drawn SVG icons, parent-facing labels, no
-  kid-facing text). One tap applies with pop+ding (<100ms).
-- **FR2 — Pure core consist model.** Wagon choice lives in
-  `src/core/` (TDD, >80% coverage), session + persisted; pre-workshop
-  saves default to today's lumber+box.
-- **FR3 — Ride unchanged.** Chosen wagons follow the engine through
-  straights, curves, crossings, bridges, tunnels, hills, switches
-  (incl. mirror) with today's spacing; cargo load/deliver/confetti/8-
-  crate platform behavior identical.
+- **FR1 — Wagon row in train drawer.** Four icon-only preset buttons
+  (Classic / Coal / Tank / Container) sit under the loco picker. One
+  tap applies to the currently selected loco with pop+ding (<100ms,
+  silent when muted). Hidden mid-ride with the rest of the drawer.
+- **FR2 — Per-train consist model (pure core).** Wagon choice lives in
+  `src/core/` (TDD, >80% coverage): preset type, per-train mapping
+  (`steam`/`diesel`/`tram` → preset), default Classic. Session state +
+  persisted.
+- **FR3 — Ride unchanged.** Chosen wagons load via `load-wagons.ts`
+  and follow the engine through straights, curves, crossings, bridges,
+  tunnels, hills, and switches with today's spacing — no popping,
+  no derails, dead-end shuttles included.
 - **FR4 — Saves stay whole.** Additive field only; old worlds load
-  exactly; workshop worlds round-trip; wagon choice survives reload.
-- **FR5 — Drawer & guidelines.** Picks only while building (hidden
-  mid-ride like today); ≥64px targets; reduced-motion safe (no
-  camera/particle changes); mute-respecting (ding only if sound on).
+  exactly as Classic; workshop worlds round-trip through
+  `src/core/save.ts` + `src/state/persistence.ts`; choice survives
+  reload per-train.
+- **FR5 — Guidelines compliance.** Icon-only (no kid-facing text),
+  ≥64px targets, reduced-motion safe (no camera/particle changes),
+  works on tablet + phone touch viewports.
 
-## Non-Functional Requirements (proposed)
+## Non-Functional Requirements
 
-- New logic in `src/core/` — pure, TDD'd, >80% coverage; zero scene
-  coupling.
+- New logic in `src/core/` is pure TypeScript, TDD'd, >80% coverage,
+  zero `three.js` coupling per the `tech-stack.md` boundary rule.
 - No per-frame allocations in ride changes; precached GLBs only, no
-  runtime network; 60 FPS preserved; cold load <5s.
-- Kid UX per `product-guidelines.md`: no fail states — every preset
-  rides every topology including dead ends.
+  runtime network; 60 FPS preserved; cold load <5s; PWA precache
+  weight checked against the 6MB cap.
+- Kid UX per `product-guidelines.md`: every preset rides every
+  topology — no fail states, instant forgiving feedback.
 
-## Acceptance Criteria (proposed)
+## Acceptance Criteria
 
-1. Kid picks a preset from the train drawer; wagons swap with pop+ding.
-2. Press ▶ — chosen consist rides a loop, a dead-end shuttle, a tunnel,
-   a hill run, and a switch branch with wheels on rails, no popping.
+1. Kid selects a loco, taps Coal — wagons swap with pop+ding (<100ms).
+2. Press ▶ — chosen consist rides a loop, a dead-end shuttle, a
+   tunnel, a hill run, and a switch branch with wheels on rails and
+   no popping.
 3. Cargo still loads at the first station and confetti-delivers at the
-   next; platform keeps up to 8 crates.
-4. Reload restores the chosen consist; pre-workshop saves open as
-   lumber+box.
-5. `pnpm check` + Playwright green (new workshop e2e: pick preset, ride,
-   assert consist, reload restores, zero external requests, clean
-   console, tablet + phone).
+   next; the platform keeps up to 8 crates regardless of wagon skin.
+4. Reload restores each loco's chosen consist; a pre-workshop save
+   opens as Classic everywhere.
+5. `pnpm check` green (biome + `tsc --noEmit` + vitest) plus a new
+   Playwright spec (pick preset → ride → assert consist → reload
+   restores → zero external requests, clean console, tablet + phone).
 
-## Out of Scope (proposed)
+## Out of Scope
 
-- New locomotives (the ~20 unused engines stay parked; wagons only).
-- Per-wagon colors beyond curated presets; custom painters.
-- Wagon physics, capacities, or gameplay effects (purely cosmetic).
-- Loco-specific whistle samples; crossing/bridge sounds (separate
-  soundscape track).
-- Motorized/levever switching; elevation-combined wagon geometry.
+- New locomotives (unused kit engines stay parked; wagons only).
+- Independent lead/rear pickers or custom painters (pairs only).
+- Wagon physics, capacities, or gameplay effects (cosmetic only).
+- Crate restyling to match wagons; loco-specific whistle samples;
+  crossing/bridge sounds (separate soundscape track).
+- Motorized/lever switching; elevation-combined wagon geometry.
+- More than 4 presets (flatbed/dirt/wood stay parked for a follow-up).
