@@ -34,9 +34,10 @@ const resetAndBuild = (page: import('@playwright/test').Page) =>
   });
 
 test('wagons load, deliver, and the station keeps the count across a reload', async ({ page }) => {
-  // The poll below allows 45s, so the test itself must outlive it: on loaded
-  // CI runners the 30s default kills the test before a slow first lap lands.
-  test.setTimeout(90_000);
+  // The poll below allows 90s, so the test itself must outlive it: on loaded
+  // CI runners the sim crawls (software rendering) and a first lap has taken
+  // over 45s of riding before its delivery lands.
+  test.setTimeout(150_000);
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -73,7 +74,7 @@ test('wagons load, deliver, and the station keeps the count across a reload', as
             ).__tinyTracksWorld?.deliveryCount(id),
           [stationId] as const,
         )) ?? 0,
-      { timeout: 45000, intervals: [2000] },
+      { timeout: 90000, intervals: [1000] },
     )
     .toBeGreaterThanOrEqual(1);
 
