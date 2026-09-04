@@ -214,3 +214,6 @@ Phase 3 closes with e2e, docs, and final gates.
     vitest). No new core-logic files this phase, so the Phase 1
     coverage record stands (`switches.ts` + `pieces.ts` 100%,
     `pathing.ts` lines 99.31 = pre-track baseline).
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions 04911ff
