@@ -95,7 +95,8 @@ const expectClean = (
  * station's `colormap.png … due to access control checks`). It reproduces
  * with hills alone — no station, cargo, or pace logic involved — and this
  * track changes no asset-loading code, so the reload test fingerprints it
- * instead of asserting a silence WebKit cannot keep. Every behavioral
+ * instead of asserting a silence WebKit cannot keep. Scoped to the re-ride
+ * only (the first ride asserts strict silence just above). Every behavioral
  * assert in that test still runs at full strength.
  */
 const KNOWN_WEBKIT_RELOAD_NOISE: readonly ((text: string) => boolean)[] = [
@@ -183,6 +184,9 @@ test('diesel keeps a zippier pace than steam on the same hill', async ({ page })
 });
 
 test('downhill-into-station docks, resumes, and reloads with its diesel pace', async ({ page }) => {
+  // A 10 s first ride plus reload plus re-ride sampling legitimately fills
+  // the default 30 s budget on software rendering (cf. wagon-workshop).
+  test.setTimeout(120_000);
   const activity = trackActivity(page);
   await gotoReady(page);
   await clearMeadow(page);
@@ -212,6 +216,10 @@ test('downhill-into-station docks, resumes, and reloads with its diesel pace', a
   // reloading under those in-flight asset fetches logs access-control
   // noise. Toddlers only ever reload a parked meadow, so wait it out.
   await page.waitForTimeout(3500);
+  // The first ride stays zero-tolerance — the allowlist below covers only
+  // the re-ride, never this.
+  expectClean(page, activity);
+  activity.consoleErrors.length = 0;
 
   // The world comes back with its hills, its station, and its diesel —
   // and a fresh-built rig still rides at the diesel tempo (no
