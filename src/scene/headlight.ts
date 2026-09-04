@@ -21,7 +21,7 @@ export interface Headlight {
  * teardown reclaims the geometry and materials.
  */
 export function attachHeadlight(model: Object3D): Headlight {
-  // The engine's authored front faces -Z at yaw 0 (ride-motion's convention).
+  // The engine's authored front faces +Z at yaw 0 (see MODEL_YAW_OFFSET in ride-motion).
   const lampGeometry = new SphereGeometry(LAMP_RADIUS, 12, 8);
   const lampMaterial = new MeshBasicMaterial({
     color: 0xffe9b0,
@@ -29,13 +29,13 @@ export function attachHeadlight(model: Object3D): Headlight {
     opacity: 0,
   });
   const lamp = new Mesh(lampGeometry, lampMaterial);
-  lamp.position.set(0, 1.0, -1.55);
+  lamp.position.set(0, 1.0, 1.55);
   model.add(lamp);
 
   const spot = new SpotLight(0xffe2a8, 0, SPOT_DISTANCE, SPOT_ANGLE, SPOT_PENUMBRA, 1.2);
-  spot.position.set(0, 1.1, -1.5);
+  spot.position.set(0, 1.1, 1.5);
   model.add(spot);
-  const aim = new Vector3(0, 0.2, -9);
+  const aim = new Vector3(0, 0.2, 9);
   model.add(spot.target); // The target must live in the same scene graph.
   spot.target.position.copy(aim);
 
