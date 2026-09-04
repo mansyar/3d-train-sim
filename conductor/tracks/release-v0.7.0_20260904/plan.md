@@ -44,13 +44,39 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
+- [x] Task: Run the full local gate suite (6c76953)
+  - Acceptance: `pnpm check` green and the full Playwright e2e suite
+    green (rerun at `--workers=2` if GPU-context flakes recur).
+  - Progress: `pnpm check` green (biome, tsc, 566/566 vitest). E2e at
+    `--workers=2`: 89 passed, 2 failed — both the same
+    `wagon-workshop` tablet+phone test, tripping only on the
+    zero-console-errors assertion (`blob:` texture fetches blocked by
+    access-control checks in Windows headless Chromium). All functional
+    assertions in that test pass (crate delivery lands, reload restores
+    every consist). Single-spec rerun: phone passed, tablet failed the
+    same assertion — flaky across projects, pre-existing on `main`
+    (release branch is docs-only), and already flagged as environmental
+    noise in the wagon-workshop review.
+  - Decision (2026-09-04, user-confirmed): proceed with the release;
+    the ubuntu release-pipeline e2e is the authority and will safely
+    stop the release if the failure is real. The noise is filed as the
+    planned e2e-stability follow-up chore (out of scope for this track).
   - Acceptance: `pnpm check` green and the full Playwright e2e suite
     green (rerun at `--workers=2` if GPU-context flakes recur).
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2`
         if GPU-context flakes recur per the v0.5.0/v0.6.0 lessons)
-- [ ] Task: Local container smoke check
+- [x] Task: Local container smoke check (0189458)
+  - Acceptance: local `docker build` succeeds; running container
+    serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
+    `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
+    back to `index.html` — all per `nginx.conf`.
+  - Notes: `docker build -t tiny-tracks:0.7.0 .` green (image
+    0189458). Curl smoke all as specified: `/` 200 html no-cache;
+    `/sw.js` 200 no-cache; `/manifest.webmanifest` 200 no-cache;
+    hashed `/assets/index-Cr-rtSEB.js` 200 immutable; unknown route →
+    200 html (SPA fallback). Container stopped/removed. Files: none
+    (verification only).
   - Acceptance: local `docker build` succeeds; running container
     serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
     `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
