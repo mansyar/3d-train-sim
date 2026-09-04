@@ -40,7 +40,7 @@ pnpm ^11 — strict, fast, workspace-ready if tracks ever split.
 | Layer | Tool | Scope |
 |---|---|---|
 | Unit/integration | Vitest ^4 | Colocated `*.test.ts` next to modules. **TDD enforced for pure logic**: track graph, snap resolution, path following, save/load |
-| E2E smoke | Playwright ^1.62 | `e2e/` — boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors |
+| E2E smoke | Playwright ^1.62 | `e2e/` — boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors. Stability conventions (allowlisted WebKit `blob:` noise, 2-worker cap, rerun rule, ubuntu release authority): `e2e/README.md` |
 
 ## Folder structure
 
