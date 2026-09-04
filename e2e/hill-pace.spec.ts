@@ -111,6 +111,9 @@ const HILL_RUN: [string, { x: number; y: number }][] = [
 ];
 
 test('a steam climb labors and the descent breezes, never stalling', async ({ page }) => {
+  // Setup + both settled pace extremes + the puff loop legitimately fill
+  // the 30 s budget on software rendering (cf. the station test below).
+  test.setTimeout(120_000);
   const activity = trackActivity(page);
   await gotoReady(page);
   await clearMeadow(page);
@@ -123,10 +126,19 @@ test('a steam climb labors and the descent breezes, never stalling', async ({ pa
 
   // The shuttle climbs both dead-end legs within the window: the minimum
   // catches the settled labor (0.9 × 0.65 ≈ 0.585), the maximum the
-  // settled breeze (0.9 × 1.25 ≈ 1.125).
-  const pace = await samplePace(page, 45, 200);
-  expect(Math.min(...pace)).toBeLessThan(0.7);
-  expect(Math.max(...pace)).toBeGreaterThan(1.05);
+  // settled breeze (0.9 × 1.25 ≈ 1.125). Each extreme is polled for —
+  // under software rendering the traversal lags the wall clock, so a
+  // single fixed draw can miss the far leg (observed on ubuntu CI).
+  await expect
+    .poll(async () => Math.min(...(await samplePace(page, 12, 100))), {
+      timeout: 45_000,
+    })
+    .toBeLessThan(0.7);
+  await expect
+    .poll(async () => Math.max(...(await samplePace(page, 12, 100))), {
+      timeout: 45_000,
+    })
+    .toBeGreaterThan(1.05);
 
   // Per-train puffs: the laboring engine still breathes while riding.
   let puffsSeen = 0;
@@ -149,6 +161,9 @@ test('a steam climb labors and the descent breezes, never stalling', async ({ pa
 });
 
 test('diesel keeps a zippier pace than steam on the same hill', async ({ page }) => {
+  // Two ride sessions plus both settled labor readings legitimately fill
+  // the 30 s budget on software rendering (cf. the station test below).
+  test.setTimeout(120_000);
   const activity = trackActivity(page);
   await gotoReady(page);
   await clearMeadow(page);
@@ -160,21 +175,40 @@ test('diesel keeps a zippier pace than steam on the same hill', async ({ page })
   await page.waitForTimeout(800);
   await page.click('.ride-toggle');
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
-  const dieselPace = await samplePace(page, 40, 200);
-  const dieselMin = Math.min(...dieselPace);
+  // Settled labors are polled for (traversal lags the wall clock under
+  // software rendering; a single fixed draw can miss the settled grade).
+  // Thresholds sit near the settled floors (diesel ≈ 0.78, steam ≈ 0.585)
+  // rather than at the first crossing, so the ranking margin below holds
+  // no matter when the poll passes.
+  let dieselMin = 0;
+  await expect
+    .poll(
+      async () => {
+        dieselMin = Math.min(...(await samplePace(page, 12, 100)));
+        return dieselMin;
+      },
+      { timeout: 45_000 },
+    )
+    .toBeLessThan(0.85);
   await page.click('.ride-toggle');
 
   await selectTrain(page, 'steam');
   await page.waitForTimeout(800);
   await page.click('.ride-toggle');
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
-  const steamPace = await samplePace(page, 40, 200);
-  const steamMin = Math.min(...steamPace);
+  let steamMin = 1;
+  await expect
+    .poll(
+      async () => {
+        steamMin = Math.min(...(await samplePace(page, 12, 100)));
+        return steamMin;
+      },
+      { timeout: 45_000 },
+    )
+    .toBeLessThan(0.62);
 
   // Settled labors: diesel ≈ 0.78, steam ≈ 0.585 — clearly ranked.
   expect(dieselMin).toBeGreaterThan(0.7);
-  expect(dieselMin).toBeLessThan(0.9);
-  expect(steamMin).toBeLessThan(0.7);
   expect(dieselMin).toBeGreaterThan(steamMin + 0.1);
   expectClean(page, activity);
 });
