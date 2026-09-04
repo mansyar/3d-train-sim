@@ -161,15 +161,15 @@ const PIECE_URLS: Record<PieceType, string> = {
   'slope-up': '/assets/train-kit/hill-slope-up.glb',
   hill: '/assets/train-kit/hill-hill.glb',
   'slope-down': '/assets/train-kit/hill-slope-down.glb',
-  // Phase-1 stand-ins (Phase 2 authors the real GLBs via deterministic
-  // Blender recipes): the bump run reuses the hill run's embankments, the
-  // elevated corners reuse the corner's rails until their banked GLBs land.
-  'bump-up': '/assets/train-kit/hill-slope-up.glb',
-  'hill-half': '/assets/train-kit/hill-hill.glb',
-  'bump-down': '/assets/train-kit/hill-slope-down.glb',
-  'corner-up': '/assets/train-kit/railroad-corner-small.glb',
-  'hill-corner': '/assets/train-kit/railroad-corner-small.glb',
-  'corner-down': '/assets/train-kit/railroad-corner-small.glb',
+  // Blender-authored little siblings (blender-hills-phase2.py): the same
+  // kit-straight rails + embankment language at half height, plus banked
+  // elevated corners carrying the kit corner-small's own arc.
+  'bump-up': '/assets/train-kit/hill-bump-up.glb',
+  'hill-half': '/assets/train-kit/hill-hill-half.glb',
+  'bump-down': '/assets/train-kit/hill-bump-down.glb',
+  'corner-up': '/assets/train-kit/hill-corner-up.glb',
+  'hill-corner': '/assets/train-kit/hill-hill-corner.glb',
+  'corner-down': '/assets/train-kit/hill-corner-down.glb',
   // Blender-authored Y-junction (blender-switch.py): kit straight rails
   // for the through-road + kit corner rails for the diverging road on the
   // kit mount, with a named `switch_blades` node the renderer flips.
@@ -189,6 +189,14 @@ const HILL_SNOW_URLS: Partial<Record<PieceType, string>> = {
   'slope-up': '/assets/train-kit/hill-snow-slope-up.glb',
   hill: '/assets/train-kit/hill-snow-hill.glb',
   'slope-down': '/assets/train-kit/hill-snow-slope-down.glb',
+  // Hills Phase 2 crowns (blender-hills-phase2.py): proud where the piece's
+  // own crest is high, so low bumps melt first like real snow.
+  'bump-up': '/assets/train-kit/hill-snow-bump-up.glb',
+  'hill-half': '/assets/train-kit/hill-snow-hill-half.glb',
+  'bump-down': '/assets/train-kit/hill-snow-bump-down.glb',
+  'corner-up': '/assets/train-kit/hill-snow-corner-up.glb',
+  'hill-corner': '/assets/train-kit/hill-snow-hill-corner.glb',
+  'corner-down': '/assets/train-kit/hill-snow-corner-down.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
@@ -722,7 +730,10 @@ export function startTrackRenderer(
     hillSnow = visible;
     for (const type of Object.keys(HILL_SNOW_URLS) as PieceType[]) {
       const setCrown = (model: Object3D): void => {
-        const crown = model.getObjectByName(`hill_snow_${type}`);
+        // Blender node names use underscores (hill_snow_slope_up), but the
+        // piece types spell them with hyphens (slope-up) — normalize, or the
+        // crown lookup silently misses and winter never shows on ramps.
+        const crown = model.getObjectByName(`hill_snow_${type.replaceAll('-', '_')}`);
         if (crown) crown.visible = visible;
       };
       const template = templates.get(type);
