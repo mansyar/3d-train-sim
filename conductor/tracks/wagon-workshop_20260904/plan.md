@@ -17,12 +17,14 @@ observable acceptance criteria + Playwright smoke for scene/UI.
   - [x] Refactor for clarity; rerun tests
   - [x] Verify coverage >80% for new core code
   - Notes: 16/16 vitest pass (9 new Red→Green); wagons.ts 100% stmts/branch/funcs/lines; biome clean after import sort; tsc clean. Classic preset reuses today's lumber+box URLs so existing catalog tests untouched.
-- [ ] Task: Save round-trip + persistence (logic)
-  - [ ] Write failing tests: additive field serializes per-train, pre-workshop saves load as classic, workshop worlds round-trip, corrupt/unknown preset forgives to classic
-  - [ ] Implement `src/core/save.ts` additive shape (no version bump) + `src/state/` wiring to green
-  - [ ] Refactor; rerun tests
-  - [ ] Verify coverage >80% for new save/state code
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Save round-trip + persistence (logic) c1bdf8a
+  - [x] Write failing tests: additive field serializes per-train, pre-workshop saves load as classic, workshop worlds round-trip, corrupt/unknown preset forgives to classic
+  - [x] Implement `src/core/save.ts` additive shape (no version bump) + `src/state/` wiring to green
+  - [x] Refactor; rerun tests
+  - [x] Verify coverage >80% for new save/state code
+  - Notes: 9 new tests Red→Green (4 save round-trip/forgiveness + 5 store consist); 151/151 pass across save/world/starters/persistence/wagons; tsc + biome clean. `consist` omitted when all-classic (minimal snapshots, like muted/deliveries); pre-workshop saves load as classic; store `selectConsist` mirrors `selectTrain` (invalid→classic+false); consist rides hydrate/applyPreset-undo/reset; autosave + boot seed carry it.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) b3e3348
+  - Notes: scope = `d31551d` + `c1bdf8a` + `b3e3348`. Missing-tests sweep added silence-on-unchanged + consist-copy isolation (`b3e3348`). `CI=true pnpm test` → 34 files / 542 tests pass, 0 fixes. tsc + biome clean; new-code coverage >80% (uncovered lines pre-existing). No tablet-visible change yet (logic-only phase) — hands-on verification deferred to Phase 3/4 e2e.
 
 ## Phase 2 - Scene: Chosen Wagons Ride Everything
 
