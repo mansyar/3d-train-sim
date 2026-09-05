@@ -14,6 +14,10 @@ const SOUNDS: Record<string, { base: string; loop: boolean; volume: number }> = 
   'oink-pig': { base: 'oink-pig', loop: false, volume: 0.5 },
   'baa-sheep': { base: 'baa-sheep', loop: false, volume: 0.5 },
   'woof-pug': { base: 'woof-pug', loop: false, volume: 0.5 },
+  // The crossing bell loops while any crossing's gates are down. Half voice
+  // keeps the ding-ding-ding friendly under the train's voices (guidelines:
+  // capped volume, sounds reward — never startle).
+  'crossing-bell': { base: 'crossing-bell', loop: true, volume: 0.5 },
 };
 
 /** How long a stop eases the chug out. */

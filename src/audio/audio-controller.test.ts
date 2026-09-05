@@ -409,6 +409,56 @@ describe('createAudioController', () => {
     expect(handles.get('woof-pug')?.calls).toEqual(['play']);
   });
 
+  it('rings the crossing bell while gates are down and is idempotent', () => {
+    const { controller, handles, created } = makeWired();
+    controller.setCrossingBell(true);
+    controller.setCrossingBell(true);
+
+    expect(created).toEqual(['crossing-bell']);
+    expect(handles.get('crossing-bell')?.calls).toEqual(['play']);
+  });
+
+  it('eases the bell out when the crossing clears and is idempotent', () => {
+    const { controller, handles, created } = makeWired();
+    controller.setCrossingBell(true);
+    controller.setCrossingBell(false);
+    controller.setCrossingBell(false);
+
+    expect(created).toEqual(['crossing-bell']);
+    expect(handles.get('crossing-bell')?.calls.filter((c) => c === 'fade')).toHaveLength(1);
+    expect(handles.get('crossing-bell')?.calls).not.toContain('stop');
+  });
+
+  it('a bell rung while muted waits for the mute to lift', () => {
+    const { controller, handles } = makeWired();
+    controller.setMuted(true);
+    controller.setCrossingBell(true);
+    expect(handles.get('crossing-bell')?.calls ?? []).not.toContain('play');
+
+    controller.setMuted(false);
+    expect(handles.get('crossing-bell')?.calls).toContain('play');
+  });
+
+  it('stopping the bell while muted stays silent on unmute', () => {
+    const { controller, handles } = makeWired();
+    controller.setMuted(true);
+    controller.setCrossingBell(true);
+    controller.setCrossingBell(false);
+    controller.setMuted(false);
+
+    expect(handles.get('crossing-bell')?.calls ?? []).not.toContain('play');
+  });
+
+  it('a ringing bell speaks again after the tab is hidden and shown', () => {
+    const { controller, handles } = makeWired();
+    controller.setCrossingBell(true);
+    handles.get('crossing-bell')?.calls.splice(0); // drop the first play
+    controller.suspend();
+    controller.resume();
+
+    expect(handles.get('crossing-bell')?.calls).toEqual(['play']);
+  });
+
   it('notifies chug-beat listeners once for each beat while chugging', () => {
     const { controller, emitChugBeat } = makeWired();
     const beats: number[] = [];

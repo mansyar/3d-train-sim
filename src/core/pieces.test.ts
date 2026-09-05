@@ -20,7 +20,7 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, bridge, tunnel, the hill run, both switches, the bump half-run, and the elevated corner run', () => {
+  it('offers exactly the piece set: straight, corner, crossing, crossing gate, bridge, tunnel, the hill run, both switches, the bump half-run, and the elevated corner run', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
       'bump-down',
@@ -29,6 +29,7 @@ describe('piece catalog', () => {
       'corner-down',
       'corner-up',
       'crossing',
+      'crossing-gate',
       'hill',
       'hill-corner',
       'hill-half',
@@ -268,5 +269,21 @@ describe('endpointsFor — crossing', () => {
   it('is rotation-invariant (4-fold symmetric)', () => {
     expect(endpointsFor('crossing', 90)).toEqual(endpointsFor('crossing', 0));
     expect(endpointsFor('crossing', 270)).toEqual(endpointsFor('crossing', 0));
+  });
+});
+
+describe('crossing-gate piece geometry', () => {
+  it('joins opposite edges exactly like a straight — the road crosses, the rail rides through', () => {
+    expect(endpointsFor('crossing-gate', 0)).toEqual(['north', 'south']);
+    expect(endpointsFor('crossing-gate', 90)).toEqual(['east', 'west']);
+    // Symmetric under 180°, same as the straight it mirrors.
+    expect(endpointsFor('crossing-gate', 180)).toEqual(['north', 'south']);
+    expect(endpointsFor('crossing-gate', 270)).toEqual(['east', 'west']);
+  });
+
+  it('gives the crossing gate exactly two endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('crossing-gate', rotation)).toHaveLength(2);
+    }
   });
 });

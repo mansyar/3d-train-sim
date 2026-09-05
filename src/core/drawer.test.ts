@@ -21,6 +21,7 @@ describe('drawerTabs', () => {
       'straight',
       'corner',
       'crossing',
+      'crossing-gate',
       'bump-up',
       'hill-half',
       'bump-down',
@@ -52,7 +53,7 @@ describe('drawerTabs', () => {
 
   it('covers every catalog kind exactly once across all tabs', () => {
     const all = drawerTabs().flatMap((tab) => tab.kinds);
-    expect(all).toHaveLength(SCENERY_KINDS.length + 16); // + 16 track pieces
+    expect(all).toHaveLength(SCENERY_KINDS.length + 17); // + 17 track pieces
     expect(new Set(all).size).toBe(all.length);
   });
 
@@ -75,6 +76,7 @@ describe('tabForKind', () => {
     expect(tabForKind('straight')).toBe('rails');
     expect(tabForKind('corner')).toBe('rails');
     expect(tabForKind('crossing')).toBe('rails');
+    expect(tabForKind('crossing-gate')).toBe('rails');
     expect(tabForKind('bump-up')).toBe('rails');
     expect(tabForKind('hill-half')).toBe('rails');
     expect(tabForKind('bump-down')).toBe('rails');

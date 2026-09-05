@@ -110,7 +110,15 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-mirror')).toBeNull();
   });
 
-  it('rejects the bump run on river water — dry-land toys like every non-bridge piece', () => {
+  it('rejects the crossing gate on river water - a road meets the rail on dry land', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'crossing-gate')).toBe('water');
+  });
+
+  it('accepts a crossing gate on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'crossing-gate')).toBeNull();
+  });
+
+  it('rejects the bump run on river water - dry-land toys like every non-bridge piece', () => {
     expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-up')).toBe('water');
     expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill-half')).toBe('water');
     expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-down')).toBe('water');

@@ -3,6 +3,7 @@ export const PIECE_TYPES = [
   'straight',
   'corner',
   'crossing',
+  'crossing-gate',
   'bridge',
   'tunnel',
   'slope-up',
@@ -65,6 +66,11 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   straight: ['north', 'south'],
   corner: ['north', 'east'],
   crossing: ['north', 'east', 'south', 'west'],
+  // The railway crossing gate rides exactly like the straight it mirrors —
+  // the road crosses at grade, the rail rolls straight through (never a
+  // pause, never a slowdown). Only its terrain rule (dry land), its model,
+  // and the gate's proximity show (crossings.ts) differ.
+  'crossing-gate': ['north', 'south'],
   // The bridge rides exactly like the straight it mirrors — trains cross at
   // normal speed and height; only its terrain rule differs.
   bridge: ['north', 'south'],

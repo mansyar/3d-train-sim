@@ -18,6 +18,7 @@ import {
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { AudioController } from '../audio/audio-controller';
 import { MAX_DELIVERED_CRATES } from '../core/cargo';
+import { advanceCrossing, type CrossingMotion, idleCrossing } from '../core/crossings';
 import { PIECE_TYPES, type PieceType } from '../core/pieces';
 import {
   type PlacedScenery,
@@ -58,6 +59,10 @@ const BASE_YAW: Record<PieceType, number> = {
   corner: -Math.PI / 2,
   // 4-fold symmetric: every yaw looks identical, so rotation is a no-op.
   crossing: 0,
+  // The crossing gate rides like the straight it mirrors; its road lies
+  // across the rail at yaw 0 (north–south road ends east–west) — the
+  // authored GLB carries the same frame as the straight, so no extra yaw.
+  'crossing-gate': 0,
   // Placeholder until the trestle model lands (Phase 2): rides like a straight.
   bridge: 0,
   // The tunnel rides like the straight it mirrors; the dome is yaw-symmetric.
@@ -116,6 +121,10 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // model-space point as the straight's rail midpoint: x=0, underside y=−1,
   // mid-length z=2 — the cell centre the graph pivots rides around.
   crossing: [0, -1, 2],
+  // The crossing gate: authored on the straight's mount (the rail half IS
+  // the kit straight), so the same anchor lands the rails flush with
+  // neighbours until the dedicated GLB replaces the placeholder.
+  'crossing-gate': [0, -1, 2],
   // Placeholder until the trestle model lands (Phase 2): same anchor as the
   // straight it mirrors.
   bridge: [0, -1, 2],
@@ -149,6 +158,9 @@ const PIECE_URLS: Record<PieceType, string> = {
   straight: '/assets/train-kit/railroad-straight.glb',
   corner: '/assets/train-kit/railroad-corner-small.glb',
   crossing: '/assets/train-kit/railroad-crossing.glb',
+  // The Blender-authored gate crossing: straight rails through a road strip,
+  // crossbuck + swinging barrier arms + blinking lantern + winter snow cap.
+  'crossing-gate': '/assets/train-kit/crossing-gate.glb',
   // Placeholder until the trestle model lands (Phase 2).
   bridge: '/assets/train-kit/railroad-straight.glb',
   // The Blender-authored dome: named nodes carry the portal arches and the
@@ -277,6 +289,18 @@ export interface TrackRenderer {
   setTunnelSnow(visible: boolean): void;
   /** Flip a switch's point blades to the chosen road (event-driven). */
   setSwitchRoad(pieceId: string, exit: Edge): void;
+  /** Advance every crossing gate toward the trains; poses the arms, lantern,
+   *  and bell ask. `trains` are riding trains' world-space spots, `night` the
+   *  0..1 night factor (idle lanterns glow softly after dusk). */
+  updateCrossings(dt: number, trains: ReadonlyArray<{ x: number; z: number }>, night: number): void;
+  /** Winter tell: show/hide the crossing's snow cap (event-driven). */
+  setCrossingSnow(visible: boolean): void;
+
+  /** Debug aid: every placed crossing's live phase ('idle'|'closing'|
+   *  'active'|'lifting'), for e2e witnesses. */
+  crossingPhases(): string[];
+  /** Debug aid: whether the crossing bell edge is ringing right now. */
+  bellRinging(): boolean;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -344,6 +368,8 @@ export function startTrackRenderer(
       scene.remove(model);
       rendered.delete(item.id);
       bladeTweens.delete(item.id);
+      crossingParts.delete(item.id);
+      crossingMotions.delete(item.id);
       model = undefined;
     }
     if (!model) {
@@ -351,6 +377,7 @@ export function startTrackRenderer(
       model.userData.renderedKind = kind;
       scene.add(model);
       rendered.set(item.id, model);
+      if (kind === 'crossing-gate') trackCrossing(item.id, model);
     }
     model.position.set(x, 0, z);
     model.rotation.y = yaw;
@@ -364,6 +391,8 @@ export function startTrackRenderer(
       if (!wanted.has(id)) {
         popOut(model); // A soft scale-down pop, then the mesh leaves the scene.
         rendered.delete(id);
+        crossingParts.delete(id);
+        crossingMotions.delete(id);
       }
     }
     tracked.clear();
@@ -694,6 +723,161 @@ export function startTrackRenderer(
   }
 
   let tunnelSnow = false;
+  // ── Railway crossing gates ──────────────────────────────────────────────
+  // The Phase 1 core machine (advanceCrossing) owns each gate's phase; this
+  // layer only poses the arm pivots, the lantern glow, and the bell ask.
+  // Cost is a few transforms + emissive writes per frame while a gate is
+  // awake — no allocations, no rAF of its own.
+
+  const GATE_OPEN_Y = Math.PI / 2; // The authored open pose arrives as +y via export_yup.
+  const CROSSING_BLINK_HZ = 2; // Classic alternating warn blink.
+  const CROSSING_ACTIVE_GLOW = 3;
+  const CROSSING_IDLE_BLINK_HZ = 0.8; // A slow night-light waltz.
+  const CROSSING_IDLE_GLOW = 0.9;
+  const CROSSING_NIGHT_THRESHOLD = 0.35;
+  const CROSSING_SQUASH = 0.3; // Arms flatten mid-swing, spring back at rest.
+  const CROSSING_STRETCH = 0.14;
+  const easeOut = (t: number): number => 1 - (1 - t) * (1 - t) * (1 - t);
+
+  let crossingSnow = false;
+  let crossingBell = false;
+  /** Runtime gate state per crossing — derived from the trains, never saved. */
+  const crossingMotions = new Map<string, CrossingMotion>();
+  /** Cached pose targets + per-clone lamp materials, so each gate's lantern
+   *  blinks alone (placed clones share template materials otherwise). */
+  const crossingParts = new Map<
+    string,
+    {
+      east: Object3D | null;
+      west: Object3D | null;
+      lampA: MeshStandardMaterial | null;
+      lampB: MeshStandardMaterial | null;
+    }
+  >();
+
+  /** Cache a crossing clone's arm pivots and give it its own lamp materials. */
+  function trackCrossing(id: string, model: Object3D): void {
+    const east = model.getObjectByName('crossing_gate_east') ?? null;
+    const west = model.getObjectByName('crossing_gate_west') ?? null;
+    let lampA: MeshStandardMaterial | null = null;
+    let lampB: MeshStandardMaterial | null = null;
+    model.traverse((node) => {
+      const mesh = node as Mesh;
+      if (!mesh.isMesh) return;
+      const slots = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (let i = 0; i < slots.length; i++) {
+        const material = slots[i] as MeshStandardMaterial;
+        if (material.name !== 'crossing_lamp_0' && material.name !== 'crossing_lamp_1') continue;
+        const glow = material.clone();
+        glow.emissive.setRGB(0.9, 0.08, 0.05); // Red warn light, dark until told.
+        glow.emissiveIntensity = 0;
+        if (material.name === 'crossing_lamp_0') lampA = glow;
+        else lampB = glow;
+        if (Array.isArray(mesh.material)) mesh.material[i] = glow;
+        else mesh.material = glow;
+      }
+    });
+    crossingParts.set(id, { east, west, lampA, lampB });
+  }
+
+  /** Scratch cell-space train spots — filled per frame, never reallocated. */
+  const trainPool: Array<{ x: number; y: number }> = [];
+  const trainView: Array<{ x: number; y: number }> = [];
+
+  function updateCrossings(
+    dt: number,
+    trains: ReadonlyArray<{ x: number; z: number }>,
+    night: number,
+  ): void {
+    if (disposed) return;
+    // Trains ride in world units; the core reasons in cell space.
+    trainView.length = trains.length;
+    for (let i = 0; i < trains.length; i++) {
+      const spot = trains[i];
+      if (!spot) continue;
+      let cell = trainPool[i];
+      if (!cell) {
+        cell = { x: 0, y: 0 };
+        trainPool[i] = cell;
+      }
+      cell.x = (spot.x + GROUND_SIZE / 2) / CELL_SIZE - 0.5;
+      cell.y = (spot.z + GROUND_SIZE / 2) / CELL_SIZE - 0.5;
+      trainView[i] = cell;
+    }
+    const seconds = performance.now() / 1000;
+    const beat = Math.floor(seconds * CROSSING_BLINK_HZ * 2) % 2 === 0;
+    const breathe = 0.5 + 0.5 * Math.sin(seconds * Math.PI * 2 * CROSSING_IDLE_BLINK_HZ);
+    const idleGlow = night > CROSSING_NIGHT_THRESHOLD ? CROSSING_IDLE_GLOW * breathe * night : 0;
+    let anyAwake = false;
+    for (const [id, item] of tracked) {
+      if (!isPiece(item) || item.type !== 'crossing-gate') continue;
+      const model = rendered.get(id);
+      const parts = crossingParts.get(id);
+      if (!model || !parts) continue;
+      let motion = crossingMotions.get(id);
+      if (!motion) {
+        motion = idleCrossing();
+        crossingMotions.set(id, motion);
+      }
+      advanceCrossing(motion, item.cell, trainView, dt, motion);
+      if (motion.phase !== 'idle') anyAwake = true;
+      // Arm swing: 1 = up, 0 = down. Closing descends 1 → 0, lifting rises
+      // 0 → 1, both with the blades' gentle ease-out. The squash-and-stretch
+      // bump peaks mid-swing. Reduced motion snaps the pose, no wobble.
+      let open: number;
+      if (motion.phase === 'closing') open = 1 - easeOut(motion.progress);
+      else if (motion.phase === 'lifting') open = easeOut(motion.progress);
+      else open = motion.phase === 'active' ? 0 : 1;
+      let bump = Math.sin(Math.PI * open);
+      if (reducedMotion) {
+        open = motion.phase === 'active' || motion.phase === 'closing' ? 0 : 1;
+        bump = 0;
+      }
+      const stretch = 1 + CROSSING_STRETCH * bump;
+      const squash = 1 - CROSSING_SQUASH * bump;
+      if (parts.east) {
+        parts.east.rotation.y = -GATE_OPEN_Y * open;
+        parts.east.scale.set(stretch, squash, stretch);
+      }
+      if (parts.west) {
+        parts.west.rotation.y = GATE_OPEN_Y * open;
+        parts.west.scale.set(stretch, squash, stretch);
+      }
+      // Lantern: hard alternating blink while awake (any time of day); a
+      // soft paired night-light while it rests after dusk. Reduced motion
+      // swaps the 2 Hz strobe for a steady warn glow on both lamps.
+      const awake = motion.phase !== 'idle';
+      const blinkA = beat ? CROSSING_ACTIVE_GLOW : 0;
+      const blinkB = beat ? 0 : CROSSING_ACTIVE_GLOW;
+      const glowA = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkA) : idleGlow;
+      const glowB = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkB) : idleGlow;
+      if (parts.lampA) parts.lampA.emissiveIntensity = glowA;
+      if (parts.lampB) parts.lampB.emissiveIntensity = glowB;
+    }
+    // The bell rings while any gate is awake and eases off when the last
+    // one rests — audio is change-gated, so only edges nudge it.
+    if (anyAwake !== crossingBell) {
+      crossingBell = anyAwake;
+      audio.setCrossingBell(anyAwake);
+    }
+  }
+
+  /** Winter tell: the crossing wears a snow cap like the tunnel domes. */
+  function setCrossingSnow(visible: boolean): void {
+    if (visible === crossingSnow) return;
+    crossingSnow = visible;
+    const setCap = (model: Object3D): void => {
+      const cap = model.getObjectByName('crossing_snow_cap');
+      if (cap) cap.visible = visible;
+    };
+    const template = templates.get('crossing-gate');
+    if (template) setCap(template);
+    for (const [id, model] of rendered) {
+      const item = tracked.get(id);
+      if (item && isPiece(item) && item.type === 'crossing-gate') setCap(model);
+    }
+  }
+
   function setTunnelSnow(visible: boolean): void {
     if (visible === tunnelSnow) return;
     tunnelSnow = visible;
@@ -771,6 +955,13 @@ export function startTrackRenderer(
           // Clones inherit the template's state.
           const cap = model.getObjectByName('tunnel_snow_cap');
           if (cap) cap.visible = tunnelSnow;
+        }
+        if (type === 'crossing-gate') {
+          // The snow cap is a winter-only tell — hidden unless snow already
+          // settled while the asset was in flight (setCrossingSnow is
+          // change-driven, so the template must honor the live state).
+          const cap = model.getObjectByName('crossing_snow_cap');
+          if (cap) cap.visible = crossingSnow;
         }
         if (type in HILL_SNOW_URLS) {
           // The crown may have landed before its piece template did.
@@ -889,6 +1080,14 @@ export function startTrackRenderer(
     setTunnelSnow,
     setHillSnow,
     setSwitchRoad,
+    updateCrossings,
+    setCrossingSnow,
+    // Dev/e2e witnesses: live crossing phases and the bell edge state.
+    crossingPhases: () =>
+      [...tracked.values()]
+        .filter((item) => isPiece(item) && item.type === 'crossing-gate')
+        .map((item) => crossingMotions.get(item.id)?.phase ?? 'idle'),
+    bellRinging: () => crossingBell,
     dispose(): void {
       disposed = true;
       unsubscribe();
@@ -898,6 +1097,8 @@ export function startTrackRenderer(
       if (bladeRaf !== null) cancelAnimationFrame(bladeRaf);
       bladeRaf = null;
       bladeTweens.clear();
+      crossingMotions.clear();
+      crossingParts.clear();
       for (const pop of pops) scene.remove(pop.model);
       pops.length = 0;
       for (const model of rendered.values()) scene.remove(model);

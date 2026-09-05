@@ -29,7 +29,7 @@ Supporting guardrails:
 - No multi-language, no accounts, no cloud sync, no app store distribution.
 
 ## Core Gameplay Loop
-1. **Build:** drag track pieces (straights, 90° curves, crossings, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away. A ↩️ take-back in the bottom bar undoes the very last move.
+1. **Build:** drag track pieces (straights, 90° curves, crossings, a railway crossing gate, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away. A ↩️ take-back in the bottom bar undoes the very last move.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
 3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
 crate there, loaded wagons deliver theirs in a confetti burst, and the station's
@@ -56,7 +56,8 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 - ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow.
 - ~~Elevation~~ — ✅ shipped (hills-ramps_20260903, 2026-09-03): the meadow gains real height — a three-piece hill run (`slope-up` climbs, `hill` cruises the crest, `slope-down` descends) with gentle auto-blending at any joint, chase camera following over the top, and winter snow crowns. ✅ phase 2 shipped (hills-phase2_20260904, 2026-09-04): the gentle half-height bump run and the banked elevated corners.
 - ~~Station cargo gameplay~~ — ✅ shipped (cargo-pickups_20260902, 2026-09-02): wagons load crates at a station and deliver at the next — confetti burst, and the station's platform (Kenney-matched restyle, Blender-authored) accumulates up to 8 delivered crates that persist in the save.
-- Time of day and weather
+- **Time of day and weather** — ✅ shipped (time-of-day-weather_20260830, 2026-08-30): dawn→noon→dusk→night sky, warm window glows, rain and snow with ground whitening, headlight, tunnel portal glow at night.
+- Railway crossing gate — ✅ shipped (railway-crossing-gate_20260905, 2026-09-05): a road-level crossing piece on the Rails tab; any train's approach swings the little red-and-white gates shut with a blinking lantern and a soft CC0 bell, the pass lifts them, and the piece wears a snow cap in winter (Blender-authored via a checked-in recipe).
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
 
 ## Platform & Technical Requirements

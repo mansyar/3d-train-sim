@@ -102,7 +102,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
   await expect(tabs).toHaveCount(5);
 
   const counts: Record<string, number> = {
-    rails: 9,
+    rails: 10,
     adventure: 7,
     nature: 3,
     town: 3,

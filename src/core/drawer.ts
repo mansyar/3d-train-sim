@@ -26,6 +26,7 @@ const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
   straight: 'rails',
   corner: 'rails',
   crossing: 'rails',
+  'crossing-gate': 'rails',
   'bump-up': 'rails',
   'hill-half': 'rails',
   'bump-down': 'rails',
