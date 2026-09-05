@@ -672,7 +672,7 @@ test('steam puffs emit during rides, stop cleanly, and cover the fleet', async (
   });
 
   await page.click('[data-drawer="trains"]');
-  for (const train of ['diesel', 'tram', 'steam']) {
+  for (const train of ['diesel', 'tram', 'steam', 'express', 'freight', 'bullet']) {
     await page.locator(`.train-slot[data-train="${train}"]`).click();
     await expect(page.locator(`.train-slot[data-train="${train}"]`)).toHaveAttribute(
       'aria-pressed',
