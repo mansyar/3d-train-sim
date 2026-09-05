@@ -17,7 +17,18 @@ describe('drawerTabs', () => {
 
   it('holds the basic track pieces on the Rails tab, in piece order', () => {
     const rails = drawerTabs().find((tab) => tab.id === 'rails');
-    expect(rails?.kinds).toEqual<PieceType[]>(['straight', 'corner', 'crossing', 'crossing-gate']);
+    expect(rails?.kinds).toEqual<PieceType[]>([
+      'straight',
+      'corner',
+      'crossing',
+      'crossing-gate',
+      'bump-up',
+      'hill-half',
+      'bump-down',
+      'corner-up',
+      'hill-corner',
+      'corner-down',
+    ]);
   });
 
   it('holds the adventure pieces on the Adventure tab, in piece order', () => {
@@ -42,7 +53,7 @@ describe('drawerTabs', () => {
 
   it('covers every catalog kind exactly once across all tabs', () => {
     const all = drawerTabs().flatMap((tab) => tab.kinds);
-    expect(all).toHaveLength(SCENERY_KINDS.length + 11); // + 11 track pieces
+    expect(all).toHaveLength(SCENERY_KINDS.length + 17); // + 17 track pieces
     expect(new Set(all).size).toBe(all.length);
   });
 
@@ -66,6 +77,12 @@ describe('tabForKind', () => {
     expect(tabForKind('corner')).toBe('rails');
     expect(tabForKind('crossing')).toBe('rails');
     expect(tabForKind('crossing-gate')).toBe('rails');
+    expect(tabForKind('bump-up')).toBe('rails');
+    expect(tabForKind('hill-half')).toBe('rails');
+    expect(tabForKind('bump-down')).toBe('rails');
+    expect(tabForKind('corner-up')).toBe('rails');
+    expect(tabForKind('hill-corner')).toBe('rails');
+    expect(tabForKind('corner-down')).toBe('rails');
   });
 
   it('maps adventure pieces to the Adventure tab', () => {

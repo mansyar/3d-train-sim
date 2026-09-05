@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   easedHeightAt,
   HILL_BLEND_FRACTION,
+  HILL_HALF_HEIGHT,
   HILL_HEIGHT,
   heightAt,
   type RideSpan,
@@ -64,6 +65,34 @@ describe('heightAt — piecewise-linear profiles in the piece base frame', () =>
     expect(heightAt('slope-up', 0.25)).toBeCloseTo(HILL_HEIGHT / 4, 6);
     expect(heightAt('slope-up', 0.75)).toBeCloseTo((HILL_HEIGHT * 3) / 4, 6);
   });
+
+  it('humps 0 → HALF across the cell for bump-up (gentle sibling at half height)', () => {
+    expect(heightAt('bump-up', 0)).toBeCloseTo(0, 6);
+    expect(heightAt('bump-up', 0.5)).toBeCloseTo(HILL_HALF_HEIGHT / 2, 6);
+    expect(heightAt('bump-up', 1)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+  });
+
+  it('cruises at constant HALF for hill-half', () => {
+    expect(heightAt('hill-half', 0)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(heightAt('hill-half', 0.5)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(heightAt('hill-half', 1)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+  });
+
+  it('settles HALF → 0 across the cell for bump-down', () => {
+    expect(heightAt('bump-down', 0)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(heightAt('bump-down', 0.5)).toBeCloseTo(HILL_HALF_HEIGHT / 2, 6);
+    expect(heightAt('bump-down', 1)).toBeCloseTo(0, 6);
+  });
+
+  it('banks the turn: corner-up climbs 0 → H, hill-corner cruises H, corner-down descends H → 0', () => {
+    expect(heightAt('corner-up', 0)).toBeCloseTo(0, 6);
+    expect(heightAt('corner-up', 0.5)).toBeCloseTo(HILL_HEIGHT / 2, 6);
+    expect(heightAt('corner-up', 1)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(heightAt('hill-corner', 0.5)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(heightAt('corner-down', 0)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(heightAt('corner-down', 0.5)).toBeCloseTo(HILL_HEIGHT / 2, 6);
+    expect(heightAt('corner-down', 1)).toBeCloseTo(0, 6);
+  });
 });
 
 describe('rideHeightAt — direction- and rotation-aware natural profile', () => {
@@ -102,6 +131,30 @@ describe('rideHeightAt — direction- and rotation-aware natural profile', () =>
     expect(rideHeightAt(span('slope-down', 0, 'south'), 1)).toBeCloseTo(0, 6);
     expect(rideHeightAt(span('slope-down', 0, 'north'), 0)).toBeCloseTo(0, 6);
     expect(rideHeightAt(span('slope-down', 0, 'north'), 1)).toBeCloseTo(HILL_HEIGHT, 6);
+  });
+
+  it('humps the bump run at half height with shuttle parity (forward climbs, reverse descends)', () => {
+    expect(rideHeightAt(span('bump-up', 0, 'south'), 0)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('bump-up', 0, 'south'), 1)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(rideHeightAt(span('bump-up', 0, 'north'), 0)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(rideHeightAt(span('bump-up', 0, 'north'), 1)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('hill-half', 0, 'south'), 0.5)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(rideHeightAt(span('hill-half', 0, 'north'), 0.5)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(rideHeightAt(span('bump-down', 0, 'south'), 0)).toBeCloseTo(HILL_HALF_HEIGHT, 6);
+    expect(rideHeightAt(span('bump-down', 0, 'south'), 1)).toBeCloseTo(0, 6);
+  });
+
+  it('banks elevated corners with shuttle parity (low leg first climbs, high leg first descends)', () => {
+    expect(rideHeightAt(span('corner-up', 0, 'north'), 0)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('corner-up', 0, 'north'), 1)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(rideHeightAt(span('corner-up', 0, 'east'), 0)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(rideHeightAt(span('corner-up', 0, 'east'), 1)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('hill-corner', 0, 'north'), 0.5)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(rideHeightAt(span('hill-corner', 0, 'east'), 0.5)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(rideHeightAt(span('corner-down', 0, 'north'), 0)).toBeCloseTo(HILL_HEIGHT, 6);
+    expect(rideHeightAt(span('corner-down', 0, 'north'), 1)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('corner-down', 0, 'east'), 0)).toBeCloseTo(0, 6);
+    expect(rideHeightAt(span('corner-down', 0, 'east'), 1)).toBeCloseTo(HILL_HEIGHT, 6);
   });
 
   it('keeps every existing piece flat at every rotation and entry edge', () => {

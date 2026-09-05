@@ -188,6 +188,28 @@ describe('world snapshots', () => {
     });
   });
 
+  it('round-trips the hills-phase-2 elevation pieces like any other track piece', () => {
+    const elevation: PlacedPiece[] = [
+      { id: 'piece-1', type: 'bump-up', cell: { x: 3, y: 4 }, rotation: 0 },
+      { id: 'piece-2', type: 'hill-half', cell: { x: 3, y: 3 }, rotation: 0 },
+      { id: 'piece-3', type: 'bump-down', cell: { x: 3, y: 2 }, rotation: 0 },
+      { id: 'piece-4', type: 'corner-up', cell: { x: 5, y: 4 }, rotation: 90 },
+      { id: 'piece-5', type: 'hill-corner', cell: { x: 5, y: 3 }, rotation: 90 },
+      { id: 'piece-6', type: 'corner-down', cell: { x: 5, y: 2 }, rotation: 90 },
+    ];
+
+    const snapshot = serializeWorld(elevation, [], 'steam');
+
+    expect(snapshot.pieces).toEqual(elevation);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: elevation,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
   it('rejects duplicate cells across tracks and scenery', () => {
     const invalid = {
       version: 1,

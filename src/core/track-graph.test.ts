@@ -110,12 +110,36 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-mirror')).toBeNull();
   });
 
-  it('rejects the crossing gate on river water — a road meets the rail on dry land', () => {
+  it('rejects the crossing gate on river water - a road meets the rail on dry land', () => {
     expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'crossing-gate')).toBe('water');
   });
 
   it('accepts a crossing gate on dry land', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'crossing-gate')).toBeNull();
+  });
+
+  it('rejects the bump run on river water - dry-land toys like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-up')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill-half')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'bump-down')).toBe('water');
+  });
+
+  it('accepts the bump run on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bump-up')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'hill-half')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'bump-down')).toBeNull();
+  });
+
+  it('rejects the elevated corner run on river water — dry-land toys like every non-bridge piece', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'corner-up')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'hill-corner')).toBe('water');
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'corner-down')).toBe('water');
+  });
+
+  it('accepts the elevated corner run on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'corner-up')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'hill-corner')).toBeNull();
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'corner-down')).toBeNull();
   });
 
   it('keeps the older rule order: bounds and occupancy win over terrain', () => {

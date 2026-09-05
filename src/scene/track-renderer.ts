@@ -73,6 +73,14 @@ const BASE_YAW: Record<PieceType, number> = {
   'slope-up': 0,
   hill: 0,
   'slope-down': 0,
+  // The bump run rides like the straight it mirrors (half-height humps).
+  'bump-up': 0,
+  'hill-half': 0,
+  'bump-down': 0,
+  // The elevated corner run rides like the corner it mirrors (banked bend).
+  'corner-up': -Math.PI / 2,
+  'hill-corner': -Math.PI / 2,
+  'corner-down': -Math.PI / 2,
   // The switch rides like the straight it mirrors in yaw: stem south,
   // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
   // correctly with no extra base yaw (verified in the render checks).
@@ -129,6 +137,13 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   'slope-up': [0, -1, 2],
   hill: [0, -1, 2],
   'slope-down': [0, -1, 2],
+  // The bump run on the straight mount, the elevated corners on the corner mount.
+  'bump-up': [0, -1, 2],
+  'hill-half': [0, -1, 2],
+  'bump-down': [0, -1, 2],
+  'corner-up': [0, -1, 2],
+  'hill-corner': [0, -1, 2],
+  'corner-down': [0, -1, 2],
   // The switch: authored on the straight's mount (blender-switch.py —
   // through-road is the kit straight's own rails, diverge is the kit
   // corner's rails rotated onto the SE-pivot arc), so the same anchor
@@ -157,6 +172,15 @@ const PIECE_URLS: Record<PieceType, string> = {
   'slope-up': '/assets/train-kit/hill-slope-up.glb',
   hill: '/assets/train-kit/hill-hill.glb',
   'slope-down': '/assets/train-kit/hill-slope-down.glb',
+  // Blender-authored little siblings (blender-hills-phase2.py): the same
+  // kit-straight rails + embankment language at half height, plus banked
+  // elevated corners carrying the kit corner-small's own arc.
+  'bump-up': '/assets/train-kit/hill-bump-up.glb',
+  'hill-half': '/assets/train-kit/hill-hill-half.glb',
+  'bump-down': '/assets/train-kit/hill-bump-down.glb',
+  'corner-up': '/assets/train-kit/hill-corner-up.glb',
+  'hill-corner': '/assets/train-kit/hill-hill-corner.glb',
+  'corner-down': '/assets/train-kit/hill-corner-down.glb',
   // Blender-authored Y-junction (blender-switch.py): kit straight rails
   // for the through-road + kit corner rails for the diverging road on the
   // kit mount, with a named `switch_blades` node the renderer flips.
@@ -176,6 +200,14 @@ const HILL_SNOW_URLS: Partial<Record<PieceType, string>> = {
   'slope-up': '/assets/train-kit/hill-snow-slope-up.glb',
   hill: '/assets/train-kit/hill-snow-hill.glb',
   'slope-down': '/assets/train-kit/hill-snow-slope-down.glb',
+  // Hills Phase 2 crowns (blender-hills-phase2.py): proud where the piece's
+  // own crest is high, so low bumps melt first like real snow.
+  'bump-up': '/assets/train-kit/hill-snow-bump-up.glb',
+  'hill-half': '/assets/train-kit/hill-snow-hill-half.glb',
+  'bump-down': '/assets/train-kit/hill-snow-bump-down.glb',
+  'corner-up': '/assets/train-kit/hill-snow-corner-up.glb',
+  'hill-corner': '/assets/train-kit/hill-snow-hill-corner.glb',
+  'corner-down': '/assets/train-kit/hill-snow-corner-down.glb',
 };
 
 /** The world-space center of a meadow cell (grid north is -Z). */
@@ -881,7 +913,10 @@ export function startTrackRenderer(
     hillSnow = visible;
     for (const type of Object.keys(HILL_SNOW_URLS) as PieceType[]) {
       const setCrown = (model: Object3D): void => {
-        const crown = model.getObjectByName(`hill_snow_${type}`);
+        // Blender node names use underscores (hill_snow_slope_up), but the
+        // piece types spell them with hyphens (slope-up) — normalize, or the
+        // crown lookup silently misses and winter never shows on ramps.
+        const crown = model.getObjectByName(`hill_snow_${type.replaceAll('-', '_')}`);
         if (crown) crown.visible = visible;
       };
       const template = templates.get(type);
