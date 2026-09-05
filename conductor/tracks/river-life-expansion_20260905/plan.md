@@ -39,7 +39,7 @@
     river stays red + refused; frog commits on grass too; undo/trash
     work as for other scenery.
 
-## Phase 2 — Blender Assets
+## Phase 2 — Blender Assets [checkpoint: 5156f8c]
 
 - [x] Task: Barge recipe `scripts/blender-barge.py` → `public/assets/train-kit/barge.glb` (non-logic — render is the acceptance test) `beb8b1d`
   - - [x] Author chunky toy barge (hull, deck crates, little paddle wheel), sized to pass under the trestle bridge clearance; named-node contract (`barge_hull`, `barge_wheel`), named Principled double-sided materials
@@ -59,7 +59,16 @@
     - Pad carries the classic wedge notch (boolean slit, rear); kit-style green/yellow via the yellow throat + green body/pad; white googly eyes with dark pupils.
     - Fixed an authored-bug en route: the uvsphere helper scaled radius-1 spheres by 2×half (cube math) — every sphere was double size until corrected to ×half.
     - Renders (front/top/side/scale-vs-pig) pass vision critique; GLB 99,168 bytes with nodes `frog_body`/`frog_pad`, materials `frog_green`/`pad_green`/`frog_yellow`/`frog_white`/`frog_dark`.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-05): non-logic phase — the render is the
+    acceptance test. `barge.glb` (28,752 B, nodes barge_hull/barge_cargo/
+    barge_wheel) and `frog.glb` (99,168 B, nodes frog_body/frog_pad) both
+    verified via GLB JSON parse + headless-Blender camera renders
+    (top/side/bridge-pass, front/top/side/scale-vs-pig) that passed the
+    vision critique; the low-profile bridge-pass deviation was
+    user-approved before authoring. Automated `pnpm check` green — biome
+    clean, `tsc --noEmit` clean, 654/654 vitest pass. User confirmed
+    checkpoint 2026-09-05.
 
 ## Phase 3 — Scene & Audio Wiring
 
