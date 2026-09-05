@@ -23,7 +23,7 @@ Registry of active development tracks.
 | [hill-grade-pace_20260904](archive/hill-grade-pace_20260904/index.md) | Hill-Grade Pace | Feature | done |
 | [release-v0.7.0_20260904](archive/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
 | [release-v0.8.0_20260905](tracks/release-v0.8.0_20260905/index.md) | Release v0.8.0 | Chore | in progress |
-| [river-life-expansion_20260905](tracks/river-life-expansion_20260905/index.md) | River Life Expansion | Feature | done |
+| [river-life-expansion_20260905](archive/river-life-expansion_20260905/index.md) | River Life Expansion | Feature | done |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
@@ -38,4 +38,5 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `cargo-pickups_20260902`, `release-v0.5.0_20260902`, `hills-ramps_20260903`,
 `switches-branches_20260903`,
 `ride-toybox-flow_20260903`, `release-v0.6.0_20260903`,
-`e2e-stability_20260904`, `railway-crossing-gate_20260905`.
+`e2e-stability_20260904`, `railway-crossing-gate_20260905`,
+`river-life-expansion_20260905`.
