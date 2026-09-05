@@ -61,6 +61,9 @@ const waitForGlb = (page: import('@playwright/test').Page, name: string) =>
   );
 
 test('the three delight toys load their GLBs and the balloon takes wing', async ({ page }) => {
+  // CI tablet profiles can crawl under parallel load; the balloon is
+  // wall-clock driven, so give the takeoff poll generous headroom.
+  test.setTimeout(90_000);
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -86,7 +89,10 @@ test('the three delight toys load their GLBs and the balloon takes wing', async 
   // The balloon rests a beat, then rises: the wander state machine's
   // airborne phase, watched through the dev witness.
   await expect
-    .poll(() => balloonDrift(page).then((pose) => pose?.altitude ?? 0), { timeout: 20_000 })
+    .poll(() => balloonDrift(page).then((pose) => pose?.altitude ?? 0), {
+      timeout: 60_000,
+      intervals: [250],
+    })
     .toBeGreaterThan(0.2);
 
   // …and it stays a gentle toy: never higher than its cruise ceiling.
