@@ -125,9 +125,32 @@
 
 ## Phase 4 — E2E, Docs & Gates
 
-- [ ] Task: Playwright spec `e2e/river-life.spec.ts` (per `e2e/README.md` conventions)
-  - - [ ] Via `__tinyTracksWorld`: place frog on a water cell and a land cell, assert the frog GLB loads and the barge is present, start a ride, assert zero console errors
-- [ ] Task: Docs
+- [x] Task: Playwright spec `e2e/river-life.spec.ts` (per `e2e/README.md` conventions) `9266722`
+  - - [x] Via `__tinyTracksWorld`: place frog on a water cell and a land cell, assert the frog GLB loads and the barge is present, start a ride, assert zero console errors
+  - Notes:
+    - Two tests, both run on the tablet + phone profiles (4/4 green):
+      (1) reset → tree on water (8,8) refused `'water'`, frog on water
+      `(8,8)` and land `(2,2)` both `'placed'`, scenery list asserts the
+      two frogs; `frog.glb` resource entry awaited; `barge.glb`
+      presence + living-river screenshot diff. (2) cargo.spec's
+      4-corner loop + both frogs → ride → still riding after 8 s,
+      zero console errors, no external requests.
+    - Barge presence asserts via the `performance` resource entry
+      (cargo.spec's crate.glb precedent) — `__tinyTracksScene` is the
+      app controller, not a raw THREE scene, so no scene-graph probe.
+    - Water/land cells reuse river.spec.ts's hand-derived map
+      (row 8 water spans x 7–9; (2,2) is dry).
+- [x] Task: Docs `5263d4f`
+  - - [x] Parent-facing `CHANGELOG.md` entry under `## [Unreleased]`
+  - - [x] `product.md` living-meadow/roadmap note (river life shipped)
+  - Notes:
+    - CHANGELOG: one parent-facing "The river comes to life" Added
+      entry — barge drift/bob/bedtime-and-ice behavior, frog floating
+      on water vs grass, ride-triggered hop + ribbit (mute-respecting),
+      persistence, older saves unchanged.
+    - product.md: roadmap bullet appended after the crossing-gate
+      entry, following the established "✅ shipped (track, date)"
+      pattern — barge + frog summary with the no-version-bump note.
   - - [ ] Parent-facing `CHANGELOG.md` entry under `## [Unreleased]`
   - - [ ] `product.md` living-meadow/roadmap note (river life shipped)
 - [ ] Task: Full gates
