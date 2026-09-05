@@ -70,7 +70,7 @@
     clean, `tsc --noEmit` clean, 654/654 vitest pass. User confirmed
     checkpoint 2026-09-05.
 
-## Phase 3 — Scene & Audio Wiring
+## Phase 3 — Scene & Audio Wiring [checkpoint: bca7b43]
 
 - [x] Task: Barge module `src/scene/barge.ts` (modeled on `duck.ts`; glue — manual verification) `edd2a77`
   - - [x] Load `barge.glb`; drift `riverDriftPath()` ping-pong at ~0.15 cells/s; gentle bob; face travel direction
@@ -95,7 +95,33 @@
     - `'ribbit-frog'` registered in `howler-voice.ts` at the critters' capped 0.5 voice (mute + chirp path shared with oink/baa/woof — mute-respecting for free).
     - `CRITTER_SOUNDS` in `core/attract-clock.ts` grew to include the ribbit, so idle attract chirps may croak too; the RNG-draw test expectation updated to the new last entry.
     - Gates: biome ✓ · tsc ✓ · 654 tests pass.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-05): changed files since the Phase 2
+    checkpoint (5156f8c) reviewed — scene/audio glue plus one
+    logic-bearing file, `core/attract-clock.ts` (its test file updated
+    in task 3.3). Automated `pnpm check` green — biome clean,
+    `tsc --noEmit` clean, 654/654 vitest pass.
+  - Bug found & fixed during verification: the barge's red deck
+    flickered blue. Root cause: deck freeboard (+0.02 above the GLB's
+    waterline origin) is smaller than the 0.05 bob amplitude, so the
+    opaque water plane (y = 0.02) sliced through the deck every bob
+    cycle — z-fight/intersection blink between red deck and blue
+    water. Fixed in `bca7b43`: bob amplitude 0.05 → 0.02 plus a 0.02
+    ride lift — the deck stays ≥ 0.02 clear of the water at every
+    phase and the barge's high point stays under the previously
+    verified bridge-pass height. Verified in-browser across a full bob
+    cycle (12-frame sweep at 220 ms: deck red, no blue, no
+    intersection artifacts). Supersedes the "0.05 amplitude" note in
+    the barge task above.
+  - Manual (user confirmed 2026-09-05): barge drifts bow-first with a
+    gentle bob and no red/blue blink, passes the trestle without
+    clipping; wheel pauses at bedtime/frozen while the bob continues;
+    frog button with lily-pad icon on Critter tab; frog ghost green
+    over water and the pad rests at the surface; land placement sits
+    at ground height; ride pass triggers the hop + soft ribbit,
+    mute-respecting; undo/trash behave as for other scenery; reload
+    persists frogs; older saved worlds open unchanged (no save-version
+    prompt).
 
 ## Phase 4 — E2E, Docs & Gates
 
