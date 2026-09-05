@@ -14,7 +14,22 @@
     tab regains visibility or ≥ ~60 min since the last probe.
 - [x] Task: Implement `src/core/update-state.ts` to green (minimum code) — 5fb5621
 - [x] Task: Verify coverage >80% (`CI=true pnpm test -- --coverage`) — 100% statements/branches/functions/lines — 5fb5621
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — user
+  approved 2026-09-05 [checkpoint: 7cd6687]
+
+## Phase 1 Verification Report
+
+- **Changed files:** `src/core/update-state.ts` + `src/core/update-state.test.ts`
+  (both new; no existing modules import them yet, so the blast radius is nil).
+- **Test audit:** `update-state.test.ts` is the only suite covering the new
+  module; the full unit suite passes unchanged (37 files, 650 tests).
+- **Gates:** `biome check` clean · `tsc --noEmit` clean · coverage 100%
+  statements/branches/functions/lines on the new module.
+- **Manual verification plan** (deferred to end of Phase 2, when the glue
+  lands): idle table + new deploy → single reload into the new version;
+  mid-ride → reload deferred until the ride ends; no reload within 15 s of
+  load; world restored intact from autosave afterwards.
+- **User approval:** Yes — recorded 2026-09-05.
 
 ## Notes
 
