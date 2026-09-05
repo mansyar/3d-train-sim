@@ -20,11 +20,13 @@ import type { AudioController } from '../audio/audio-controller';
 import { MAX_DELIVERED_CRATES } from '../core/cargo';
 import { advanceCrossing, type CrossingMotion, idleCrossing } from '../core/crossings';
 import { PIECE_TYPES, type PieceType } from '../core/pieces';
+import { isWater } from '../core/river';
 import {
   type PlacedScenery,
   SCENERY_KINDS,
   type SceneryKind,
   sceneryCategory,
+  sceneryFloats,
   sceneryLift,
   sceneryScale,
   sceneryUrl,
@@ -46,6 +48,7 @@ import { type CritterMood, createCritterLife } from './critter-life';
 import { createDelightMotion, isDelightKind } from './delight-motion';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
+import { SURFACE_LIFT } from './river-water';
 import { disableShadows, enableCastShadows } from './shadows';
 import { attachWindowGlow } from './window-glow';
 
@@ -393,6 +396,14 @@ export function startTrackRenderer(
     }
     model.position.set(x, 0, z);
     model.rotation.y = yaw;
+    if (!isPiece(item) && sceneryFloats(item.kind)) {
+      // The floating toy's GLB origin is its underside: on water cells the
+      // pad rests on the river surface; on land it sits on the play mat.
+      const inner = model.children[0];
+      if (inner) {
+        inner.position.y = isWater(item.cell) ? SURFACE_LIFT : sceneryLift(item.kind);
+      }
+    }
   }
 
   function reconcile(): void {

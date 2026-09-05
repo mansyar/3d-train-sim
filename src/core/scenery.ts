@@ -24,6 +24,7 @@ export const SCENERY_KINDS = [
   'pig',
   'sheep',
   'pug',
+  'frog',
 ] as const;
 
 export type SceneryKind = (typeof SCENERY_KINDS)[number];
@@ -37,10 +38,10 @@ export interface PlacedScenery {
 }
 
 /** The meadow model for each kind (Kenney kits, CC0, vendored in the repo);
- *  the station and the delight toys (windmill, carousel, balloon) are original
- *  Blender-authored pieces (scripts/blender-*.py); the station carries named
- *  crate slots for the cargo deliveries, the delight toys carry named motion
- *  and snow-cap nodes. */
+ *  the station, the river frog, and the delight toys (windmill, carousel,
+ *  balloon) are original Blender-authored pieces (scripts/blender-*.py); the
+ *  station carries named crate slots for the cargo deliveries, the frog sits
+ *  on its pad, and the delight toys carry named motion and snow-cap nodes. */
 const SCENERY_URLS: Record<SceneryKind, string> = {
   tree: '/assets/nature-kit/tree_default.glb',
   bush: '/assets/nature-kit/plant_bushDetailed.glb',
@@ -54,6 +55,7 @@ const SCENERY_URLS: Record<SceneryKind, string> = {
   pig: '/assets/quaternius-farm/pig.glb',
   sheep: '/assets/quaternius-farm/sheep.glb',
   pug: '/assets/quaternius-farm/pug.glb',
+  frog: '/assets/nature-kit/frog.glb',
 };
 
 /** The drawer group each kind belongs to. */
@@ -70,6 +72,7 @@ const SCENERY_CATEGORIES_BY_KIND: Record<SceneryKind, SceneryCategory> = {
   pig: 'critter',
   sheep: 'critter',
   pug: 'critter',
+  frog: 'critter',
 };
 /**
  * Scale relative to one meadow cell. The kits are authored with 1 unit ~= 1
@@ -89,6 +92,7 @@ const SCENERY_SCALES: Record<SceneryKind, number> = {
   pig: 1,
   sheep: 1,
   pug: 1,
+  frog: 1,
 };
 
 /** Ground-plane lift so decor never z-fights with the meadow mat. */
@@ -105,6 +109,7 @@ const SCENERY_LIFTS: Record<SceneryKind, number> = {
   pig: 0.01,
   sheep: 0.01,
   pug: 0.01,
+  frog: 0.01,
 };
 
 /** Drawer button labels (aria only - the UI itself is icon-only). */
@@ -121,6 +126,7 @@ const SCENERY_ARIA: Record<SceneryKind, string> = {
   pig: 'Pig',
   sheep: 'Sheep',
   pug: 'Pug',
+  frog: 'Frog',
 };
 
 /**
@@ -131,6 +137,7 @@ const SCENERY_VOICES: Partial<Record<SceneryKind, string>> = {
   pig: 'oink-pig',
   sheep: 'baa-sheep',
   pug: 'woof-pug',
+  frog: 'ribbit-frog',
 };
 
 export function sceneryCategory(kind: SceneryKind): SceneryCategory {
@@ -151,6 +158,15 @@ export function sceneryLift(kind: SceneryKind): number {
 
 export function sceneryVoice(kind: SceneryKind): string | null {
   return SCENERY_VOICES[kind] ?? null;
+}
+
+/**
+ * The one toy that lives on the river: the frog's lily pad floats on the
+ * water, so placement rules let it rest on river cells. Everything else
+ * stays a land toy.
+ */
+export function sceneryFloats(kind: SceneryKind): boolean {
+  return kind === 'frog';
 }
 
 export function sceneryAria(kind: SceneryKind): string {

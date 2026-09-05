@@ -10,6 +10,17 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 ## [Unreleased]
 
 ### Added
+- **A bigger engine shed: six locomotives to choose from.** Three new
+  engines join the trains drawer — the **Express** (a bright orange
+  steamer), the **Freight** (a sturdy boxy diesel), and the **Bullet**
+  (a speedy white bullet train) — each with its own pace out on the
+  meadow: Bullet is the quickest of the bunch, Express is brisk, and
+  Freight takes the hills steady and slow. Every engine whistles in the
+  voice of its family and puffs just like the originals, the engine
+  row now swipes sideways on phones to fit all six, and each engine
+  keeps its own wagon outfits in the wagon workshop. The choice stays
+  saved across visits, and everything still works offline with no new
+  downloads.
 - **A fourth starter: Hilltop Junction.** The picture gallery behind the
   parent gate gains a new railway that shows off what the meadow can do:
   a climb up and over the hills on one side and a proper passing loop
@@ -17,6 +28,17 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   siding laps all by itself. Picking any starter still keeps the kid's
   chosen engine and wagon outfits — only the rails and scenery swap —
   and one ↩️ tap still takes the whole swap right back.
+
+- **The river comes to life.** A chunky red cargo barge now putters
+  along the river, paddling slowly under the trestle bridge and bobbing
+  on the swell — and at bedtime, or when the river ices over, its engine
+  rests while it keeps gently riding the water. The Critter tab also
+  gains a little frog: drag it onto the river and it floats on its lily
+  pad, or set it on the grass like any other toy. Chug past on a ride
+  and it hops with a soft ribbit (quiet when the meadow is muted).
+  and it hops with a soft ribbit (quiet when the meadow is muted).
+  Frogs stay in the meadow between visits, and older saved worlds open
+  unchanged.
 
 ## [0.8.0] - 2026-09-05
 

@@ -15,7 +15,7 @@ test('app boots on a tablet with a clean console and zero external requests', as
   await expect(page.locator('.toy-slot')).toHaveCount(2);
 
   await page.click('[data-drawer="trains"]');
-  await expect(page.locator('.train-slot')).toHaveCount(3);
+  await expect(page.locator('.train-slot')).toHaveCount(6);
   await page.locator('.train-slot[data-train="diesel"]').click();
   await expect(page.locator('.train-slot[data-train="diesel"]')).toHaveAttribute(
     'aria-pressed',
@@ -625,6 +625,9 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
 });
 
 test('steam puffs emit during rides, stop cleanly, and cover the fleet', async ({ page }) => {
+  // The fleet loop swaps six engines (three of them first-time GLB loads), so
+  // the default 30s budget is too tight on a loaded CI tablet runner.
+  test.setTimeout(60_000);
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -672,7 +675,7 @@ test('steam puffs emit during rides, stop cleanly, and cover the fleet', async (
   });
 
   await page.click('[data-drawer="trains"]');
-  for (const train of ['diesel', 'tram', 'steam']) {
+  for (const train of ['diesel', 'tram', 'steam', 'express', 'freight', 'bullet']) {
     await page.locator(`.train-slot[data-train="${train}"]`).click();
     await expect(page.locator(`.train-slot[data-train="${train}"]`)).toHaveAttribute(
       'aria-pressed',
@@ -817,7 +820,7 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
   ).toBeVisible();
   await page.click('.drawer-tab[data-tab="critter"]');
   await expect(page.locator('.drawer-panel[data-panel="critter"]')).toBeVisible();
-  await expect(page.locator('.drawer-panel[data-panel="critter"] .scenery-slot')).toHaveCount(3);
+  await expect(page.locator('.drawer-panel[data-panel="critter"] .scenery-slot')).toHaveCount(4);
 
   // Drag a sheep from the Critters tab onto the meadow.
   const dragFrom = async (selector: string, x: number, y: number) => {

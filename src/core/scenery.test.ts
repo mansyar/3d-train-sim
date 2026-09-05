@@ -4,6 +4,7 @@ import {
   type SceneryKind,
   sceneryAria,
   sceneryCategory,
+  sceneryFloats,
   sceneryLift,
   sceneryScale,
   sceneryUrl,
@@ -19,16 +20,17 @@ const TOWN_KINDS: readonly SceneryKind[] = [
   'carousel',
   'balloon',
 ];
-const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug'];
+const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug', 'frog'];
 
 describe('scenery catalog', () => {
-  it('offers exactly twelve toys: nature, town, and critters', () => {
+  it('offers exactly thirteen toys: nature, town, and critters', () => {
     expect([...SCENERY_KINDS].sort()).toEqual(
       [
         'balloon',
         'bush',
         'carousel',
         'cottage',
+        'frog',
         'house',
         'pig',
         'pug',
@@ -78,17 +80,25 @@ describe('sceneryUrl', () => {
   });
 
   it('serves critters from the vendored Quaternius farm pack', () => {
-    for (const kind of CRITTER_KINDS) {
+    for (const kind of ['pig', 'sheep', 'pug'] as const) {
       expect(sceneryUrl(kind)).toMatch(/^\/assets\/quaternius-farm\/[\w-]+\.glb$/);
     }
+  });
+
+  it('serves the frog from the Blender-authored nature kit pieces', () => {
+    expect(sceneryUrl('frog')).toBe('/assets/nature-kit/frog.glb');
   });
 });
 
 describe('sceneryVoice', () => {
   it('gives every critter its own gentle voice id', () => {
     for (const kind of CRITTER_KINDS) {
-      expect(sceneryVoice(kind)).toMatch(/^(oink|baa|woof)-[\w]+$/);
+      expect(sceneryVoice(kind)).toMatch(/^(oink|baa|woof|ribbit)-[\w]+$/);
     }
+  });
+
+  it('gives the frog its ribbit voice', () => {
+    expect(sceneryVoice('frog')).toBe('ribbit-frog');
   });
 
   it('gives non-critters no voice', () => {
@@ -122,6 +132,14 @@ describe('sceneryAria', () => {
   it('names every kind for the drawer buttons (icon-only UI)', () => {
     for (const kind of SCENERY_KINDS) {
       expect(sceneryAria(kind).length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('sceneryFloats', () => {
+  it('floats only the frog — every other toy stays on the banks', () => {
+    for (const kind of SCENERY_KINDS) {
+      expect(sceneryFloats(kind)).toBe(kind === 'frog');
     }
   });
 });

@@ -5,6 +5,9 @@ const WHISTLE_RATES: Record<TrainKind, number> = {
   steam: 1,
   diesel: 0.92,
   tram: 1.08,
+  express: 1,
+  freight: 0.92,
+  bullet: 1.08,
 };
 
 export function whistleRate(kind: TrainKind): number {

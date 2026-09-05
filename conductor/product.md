@@ -4,7 +4,7 @@
 A world where every toddler can build their own railway and watch it come alive — no rules, no reading, no failure. Just the pure joy of cause and effect: lay the track, press the button, and watch your train go.
 
 ## Product Description
-Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of three locomotives, then press ▶ to watch autonomous trains chug around their own creation — every connected track comes alive with its own train (up to four at once) — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads, Android tablets, and phones.
+Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of six locomotives, then press ▶ to watch autonomous trains chug around their own creation — every connected track comes alive with its own train (up to four at once) — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads, Android tablets, and phones.
 
 ## Target Users
 - **Primary:** Toddlers aged 2–4. Non-readers. Developing fine motor skills. Short attention spans reward instant, forgiving feedback.
@@ -31,7 +31,7 @@ Supporting guardrails:
 ## Core Gameplay Loop
 1. **Build:** drag track pieces (straights, 90° curves, crossings, a railway crossing gate, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away. A ↩️ take-back in the bottom bar undoes the very last move.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
-3. **Play:** choose one of three friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
+3. **Play:** choose one of six friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
 crate there, loaded wagons deliver theirs in a confetti burst, and the station's
 platform keeps the delivered crates (up to 8); the chase camera follows one train, and the 🎥 button cycles between riding trains and the overview while ≥2 ride. Whistle button. ⏹ stops them all.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
@@ -39,7 +39,7 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 ## V1 Scope (Lean Core)
 - Grid-snap track building on a single grassy meadow
 - Scenery placement (trees, houses, animals, stations)
-- Three selectable autonomous locomotives running any layout — one train per connected track (up to 4 concurrent): closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
+- Six selectable autonomous locomotives running any layout — one train per connected track (up to 4 concurrent): closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
 - 🎥 camera cycling between riding trains and the overview (visible at ≥2 rides; hidden under reduced motion)
 - Go / stop / whistle control panel
 - Follow-camera
@@ -50,7 +50,7 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 
 ## Future Scope (Roadmap Candidates)
 - ~~Reactive characters~~ — ✅ shipped in V1: critters near the track hop with squash-and-stretch and chirp as the train passes (mute-respecting)
-- ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons; ✅ wagon workshop (wagon-workshop_20260904, 2026-09-04): each locomotive dresses its pair from 4 curated presets (classic lumber-and-box, coal duo, tank duo, red-and-blue containers) — icon-only picker, per-train choices persist across reloads, purely cosmetic cargo.
+- ~~Expanded train collection: cargo wagons~~ — ✅ shipped: every locomotive pulls two bundled cargo wagons; ✅ wagon workshop (wagon-workshop_20260904, 2026-09-04): each locomotive dresses its pair from 4 curated presets (classic lumber-and-box, coal duo, tank duo, red-and-blue containers) — icon-only picker, per-train choices persist across reloads, purely cosmetic cargo. ✅ fleet expansion (loco-fleet_20260905, 2026-09-05): six selectable locomotives — Express, Freight, and Bullet join Steam, Diesel, and Tram, all from the already-vendored kit (zero new downloads), each with its own pace personality, family whistle voice, and per-train wagon outfits; scrollable six-engine picker row.
 - ~~Track switches and branches~~ — ✅ shipped (switches-branches_20260903, 2026-09-03): a Blender-authored Y-junction (`switch.glb`) with a straight through-road and a curved diverging branch; each train alternates branches every pass through the stem, point blades visibly flip to the chosen road, saves stay additive with no version bump. Still roadmap: motorized levers, double-slip/3-way pieces. ✅ left-mirror shipped (mirror-switch_20260904, 2026-09-04): a second Blender-authored Y (`switch-mirror.glb`) branching west, with the same stem alternation and visible blade flips.
 - ~~Bridges~~ — ✅ shipped (river-bridge track, 2026-08-30): the meadow's river is now terrain — an S-curve water strip with 3-tile build-exclusion banks — and trestle bridges are a placable asset class that spans water (track/scenery ghosts red over it).
 - ~~Tunnels~~ — ✅ shipped (tunnels_20260831, 2026-09-02): a grassy vault the train rides through, merging into one long hill end-to-end, with chug duck, whistle echo, winter snow cap, and night portal glow.
@@ -59,6 +59,7 @@ platform keeps the delivered crates (up to 8); the chase camera follows one trai
 - **Time of day and weather** — ✅ shipped (time-of-day-weather_20260830, 2026-08-30): dawn→noon→dusk→night sky, warm window glows, rain and snow with ground whitening, headlight, tunnel portal glow at night.
 - Railway crossing gate — ✅ shipped (railway-crossing-gate_20260905, 2026-09-05): a road-level crossing piece on the Rails tab; any train's approach swings the little red-and-white gates shut with a blinking lantern and a soft CC0 bell, the pass lifts them, and the piece wears a snow cap in winter (Blender-authored via a checked-in recipe).
 - Scenery delight toys — ✅ shipped (scenery-delight_20260905, 2026-09-06): three animated town-tab toys, each Blender-authored via a checked-in recipe with a winter snow cap — a windmill whose sails turn in the breeze, a carousel with three little horses revolving under the canopy, and a hot-air balloon that rests, lifts off, wanders its own 2–3-cell neighborhood, and lands again; all motion freezes under reduced motion.
+- River life — ✅ shipped (river-life-expansion_20260905, 2026-09-05): the river gains a drifting Blender-authored cargo barge (`barge.glb` via a checked-in recipe; low-profile water-level bridge pass, engine off at bedtime/frozen while the bob never stops) and the frog — a floating critter placable on water cells (lily pad resting at the surface) or on land, hopping with a soft synthesized ribbit as the train passes; the barge is ambience (not serialized), so saves stay additive with no version bump.
 - ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
 
 ## Platform & Technical Requirements

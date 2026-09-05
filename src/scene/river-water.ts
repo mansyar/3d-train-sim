@@ -29,7 +29,7 @@ import { GROUND_SIZE } from './ground';
  */
 
 /** The surface lift above the play mat (the mat itself sits at y = 0). */
-const SURFACE_LIFT = 0.02;
+export const SURFACE_LIFT = 0.02;
 
 /** World units between ripple crests — one per cell, bands flow downstream. */
 const RIPPLE_PERIOD = GROUND_SIZE / MEADOW_CELLS;

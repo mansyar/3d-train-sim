@@ -2,7 +2,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import { closesLoop } from '../core/ride-ready';
 import { isWater } from '../core/river';
-import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
+import { SCENERY_KINDS, type SceneryKind, sceneryAria, sceneryFloats } from '../core/scenery';
 import { STARTER_PRESETS } from '../core/starters';
 import {
   type Cell,
@@ -186,6 +186,24 @@ const SCENERY_ICONS: Record<SceneryKind, string> = {
       <ellipse cx="24" cy="30" rx="7" ry="6" fill="var(--toy-cream)"
                stroke="var(--toy-brown)" stroke-width="2.5"/>
       <circle cx="24" cy="27" r="2.2" fill="var(--toy-brown)"/>
+    </svg>`,
+  // A frog on a lily pad: green round head, cream eye bumps, notch-cut pad.
+  frog: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="24" cy="36" rx="19" ry="9" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M24 36 L36 30" stroke="var(--toy-brown)" stroke-width="2.5"
+            stroke-linecap="round"/>
+      <circle cx="17" cy="16" r="4.5" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="31" cy="16" r="4.5" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="17" cy="16" r="1.6" fill="var(--toy-brown)"/>
+      <circle cx="31" cy="16" r="1.6" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="26" rx="14" ry="11" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M17 30 Q24 35 31 30" fill="none" stroke="var(--toy-brown)"
+            stroke-width="2.5" stroke-linecap="round"/>
     </svg>`,
 };
 
@@ -531,6 +549,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   trainDrawer.setAttribute('role', 'group');
   trainDrawer.setAttribute('aria-label', 'Train collection');
   trainDrawer.hidden = true;
+  // The loco row scrolls sideways like the drawer panels: six chunky engine
+  // buttons stay one tap-easy row on phones instead of wrapping.
+  const locoRow = document.createElement('div');
+  locoRow.className = 'loco-row';
+  locoRow.setAttribute('role', 'group');
+  locoRow.setAttribute('aria-label', 'Locomotives');
   for (const kind of TRAIN_KINDS) {
     const button = document.createElement('button');
     button.className = 'train-slot';
@@ -539,8 +563,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     button.setAttribute('aria-label', trainAria(kind));
     button.setAttribute('aria-pressed', String(options.world.train() === kind));
     button.innerHTML = trainIcon(kind);
-    trainDrawer.append(button);
+    locoRow.append(button);
   }
+  trainDrawer.append(locoRow);
   // The wagon row: one chunky pair-preset per button, dressing the selected
   // locomotive. It lives inside the train drawer, so it hides mid-ride and
   // on drawer close with the loco slots — no separate visibility logic.
@@ -708,7 +733,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (toy.id === drag?.pickedId) continue;
       if (toy.cell.x === cell.x && toy.cell.y === cell.y) return false;
     }
-    return isPieceKind(kind) ? terrainErrorFor(kind, cell) === null : !isWater(cell);
+    return isPieceKind(kind)
+      ? terrainErrorFor(kind, cell) === null
+      : !isWater(cell) || sceneryFloats(kind);
   };
 
   const stepRotation = () => {

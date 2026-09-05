@@ -52,6 +52,7 @@ const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
   pig: 'critter',
   sheep: 'critter',
   pug: 'critter',
+  frog: 'critter',
 };
 
 const TAB_ICONS: Record<DrawerTabId, string> = {
