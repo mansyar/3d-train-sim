@@ -20,11 +20,15 @@ export const PACE_MIN_FACTOR = 0.5;
 /** Pace eases toward a new target over this long — a gentle shift, never a pop. */
 export const PACE_EASE_SECONDS = 0.5;
 
-/** Wide per-loco personalities: steam steady, tram middle, diesel zippy. */
+/** Wide per-loco personalities: freight steady, steam steady, tram middle,
+ * express brisk, diesel zippy, bullet quickest of the fleet. */
 const PERSONALITY_PACE: Record<TrainKind, number> = {
   steam: 0.9,
   tram: 1.0,
   diesel: 1.2,
+  express: 1.05,
+  freight: 0.85,
+  bullet: 1.3,
 };
 
 /** The base personality factor for one locomotive. Pure and total. */

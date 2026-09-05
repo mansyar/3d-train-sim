@@ -4,7 +4,7 @@ import { whistleRate } from './whistle-profiles';
 
 describe('whistle profiles', () => {
   it('provides one stable rate for every train', () => {
-    expect(TRAIN_KINDS.map(whistleRate)).toEqual([1, 0.92, 1.08]);
+    expect(TRAIN_KINDS.map(whistleRate)).toEqual([1, 0.92, 1.08, 1, 0.92, 1.08]);
   });
 
   it('keeps profiles in a gentle playback range', () => {

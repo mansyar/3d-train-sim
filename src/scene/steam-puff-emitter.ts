@@ -17,6 +17,9 @@ const FALLBACK_OFFSETS: Record<TrainKind, readonly [number, number, number]> = {
   steam: [0, 3.2, 0],
   diesel: [0, 2.8, 0],
   tram: [0, 3, 0],
+  express: [0, 3.2, 0],
+  freight: [0, 2.8, 0],
+  bullet: [0, 3, 0],
 };
 
 export interface SteamPuffEmitter {

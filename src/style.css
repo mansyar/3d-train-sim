@@ -372,6 +372,19 @@ body {
   display: none;
 }
 
+/* The loco row swipes sideways like the drawer panels: six engines stay one
+   chunky row on phones instead of wrapping. Swipes starting on the gaps
+   scroll; taps on the engines still select. */
+.loco-row {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-start;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+}
+
 .train-slot {
   background: #f4c95d;
   border: 4px solid var(--toy-brown);

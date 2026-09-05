@@ -81,7 +81,14 @@ export function wagonPresetUrls(preset: WagonPreset): Record<WagonSlot, string> 
 
 /** Fresh consist with every locomotive on the classic pair. */
 export function defaultConsist(): TrainConsist {
-  return { steam: 'classic', diesel: 'classic', tram: 'classic' };
+  return {
+    steam: 'classic',
+    diesel: 'classic',
+    tram: 'classic',
+    express: 'classic',
+    freight: 'classic',
+    bullet: 'classic',
+  };
 }
 
 /** Reads one train's preset, forgiving corrupt entries back to classic. */
