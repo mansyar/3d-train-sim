@@ -145,7 +145,7 @@
   - [x] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test` — all green (38 files / 664 tests); coverage: `scenery.ts` 100% stmts, `balloon-wander.ts` 100% stmts / 96.55% branch (gate >80% met)
   - [x] Manual tablet verification: place toys, watch motion, winter caps, reduced-motion freeze (approved at the Phase 3 checkpoint)
 - [x] Task: Docs — note the three toys in `conductor/product.md` shipped list (7fe3eb9)
-- [~] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (refer to workflow.md)
   - Notes:
     - Files changed since previous checkpoint (base 0b7f262): `src/scene/delight-motion.ts`, `src/scene/track-renderer.ts`, `src/scene/init-scene.ts` (dev witnesses), `e2e/delight-toys.spec.ts` (new), `conductor/product.md` (docs).
     - No new logic-bearing modules — the witnesses are scene-glue probes; core logic unchanged since Phase 1.
