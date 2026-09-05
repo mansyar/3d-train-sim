@@ -133,6 +133,15 @@ Rules of the house (learned the hard way on the tunnel):
    `getObjectByName`: `tunnel_dome`, `tunnel_portal_entry`/`tunnel_portal_exit`
    (toggled per run seam), `tunnel_snow_cap` (winter tell, hidden at load).
    Blender object names become glTF node names — rename nothing casually.
+   - Delight toys (`scripts/blender-windmill.py`, `blender-carousel.py`,
+     `blender-balloon.py`): motion anchors `windmill_sails` (sweeps the
+     vertical plane — the authored +y hub exports to glTF −z, so the scene
+     spins it about local z), `carousel_spin` (authored +z exports to glTF
+     +y), and `balloon_basket` (wander anchor; origin stays at ground centre
+     so the scene repositions it directly); each also has a `<kind>_snow_cap`
+     toggled by the shared frozen gate. Lesson: the exporter converts node
+     positions but leaves node rotations identity — check the exported axis
+     before wiring motion (src/scene/delight-motion.ts).
 5. **Materials are named, Principled, and double-sided.** `tunnel_*` palette
    (grass, cream bed, steel rails, dirt interior, snow); leave backface
    culling off so the exporter writes `doubleSided: true` — the dark bore

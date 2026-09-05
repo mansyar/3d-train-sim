@@ -127,6 +127,10 @@ export interface SceneHandle {
   crossingPhases(): string[];
   /** Debug aid: whether the crossing bell edge is ringing right now. */
   bellRinging(): boolean;
+  /** Debug aid: the first balloon's drift from its base, in cells. */
+  delightBalloonDrift(): { x: number; z: number; altitude: number } | null;
+  /** Debug aid: force the delight toys' winter state (e2e determinism). */
+  setDelightSnow(visible: boolean): void;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -264,6 +268,7 @@ export function initScene(
     tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
     tracks.setHillSnow(base.snow >= FROZEN_SNOW); // The hill run's crowns share the gate.
     tracks.setCrossingSnow(base.snow >= FROZEN_SNOW); // The crossing wears winter too.
+    tracks.setDelightSnow(base.snow >= FROZEN_SNOW); // The delight toys join winter.
     water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     // River babble whispers near the water; a frozen river stands the babble
@@ -956,6 +961,9 @@ export function initScene(
       // The gates watch every riding train: arms swing, lanterns blink, the
       // bell rings while any crossing is awake.
       tracks.updateCrossings(dt, crossingTrainView, night);
+      // The delight toys keep their charm loop: sails turn, the carousel
+      // spins, balloons wander their neighborhood (frozen in reduced motion).
+      tracks.updateDelight(dt);
       // The duck drifts the S-curve and wiggles for passing trains; night is
       // bedtime, and a frozen river (snow) parks it on the ice.
       duck.update(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
@@ -1045,6 +1053,8 @@ export function initScene(
     ridingTrainCount: () => rigs.size,
     crossingPhases: () => tracks.crossingPhases(),
     bellRinging: () => tracks.bellRinging(),
+    delightBalloonDrift: () => tracks.delightBalloonDrift(),
+    setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
     filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);

@@ -100,6 +100,47 @@ const SCENERY_ICONS: Record<SceneryKind, string> = {
       <rect x="10" y="32" width="28" height="6" rx="2" fill="var(--toy-steel)"
             stroke="var(--toy-brown)" stroke-width="2.5"/>
     </svg>`,
+  // A windmill: cream tower, orange cap, four crossed sails.
+  windmill: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M18 44 L21 18 L27 18 L30 44 Z" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="20" y="10" width="8" height="10" rx="2" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <line x1="24" y1="4" x2="24" y2="28" stroke="var(--toy-brown)"
+            stroke-width="3" stroke-linecap="round"/>
+      <line x1="12" y1="16" x2="36" y2="16" stroke="var(--toy-brown)"
+            stroke-width="3" stroke-linecap="round"/>
+      <line x1="15.2" y1="7.2" x2="32.8" y2="24.8" stroke="var(--toy-brown)"
+            stroke-width="3" stroke-linecap="round"/>
+      <line x1="32.8" y1="7.2" x2="15.2" y2="24.8" stroke="var(--toy-brown)"
+            stroke-width="3" stroke-linecap="round"/>
+      <circle cx="24" cy="16" r="3" fill="var(--toy-brown)"/>
+    </svg>`,
+  // A carousel: striped canopy on steel poles over a cream base.
+  carousel: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M4 20 Q24 2 44 20 Z" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="10" y="20" width="4" height="16" fill="var(--toy-steel)"/>
+      <rect x="22" y="20" width="4" height="16" fill="var(--toy-steel)"/>
+      <rect x="34" y="20" width="4" height="16" fill="var(--toy-steel)"/>
+      <rect x="6" y="36" width="36" height="7" rx="3" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <circle cx="24" cy="7" r="3" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
+  // A hot-air balloon: striped envelope over a woven basket.
+  balloon: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M24 4 C33 4 39 11 39 19 C39 28 30 32 27 36 L21 36 C18 32 9 28 9 19 C9 11 15 4 24 4 Z"
+            fill="var(--toy-orange)" stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M24 4 C19 4 16 11 16 19 C16 28 20 32 21 36 L27 36 C28 32 32 28 32 19 C32 11 29 4 24 4 Z"
+            fill="var(--toy-cream)" opacity=".8"/>
+      <line x1="20" y1="36" x2="19" y2="41" stroke="var(--toy-brown)" stroke-width="2"/>
+      <line x1="28" y1="36" x2="29" y2="41" stroke="var(--toy-brown)" stroke-width="2"/>
+      <rect x="17" y="41" width="14" height="5" rx="1.5" fill="var(--toy-brown)"/>
+    </svg>`,
   // A round piggy: orange head, cream snout, perky ears.
   pig: `
     <svg viewBox="0 0 48 48" aria-hidden="true">

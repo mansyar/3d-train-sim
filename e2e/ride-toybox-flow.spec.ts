@@ -105,7 +105,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
     rails: 10,
     adventure: 7,
     nature: 3,
-    town: 3,
+    town: 6,
     critter: 4,
   };
   for (const [tab, count] of Object.entries(counts)) {
