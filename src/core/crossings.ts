@@ -30,8 +30,9 @@ export interface CrossingMotion {
   phase: CrossingPhase;
   /**
    * Progress within the phase's swing, 0..1. `closing` eases 0 → 1 (arms
-   * descending); `active` holds at 1 (arms down); `lifting` eases 0 → 1
-   * (arms rising); `idle` rests at 0.
+   * descending); `active` holds at 1 (arms down — note it persists through a
+   * train's whole exit, until the last one clears the hold distance);
+   * `lifting` eases 0 → 1 (arms rising); `idle` rests at 0.
    */
   progress: number;
 }
@@ -42,7 +43,7 @@ export const CROSSING_WARNING_DISTANCE = 2.25;
 export const CROSSING_HOLD_DISTANCE = 2.25;
 /** Cells: a rising gate snaps back down inside this guard. */
 export const CROSSING_EXIT_DISTANCE = 1.25;
-/** Cells: a train this close is ON the crossing — arms fully down. */
+/** Cells: a train this close is ON the crossing — arms fully down, bell loud. */
 export const CROSSING_OCCUPY_DISTANCE = 0.75;
 /** Seconds the barrier arms take to swing shut. */
 export const CROSSING_CLOSE_SECONDS = 0.6;

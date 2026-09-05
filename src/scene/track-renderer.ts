@@ -812,10 +812,13 @@ export function startTrackRenderer(
         parts.west.scale.set(stretch, squash, stretch);
       }
       // Lantern: hard alternating blink while awake (any time of day); a
-      // soft paired night-light while it rests after dusk.
+      // soft paired night-light while it rests after dusk. Reduced motion
+      // swaps the 2 Hz strobe for a steady warn glow on both lamps.
       const awake = motion.phase !== 'idle';
-      const glowA = awake ? (beat ? CROSSING_ACTIVE_GLOW : 0) : idleGlow;
-      const glowB = awake ? (beat ? 0 : CROSSING_ACTIVE_GLOW) : idleGlow;
+      const blinkA = beat ? CROSSING_ACTIVE_GLOW : 0;
+      const blinkB = beat ? 0 : CROSSING_ACTIVE_GLOW;
+      const glowA = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkA) : idleGlow;
+      const glowB = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkB) : idleGlow;
       if (parts.lampA) parts.lampA.emissiveIntensity = glowA;
       if (parts.lampB) parts.lampB.emissiveIntensity = glowB;
     }
