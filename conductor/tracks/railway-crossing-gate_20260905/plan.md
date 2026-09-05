@@ -191,3 +191,8 @@ final gates.
   > runbook; the Windows WebKit blob: noise did not trip this run.
 
   [checkpoint: 275a41f]
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions `608cef9`
+  - **Notes:** Review (Iterative Mode, 1,554 insertions / 23 files) found no Critical or High issues. Applied both LOW suggestions: (1) track-renderer.ts — under `prefers-reduced-motion` the lantern now holds a steady warn glow on both lamps instead of strobing at 2 Hz (arm swing already snapped binary); (2) crossings.ts — `CrossingMotion.progress` doc now states that `active` persists through a train's whole exit until the last one clears the hold distance, and the `OCCUPY` doc gained "bell loud". Gates: tsc clean, biome clean, vitest unaffected (comment-only core change).
