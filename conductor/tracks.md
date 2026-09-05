@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [loco-fleet_20260905](tracks/loco-fleet_20260905/index.md) | Locomotive Fleet Expansion | Feature | in progress |
+| [loco-fleet_20260905](archive/loco-fleet_20260905/index.md) | Locomotive Fleet Expansion | Feature | done |
 | [railway-crossing-gate_20260905](archive/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | done |
 | [e2e-stability_20260904](archive/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | done |
 | [switches-branches_20260903](archive/switches-branches_20260903/index.md) | Track Switches & Branches | Feature | done |
@@ -39,4 +39,4 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `switches-branches_20260903`,
 `ride-toybox-flow_20260903`, `release-v0.6.0_20260903`,
 `e2e-stability_20260904`, `railway-crossing-gate_20260905`,
-`release-v0.8.0_20260905`.
+`release-v0.8.0_20260905`, `loco-fleet_20260905`.
