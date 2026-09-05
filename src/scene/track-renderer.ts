@@ -302,6 +302,8 @@ export interface TrackRenderer {
   updateDelight(dt: number): void;
   /** Winter tell: show/hide the delight toys' snow caps (event-driven). */
   setDelightSnow(visible: boolean): void;
+  /** Dev/e2e witness: the first balloon's drift from its base, in cells. */
+  delightBalloonDrift(): { x: number; z: number; altitude: number } | null;
 
   /** Debug aid: every placed crossing's live phase ('idle'|'closing'|
    *  'active'|'lifting'), for e2e witnesses. */
@@ -1130,6 +1132,7 @@ export function startTrackRenderer(
       delight.update(dt, reducedMotion);
     },
     setDelightSnow,
+    delightBalloonDrift: () => delight.probe(),
     // Dev/e2e witnesses: live crossing phases and the bell edge state.
     crossingPhases: () =>
       [...tracked.values()]

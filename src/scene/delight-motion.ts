@@ -59,6 +59,8 @@ export interface DelightMotion {
   detach(id: string): void;
   /** Advance every attached toy one frame. */
   update(dt: number, reducedMotion: boolean): void;
+  /** Dev/e2e witness: the first balloon's drift from its base, in cells. */
+  probe(): { x: number; z: number; altitude: number } | null;
   dispose(): void;
 }
 
@@ -109,10 +111,22 @@ export function createDelightMotion(): DelightMotion {
     }
   }
 
+  function probe(): { x: number; z: number; altitude: number } | null {
+    for (const motion of motions.values()) {
+      if (motion.kind !== 'balloon') continue;
+      return {
+        x: (motion.root.position.x - motion.base.x) / CELL_SIZE,
+        z: (motion.root.position.z - motion.base.z) / CELL_SIZE,
+        altitude: (motion.root.position.y - motion.base.y) / CELL_SIZE,
+      };
+    }
+    return null;
+  }
+
   function dispose(): void {
     disposed = true;
     motions.clear();
   }
 
-  return { attach, detach, update, dispose };
+  return { attach, detach, update, probe, dispose };
 }

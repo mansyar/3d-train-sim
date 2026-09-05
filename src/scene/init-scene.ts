@@ -126,6 +126,10 @@ export interface SceneHandle {
   crossingPhases(): string[];
   /** Debug aid: whether the crossing bell edge is ringing right now. */
   bellRinging(): boolean;
+  /** Debug aid: the first balloon's drift from its base, in cells. */
+  delightBalloonDrift(): { x: number; z: number; altitude: number } | null;
+  /** Debug aid: force the delight toys' winter state (e2e determinism). */
+  setDelightSnow(visible: boolean): void;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -1043,6 +1047,8 @@ export function initScene(
     ridingTrainCount: () => rigs.size,
     crossingPhases: () => tracks.crossingPhases(),
     bellRinging: () => tracks.bellRinging(),
+    delightBalloonDrift: () => tracks.delightBalloonDrift(),
+    setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
     filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
