@@ -3,7 +3,7 @@
 Chore track — no logic-bearing code, so no TDD tasks; verification is
 gates + smoke + checkpoints per `workflow.md`.
 
-## Phase 1 - Changelog & Version Bump
+## Phase 1 - Changelog & Version Bump [checkpoint: 735da63]
 
 - [x] Task: Promote `CHANGELOG.md` for v0.8.0 (f6c0e8d)
   - Notes: Moved both `## [Unreleased]` Added blocks (crossing gate +
@@ -27,7 +27,13 @@ gates + smoke + checkpoints per `workflow.md`.
   - Acceptance: `package.json` version reads `0.8.0`, matching the
     eventual `v0.8.0` tag.
   - [x] Single-line version bump; verify no other in-repo version references need changing (remaining `0.7.0` strings are history, compare links, and archive docs)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (735da63)
+  - Verification Report (2026-09-05): automated `pnpm check` green —
+    biome clean, `tsc --noEmit` clean, 641/641 vitest pass. Scope is
+    docs/data only (`CHANGELOG.md`, `package.json`, `conductor/` — no
+    logic-bearing files), so no new unit tests required. Manual: user
+    eyeballed the new `## [0.8.0]` section, compare links, and version
+    bump — confirmed yes.
 
 ## Phase 2 - Local Pre-Tag Verification
 
