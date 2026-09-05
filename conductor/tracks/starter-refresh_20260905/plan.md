@@ -21,7 +21,7 @@
 - [x] PV1.1 — `pnpm vitest run src/core/starters` + `src/state` green, coverage of new logic >80%. (Full `pnpm check`: 647 tests pass, 36 files; new builder + preserve logic fully exercised.)
 - [x] PV1.2 — `pnpm check` (biome 2.5.10 + `tsc --noEmit`) green; no new GLB/audio/network/deps.
 - [x] PV1.3 — Quick smoke: dev boot applies 4th builder programmatically → valid loop per pathing rules. (No vite-node/tsx runner in repo; satisfied by `starters.test.ts` applying `hilltopJunction()` through the real `rideComponentsOf` solver — one closed component, full coverage. Browser boot path covered by Phase 2 e2e.)
-- [ ] Review prior phase before proceeding (flag dead ends / stale assumptions).
+- [x] Review prior phase before proceeding (flag dead ends / stale assumptions). Notes: reviewed after the tablet catch — the empirical rotation search had trusted the ride solver's virtual junction routing, which masks geometrically dangling diverges; future switch layouts must assert real `connectionsFor` edges, not only closed rides.
 
 ## Phase 2 — Glue: gallery pick + e2e + docs
 
@@ -37,5 +37,15 @@
 
 - [x] PV2.1 — Full `pnpm check` green (biome + typecheck + vitest). Notes: one Biome format fix in the new e2e test (commit 5813008); 647/647 Vitest, Biome + `tsc --noEmit` clean.
 - [x] PV2.2 — `npx playwright test starter-railway` green tablet + phone; console clean (boot/reload paths). Notes: 8/8 passed (1.8m) incl. new preservation test; only allowlisted THREE shadow-map deprecation warnings.
-- [ ] PV2.3 — Manual tablet touch check: gallery pick, ride, undo, reset feel instant (<100ms feedback), no toddler-facing text.
+- [x] PV2.3 — Manual tablet touch check: gallery pick, ride, undo, reset feel instant (<100ms feedback), no toddler-facing text. Notes: user hands-on check 2026-09-05 — all good; the check also caught the passing-loop direction defect (fixed `847576b`) and the corrected branch was re-verified on tablet.
+
+### Phase 2 Verification Report
+
+All Phase 2 tasks and gates green. Hilltop Junction ships as the 4th gallery
+preset: icon-only pick inside the parent gate, 17 rails + 3 decor (20 toys),
+hill trio + mirrored passing loop whose diverging legs both meet the siding,
+apply preserves the kid's train + wagon picks as ONE undoable mutation, reset
+stays EMPTY. Evidence: 647/647 Vitest, Biome + `tsc --noEmit` clean, 8/8
+Playwright tablet + phone, user touch-check passed (PV2.3). Commits: `7da92e9`,
+`6061e17`, `854e229`, `e5a40f5`, `5813008`, `847576b`.
 - [ ] Update `conductor/tracks.md` (done → in-progress → done); commit per `workflow.md` (staged commits, atomic messages).
