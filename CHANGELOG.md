@@ -27,6 +27,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   winter the new hilltops wear snow crowns that melt away with the
   snow. Older saved railways open unchanged.
 
+### Changed
+- **Updates arrive quietly, between rides.** The train table now checks
+  now and then for a newer version of the app and, when it finds one, it
+  waits for a quiet moment — never mid-ride — and freshens itself with
+  one gentle reload. Grown-ups can check the current version number in
+  the picture gallery behind the parent gate.
+
 ## [0.7.0] - 2026-09-04
 
 ### Added
