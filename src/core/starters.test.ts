@@ -45,9 +45,16 @@ function expectValidStarter(data: WorldData): void {
   for (const cell of cells) expect(inBounds(cell)).toBe(true);
   expect(new Set(cells.map((c) => `${c.x},${c.y}`)).size).toBe(cells.length);
   for (const piece of data.pieces) {
-    expect(['straight', 'corner', 'bridge', 'slope-up', 'hill', 'slope-down', 'switch']).toContain(
-      piece.type,
-    );
+    expect([
+      'straight',
+      'corner',
+      'bridge',
+      'slope-up',
+      'hill',
+      'slope-down',
+      'switch',
+      'switch-mirror',
+    ]).toContain(piece.type);
     // Covers both directions: land toys on dry cells, bridges on water only.
     expect(terrainErrorFor(piece.type, piece.cell)).toBeNull();
   }
@@ -107,15 +114,16 @@ describe('hilltopJunction', () => {
     expect(types).toContain('slope-up');
     expect(types).toContain('hill');
     expect(types).toContain('slope-down');
-    expect(types.filter((type) => type === 'switch')).toHaveLength(2);
-    // Opposite-facing stems: each travel direction enters one stem, so the
-    // alternating ride serves the siding whichever way the solver runs.
-    const switchRotations = hilltopJunction()
-      .pieces.filter((piece) => piece.type === 'switch')
-      .map((piece) => piece.rotation)
-      .sort((a, b) => a - b);
-    expect(switchRotations).toEqual([90, 270]);
-    expect(types).not.toContain('switch-mirror');
+    expect(types.filter((type) => type === 'switch' || type === 'switch-mirror')).toHaveLength(2);
+    // Both diverging legs face the siding (south): the west right-switch
+    // diverges south (rot90) and the east mirrored right-switch diverges
+    // south (rot270), so the siding rails meet the switch blades visually
+    // and the westbound ride alternates main + siding laps.
+    const junctions = hilltopJunction()
+      .pieces.filter((piece) => piece.type === 'switch' || piece.type === 'switch-mirror')
+      .map((piece) => `${piece.type}@${piece.rotation}`)
+      .sort();
+    expect(junctions).toEqual(['switch-mirror@270', 'switch@90']);
     expect(types).not.toContain('tunnel');
     expect(types).not.toContain('crossing-gate');
   });

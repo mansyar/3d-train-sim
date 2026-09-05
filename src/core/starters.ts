@@ -135,13 +135,14 @@ export function riverCrossing(): WorldData {
 /** Hilltop Junction: the hill run and a passing loop in a single showcase.
  *
  * A roomier west-bank oval (columns 0–4) with the hill trio cresting the far
- * straight and two OPPOSITELY-FACING right-switches in series on the near
- * straight — west switch stem-west / diverge-south, east switch stem-east /
- * diverge-north — joined by a zigzag siding dipping one row below and
- * rising back. Each travel direction enters one stem, so the alternating
- * ride covers main + siding laps whichever way the solver runs (same-facing
- * switches only ever serve the siding in one direction). Station sits
- * beside the main line west of the siding; trees dot the dry verge.
+ * straight and a passing loop on the near straight — a right-switch (stem
+ * west / diverge south) and a mirrored right-switch (stem east / diverge
+ * south) joined by a zigzag siding dipping one row below and rising back.
+ * BOTH diverging legs face the siding so its rails meet the switch blades;
+ * the loop rides westward along the near straight, so the east mirrored
+ * switch alternates main + siding laps while the west switch merges the
+ * siding back (trailing point). Station sits beside the main line west of
+ * the siding; trees dot the dry verge.
  */
 export function hilltopJunction(): WorldData {
   return starter(
@@ -154,7 +155,7 @@ export function hilltopJunction(): WorldData {
       ['straight', 4, 5, 0],
       ['straight', 4, 6, 0],
       ['corner', 4, 7, 270],
-      ['switch', 3, 7, 270],
+      ['switch-mirror', 3, 7, 270],
       ['straight', 2, 7, 90],
       ['switch', 1, 7, 90],
       ['corner', 0, 7, 0],
