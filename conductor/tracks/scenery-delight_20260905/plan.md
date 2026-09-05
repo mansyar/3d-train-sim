@@ -26,7 +26,18 @@
   - [x] Write failing unit tests for `src/core/balloon-wander.ts`: drift stays within ~2–3 cell radius, altitude easing bounds, lands periodically, deterministic with injected RNG, landed ⇄ flying transitions
   - [x] Implement `src/core/balloon-wander.ts` (pure, injected RNG)
   - [x] Verify: tests green, `tsc --noEmit` clean, coverage >80%
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base 1c0cb14): `src/core/scenery.ts`, `src/core/scenery.test.ts`, `src/core/drawer.ts`, `src/core/drawer.test.ts`, `src/ui/app.ts`, `src/core/balloon-wander.ts`, `src/core/balloon-wander.test.ts` (+ plan/registry docs).
+    - Logic-bearing files all TDD-covered: scenery catalog additions (tests updated first, red → green), balloon-wander (7 tests, red → green). No missing tests.
+    - Gates: full suite `38 files / 665 tests` green via `CI=true pnpm test -- --coverage`; `tsc --noEmit` clean; coverage on new core modules 100% stmts (balloon-wander 96.55% branch) — above the 80% bar.
+  - Verification Report:
+    - Automated: `CI=true pnpm test -- --coverage` → all green; `tsc --noEmit` → clean; biome → clean (Task 1).
+    - Proposed manual verification (Phase 1 touches only data/logic — nothing renders yet):
+      1. `pnpm dev` → open the app → open the toybox drawer → **Town tab**: three new buttons appear after station, in order windmill → carousel → hot-air balloon, each with its chunky SVG icon.
+      2. Hover/tab-focus each new button → aria labels read "Windmill", "Carousel", "Hot-air balloon" (icon-only UI, no new text).
+      3. Expected (not a bug): placing any of the three shows no model yet — the GLBs are authored in Phase 2.
+  - [checkpoint: e8ff4bc]
 
 ## Phase 2 — Blender authoring (non-logic; render/verify gated)
 
