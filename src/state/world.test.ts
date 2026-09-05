@@ -490,6 +490,16 @@ describe('river water rules', () => {
     expect(store.scenery()).toHaveLength(0);
   });
 
+  it('lets the frog float on the water — the one scenery that lives on the river', () => {
+    const store = createWorldStore();
+    expect(store.placeScenery('frog', cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('placed');
+    const id = store.scenery()[0]?.id;
+    if (!id) throw new Error('fixture failed');
+    // The pad can hop bank-to-water and back through the normal move flow.
+    expect(store.relocateScenery(id, cellOr(LAND_CELL, { x: 0, y: 0 }), 90)).toBe('placed');
+    expect(store.relocateScenery(id, cellOr(WATER_CELL, { x: 8, y: 8 }), 0)).toBe('placed');
+  });
+
   it('keeps the meadow playable: an all-land loop still rides', () => {
     const store = createWorldStore();
     store.place('corner', { x: 0, y: 0 }, 90);

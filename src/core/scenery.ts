@@ -141,6 +141,15 @@ export function sceneryVoice(kind: SceneryKind): string | null {
   return SCENERY_VOICES[kind] ?? null;
 }
 
+/**
+ * The one toy that lives on the river: the frog's lily pad floats on the
+ * water, so placement rules let it rest on river cells. Everything else
+ * stays a land toy.
+ */
+export function sceneryFloats(kind: SceneryKind): boolean {
+  return kind === 'frog';
+}
+
 export function sceneryAria(kind: SceneryKind): string {
   return SCENERY_ARIA[kind];
 }

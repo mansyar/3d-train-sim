@@ -4,6 +4,7 @@ import {
   type SceneryKind,
   sceneryAria,
   sceneryCategory,
+  sceneryFloats,
   sceneryLift,
   sceneryScale,
   sceneryUrl,
@@ -104,6 +105,14 @@ describe('sceneryAria', () => {
   it('names every kind for the drawer buttons (icon-only UI)', () => {
     for (const kind of SCENERY_KINDS) {
       expect(sceneryAria(kind).length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('sceneryFloats', () => {
+  it('floats only the frog — every other toy stays on the banks', () => {
+    for (const kind of SCENERY_KINDS) {
+      expect(sceneryFloats(kind)).toBe(kind === 'frog');
     }
   });
 });
