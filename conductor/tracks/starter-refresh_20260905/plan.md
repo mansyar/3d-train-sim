@@ -9,18 +9,18 @@
   - Hill trio present (slope-up / hill / slope-down) + exactly two OPPOSITELY-FACING right-switches on dry land (`terrainErrorFor` / `isWater` clean) — same-facing switches only ever serve the siding in one travel direction; the {90, 270} rotation pair is pinned by test.
   - Station adjacent to loop on dry land; 2–3 nature/town decor.
 - [x] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry. (code `7da92e9`)
-- [~] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly.
+- [x] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly. (Red 2026-09-05: 3 new tests failed, 73 passed.)
   - Sub-task: verify `defaultConsist()` wipe regression is covered (diesel + coal duo survives apply + reload).
-- [ ] Task 1.4 — Green: split builders from apply (builders return rails/scenery/deliveries; `src/state/world.ts` carries train/consist forward), keep ONE pending-undo mutation.
+- [x] Task 1.4 — Green: split builders from apply — `src/state/world.ts` carries train/consist forward, keeps ONE pending-undo mutation. (code `6061e17`; minimal split: builders keep the full `WorldData` shape so `hydrate` first-run/persistence is untouched — `applyPreset` simply ignores `data.train`/`data.consist`. Old consist-overwrite test updated to the preserve contract.)
 
 > [!NOTE]
 > TDD per `workflow.md` — write failing Vitest cases FIRST for logic-bearing files (`src/core/`, `src/state/`), then implement. Notes for future implementers live here in `plan.md`, never in shipped code.
 
 ### Phase Verification & Checkpoint — Phase 1
 
-- [ ] PV1.1 — `pnpm vitest run src/core/starters` + `src/state` green, coverage of new logic >80%.
-- [ ] PV1.2 — `pnpm check` (biome 2.5.10 + `tsc --noEmit`) green; no new GLB/audio/network/deps.
-- [ ] PV1.3 — Quick smoke: dev boot applies 4th builder programmatically → valid loop per pathing rules.
+- [x] PV1.1 — `pnpm vitest run src/core/starters` + `src/state` green, coverage of new logic >80%. (Full `pnpm check`: 647 tests pass, 36 files; new builder + preserve logic fully exercised.)
+- [x] PV1.2 — `pnpm check` (biome 2.5.10 + `tsc --noEmit`) green; no new GLB/audio/network/deps.
+- [x] PV1.3 — Quick smoke: dev boot applies 4th builder programmatically → valid loop per pathing rules. (No vite-node/tsx runner in repo; satisfied by `starters.test.ts` applying `hilltopJunction()` through the real `rideComponentsOf` solver — one closed component, full coverage. Browser boot path covered by Phase 2 e2e.)
 - [ ] Review prior phase before proceeding (flag dead ends / stale assumptions).
 
 ## Phase 2 — Glue: gallery pick + e2e + docs
