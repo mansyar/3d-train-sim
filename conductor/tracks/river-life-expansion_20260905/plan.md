@@ -41,9 +41,15 @@
 
 ## Phase 2 — Blender Assets
 
-- [ ] Task: Barge recipe `scripts/blender-barge.py` → `public/assets/train-kit/barge.glb` (non-logic — render is the acceptance test)
-  - - [ ] Author chunky toy barge (hull, deck crates, little paddle wheel), sized to pass under the trestle bridge clearance; named-node contract (`barge_hull`, `barge_wheel`), named Principled double-sided materials
-  - - [ ] Camera-render fit checks against the kit scale; export by selection (`export_yup=True`); verify GLB node/material names + size (< ~150 KB)
+- [x] Task: Barge recipe `scripts/blender-barge.py` → `public/assets/train-kit/barge.glb` (non-logic — render is the acceptance test) `beb8b1d`
+  - - [x] Author chunky toy barge (hull, deck crates, little paddle wheel), sized to pass under the trestle bridge clearance; named-node contract (`barge_hull`, `barge_wheel`), named Principled double-sided materials
+  - - [x] Camera-render fit checks against the kit scale; export by selection (`export_yup=True`); verify GLB node/material names + size (< ~150 KB)
+  - Notes:
+    - **Deviation (user-approved 2026-09-05, "low-profile barge, duck precedent"):** the trestle deck sits essentially AT the waterline — measured `railroad-straight.glb` crowns at world y ≈ 0.094, so the trestle planks' bottom is ≈ 0.024 and cross-beam bottoms ≈ −0.031 (below water); there is no under-deck gap. The barge therefore passes through bridge cells at water level between the stilt legs, the shipped duck precedent on the same `riverDriftPath()`. Authored low: gunwale +0.17, crate tops ≤ +0.34, half-submerged stern wheel.
+    - Contract: the model origin IS the waterline (scene places it at y ≈ 0.02); bow on Blender +y → glTF −z forward (duck convention). Recorded in `tech-stack.md` rule 2.
+    - Iterated the paddle wheel against renders (axle stubs + 6 spokes + octagonal rim read as a waterwheel from the game's ~50° camera elevation, `init-scene.ts` OVERVIEW_POSITION (0, 52, 44)); top/side/bridge-pass renders clean.
+    - GLB: 28,752 bytes, nodes `barge_hull`/`barge_cargo`/`barge_wheel`, materials `barge_red`/`barge_trim`/`barge_dark`/`barge_crate`/`barge_wheel` — all double-sided Principled.
+    - Blender 5.2.0 LTS at `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`, run headless: `blender --background --python scripts/blender-barge.py`.
 - [ ] Task: Frog recipe `scripts/blender-frog.py` → `public/assets/nature-kit/frog.glb` (non-logic — render is the acceptance test)
   - - [ ] Author frog sitting on a lily pad (named nodes `frog_body`, `frog_pad`), kit-style green/yellow palette
   - - [ ] Render checks, export, verify names + size
