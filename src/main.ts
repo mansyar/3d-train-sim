@@ -109,12 +109,19 @@ if (root) {
       return;
     }
     lastProbeAt = performance.now();
-    void swRegistration.update();
+    swRegistration.update().catch(() => {
+      // Offline or flaky — the next probe retries; never break the quiet.
+    });
   };
 
-  void navigator.serviceWorker.getRegistration().then((registration) => {
-    swRegistration = registration ?? null;
-  });
+  void navigator.serviceWorker
+    .getRegistration()
+    .then((registration) => {
+      swRegistration = registration ?? null;
+    })
+    .catch(() => {
+      // Registration lookup is best-effort; the next probe retries.
+    });
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!hadController) {
