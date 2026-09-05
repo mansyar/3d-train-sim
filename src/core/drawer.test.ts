@@ -47,7 +47,14 @@ describe('drawerTabs', () => {
   it('groups scenery kinds by their catalog category, in catalog order', () => {
     const byId = new Map(drawerTabs().map((tab) => [tab.id, tab]));
     expect(byId.get('nature')?.kinds).toEqual(['tree', 'bush', 'rock']);
-    expect(byId.get('town')?.kinds).toEqual(['house', 'cottage', 'station']);
+    expect(byId.get('town')?.kinds).toEqual([
+      'house',
+      'cottage',
+      'station',
+      'windmill',
+      'carousel',
+      'balloon',
+    ]);
     expect(byId.get('critter')?.kinds).toEqual(['pig', 'sheep', 'pug']);
   });
 

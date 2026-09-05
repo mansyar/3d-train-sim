@@ -11,13 +11,33 @@ import {
 } from './scenery';
 
 const NATURE_KINDS: readonly SceneryKind[] = ['tree', 'bush', 'rock'];
-const TOWN_KINDS: readonly SceneryKind[] = ['house', 'cottage', 'station'];
+const TOWN_KINDS: readonly SceneryKind[] = [
+  'house',
+  'cottage',
+  'station',
+  'windmill',
+  'carousel',
+  'balloon',
+];
 const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug'];
 
 describe('scenery catalog', () => {
-  it('offers exactly nine toys: nature, town, and critters', () => {
+  it('offers exactly twelve toys: nature, town, and critters', () => {
     expect([...SCENERY_KINDS].sort()).toEqual(
-      ['bush', 'cottage', 'house', 'pig', 'pug', 'rock', 'sheep', 'station', 'tree'].sort(),
+      [
+        'balloon',
+        'bush',
+        'carousel',
+        'cottage',
+        'house',
+        'pig',
+        'pug',
+        'rock',
+        'sheep',
+        'station',
+        'tree',
+        'windmill',
+      ].sort(),
     );
   });
 
@@ -49,6 +69,12 @@ describe('sceneryUrl', () => {
 
   it('serves the station from the Blender-authored train kit pieces', () => {
     expect(sceneryUrl('station')).toBe('/assets/train-kit/station.glb');
+  });
+
+  it('serves the delight toys from the Blender-authored train kit pieces', () => {
+    expect(sceneryUrl('windmill')).toBe('/assets/train-kit/windmill.glb');
+    expect(sceneryUrl('carousel')).toBe('/assets/train-kit/carousel.glb');
+    expect(sceneryUrl('balloon')).toBe('/assets/train-kit/balloon.glb');
   });
 
   it('serves critters from the vendored Quaternius farm pack', () => {
