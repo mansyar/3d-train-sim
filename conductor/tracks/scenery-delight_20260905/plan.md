@@ -76,11 +76,26 @@
   - [x] Headless renders + style check; fit render vs ride scale
   - [x] `verify-glb.py --require carousel_spin --require carousel_snow_cap` passes; GLB ≤150 KB; exported
 
-- [~] Task: Hot-air balloon
-  - [ ] Recipe `scripts/blender-balloon.py` (`balloon_basket` assembly; `balloon_snow_cap` inside the assembly)
-  - [ ] Headless renders + style check; landed envelope clears wagon cab height
-  - [ ] `verify-glb.py --require balloon_basket --require balloon_snow_cap` passes; GLB ≤150 KB; exported
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Hot-air balloon (bddfabb)
+  - Notes:
+    - Recipe `scripts/blender-balloon.py`: named empty `balloon_basket` at the ground anchor carrying the whole assembly (brown basket, 4 ropes, orange teardrop envelope scaled z 1.15, cream equator band, `balloon_snow_cap` hemisphere on the crown); scene drives wander transforms on the root, so its origin stays at ground centre.
+    - Fix loop (3 attempts — loop cap reached, then resolved): (1) all renders blank — `to_track_quat("-Z","Y")` needs the LOOK direction (target − camera); (2) envelope rendered lemon-gold → deepened orange; fit shot still missing loco; (3) root cause: `_import_loco` left every imported object `hide_render = True`; unhide for the fit shot only.
+    - Gates: renders (quarter/top/fit/winter) viewed; style gate passed (user accepted); `verify-glb.py` PASS — 57.2 KB (budget 150), Y-up extents plausible, 9 nodes / 4 materials, `balloon_basket` + `balloon_snow_cap` exactly once.
+  - [x] Recipe `scripts/blender-balloon.py` (`balloon_basket` assembly; `balloon_snow_cap` inside the assembly)
+  - [x] Headless renders + style check; landed envelope clears wagon cab height
+  - [x] `verify-glb.py --require balloon_basket --require balloon_snow_cap` passes; GLB ≤150 KB; exported
+
+- [~] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base 8666b90): `scripts/blender-windmill.py`, `scripts/blender-carousel.py`, `scripts/blender-balloon.py`, `public/assets/train-kit/windmill.glb`, `public/assets/train-kit/carousel.glb`, `public/assets/train-kit/balloon.glb` (+ plan docs).
+    - No logic-bearing code in this phase — all three Blender recipes and GLBs; no unit tests required. Test suite still green.
+    - Gates: all three GLBs pass `verify-glb.py` (20.0 / 133.4 / 57.2 KB, contract nodes exactly once, Y-up, no hygiene failures); every toy passed headless render inspection + user style acceptance; fit renders show the ×1.6 ride-scale locomotive clears each toy.
+  - Verification Report:
+    - Automated: `CI=true pnpm test` → 38 files / 664 tests green; `tsc --noEmit` clean (assets and recipes are outside the TS graph, sanity-checked anyway).
+    - Proposed manual verification (asset-level; in-scene wiring lands in Phase 3):
+      1. Open `public/assets/train-kit/windmill.glb`, `carousel.glb`, `balloon.glb` in any glTF viewer (or Blender import) — each loads, shows named nodes from its recipe contract, Y-up.
+      2. Optional `pnpm dev` sanity check: drawer Town tab still shows the three toys; placing them still shows no model (expected until Phase 3 registers the URLs).
+  - [checkpoint: bddfabb]
 
 ## Phase 3 — Scene wiring (non-logic; smoke verified)
 
