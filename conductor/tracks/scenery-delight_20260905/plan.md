@@ -41,12 +41,32 @@
 
 ## Phase 2 — Blender authoring (non-logic; render/verify gated)
 
-- [ ] Task: Windmill
-  - [ ] Recipe `scripts/blender-windmill.py` (build/render_checks/export/verify structure, z-up, named Principled double-sided materials)
-  - [ ] Headless renders viewed as PNGs; side-by-side style check vs accepted pieces
-  - [ ] Fit render: ride-scale wagon clears windmill base (×1.6 clearance)
-  - [ ] `verify-glb.py --require windmill_sails --require windmill_snow_cap` passes; GLB ≤150 KB; exported to `public/assets/train-kit/`
-- [ ] Task: Carousel
+**Gate 1.1 — Measurement table (mount: meadow mat, scenery cells are track-free; occupant = locomotive standing beside, ride ×1.6):**
+
+| Quantity | Value | Source |
+|---|---|---|
+| Authored unit | 1 unit ≈ 1 meadow cell (scenery template convention) | tech-stack § authoring; `SCENERY_SCALES` multipliers |
+| Mat top (authored) | z = −1.0; toys rest on it | kit convention (switch/station recipes: `GROUND_Z`) |
+| Rail crown (context) | ~0.18 above mat (z ≈ −0.82) | tech-stack rule 2 |
+| Occupant bounding box | locomotive ≈ 2.3 wide × 2.7 tall at ride ×1.6 asset units | tech-stack rule 3 |
+| Windmill footprint | 1 cell; tower base Ø ≤ 0.85; total ~2.4 tall × scale 1.1 ≈ 2.6 world — chunky landmark, taller than house (1.0) | spec F1 |
+| Carousel footprint | 1 cell; platform Ø 1.1, canopy Ø 1.35, total ~1.35 tall × scale 1.0 | spec F1 |
+| Balloon footprint | 1 cell; basket 0.3 wide, envelope Ø 0.95; landed total ~1.5 tall × scale 0.9; flies ≤ maxHeight 1.6 cells above base (scene) | spec F3 |
+| Clearance rationale | scenery cells never carry rail (one-toy-per-cell placement); no bore to clear — fit check = locomotive parked beside each toy at ×1.6, reading scale + no visual clipping | Phase 1 measurement |
+
+**Node-name contracts (greppable, exactly once in each GLB):** `windmill_sails`, `windmill_snow_cap`, `carousel_spin`, `carousel_snow_cap`, `balloon_basket`, `balloon_snow_cap`. Palettes (author-chosen, warm toy range, accepted on the windmill): cream (0.95, 0.86, 0.68), toy red (0.78, 0.18, 0.10), orange (1.0, 0.62, 0.11), warm brown (0.42, 0.26, 0.15), steel (0.55, 0.60, 0.68), snow (0.94, 0.96, 0.93). Render env: `view_transform = "Standard"`, sun 2.0 (matches app tone response; accepted on windmill).
+
+- [x] Task: Windmill (470e6a3)
+  - Notes:
+    - Recipe `scripts/blender-windmill.py`: cream tapered tower (r0 0.5 → r1 0.36, h 1.9) + red cap + red 4-blade sails on named `windmill_sails` empty (blades sweep the vertical plane; scene spins about local +y), door/window dressing, `windmill_snow_cap` blanket cone. REPO derived from `__file__`.
+    - Fix loop (3 attempts): (1) blade bmesh used wrong extents → slabs instead of blades, also spin axis corrected from +z to horizontal hub +y; (2) snow cap floated → now blankets the cap cone; (3) renders washed out → `view_transform = "Standard"` (AgX desaturates; app uses NeutralToneMapping) + sun 2.0 + deeper albedo. Palette re-rendered faithful to albedo; user accepted style (Layer 3).
+    - Gates: renders viewed (top/quarter/fit-with-loco-at-×1.6/winter); `verify-glb.py` PASS — 20.0 KB, Y-up extents ok, 10 nodes, `windmill_sails` + `windmill_snow_cap` exactly once.
+  - [x] Recipe `scripts/blender-windmill.py` (build/render_checks/export/verify structure, z-up, named Principled double-sided materials)
+  - [x] Headless renders viewed as PNGs; side-by-side style check vs accepted pieces
+  - [x] Fit render: ride-scale wagon clears windmill base (×1.6 clearance)
+  - [x] `verify-glb.py --require windmill_sails --require windmill_snow_cap` passes; GLB ≤150 KB; exported to `public/assets/train-kit/`
+
+- [x] Task: Carousel
   - [ ] Recipe `scripts/blender-carousel.py` (canopy + poles + 2–3 horses under `carousel_spin`)
   - [ ] Headless renders + style check; fit render vs ride scale
   - [ ] `verify-glb.py --require carousel_spin --require carousel_snow_cap` passes; GLB ≤150 KB; exported
