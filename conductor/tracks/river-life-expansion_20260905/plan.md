@@ -123,7 +123,7 @@
     persists frogs; older saved worlds open unchanged (no save-version
     prompt).
 
-## Phase 4 — E2E, Docs & Gates
+## Phase 4 — E2E, Docs & Gates [checkpoint: af87148]
 
 - [x] Task: Playwright spec `e2e/river-life.spec.ts` (per `e2e/README.md` conventions) `9266722`
   - - [x] Via `__tinyTracksWorld`: place frog on a water cell and a land cell, assert the frog GLB loads and the barge is present, start a ride, assert zero console errors
@@ -170,7 +170,25 @@
       allowlisted WebKit blob-texture GLTFLoader trip (starter-
       railway), per the runbook.
   - - [ ] `pnpm check` (biome + tsc + vitest) and the Playwright suite (tablet · phone · prod)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-05): changed files since the Phase 3
+    checkpoint (bca7b43) reviewed — e2e specs, CHANGELOG, product.md,
+    and this plan; no new logic-bearing code, so no new coverage duty
+    (Phase 1's coverage report stands). Automated: `pnpm check` green
+    — biome clean (130 files), `tsc --noEmit` clean, 654/654 vitest.
+    Playwright suite (foreground, 2 workers, tablet + phone + prod):
+    109/113 first run; the 4 failures were stale Critter-tab counts
+    (3 → 4 with the frog), fixed in `3905cc1`, rerun green 4/4 →
+    effectively 113/113 including both river-life tests and the prod
+    test. Only runbook-known noise observed (PCFSoftShadowMap
+    deprecation warning; one allowlisted WebKit blob-texture GLTFLoader
+    trip).
+  - Manual (user confirmed 2026-09-05): the CHANGELOG `## [Unreleased]`
+    entry reads as a warm, accurate parent-facing note; the
+    `conductor/product.md` roadmap bullet matches the established
+    shipped-pattern without overstating (barge = ambience, no version
+    bump); tablet sanity pass — barge drifts with the gentler bob and
+    no color blink, frog places on river and grass, rides run clean.
 
 ## Notes
 
