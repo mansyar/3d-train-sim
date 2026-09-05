@@ -50,9 +50,15 @@
     - Iterated the paddle wheel against renders (axle stubs + 6 spokes + octagonal rim read as a waterwheel from the game's ~50° camera elevation, `init-scene.ts` OVERVIEW_POSITION (0, 52, 44)); top/side/bridge-pass renders clean.
     - GLB: 28,752 bytes, nodes `barge_hull`/`barge_cargo`/`barge_wheel`, materials `barge_red`/`barge_trim`/`barge_dark`/`barge_crate`/`barge_wheel` — all double-sided Principled.
     - Blender 5.2.0 LTS at `C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`, run headless: `blender --background --python scripts/blender-barge.py`.
-- [ ] Task: Frog recipe `scripts/blender-frog.py` → `public/assets/nature-kit/frog.glb` (non-logic — render is the acceptance test)
-  - - [ ] Author frog sitting on a lily pad (named nodes `frog_body`, `frog_pad`), kit-style green/yellow palette
-  - - [ ] Render checks, export, verify names + size
+- [x] Task: Frog recipe `scripts/blender-frog.py` → `public/assets/nature-kit/frog.glb` (non-logic — render is the acceptance test) `5156f8c`
+  - - [x] Author frog sitting on a lily pad (named nodes `frog_body`, `frog_pad`), kit-style green/yellow palette
+  - - [x] Render checks, export, verify names + size
+  - Notes:
+    - Calibration from peers: nature-kit GLBs are authored tiny (rock_smallA 0.36 raw → 1.35 world at ×3.75) and the quaternius pig renders 1.16 world tall — the frog lands at ~1.1 (incl. pad), pad Ø ~1.8 world across the 3.75-unit cell.
+    - Contract: pad underside at the model origin (land lift 0.01 / water surface in Phase 3); `frog_body` origin parked at the pad-top centre so the critter-life hop moves the body node; bow +y → glTF −z forward.
+    - Pad carries the classic wedge notch (boolean slit, rear); kit-style green/yellow via the yellow throat + green body/pad; white googly eyes with dark pupils.
+    - Fixed an authored-bug en route: the uvsphere helper scaled radius-1 spheres by 2×half (cube math) — every sphere was double size until corrected to ×half.
+    - Renders (front/top/side/scale-vs-pig) pass vision critique; GLB 99,168 bytes with nodes `frog_body`/`frog_pad`, materials `frog_green`/`pad_green`/`frog_yellow`/`frog_white`/`frog_dark`.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Scene & Audio Wiring
