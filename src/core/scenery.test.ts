@@ -12,12 +12,12 @@ import {
 
 const NATURE_KINDS: readonly SceneryKind[] = ['tree', 'bush', 'rock'];
 const TOWN_KINDS: readonly SceneryKind[] = ['house', 'cottage', 'station'];
-const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug'];
+const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug', 'frog'];
 
 describe('scenery catalog', () => {
-  it('offers exactly nine toys: nature, town, and critters', () => {
+  it('offers exactly ten toys: nature, town, and critters', () => {
     expect([...SCENERY_KINDS].sort()).toEqual(
-      ['bush', 'cottage', 'house', 'pig', 'pug', 'rock', 'sheep', 'station', 'tree'].sort(),
+      ['bush', 'cottage', 'frog', 'house', 'pig', 'pug', 'rock', 'sheep', 'station', 'tree'].sort(),
     );
   });
 
@@ -52,17 +52,25 @@ describe('sceneryUrl', () => {
   });
 
   it('serves critters from the vendored Quaternius farm pack', () => {
-    for (const kind of CRITTER_KINDS) {
+    for (const kind of ['pig', 'sheep', 'pug'] as const) {
       expect(sceneryUrl(kind)).toMatch(/^\/assets\/quaternius-farm\/[\w-]+\.glb$/);
     }
+  });
+
+  it('serves the frog from the Blender-authored nature kit pieces', () => {
+    expect(sceneryUrl('frog')).toBe('/assets/nature-kit/frog.glb');
   });
 });
 
 describe('sceneryVoice', () => {
   it('gives every critter its own gentle voice id', () => {
     for (const kind of CRITTER_KINDS) {
-      expect(sceneryVoice(kind)).toMatch(/^(oink|baa|woof)-[\w]+$/);
+      expect(sceneryVoice(kind)).toMatch(/^(oink|baa|woof|ribbit)-[\w]+$/);
     }
+  });
+
+  it('gives the frog its ribbit voice', () => {
+    expect(sceneryVoice('frog')).toBe('ribbit-frog');
   });
 
   it('gives non-critters no voice', () => {

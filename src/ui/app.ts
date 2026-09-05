@@ -146,6 +146,24 @@ const SCENERY_ICONS: Record<SceneryKind, string> = {
                stroke="var(--toy-brown)" stroke-width="2.5"/>
       <circle cx="24" cy="27" r="2.2" fill="var(--toy-brown)"/>
     </svg>`,
+  // A frog on a lily pad: green round head, cream eye bumps, notch-cut pad.
+  frog: `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <ellipse cx="24" cy="36" rx="19" ry="9" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M24 36 L36 30" stroke="var(--toy-brown)" stroke-width="2.5"
+            stroke-linecap="round"/>
+      <circle cx="17" cy="16" r="4.5" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="31" cy="16" r="4.5" fill="var(--toy-cream)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <circle cx="17" cy="16" r="1.6" fill="var(--toy-brown)"/>
+      <circle cx="31" cy="16" r="1.6" fill="var(--toy-brown)"/>
+      <ellipse cx="24" cy="26" rx="14" ry="11" fill="var(--toy-green)"
+               stroke="var(--toy-brown)" stroke-width="3"/>
+      <path d="M17 30 Q24 35 31 30" fill="none" stroke="var(--toy-brown)"
+            stroke-width="2.5" stroke-linecap="round"/>
+    </svg>`,
 };
 
 const PIECE_ICONS: Record<PieceType, string> = {
