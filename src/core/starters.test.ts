@@ -3,7 +3,13 @@ import { rideComponentsOf } from './pathing';
 import { hasCycle, isRideable } from './ride-ready';
 import { isWater } from './river';
 import type { WorldData } from './save';
-import { cozyOval, hilltopJunction, riverCrossing, STARTER_PRESETS, stationVillage } from './starters';
+import {
+  cozyOval,
+  hilltopJunction,
+  riverCrossing,
+  STARTER_PRESETS,
+  stationVillage,
+} from './starters';
 import { inBounds, terrainErrorFor } from './track-graph';
 
 const BUILDERS = {

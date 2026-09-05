@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
-import { STARTER_PRESETS, cozyOval, hilltopJunction, stationVillage } from '../core/starters';
+import { cozyOval, hilltopJunction, STARTER_PRESETS, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
 import { TRAIN_KINDS } from '../core/trains';
 import { defaultConsist, withConsistPreset } from '../core/wagons';
@@ -896,8 +896,8 @@ describe("world store preset apply preserves the kid's train", () => {
 
     const reloaded = createWorldStore();
     reloaded.hydrate({
-      pieces: store.pieces(),
-      scenery: store.scenery(),
+      pieces: [...store.pieces()],
+      scenery: [...store.scenery()],
       train: store.train(),
       deliveries: store.deliveries(),
       consist: store.consist(),

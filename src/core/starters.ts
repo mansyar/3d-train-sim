@@ -14,7 +14,11 @@ import type { PlacedScenery, SceneryKind } from './scenery';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
 import { defaultConsist } from './wagons';
 
-export type StarterPresetId = 'cozy-oval' | 'station-village' | 'river-crossing' | 'hilltop-junction';
+export type StarterPresetId =
+  | 'cozy-oval'
+  | 'station-village'
+  | 'river-crossing'
+  | 'hilltop-junction';
 
 export interface StarterPreset {
   id: StarterPresetId;
