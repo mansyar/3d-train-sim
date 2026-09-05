@@ -79,12 +79,27 @@ Playwright smoke for scene/UI.
   wagon-workshop consist reads still reference 3 kinds.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 3 - Picker: Scrollable 6-Engine Row (UI)
+## Phase 3 - Picker: Scrollable 6-Engine Row (UI) [checkpoint: a65681d]
 
-- [ ] Task: Picker becomes a horizontally scrollable row (non-logic)
-  - [ ] Acceptance: 6 identical chunky buttons, ≥64px targets, horizontal scroll on ≥360px phones, no pagination/text; pressed state + selection sound unchanged; reduced-motion safe
-  - [ ] Implement CSS/wiring in `src/ui/app.ts`
-  - [ ] Manual/tablet verification per acceptance
+**Verification Report (Phase 3)**
+- Changed files since prev checkpoint (`3a2e6ac`): src/ui/app.ts (loco-row wrapper), src/style.css (.loco-row scroll styles), plan.md. No logic-bearing changes.
+- Gates: biome/tsc clean; 664/664 unit tests; Playwright smoke 40/40; hill-pace + wagon-workshop 12/12 with retries (1 pre-existing flake under parallel load, green on retry).
+- Manual verification confirmed by user (2026-09-05): 6 buttons in one scrollable row on phone/tablet, swipe-on-gaps scrolling, taps select instantly, pressed state + wagon row unchanged.
+
+- [x] Task: Picker becomes a horizontally scrollable row (non-logic) `a65681d`
+  - [x] Acceptance: 6 identical chunky buttons, ≥64px targets, horizontal scroll on ≥360px phones, no pagination/text; pressed state + selection sound unchanged; reduced-motion safe
+  - [x] Implement CSS/wiring in `src/ui/app.ts`
+  - [x] Manual/tablet verification per acceptance
+
+  Notes: New `div.loco-row` wrapper (role=group, aria-label Locomotives) inside
+  the train drawer; `.train-slot` buttons unchanged (≥72px targets, delegation
+  + aria sync untouched — both use `[data-train]` queries on the drawer).
+  CSS mirrors the proven `.drawer-panel` scroll row (flex, overflow-x auto,
+  touch-action pan-x, thin scrollbar); `.train-drawer` keeps wrapping so the
+  wagon row sits below. No animation added — reduced-motion safe by design.
+  Gates: biome/tsc clean, 664 unit tests, smoke 40/40, hill-pace +
+  wagon-workshop 12/12 with retries (one flaky pace test under parallel load,
+  green on retry — pre-existing).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 - E2E, Docs & Final Gates
