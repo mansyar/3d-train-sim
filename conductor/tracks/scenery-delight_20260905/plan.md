@@ -99,12 +99,22 @@
 
 ## Phase 3 — Scene wiring (non-logic; smoke verified)
 
-- [ ] Task: Register GLBs & motion appliers
-  - [ ] Register `windmill.glb`, `carousel.glb`, `balloon.glb` in the scenery loader path (URLs per kind from `SCENERY_URLS`)
-  - [ ] Motion appliers: sail spin (~0.5 rev/s), carousel turn (~0.25 rev/s), balloon applier driving `balloon-wander` transforms per placed balloon
-  - [ ] All motion respects reduced-motion; no per-frame allocations; dispose chain covers new objects
-- [ ] Task: Winter wiring
-  - [ ] Snow-cap nodes hidden at load; toggled by the shared frozen gate (pattern of `setTunnelSnow`/`setHillSnow`/`setCrossingSnow`)
+- [x] Task: Register GLBs & motion appliers (c3e3e51)
+  - Notes:
+    - URLs were already live from Phase 1 (`SCENERY_URLS` → `/assets/train-kit/{windmill,carousel,balloon}.glb`) — the loader picks them up with no scene change.
+    - New `src/scene/delight-motion.ts`: per-toy applier records keyed by scenery id; windmill sails turn about **glTF local z** (GLB inspection showed identity node rotations — the authored +y hub exports to −z, so +y would have spun them flat like helicopter blades), carousel `carousel_spin` about +y at 0.25 rev/s, balloon repositions `balloon_basket` from `createBalloonWanderer` poses (cells → `CELL_SIZE` world) plus a slow pirouette.
+    - Renderer hooks follow the updateCrossings precedent: `updateDelight(dt)` pumped from the frame loop next to crossings; attach/detach on reconcile; dispose chain covers the new module; no per-frame allocations beyond the wander pose.
+    - Reduced motion freezes all three toys (steam/confetti precedent).
+    - Gates: tsc clean, biome clean, suite green (664 tests).
+  - [x] Register `windmill.glb`, `carousel.glb`, `balloon.glb` in the scenery loader path (URLs per kind from `SCENERY_URLS`)
+  - [x] Motion appliers: sail spin (~0.5 rev/s), carousel turn (~0.25 rev/s), balloon applier driving `balloon-wander` transforms per placed balloon
+  - [x] All motion respects reduced-motion; no per-frame allocations; dispose chain covers new objects
+
+- [x] Task: Winter wiring (c3e3e51)
+  - Notes:
+    - `setDelightSnow` mirrors `setTunnelSnow` exactly (change-gated; template + all placed clones); caps settle to the winter state known at template load (the tunnel asset-race pattern).
+    - init-scene snow gate calls `tracks.setDelightSnow(base.snow >= FROZEN_SNOW)` beside the crossing/hill calls.
+  - [x] Snow-cap nodes hidden at load; toggled by the shared frozen gate (pattern of `setTunnelSnow`/`setHillSnow`/`setCrossingSnow`)
 - [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
 
 ## Phase 4 — E2E, gates & wrap-up
