@@ -120,7 +120,7 @@ describe('createAttractClock', () => {
     const { events, advance } = makeClock(25_000, [0.9999]);
     advance(25_000);
     advance(44_997);
-    expect(lastOf(events, 'chirp')).toEqual({ kind: 'chirp', critter: 'woof-pug' });
+    expect(lastOf(events, 'chirp')).toEqual({ kind: 'chirp', critter: 'ribbit-frog' });
   });
 
   it('reschedules another chirp after one fires', () => {

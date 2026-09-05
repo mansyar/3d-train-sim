@@ -1,7 +1,7 @@
 import { deliveredCountAfter } from '../core/cargo';
 import { isWater } from '../core/river';
 import type { WorldData } from '../core/save';
-import type { PlacedScenery } from '../core/scenery';
+import { type PlacedScenery, sceneryFloats } from '../core/scenery';
 import {
   type Cell,
   inBounds,
@@ -226,7 +226,8 @@ export function createWorldStore(): WorldStore {
       if (!inBounds(cell)) return 'out-of-bounds';
       if (holderOf(cell)) return 'occupied';
       // Scenery is a land toy — the riverbed is no place for a tree.
-      if (isWater(cell)) return 'water';
+      // The floating frog is the exception: its lily pad lives on the water.
+      if (isWater(cell) && !sceneryFloats(kind)) return 'water';
       if (meadowCount() >= MAX_PIECES) return 'capacity';
       const id = `scenery-${nextId++}`;
       scenery.push({ id, kind, cell: { ...cell }, rotation });
@@ -243,7 +244,7 @@ export function createWorldStore(): WorldStore {
       if (!inBounds(cell)) return 'out-of-bounds';
       const holder = holderOf(cell);
       if (holder && holder !== item) return 'occupied';
-      if (isWater(cell)) return 'water';
+      if (isWater(cell) && !sceneryFloats(item.kind)) return 'water';
       const from = { ...item.cell };
       const fromRotation = item.rotation;
       item.cell = { x: cell.x, y: cell.y };

@@ -7,7 +7,7 @@
  */
 
 /** Meadow sounds the attract mode may chirp (volume is capped in the audio layer). */
-export const CRITTER_SOUNDS = ['oink-pig', 'baa-sheep', 'woof-pug'] as const;
+export const CRITTER_SOUNDS = ['oink-pig', 'baa-sheep', 'woof-pug', 'ribbit-frog'] as const;
 
 export type CritterSound = (typeof CRITTER_SOUNDS)[number];
 

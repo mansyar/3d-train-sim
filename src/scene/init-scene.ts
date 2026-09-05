@@ -46,6 +46,7 @@ import {
 import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
+import { createBarge } from './barge';
 import { createConfetti } from './confetti';
 import { disposeObject } from './dispose-object';
 import { createDuck, FROZEN_SNOW } from './duck';
@@ -174,6 +175,8 @@ export function initScene(
   disposables.push(fireflies.dispose);
   const duck = createDuck(scene, cellToWorld);
   disposables.push(duck.dispose);
+  const barge = createBarge(scene, cellToWorld);
+  disposables.push(barge.dispose);
 
   // Performance guardrails: a per-frame FPS probe feeds a quality controller
   // that trims the heaviest effects when frame rate sags (render scale,
@@ -959,6 +962,9 @@ export function initScene(
         night,
         snow: weatherNow.snow,
       });
+      // The barge drifts the same S-curve, slower and heavier — night is
+      // bedtime and a frozen river ices it in; the swell never stops.
+      barge.update(dt, { night, snow: weatherNow.snow });
       // The headlight catches the portals at night: a warm glow at the open
       // arch mouth nearest the engine, keyed to night factor and proximity.
       if (star && night > 0 && openPortals.length > 0) {
