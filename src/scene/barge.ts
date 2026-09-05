@@ -5,6 +5,7 @@ import { riverDriftPath } from '../core/river';
 import type { Cell } from '../core/track-graph';
 import { disposeObject } from './dispose-object';
 import { BEDTIME_NIGHT, type DuckMood, FROZEN_SNOW } from './duck';
+import { SURFACE_LIFT } from './river-water';
 import { enableCastShadows } from './shadows';
 
 /**
@@ -26,8 +27,6 @@ const BOB_AMPLITUDE = 0.05;
 const BOB_PERIOD_SECONDS = 2.6;
 /** The stern paddle wheel's gentle churn (radians/second, travel-scaled). */
 const WHEEL_SPIN = 0.9;
-/** The world river surface (the same value the water film is drawn at). */
-const WATER_Y = 0.02;
 const BARGE_URL = '/assets/train-kit/barge.glb';
 
 export interface Barge {
@@ -60,7 +59,7 @@ export function createBarge(
   if (first) {
     model.position.x = first.x;
     model.position.z = first.z;
-    model.position.y = WATER_Y;
+    model.position.y = SURFACE_LIFT;
   }
 
   new GLTFLoader().load(
@@ -123,7 +122,7 @@ export function createBarge(
       if (moving && wheel) wheel.rotation.x += dt * WHEEL_SPIN * direction;
 
       const bob = Math.sin(elapsed * ((Math.PI * 2) / BOB_PERIOD_SECONDS)) * BOB_AMPLITUDE;
-      model.position.y = WATER_Y + bob;
+      model.position.y = SURFACE_LIFT + bob;
     },
     dispose() {
       scene.remove(model);
