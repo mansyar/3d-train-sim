@@ -74,14 +74,35 @@ gates + smoke + checkpoints per `workflow.md`.
     `nginx.conf`; precache weight sane. Scope is verification-only
     (`plan.md` notes, no app code). Manual: user confirmed yes to ship.
 
-## Phase 3 - Tag & Ship
+## Phase 3 - Tag & Ship [checkpoint: e65264e]
 
-- [ ] Task: Push branch, open PR "Release v0.8.0", merge to `main`
-  - [ ] Push `track/release-v0.8.0_20260905`, open PR, verify CI green, merge
-- [ ] Task: Tag `v0.8.0` on the release merge commit and push the tag
-  - [ ] `git tag v0.8.0 <merge-sha> && git push origin v0.8.0`
-- [ ] Task: Watch the Release workflow to green
-  - [ ] Gates pass in CI (biome + tsc + vitest + full e2e)
-  - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.8.0` + `:latest`
-  - [ ] Coolify webhook fired; prod deploy triggered (family-device verification: cold-load, loop, play, whistle — manual, user)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Push branch, open PR "Release v0.8.0", merge to `main` (3ac55a0)
+  - Notes: branch pushed, PR #45 opened; CI green on the PR
+    (biome+typecheck 13s, vitest 16s, e2e 14m18s — run 33943827912).
+    Squash-merged 2026-09-05T04:39:47Z as `3ac55a0` "Release v0.8.0
+    (#45)". Files: none on branch (merge only).
+  - [x] Push `track/release-v0.8.0_20260905`, open PR, verify CI green, merge
+- [x] Task: Tag `v0.8.0` on the release merge commit and push the tag (3ac55a0)
+  - Notes: `git tag v0.8.0 3ac55a06039777a09b71ac96cd761bb17739ab6c`
+    (the squash-merge commit) + `git push origin v0.8.0` — tag live on
+    origin, triggering the Release workflow.
+  - [x] `git tag v0.8.0 <merge-sha> && git push origin v0.8.0`
+- [x] Task: Watch the Release workflow to green (33945182480)
+  - Notes: Release run 33945182480 (tag push `v0.8.0`) completed
+    success. Gates green (biome+typecheck, vitest, e2e
+    tablet·phone·prod). Publish green: image
+    `ghcr.io/mansyar/tiny-tracks:0.8.0` + `:latest` pushed (digest
+    sha256:9fa8ff11…); "Deploy via Coolify webhook" step ran
+    (curl POST, job success). Files: none (remote pipeline).
+  - [x] Gates pass in CI (biome + tsc + vitest + full e2e)
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.8.0` + `:latest`
+  - [x] Coolify webhook fired; prod deploy triggered (family-device verification: cold-load, loop, play, whistle — manual, user)
+- [x] Task: Phase Verification & Checkpoint (e65264e)
+  - Verification Report (2026-09-05): PR #45 CI green
+    (biome+typecheck, vitest, full e2e — run 33943827912),
+    squash-merged as `3ac55a0`; tag `v0.8.0` on the merge commit,
+    pushed to origin. Release run 33945182480 completed success:
+    all gates green, image `ghcr.io/mansyar/tiny-tracks:0.8.0` +
+    `:latest` pushed (digest sha256:9fa8ff11…), Coolify webhook
+    fired. Scope is release-only (no app code). Manual: user
+    confirmed yes — prod is good (cold-load, loop, play, whistle).
