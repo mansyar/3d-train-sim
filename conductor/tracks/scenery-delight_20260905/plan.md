@@ -156,3 +156,12 @@
   - [checkpoint: 7fe3eb9]
 
 ## Notes
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions (7eddb73)
+  - Notes:
+    - Review verdict: plan-compliant, style-clean, 664 unit tests + 4 e2e green; findings were all minor.
+    - Committed the pending recipe docstring contract fixes (windmill sails spin about glTF local z, not +y; balloon whitespace restore) so fresh-clone regeneration reads the true contract.
+    - delight-motion.update: reduced-motion now early-returns instead of per-item continue; e2e swapped the pose! assertion for the codebase ?? 0 idiom; biome autofixed the waitForGlb formatting.
+    - Gates after fixes: biome clean, tsc clean, 664 tests green.
