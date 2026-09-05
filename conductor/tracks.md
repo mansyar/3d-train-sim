@@ -4,7 +4,6 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [pwa-self-update_20260905](tracks/pwa-self-update_20260905/index.md) | PWA Self-Update Flow | Chore | done |
 | [railway-crossing-gate_20260905](archive/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | done |
 | [e2e-stability_20260904](archive/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | done |
 | [switches-branches_20260903](archive/switches-branches_20260903/index.md) | Track Switches & Branches | Feature | done |
