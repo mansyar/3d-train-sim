@@ -146,17 +146,48 @@ final gates.
 
 ## Phase 3 — E2E, Docs & Wrap-Up
 
-- [ ] Task: `e2e/crossing-gate.spec.ts` (touch-emulated tablet viewport,
+- [x] Task: `e2e/crossing-gate.spec.ts` (touch-emulated tablet viewport,
   no console errors)
-  - [ ] Place a crossing from the Rails tab on dry land; red ghost over
+  - [x] Place a crossing from the Rails tab on dry land; red ghost over
         water; snap works
-  - [ ] Train approach → gates close + lantern blinks + bell; after pass
-        → gates lift; reload restores the placed crossing; night/winter
-        variants render (following existing e2e hooks for
-        time-of-day/weather)
-- [ ] Task: Docs — `CHANGELOG.md` (Unreleased) parent-friendly note;
+  - [x] Train approach → gates close + lantern blinks + bell; after pass
+        → gates lift; reload restores the placed crossing
+
+  > **Notes** (commits `da8098a`, `9b07b48`, `275a41f`): the spec drives
+  > both tests through the dev handles (smoke/tunnel pattern) — UI-drag
+  > placement from the Rails tab onto (3,3), store-level water refusal at
+  > (8,8) backing the red ghost, and a 7-piece straight line with the gate
+  > mid-line. The ride test witnesses gate phases + the bell edge through
+  > new scene debug aids (`crossingPhases()`, `bellRinging()` — commit
+  > `da8098a`). **Why a scene witness instead of a network assertion:** the
+  > headless WebKit suite never fetches any Howler media (not even the
+  > pre-existing chug loop — verified empirically with a scratch probe:
+  > ride running, unmuted, zero `/audio/*` requests, console clean), so
+  > audio-fetch assertions are unobservable in this environment. Night/
+  > winter e2e was dropped: no dev hooks exist to force time-of-day or
+  > weather (checked `init-scene`, day clock, weather cycle), and adding
+  > forcing machinery is outside this track — the snow-cap template hook
+  > mirrors `tunnel_snow_cap`, whose winter behavior shipped without an
+  > e2e variant too. 4/4 spec runs pass (tablet + phone). One expected
+  > ripple fixed: `ride-toybox-flow`'s rails tab count 3 → 4 (`275a41f`).
+- [x] Task: Docs — `CHANGELOG.md` (Unreleased) parent-friendly note;
   `product.md` feature mention; `e2e/README.md` if the suite shape
   changes
-- [ ] Task: Final gates — `biome check`, `tsc --noEmit`, full Vitest
+
+  > **Notes** (`abee7c1`): CHANGELOG Unreleased gains a parent-friendly
+  > "railway crossing gate" paragraph; `product.md` names the piece in the
+  > Build step and gains a ✅ shipped roadmap bullet (Blender-authored via
+  > a checked-in recipe, track id + date). No `e2e/README.md` change — the
+  > suite shape (workers, profiles, allowlist) is unchanged; the new spec
+  > follows the existing conventions.
+- [x] Task: Final gates — `biome check`, `tsc --noEmit`, full Vitest
   suite, Playwright suite; Phase Verification & Checkpoint (Refer to
   workflow.md)
+
+  > **Notes**: `pnpm build` + full Playwright suite (all projects,
+  > foreground): 101 passed + the 2 count-ripple failures above → fixed
+  > and re-run green (6/6 in that spec). Vitest 619/619, `tsc --noEmit`
+  > clean, `biome check src e2e` clean. Full-suite reruns logged per the
+  > runbook; the Windows WebKit blob: noise did not trip this run.
+
+  [checkpoint: 275a41f]
