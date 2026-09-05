@@ -115,6 +115,22 @@
     - `setDelightSnow` mirrors `setTunnelSnow` exactly (change-gated; template + all placed clones); caps settle to the winter state known at template load (the tunnel asset-race pattern).
     - init-scene snow gate calls `tracks.setDelightSnow(base.snow >= FROZEN_SNOW)` beside the crossing/hill calls.
   - [x] Snow-cap nodes hidden at load; toggled by the shared frozen gate (pattern of `setTunnelSnow`/`setHillSnow`/`setCrossingSnow`)
+
+- [~] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base 362bcbc): `src/scene/delight-motion.ts` (new), `src/scene/track-renderer.ts`, `src/scene/init-scene.ts`, `scripts/blender-windmill.py` (doc-only: contract axis correction).
+    - No new logic-bearing modules — `delight-motion.ts` is scene glue (workflow: smoke + manual verification, no unit tests); its brain `balloon-wander.ts` was TDD'd in Phase 1 and is unchanged.
+    - Gates: `tsc --noEmit` clean; `biome check .` clean; full suite 664 tests green.
+  - Verification Report:
+    - Automated: `CI=true pnpm test` → all green; both lint/type gates clean (biome autofixed import order).
+    - Proposed manual verification (the toys are now live):
+      1. `pnpm dev` → place a **windmill**: sails turn steadily (~0.5 rev/s) in the vertical plane.
+      2. Place a **carousel**: canopy, poles, and horses revolve slowly; horses ride the platform.
+      3. Place a **hot-air balloon**: it rests on its basket, then takes off, drifts 2–3 cells around its base, descends, and lands — the wander radius keeps it in its own neighborhood.
+      4. Cycle weather to **snow**: each toy grows its white snow cap; thaw removes them.
+      5. OS **reduced motion** on: all three toys stand still; everything else still works.
+      6. Remove a toy: it pops away with no console errors.
+  - [checkpoint: a89a38f]
 - [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
 
 ## Phase 4 — E2E, gates & wrap-up
