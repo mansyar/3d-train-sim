@@ -49,3 +49,7 @@ stays EMPTY. Evidence: 647/647 Vitest, Biome + `tsc --noEmit` clean, 8/8
 Playwright tablet + phone, user touch-check passed (PV2.3). Commits: `7da92e9`,
 `6061e17`, `854e229`, `e5a40f5`, `5813008`, `847576b`.
 - [ ] Update `conductor/tracks.md` (done → in-progress → done); commit per `workflow.md` (staged commits, atomic messages).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions — `9b06a1d`: e2e `dressed` helper now reuses the shared `DevWorld` handle type (extended with `train()`/`consistFor()`) instead of an inline duplicate; starter-railway e2e re-run 8/8 green tablet + phone.
