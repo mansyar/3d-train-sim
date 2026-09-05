@@ -12,9 +12,14 @@
     - Typecheck forced two consumer records to learn about `frog`: `TAB_FOR_KIND` in `core/drawer.ts` (critter tab) and `SCENERY_ICONS` in `ui/app.ts` (inline lily-pad-frog SVG in the established icon style). `drawer.test.ts` critter-tab expectation updated to `['pig','sheep','pug','frog']`.
     - Files: `src/core/scenery.ts`, `src/core/scenery.test.ts`, `src/core/drawer.ts`, `src/core/drawer.test.ts`, `src/ui/app.ts`.
     - Gates: biome ✓ · tsc ✓ · 652 tests pass (full suite, coverage run).
-- [ ] Task: Floating-scenery water rule in `src/state/world.ts` (logic-bearing — TDD)
-  - - [ ] **Red:** `world.test.ts` — `placeScenery('frog', waterCell)` → `'placed'`; `placeScenery('tree', waterCell)` → `'water'`; same pair for `relocateScenery`
-  - - [ ] **Green:** add `sceneryFloats(kind)` helper in `src/core/scenery.ts` (only `frog` → true) and gate the two `isWater` checks (`placeScenery`, `relocateScenery`)
+- [x] Task: Floating-scenery water rule in `src/state/world.ts` (logic-bearing — TDD) `71ce7cb`
+  - - [x] **Red:** `world.test.ts` — `placeScenery('frog', waterCell)` → `'placed'`; `placeScenery('tree', waterCell)` → `'water'`; same pair for `relocateScenery`
+  - - [x] **Green:** add `sceneryFloats(kind)` helper in `src/core/scenery.ts` (only `frog` → true) and gate the two `isWater` checks (`placeScenery`, `relocateScenery`)
+  - Notes:
+    - TDD: two failing tests first — `sceneryFloats` catalog helper ("floats only the frog") and the world-store float rule ("lets the frog float on the water", covering place + bank↔water relocation). Confirmed Red, then Green.
+    - `placeScenery`/`relocateScenery` now read `if (isWater(cell) && !sceneryFloats(...)) return 'water'` — tree and all other toys still refused on water (existing tests unchanged and passing).
+    - Files: `src/core/scenery.ts`, `src/core/scenery.test.ts`, `src/state/world.ts`, `src/state/world.test.ts`.
+    - Gates: biome ✓ · tsc ✓ · 654 tests pass.
 - [ ] Task: UI ghost validity + drawer icon (glue — acceptance criteria in plan)
   - - [ ] `src/ui/app.ts` scenery-validity check permits `frog` on water cells; ghost green/red language unchanged otherwise
   - - [ ] inline-SVG lily-pad-frog icon added to the critter tab icons
