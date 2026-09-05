@@ -37,12 +37,18 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 2 - Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
+- [x] Task: Run the full local gate suite (e10a93c)
+  - Notes: `pnpm check` green (biome, tsc, 641/641 vitest — run
+    2026-09-05 on identical app tree; only `plan.md` changed since).
+    Full Playwright e2e at `--workers=2`: **109 passed, 0 failed**
+    (8.4m). The v0.7.0-era `wagon-workshop` Windows `blob:`-noise flake
+    did not recur — all functional + console assertions green locally.
+    Files: none (verification only).
   - Acceptance: `pnpm check` green and the full Playwright e2e suite
     green (rerun at `--workers=2` if GPU-context flakes recur).
-  - [ ] `pnpm check` (biome + typecheck + vitest)
-  - [ ] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2` if GPU-context flakes recur per the v0.5.0/v0.6.0/v0.7.0 lessons)
-- [ ] Task: Local container smoke check
+  - [x] `pnpm check` (biome + typecheck + vitest)
+  - [x] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2` if GPU-context flakes recur per the v0.5.0/v0.6.0/v0.7.0 lessons)
+- [~] Task: Local container smoke check
   - Acceptance: local `docker build` succeeds; running container
     serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
     `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
