@@ -61,7 +61,8 @@ reload within the first ~15 s after load; no console errors.
 - [x] Task: Wire quiet apply — `controllerchange` marks the update pending;
   on the ride state reaching idle, perform a single `location.reload()`;
   connect the ride-state hook (`src/state/ride.ts`). — 08ab55d
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) — user
+  approved 2026-09-05 [checkpoint: d6829b7]
 
 ## Phase 2 Notes (commit 08ab55d)
 
@@ -98,15 +99,41 @@ reload within the first ~15 s after load; no console errors.
   existing e2e suite in Phase 4.
 - **Gates:** `biome check` clean · `tsc --noEmit` clean · full `vitest run`
   650/650.
-- **User approval:** pending.
+- **User approval:** Yes — recorded 2026-09-05 [checkpoint: d6829b7].
 
 ## Phase 3: Version in the parent gate
 
-- [ ] Task: Inject `__APP_VERSION__` at build time (`vite.config.ts`
-  reads `package.json`).
-- [ ] Task: Render the version line in the parent gate panel
-  (`src/ui/app.ts` + `src/style.css` — small, subtle, grown-up-facing).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Inject `__APP_VERSION__` at build time (`vite.config.ts`
+  reads `package.json`). — 722e750
+- [x] Task: Render the version line in the parent gate panel
+  (`src/ui/app.ts` + `src/style.css` — small, subtle, grown-up-facing). — 722e750
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase 3 Notes (commit 722e750)
+
+- `vite.config.ts` reads `package.json` with `readFileSync` (no new deps)
+  and injects `__APP_VERSION__` via `define`; `src/vite-env.d.ts` declares
+  the ambient constant for TypeScript.
+- The readout lives **inside the parent-gated starter tray**
+  (`<span class="app-version">v0.7.0</span>`): the tray only opens after the
+  deliberate 2 s hold, so toddler taps never see it. Styled as 12 px
+  low-opacity brown text that wraps to its own line under the preset
+  buttons (`flex-basis: 100%`) — grown-up eyes only, zero kid-facing noise.
+- Verified in the production bundle: the built JS contains the literal
+  `v0.7.0` (precached by the SW, so the version updates with each deploy).
+- Gates: `biome check` clean · `tsc --noEmit` clean · `vite build` green
+  (164 precache entries, generateSW).
+
+## Phase 3 Verification Report
+
+- **Acceptance criteria:** version visible in the parent gate panel
+  (tray); injected from `package.json` at build time; verified present in
+  the production bundle; tray opens only via the armed parent gate.
+- **Test audit:** template/CSS/build-config change — no unit tests per
+  workflow (non-logic phase); verified by build inspection + existing
+  suites.
+- **Gates:** `biome check` clean · `tsc --noEmit` clean · `vite build` green.
+- **User approval:** pending.
 
 ## Phase 4: Gates, docs, close-out
 
