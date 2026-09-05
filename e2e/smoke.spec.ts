@@ -15,7 +15,7 @@ test('app boots on a tablet with a clean console and zero external requests', as
   await expect(page.locator('.toy-slot')).toHaveCount(2);
 
   await page.click('[data-drawer="trains"]');
-  await expect(page.locator('.train-slot')).toHaveCount(3);
+  await expect(page.locator('.train-slot')).toHaveCount(6);
   await page.locator('.train-slot[data-train="diesel"]').click();
   await expect(page.locator('.train-slot[data-train="diesel"]')).toHaveAttribute(
     'aria-pressed',
