@@ -2,7 +2,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import { closesLoop } from '../core/ride-ready';
 import { isWater } from '../core/river';
-import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
+import { SCENERY_KINDS, type SceneryKind, sceneryAria, sceneryFloats } from '../core/scenery';
 import { STARTER_PRESETS } from '../core/starters';
 import {
   type Cell,
@@ -683,7 +683,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       if (toy.id === drag?.pickedId) continue;
       if (toy.cell.x === cell.x && toy.cell.y === cell.y) return false;
     }
-    return isPieceKind(kind) ? terrainErrorFor(kind, cell) === null : !isWater(cell);
+    return isPieceKind(kind)
+      ? terrainErrorFor(kind, cell) === null
+      : !isWater(cell) || sceneryFloats(kind);
   };
 
   const stepRotation = () => {
