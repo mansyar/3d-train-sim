@@ -9,9 +9,19 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+- **Gentle bumps and banked corners for the hills.** Six new chunky
+  pieces join the Rails tab: a low hump run (up, cruise, down) for a
+  softer dip, and corners that climb, cruise high, and descend out of
+  the bend. Trains ride every one, easing gently where heights meet
+  and laboring sweetly on the climbs, and each crest earns one soft
+  celebratory pop. In
+  winter the new hilltops wear snow crowns that melt away with the
+  snow. Older saved railways open unchanged.
+
 ## [0.7.0] - 2026-09-04
 
 ### Added
+
 - **A cozy first railway for every new train table.** A fresh install now
   opens on a ready-to-ride oval with a station, trees, and a house — one
   tap of ▶ and the train is off, so little engineers get the big moment

@@ -463,6 +463,11 @@ export function initScene(
     }, STATION_DING_GAP_MS);
   };
 
+  /** A bump-run crest earns one light pop — the station voice, solo and soft. */
+  const onBumpCrest = (): void => {
+    audio.ding();
+  };
+
   /** Builds one train (locomotive + wagons + steam) for the selected kind. */
   const createRig = (): TrainRig | null => {
     const kind = world.train();
@@ -505,6 +510,7 @@ export function initScene(
       (inside) => setRigInTunnel(rig, inside),
       (stationId) => handleStationCargo(rig, stationId),
       (pieceId: string, exit: Edge) => tracks.setSwitchRoad(pieceId, exit),
+      onBumpCrest,
     );
     return rig;
   };

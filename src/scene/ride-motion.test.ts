@@ -67,6 +67,14 @@ describe('segmentForStep — the bridge rides exactly like the straight it mirro
     expect(segmentForStep(piece('straight', 8, 8), step('north', 'south')).kind).toBe('line');
     expect(segmentForStep(piece('crossing', 8, 8), step('north', 'south')).kind).toBe('line');
   });
+
+  it('rides the elevated corner run on the same quarter-arc pivot as a flat corner', () => {
+    for (const type of ['corner-up', 'hill-corner', 'corner-down'] as const) {
+      const segment = segmentForStep(piece(type, 8, 8), step('north', 'east'));
+      expect(segment.kind).toBe('arc');
+      expect(segment.r).toBeCloseTo(CELL_SIZE / 2);
+    }
+  });
 });
 
 /** A path segment as returned by `segmentForStep`. */
@@ -796,5 +804,100 @@ describe('createRideMotion — riding under the hill reports tunnel coverage', (
     expect(inside).toEqual([true]);
     motion.dispose();
     expect(inside).toEqual([true, false]);
+  });
+});
+
+describe('createRideMotion — the bump run pops a soft crest ding, once per visit', () => {
+  /** bump-up → hill-half → bump-down humping south to north at (2,4) → (2,2). */
+  function bumpRunWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('bump-up', { x: 2, y: 4 }, 0)).toBe('placed');
+    expect(world.place('hill-half', { x: 2, y: 3 }, 0)).toBe('placed');
+    expect(world.place('bump-down', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the bump run must solve to one ride component');
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  function startCrestRide(
+    world: WorldStore,
+    state: RideState,
+  ): {
+    motion: ReturnType<typeof createRideMotion>;
+    crests: number[];
+    paused: boolean[];
+  } {
+    const engine = new Object3D();
+    const crests: number[] = [];
+    const paused: boolean[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      (value) => paused.push(value),
+      undefined,
+      [],
+      undefined,
+      undefined,
+      undefined,
+      () => crests.push(crests.length),
+    );
+    motion.begin(state);
+    return { motion, crests, paused };
+  }
+
+  /** Roll until the dead-end pause has parked the train `pauses` times (capped). */
+  function ridePauses(
+    run: { motion: ReturnType<typeof createRideMotion>; paused: boolean[] },
+    pauses: number,
+  ): void {
+    for (let i = 0; i < 120 && run.paused.filter(Boolean).length < pauses; i += 1) {
+      run.motion.update(0.5);
+    }
+  }
+
+  it('dings once riding up and over the bump run', () => {
+    const { world, state } = bumpRunWorld();
+    const run = startCrestRide(world, state);
+    ridePauses(run, 1);
+    expect(run.paused).toContain(true);
+    expect(run.crests).toHaveLength(1);
+    run.motion.dispose();
+  });
+
+  it('dings again on the shuttle way back — one per crest visit', () => {
+    const { world, state } = bumpRunWorld();
+    const run = startCrestRide(world, state);
+    ridePauses(run, 2);
+    expect(run.paused.filter(Boolean).length).toBeGreaterThanOrEqual(2);
+    expect(run.crests).toHaveLength(2);
+    run.motion.dispose();
+  });
+
+  it('stays silent over the full-height hill run', () => {
+    // slope-up → hill → slope-down: the train climbs straight through the
+    // bump trigger height, but no bump piece is ever under the wheels.
+    const world = createWorldStore();
+    expect(world.place('slope-up', { x: 2, y: 4 }, 0)).toBe('placed');
+    expect(world.place('hill', { x: 2, y: 3 }, 0)).toBe('placed');
+    expect(world.place('slope-down', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the hill run must solve to one ride component');
+    const run = startCrestRide(world, { ...component, direction: 1 });
+    ridePauses(run, 1);
+    expect(run.paused).toContain(true);
+    expect(run.crests).toHaveLength(0);
+    run.motion.dispose();
+  });
+
+  it('stays silent on flat straights', () => {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone straight must solve to one ride component');
+    const run = startCrestRide(world, { ...component, direction: 1 });
+    ridePauses(run, 1);
+    expect(run.crests).toHaveLength(0);
+    run.motion.dispose();
   });
 });
