@@ -6,6 +6,12 @@ import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { deserializeWorld, serializeWorld } from './core/save';
 import { cozyOval } from './core/starters';
+import {
+  BOOT_GUARD_MS,
+  PROBE_INTERVAL_MS,
+  shouldProbeForUpdate,
+  shouldReload,
+} from './core/update-state';
 import { initScene, type SceneHandle } from './scene/init-scene';
 import {
   loadWorldSnapshot,
@@ -59,6 +65,82 @@ if (root) {
   // then, so the UI hears every ride change from the very first one.
   const filmCountListeners: ((count: number) => void)[] = [];
   const rideModeListeners: ((riding: boolean) => void)[] = [];
+
+  // ---- PWA self-update: probe quietly, adopt when the table is quiet -----
+  // Deployments install a new service worker, but the running page keeps its
+  // old precache until it reloads. A fresh `controllerchange` therefore marks
+  // the update pending, and the page reloads itself into it only once — and
+  // only when no train is riding and the boot guard has passed. The decision
+  // logic lives in core/update-state.ts.
+  const bootAt = performance.now();
+  let lastProbeAt: number | null = null;
+  let swRegistration: ServiceWorkerRegistration | null = null;
+  let pendingUpdate = false;
+  let riding = false;
+  // `controllerchange` also fires on first install — only a change after an
+  // existing controller means a fresh deployment to adopt.
+  let hadController = navigator.serviceWorker.controller !== null;
+
+  /** Applies a pending update if the table is quiet and the guard has passed. */
+  const applyPendingUpdate = (): void => {
+    if (!pendingUpdate) return;
+    if (
+      !shouldReload({
+        rideActive: riding,
+        uptimeMs: performance.now() - bootAt,
+        alreadyReloaded: false,
+      })
+    ) {
+      return;
+    }
+    location.reload();
+  };
+
+  /** Asks the service worker to check for a newer deployment. */
+  const probeForUpdate = (): void => {
+    if (!swRegistration) return;
+    const sinceLastProbe = lastProbeAt === null ? null : performance.now() - lastProbeAt;
+    if (
+      !shouldProbeForUpdate({
+        visible: document.visibilityState === 'visible',
+        msSinceLastProbe: sinceLastProbe,
+      })
+    ) {
+      return;
+    }
+    lastProbeAt = performance.now();
+    void swRegistration.update();
+  };
+
+  void navigator.serviceWorker.getRegistration().then((registration) => {
+    swRegistration = registration ?? null;
+  });
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) {
+      hadController = true; // first install — no old page to replace
+      return;
+    }
+    pendingUpdate = true;
+    applyPendingUpdate();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    probeForUpdate();
+    applyPendingUpdate();
+  });
+  setInterval(probeForUpdate, PROBE_INTERVAL_MS);
+
+  // An update that lands during the boot guard would otherwise wait for the
+  // next visibility change or hourly probe — recheck once when the guard ends.
+  setTimeout(applyPendingUpdate, BOOT_GUARD_MS);
+
+  rideModeListeners.push((isRiding) => {
+    riding = isRiding;
+    if (!isRiding) applyPendingUpdate();
+  });
+
   const canvas = mountApp(root, {
     isReady: () => !restoring,
     world,
