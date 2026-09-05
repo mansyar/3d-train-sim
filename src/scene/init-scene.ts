@@ -256,6 +256,7 @@ export function initScene(
     ground.setSnow(base.snow);
     tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
     tracks.setHillSnow(base.snow >= FROZEN_SNOW); // The hill run's crowns share the gate.
+    tracks.setCrossingSnow(base.snow >= FROZEN_SNOW); // The crossing wears winter too.
     water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
     ambience.update(base); // Rain patter + wind follow the weather bed.
     // River babble whispers near the water; a frozen river stands the babble
@@ -859,6 +860,17 @@ export function initScene(
     camera.lookAt(camLook);
   };
 
+  // Crossing gates track each riding train's spot. The pool is preallocated
+  // (up to the ride cap) and refilled per frame — no loop allocations.
+  const crossingTrainPool: Array<{ x: number; z: number }> = [
+    { x: 0, z: 0 },
+    { x: 0, z: 0 },
+    { x: 0, z: 0 },
+    { x: 0, z: 0 },
+  ];
+  const crossingTrainView: Array<{ x: number; z: number }> = [];
+  let crossingTrainCount = 0;
+
   const spinLoop = startSpinLoop(
     renderer,
     scene,
@@ -875,6 +887,7 @@ export function initScene(
       weatherClock.tick();
       paintAmbience(dt);
       visibleSteamPuffs = 0;
+      crossingTrainCount = 0;
       // Every little train ticks — parked spares too, so a pre-ride whistle
       // burst still puffs from the meadow's resting train.
       for (const rig of [...rigs.values(), ...spares]) {
@@ -885,6 +898,14 @@ export function initScene(
         // laboring climber puffs slow and deep, a breezing descender quick
         // and light. Parked trains hold their breath (no saved-up burst).
         if (rigState(rig)) {
+          const spot = crossingTrainPool[crossingTrainCount] as
+            | { x: number; z: number }
+            | undefined;
+          if (spot) {
+            spot.x = rig.model.position.x;
+            spot.z = rig.model.position.z;
+            crossingTrainCount++;
+          }
           rig.puffAcc += dt * rig.motion.pace();
           while (rig.puffAcc >= CHUG_BEAT_SECONDS) {
             rig.puffAcc -= CHUG_BEAT_SECONDS;
@@ -894,6 +915,11 @@ export function initScene(
           rig.puffAcc = 0;
         }
         visibleSteamPuffs += rig.puffs.activeCount();
+      }
+      // Hand the riding trains' spots to the crossing gates as one view.
+      crossingTrainView.length = crossingTrainCount;
+      for (let i = 0; i < crossingTrainCount; i++) {
+        crossingTrainView[i] = crossingTrainPool[i] as { x: number; z: number };
       }
       // One capped chug loop, riding the filmed train's live pace — the
       // camera's train sets the tempo. The rate glides with the pace ramp
@@ -914,6 +940,9 @@ export function initScene(
         rain: weatherNow.rain,
         night,
       });
+      // The gates watch every riding train: arms swing, lanterns blink, the
+      // bell rings while any crossing is awake.
+      tracks.updateCrossings(dt, crossingTrainView, night);
       // The duck drifts the S-curve and wiggles for passing trains; night is
       // bedtime, and a frozen river (snow) parks it on the ice.
       duck.update(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
