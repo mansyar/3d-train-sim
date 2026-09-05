@@ -66,11 +66,17 @@
   - [x] Fit render: ride-scale wagon clears windmill base (×1.6 clearance)
   - [x] `verify-glb.py --require windmill_sails --require windmill_snow_cap` passes; GLB ≤150 KB; exported to `public/assets/train-kit/`
 
-- [x] Task: Carousel
-  - [ ] Recipe `scripts/blender-carousel.py` (canopy + poles + 2–3 horses under `carousel_spin`)
-  - [ ] Headless renders + style check; fit render vs ride scale
-  - [ ] `verify-glb.py --require carousel_spin --require carousel_snow_cap` passes; GLB ≤150 KB; exported
-- [ ] Task: Hot-air balloon
+- [x] Task: Carousel (d47ac75)
+  - Notes:
+    - Recipe `scripts/blender-carousel.py` mirrors the accepted windmill structure (REPO from `__file__`, same accepted render env).
+    - Design: cream base disc + red rim platform (Ø 1.1), steel column, `carousel_spin` empty at platform top carrying red canopy cone, orange knob, 6 steel poles, 3 chunky cream horses with orange saddles; `carousel_snow_cap` blankets the canopy.
+    - Fix loop (2 attempts): (1) `_horse` signature/parenting slips fixed pre-run; (2) first render exposed Blender parenting semantics — children of the spin empty are positioned in PARENT-LOCAL space, so canopy/poles/horses/knob sank 0.88 into the ground; re-positioned children relative to `PLATFORM_TOP`.
+    - Gates: renders (top/quarter/fit/winter) viewed; style gate passed (user accepted); `verify-glb.py` PASS — 133.4 KB (budget 150), Y-up extents plausible, 22 nodes / 5 materials, `carousel_spin` + `carousel_snow_cap` exactly once.
+  - [x] Recipe `scripts/blender-carousel.py` (canopy + poles + 2–3 horses under `carousel_spin`)
+  - [x] Headless renders + style check; fit render vs ride scale
+  - [x] `verify-glb.py --require carousel_spin --require carousel_snow_cap` passes; GLB ≤150 KB; exported
+
+- [~] Task: Hot-air balloon
   - [ ] Recipe `scripts/blender-balloon.py` (`balloon_basket` assembly; `balloon_snow_cap` inside the assembly)
   - [ ] Headless renders + style check; landed envelope clears wagon cab height
   - [ ] `verify-glb.py --require balloon_basket --require balloon_snow_cap` passes; GLB ≤150 KB; exported
