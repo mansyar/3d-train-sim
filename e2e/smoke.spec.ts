@@ -625,6 +625,9 @@ test('the parent gate clears the world only after hold and confirm', async ({ pa
 });
 
 test('steam puffs emit during rides, stop cleanly, and cover the fleet', async ({ page }) => {
+  // The fleet loop swaps six engines (three of them first-time GLB loads), so
+  // the default 30s budget is too tight on a loaded CI tablet runner.
+  test.setTimeout(60_000);
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
