@@ -18,10 +18,15 @@ gates + smoke + checkpoints per `workflow.md`.
     `mansyar/3d-train-sim`); `## [Unreleased]` left empty.
   - [x] Move `## [Unreleased]` Added blocks verbatim into `## [0.8.0] - 2026-09-05`
   - [x] Refresh compare links (`v0.7.0...v0.8.0`, Unreleased → `v0.8.0...HEAD`); keep them on `mansyar/3d-train-sim`
-- [ ] Task: Bump `package.json` version to `0.8.0`
+- [x] Task: Bump `package.json` version to `0.8.0` (8808e5f)
+  - Notes: Single-line version bump; verified no other in-repo version
+    references needed changing (no `0.7.0` strings in `src/`,
+    `package.json` (besides the bumped line), `index.html`, or
+    `vite.config.ts` — remaining hits are history, compare links, and
+    archive docs). Files: `package.json` only.
   - Acceptance: `package.json` version reads `0.8.0`, matching the
     eventual `v0.8.0` tag.
-  - [ ] Single-line version bump; verify no other in-repo version references need changing (remaining `0.7.0` strings are history, compare links, and archive docs)
+  - [x] Single-line version bump; verify no other in-repo version references need changing (remaining `0.7.0` strings are history, compare links, and archive docs)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 - Local Pre-Tag Verification
