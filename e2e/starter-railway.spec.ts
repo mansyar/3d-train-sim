@@ -152,18 +152,21 @@ test('gallery apply preserves the train and wagon picks across undo and reload',
   });
 
   const dressed = (train: string) =>
-    page.evaluate(([name]) => {
-      const handle = (
-        window as unknown as {
-          __tinyTracksWorld?: {
-            train: () => string;
-            consistFor: (kind: string) => string;
-          };
-        }
-      ).__tinyTracksWorld;
-      if (!handle) throw new Error('dev world handle missing');
-      return { train: handle.train(), consist: handle.consistFor(name) };
-    }, [train] as const);
+    page.evaluate(
+      ([name]) => {
+        const handle = (
+          window as unknown as {
+            __tinyTracksWorld?: {
+              train: () => string;
+              consistFor: (kind: string) => string;
+            };
+          }
+        ).__tinyTracksWorld;
+        if (!handle) throw new Error('dev world handle missing');
+        return { train: handle.train(), consist: handle.consistFor(name) };
+      },
+      [train] as const,
+    );
 
   // Dress diesel in coal through the train drawer, then apply Hilltop Junction.
   await page.click('[data-drawer="trains"]');
