@@ -9,6 +9,15 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- **A railway crossing gate that really warns the trains.** The toy box's
+  rail tab gains a road-level crossing piece: when a train nears, the
+  little red-and-white gates swing shut, the lantern blinks, and a soft
+  bell rings until everyone has passed - then the gates lift and the
+  meadow rests. Trains roll straight through without stopping; the
+  crossing keeps its snow cap on in winter and its lantern glowing on
+  winter nights.
+
 ## [0.7.0] - 2026-09-04
 
 ### Added
