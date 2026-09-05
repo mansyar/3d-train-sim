@@ -135,12 +135,24 @@
 
 ## Phase 4 — E2E, gates & wrap-up
 
-- [ ] Task: Playwright smoke
-  - [ ] Place each toy via `__tinyTracksWorld`; toggle winter; assert balloon airborne over time; assert no console errors
-- [ ] Task: Full quality gates + manual verification
-  - [ ] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test` (coverage >80% on new `src/core` modules)
-  - [ ] Manual tablet verification: place toys, watch motion, winter caps, reduced-motion freeze
-- [ ] Task: Docs — note the three toys in `conductor/product.md` shipped list
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Playwright smoke (58d95a3)
+  - Notes:
+    - New `e2e/delight-toys.spec.ts` (shaped like the tunnel spec): places all three toys via `__tinyTracksWorld.placeScenery`, waits for each `*.glb` resource, asserts the balloon takes wing through a new dev witness (`delightBalloonDrift()`, ≤ cruise ceiling), toggles winter both ways via `setDelightSnow`, and asserts zero console errors / zero external requests. 4/4 green (tablet + phone).
+    - Dev witnesses added per the crossingPhases/steamPuffCount precedent: `delightBalloonDrift()` (TrackRenderer + SceneHandle) and `setDelightSnow` (SceneHandle); `delight-motion.probe()` reads the first balloon's drift in cells.
+    - First run taught a meadow fact: the default river band spans columns 4–6 in low rows — cell (5,2) is water and scenery placement rightly refuses it ("Scenery is a land toy"); the spec now uses dry cells.
+  - [x] Place each toy via `__tinyTracksWorld`; toggle winter; assert balloon airborne over time; assert no console errors
+- [x] Task: Full quality gates + manual verification (58d95a3)
+  - [x] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test` — all green (38 files / 664 tests); coverage: `scenery.ts` 100% stmts, `balloon-wander.ts` 100% stmts / 96.55% branch (gate >80% met)
+  - [x] Manual tablet verification: place toys, watch motion, winter caps, reduced-motion freeze (approved at the Phase 3 checkpoint)
+- [x] Task: Docs — note the three toys in `conductor/product.md` shipped list (7fe3eb9)
+- [~] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base 0b7f262): `src/scene/delight-motion.ts`, `src/scene/track-renderer.ts`, `src/scene/init-scene.ts` (dev witnesses), `e2e/delight-toys.spec.ts` (new), `conductor/product.md` (docs).
+    - No new logic-bearing modules — the witnesses are scene-glue probes; core logic unchanged since Phase 1.
+    - Gates: biome clean, `tsc --noEmit` clean, suite 38 files / 664 tests green, e2e delight spec 4/4 green.
+  - Verification Report:
+    - Automated: all quality gates green (see Notes); e2e asserts GLB loading, balloon airborne (0.2 < altitude < 1.7), winter toggle, zero console errors, zero external requests.
+    - Proposed manual verification: on a real family tablet — (1) drawer Town tab: place windmill/carousel/balloon; (2) watch sails turn, carousel revolve, balloon rest → lift → wander → land; (3) cycle weather to snow and back — caps appear/disappear on all three; (4) OS reduce-motion on — toys stand still; (5) reload — toys persist via autosave.
+  - [checkpoint: 7fe3eb9]
 
 ## Notes
