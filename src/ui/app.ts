@@ -490,6 +490,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   trainDrawer.setAttribute('role', 'group');
   trainDrawer.setAttribute('aria-label', 'Train collection');
   trainDrawer.hidden = true;
+  // The loco row scrolls sideways like the drawer panels: six chunky engine
+  // buttons stay one tap-easy row on phones instead of wrapping.
+  const locoRow = document.createElement('div');
+  locoRow.className = 'loco-row';
+  locoRow.setAttribute('role', 'group');
+  locoRow.setAttribute('aria-label', 'Locomotives');
   for (const kind of TRAIN_KINDS) {
     const button = document.createElement('button');
     button.className = 'train-slot';
@@ -498,8 +504,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     button.setAttribute('aria-label', trainAria(kind));
     button.setAttribute('aria-pressed', String(options.world.train() === kind));
     button.innerHTML = trainIcon(kind);
-    trainDrawer.append(button);
+    locoRow.append(button);
   }
+  trainDrawer.append(locoRow);
   // The wagon row: one chunky pair-preset per button, dressing the selected
   // locomotive. It lives inside the train drawer, so it hides mid-ride and
   // on drawer close with the loco slots — no separate visibility logic.
