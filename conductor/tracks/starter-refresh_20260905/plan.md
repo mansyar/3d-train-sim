@@ -8,7 +8,7 @@
   - One connected component whose periodic ride is closed and covers every piece (main + siding laps via `rideComponentsOf`), one toy per cell, ≤ 20 toys.
   - Hill trio present (slope-up / hill / slope-down) + exactly two OPPOSITELY-FACING right-switches on dry land (`terrainErrorFor` / `isWater` clean) — same-facing switches only ever serve the siding in one travel direction; the {90, 270} rotation pair is pinned by test.
   - Station adjacent to loop on dry land; 2–3 nature/town decor.
-- [x] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry. (code `7da92e9`)
+- [x] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry. (code `7da92e9`; corrected `847576b` — tablet check caught the east switch's diverging leg pointing north into the meadow while the siding approached from the south: the ride solver routes through the junction virtually so the broken geometry still measured "closed 17/17", but the rendered rails did not meet. East piece is now `switch-mirror` rot270 (stem E / straight W / diverge S), both diverging legs face the siding, `3,7|3,8` connection verified via `connectionsFor`, ride still closed with full coverage)
 - [x] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly. (Red 2026-09-05: 3 new tests failed, 73 passed.)
   - Sub-task: verify `defaultConsist()` wipe regression is covered (diesel + coal duo survives apply + reload).
 - [x] Task 1.4 — Green: split builders from apply — `src/state/world.ts` carries train/consist forward, keeps ONE pending-undo mutation. (code `6061e17`; minimal split: builders keep the full `WorldData` shape so `hydrate` first-run/persistence is untouched — `applyPreset` simply ignores `data.train`/`data.consist`. Old consist-overwrite test updated to the preserve contract.)
@@ -35,7 +35,7 @@
 
 ### Phase Verification & Checkpoint — Phase 2 (final gate)
 
-- [ ] PV2.1 — Full `pnpm check` green (biome + typecheck + vitest).
-- [ ] PV2.2 — `npx playwright test starter-railway` green tablet + phone; console clean (boot/reload paths).
+- [x] PV2.1 — Full `pnpm check` green (biome + typecheck + vitest). Notes: one Biome format fix in the new e2e test (commit 5813008); 647/647 Vitest, Biome + `tsc --noEmit` clean.
+- [x] PV2.2 — `npx playwright test starter-railway` green tablet + phone; console clean (boot/reload paths). Notes: 8/8 passed (1.8m) incl. new preservation test; only allowlisted THREE shadow-map deprecation warnings.
 - [ ] PV2.3 — Manual tablet touch check: gallery pick, ride, undo, reset feel instant (<100ms feedback), no toddler-facing text.
 - [ ] Update `conductor/tracks.md` (done → in-progress → done); commit per `workflow.md` (staged commits, atomic messages).
