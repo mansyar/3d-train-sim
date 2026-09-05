@@ -20,9 +20,14 @@
     - `placeScenery`/`relocateScenery` now read `if (isWater(cell) && !sceneryFloats(...)) return 'water'` — tree and all other toys still refused on water (existing tests unchanged and passing).
     - Files: `src/core/scenery.ts`, `src/core/scenery.test.ts`, `src/state/world.ts`, `src/state/world.test.ts`.
     - Gates: biome ✓ · tsc ✓ · 654 tests pass.
-- [ ] Task: UI ghost validity + drawer icon (glue — acceptance criteria in plan)
-  - - [ ] `src/ui/app.ts` scenery-validity check permits `frog` on water cells; ghost green/red language unchanged otherwise
-  - - [ ] inline-SVG lily-pad-frog icon added to the critter tab icons
+- [x] Task: UI ghost validity + drawer icon (glue — acceptance criteria in plan) `b0593e5`
+  - - [x] `src/ui/app.ts` scenery-validity check permits `frog` on water cells; ghost green/red language unchanged otherwise
+  - - [x] inline-SVG lily-pad-frog icon added to the critter tab icons
+  - Notes:
+    - `canPlaceAt` in `ui/app.ts` now reads `!isWater(cell) || sceneryFloats(kind)` for scenery — the single-source rule from core, ghost tints green over the river for the frog only.
+    - The lily-pad-frog icon landed in Task 1.1 (required for typecheck of `SCENERY_ICONS`).
+    - Acceptance criteria (manual, deferred to Phase checkpoint): frog button visible on Critter tab; dragging frog over river shows a green ghost and commits; tree over river stays red.
+    - Gates: biome ✓ · tsc ✓ · 654 tests pass.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Blender Assets
