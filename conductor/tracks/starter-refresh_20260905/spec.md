@@ -7,14 +7,14 @@
 
 The starters feel stale: the 3 gallery presets are flat closed loops with no hills / switches / tunnels by design (starter-railway FR2 excluded adventure pieces), while the drawer now sells hills, bumps, corners, switches, and the crossing gate. First-run still lands well (cozy oval), but the gallery never showcases what the meadow can do.
 
-This polish track adds ONE 4th showcase starter — **Hilltop Junction**: hill trio (`slope-up` / `hill` / `slope-down`) + a single right-`switch` inside a closed one-tap loop — keeps parent reset to EMPTY, preserves train + per-train wagon picks across gallery apply, and keeps the crossing gate out of starters.
+This polish track adds ONE 4th showcase starter — **Hilltop Junction**: hill trio (`slope-up` / `hill` / `slope-down`) on the far straight + a passing loop on the near straight (TWO right-`switch`es joined by a station siding, so the ride alternates main/siding laps whichever way the solver runs) — keeps parent reset to EMPTY, preserves train + per-train wagon picks across gallery apply, and keeps the crossing gate out of starters.
 
 ## Functional Requirements
 
 - **FR1 — 4th preset `hilltop-junction`:** pure builder in `src/core/starters.ts` returning ordinary `WorldData`:
   - Closed loop, one-tap rideable (`rideComponentsOf` yields one closed component; `▶` rides instantly).
   - ≤ ~20 toys, one toy per cell, 16×16 meadow, dry-land legal (`terrainErrorFor` / `isWater` — hills + switch dry only, bridges only over water; this preset uses no bridges).
-  - Composition: hill trio on one straight + ONE right-`switch` whose branches rejoin the loop (no dead ends by construction); 1 station adjacent on dry land + 2–3 nature/town toys.
+  - Composition: hill trio on the far straight + a passing loop on the near straight — TWO OPPOSITELY-FACING right-`switch`es in series (west switch stem-west / diverge-south, east switch stem-east / diverge-north) joined by a zigzag 3-piece siding (corner / straight / corner) dipping one row below and rising back, so the alternating ride covers main + siding laps whichever way the solver runs (same-facing switches only ever serve the siding in one direction); 1 station beside the loop on dry land + 2 trees; 17 rail + 3 decor = 20 toys.
   - No gate, no tunnel, no bumps/corners (keep scope to hill trio + one switch).
 - **FR2 — Gallery 4th pick:** parent-gated preset tray gains one icon-only pick (reuse hill/switch SVG language, ≥64px, no text). Lives inside the armed confirm step — toddler taps can never reach it. Muted / reduced-motion behavior unchanged.
 - **FR3 — Preserve train + consist on apply:** applying ANY gallery preset keeps current `train` + per-train wagon `consist`; only rails / scenery / deliveries swap. Today `starter()` hard-codes `train: 'steam'` + `defaultConsist()` (see `src/core/starters.ts:44-46`) which would undress the kid's workshop picks. Fix: builders return rails/scenery/deliveries; apply layer carries train/consist forward.

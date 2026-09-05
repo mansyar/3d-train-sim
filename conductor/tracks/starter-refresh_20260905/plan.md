@@ -4,12 +4,12 @@
 
 ## Phase 1 — Core: builder + consist-preserving apply (TDD)
 
-- [ ] Task 1.1 — Red: `hilltopJunction()` builder tests in `src/core/starters.ts`
-  - Closed-loop rideable (one closed component via `rideComponentsOf`), one toy per cell, ≤ ~20 toys.
-  - Hill trio present (slope-up / hill / slope-down) + exactly one right-switch on dry land (`terrainErrorFor` / `isWater` clean).
+- [x] Task 1.1 — Red: `hilltopJunction()` builder tests in `src/core/starters.ts`
+  - One connected component whose periodic ride is closed and covers every piece (main + siding laps via `rideComponentsOf`), one toy per cell, ≤ 20 toys.
+  - Hill trio present (slope-up / hill / slope-down) + exactly two OPPOSITELY-FACING right-switches on dry land (`terrainErrorFor` / `isWater` clean) — same-facing switches only ever serve the siding in one travel direction; the {90, 270} rotation pair is pinned by test.
   - Station adjacent to loop on dry land; 2–3 nature/town decor.
-- [ ] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry.
-- [ ] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly.
+- [x] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry. (code `7da92e9`)
+- [~] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly.
   - Sub-task: verify `defaultConsist()` wipe regression is covered (diesel + coal duo survives apply + reload).
 - [ ] Task 1.4 — Green: split builders from apply (builders return rails/scenery/deliveries; `src/state/world.ts` carries train/consist forward), keep ONE pending-undo mutation.
 
