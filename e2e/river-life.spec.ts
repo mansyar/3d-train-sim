@@ -19,8 +19,7 @@ interface WorldHandle {
 
 const hasResource = (page: Page, asset: string): Promise<boolean> =>
   page.evaluate(
-    (asset) =>
-      performance.getEntriesByType('resource').some((entry) => entry.name.includes(asset)),
+    (asset) => performance.getEntriesByType('resource').some((entry) => entry.name.includes(asset)),
     asset,
   );
 
