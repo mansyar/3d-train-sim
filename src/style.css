@@ -652,6 +652,7 @@ body {
 
 .preset-tray {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   left: calc(12px + env(safe-area-inset-left));
   position: absolute;
@@ -661,6 +662,14 @@ body {
 
 .preset-tray[hidden] {
   display: none;
+}
+
+/* Grown-up eyes only: which build the family device is running. */
+.app-version {
+  color: var(--toy-brown);
+  flex-basis: 100%;
+  font-size: 12px;
+  opacity: 0.55;
 }
 
 .preset-pick {
