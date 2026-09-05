@@ -7,6 +7,8 @@ type DevWorld = {
   __tinyTracksWorld?: {
     pieces: () => Array<{ id: string }>;
     scenery: () => Array<{ id: string }>;
+    train: () => string;
+    consistFor: (kind: string) => string;
   };
 };
 
@@ -154,14 +156,7 @@ test('gallery apply preserves the train and wagon picks across undo and reload',
   const dressed = (train: string) =>
     page.evaluate(
       ([name]) => {
-        const handle = (
-          window as unknown as {
-            __tinyTracksWorld?: {
-              train: () => string;
-              consistFor: (kind: string) => string;
-            };
-          }
-        ).__tinyTracksWorld;
+        const handle = (window as unknown as DevWorld).__tinyTracksWorld;
         if (!handle) throw new Error('dev world handle missing');
         return { train: handle.train(), consist: handle.consistFor(name) };
       },
