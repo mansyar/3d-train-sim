@@ -192,5 +192,16 @@
 
 ## Notes
 
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions `a760fd0`
+  - Review report (2026-09-05): plan compliance Yes, style Pass, new
+    tests Yes, coverage Yes, vitest 654/654 + Playwright 113/113
+    effective. No Critical/High/Medium findings; one Low observation
+    (hardcoded `REPO` path in the new recipes — matches the existing
+    recipes' house pattern, not owed by this track). Fix applied: the
+    Biome formatting collapse in `e2e/river-life.spec.ts` had been
+    left uncommitted (`3905cc1` staged only the count fixes) —
+    committed here; 20 debug screenshots removed from the repo root.
+
 - Coverage target >80% on the new logic in `core/scenery.ts` / `state/world.ts`.
 - The barge is ambience and intentionally not serialized; saves stay additive (no version bump).
