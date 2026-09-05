@@ -27,6 +27,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   winter the new hilltops wear snow crowns that melt away with the
   snow. Older saved railways open unchanged.
 
+- **A fourth starter: Hilltop Junction.** The picture gallery behind the
+  parent gate gains a new railway that shows off what the meadow can do:
+  a climb up and over the hills on one side and a proper passing loop
+  with two switches on the other, so the train alternates main-line and
+  siding laps all by itself. Picking any starter still keeps the kid's
+  chosen engine and wagon outfits — only the rails and scenery swap —
+  and one ↩️ tap still takes the whole swap right back.
+
 ## [0.7.0] - 2026-09-04
 
 ### Added

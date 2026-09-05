@@ -25,12 +25,13 @@
 
 ## Phase 2 — Glue: gallery pick + e2e + docs
 
-- [ ] Task 2.1 — Gallery: 4th icon-only pick (reuse hill/switch SVG idiom, ≥64px, no text) inside parent-gate armed confirm; reset path untouched (stays EMPTY).
-- [ ] Task 2.2 — E2E (extend `e2e/starter-railway.spec.ts`, tablet + phone per `e2e/README.md`):
+- [x] Task 2.1 — Gallery: 4th icon-only pick (reuse hill/switch SVG idiom, ≥64px, no text) inside parent-gate armed confirm; reset path untouched (stays EMPTY). Notes: button `data-preset="hilltop-junction"` with tray switch icon; generic STARTER_PRESETS.find + applyPreset path, no new logic.
+- [x] Task 2.2 — E2E (extend `e2e/starter-railway.spec.ts`, tablet + phone per `e2e/README.md`):
   - 4th pick applies → counts match → `▶` rides with station pause → reload persists.
   - Consist case: set diesel + coal duo → apply → train/consist preserved → undo restores full prior world.
   - Reset case: reset → empty → reload stays empty.
-- [ ] Task 2.3 — Docs: CHANGELOG Unreleased one-liner; `conductor/product.md` starter sentence (4 presets) only if it names the count.
+  Notes: new test "gallery apply preserves the train and wagon picks across undo and reload"; 8/8 green tablet + phone.
+- [x] Task 2.3 — Docs: CHANGELOG Unreleased one-liner; `conductor/product.md` starter sentence (4 presets) only if it names the count. Notes: CHANGELOG entry added; product.md names no starter count — unchanged.
 
 ### Phase Verification & Checkpoint — Phase 2 (final gate)
 

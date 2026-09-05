@@ -85,7 +85,7 @@ test('fresh boot shows the cozy oval and rides with a clean console', async ({ p
 });
 
 test('each gallery preset applies behind the gate and rides', async ({ page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(150_000);
   const errors = watchConsoleErrors(page);
   await boot(page, () => {
     errors.length = 0;
@@ -95,6 +95,7 @@ test('each gallery preset applies behind the gate and rides', async ({ page }) =
     { id: 'cozy-oval', pieces: 10, scenery: 4 },
     { id: 'station-village', pieces: 14, scenery: 5 },
     { id: 'river-crossing', pieces: 18, scenery: 2 },
+    { id: 'hilltop-junction', pieces: 17, scenery: 3 },
   ];
   for (const preset of presets) {
     await openGallery(page);
@@ -139,4 +140,60 @@ test('apply, undo, reload, reset round-trip', async ({ page }) => {
   await page.locator('.parent-gate').click({ force: true });
   await page.waitForTimeout(1500);
   expect(await counts(page)).toEqual({ pieces: 0, scenery: 0 });
+});
+
+test('gallery apply preserves the train and wagon picks across undo and reload', async ({
+  page,
+}) => {
+  test.setTimeout(150_000);
+  const errors = watchConsoleErrors(page);
+  await boot(page, () => {
+    errors.length = 0;
+  });
+
+  const dressed = (train: string) =>
+    page.evaluate(([name]) => {
+      const handle = (
+        window as unknown as {
+          __tinyTracksWorld?: {
+            train: () => string;
+            consistFor: (kind: string) => string;
+          };
+        }
+      ).__tinyTracksWorld;
+      if (!handle) throw new Error('dev world handle missing');
+      return { train: handle.train(), consist: handle.consistFor(name) };
+    }, [train] as const);
+
+  // Dress diesel in coal through the train drawer, then apply Hilltop Junction.
+  await page.click('[data-drawer="trains"]');
+  await page.locator('.train-slot[data-train="diesel"]').click();
+  await page.locator('.wagon-slot[data-wagon="coal"]').click();
+  await expect(page.locator('.wagon-slot[data-wagon="coal"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await openGallery(page);
+  await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
+  await page.waitForTimeout(2500);
+  expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
+  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+
+  // One ↩️ restores the prior build; the dressed diesel was already selected.
+  await page.locator('.undo-toggle').click();
+  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
+  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+
+  // Re-apply, reload: the junction persists with its dressed diesel.
+  await openGallery(page);
+  await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
+  await page.waitForTimeout(2500);
+  await page.reload();
+  await page.waitForSelector('canvas');
+  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
+  await page.waitForTimeout(2000);
+  expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
+  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  expect(errors).toEqual([]);
 });

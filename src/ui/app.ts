@@ -456,6 +456,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Build the station village starter railway">${SCENERY_ICONS.station}</button>
       <button class="preset-pick" type="button" data-preset="river-crossing"
               aria-label="Build the river crossing starter railway">${PIECE_ICONS.bridge}</button>
+      <button class="preset-pick" type="button" data-preset="hilltop-junction"
+              aria-label="Build the hilltop junction starter railway">${PIECE_ICONS.switch}</button>
     </div>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Toybox"
@@ -1198,7 +1200,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     options.audio.ding();
   });
 
-  // ---- Starter gallery: three icon-only presets inside the parent gate --
+  // ---- Starter gallery: four icon-only presets inside the parent gate ---
   // The tray only opens with the armed confirm step, so kid taps can never
   // reach it. A pick lands as ONE undoable mutation — the ↩️ chip appears
   // and one tap restores the prior build.
