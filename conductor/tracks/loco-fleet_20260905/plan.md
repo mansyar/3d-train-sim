@@ -102,13 +102,34 @@ Playwright smoke for scene/UI.
   green on retry — pre-existing).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4 - E2E, Docs & Final Gates
+## Phase 4 - E2E, Docs & Final Gates [checkpoint: b011afe]
 
-- [ ] Task: Playwright e2e — fleet flow
-  - [ ] Spec: pick each new engine → ride → reload restores choice → wagon workshop still per-train → zero external requests, clean console, tablet + phone viewports
-- [ ] Task: Docs
-  - [ ] `CHANGELOG.md` parent-voice entry; `product.md` fleet description update
-- [ ] Task: Final gates
-  - [ ] `pnpm check` green (biome + `tsc --noEmit` + vitest); coverage on new core logic; full Playwright run
+- [x] Task: Playwright e2e — fleet flow `a6d1095`
+  - [x] Spec: pick each new engine → ride → reload restores choice → wagon workshop still per-train → zero external requests, clean console, tablet + phone viewports
+
+  Notes: New `e2e/fleet.spec.ts` — cycles express/freight/bullet with a toot
+  each, reloads, asserts bullet restored, then origin-scoped external-request
+  and console checks (tablet + phone). First draft failed on `blob:` URLs
+  being counted as external — switched to the house `new URL(url).origin`
+  filter from smoke.spec. smoke.spec "cover the fleet" loop widened to all
+  6 kinds.
+- [x] Task: Docs `b011afe`
+  - [x] `CHANGELOG.md` parent-voice entry; `product.md` fleet description update
+
+  Notes: CHANGELOG [Unreleased] Added entry (six-engine shed, personalities,
+  swipeable row, per-train outfits, offline/no downloads). product.md: three
+  → six locomotives in pitch, How-to-play, and core behaviors; scope bullet
+  marked shipped under the wagons line.
+- [x] Task: Final gates `a6d1095`
+  - [x] `pnpm check` green (biome + `tsc --noEmit` + vitest); coverage on new core logic; full Playwright run
+
+  Notes: biome 129 files clean, tsc clean, 664/664 unit passing. Full
+  Playwright run: 113/113 passing (10.1m), incl. the new fleet spec on both
+  viewports. Gate met.
+
+**Verification Report (Phase 4)**
+- Changed files since prev checkpoint (`a65681d`): e2e/fleet.spec.ts (new), e2e/smoke.spec.ts (6-kind fleet loop), CHANGELOG.md, conductor/product.md, plan.md. No logic-bearing changes.
+- Final gates all green: biome check (129 files), `tsc --noEmit`, 664/664 unit tests, full Playwright suite 113/113 (10.1m) across tablet + phone — clean console, zero external requests throughout.
+- Coverage on new core logic (Phase 1): trains.ts 100%, pace.ts 92.3%, save.ts 91.6%, wagons.ts 100%.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 - [ ] Task: Review & archive (`conductor-review`), PR, merge
