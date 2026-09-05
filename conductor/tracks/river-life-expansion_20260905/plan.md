@@ -153,7 +153,22 @@
       pattern — barge + frog summary with the no-version-bump note.
   - - [ ] Parent-facing `CHANGELOG.md` entry under `## [Unreleased]`
   - - [ ] `product.md` living-meadow/roadmap note (river life shipped)
-- [ ] Task: Full gates
+- [x] Task: Full gates `3905cc1`
+  - - [x] `pnpm check` (biome + tsc + vitest) and the Playwright suite (tablet · phone · prod)
+  - Notes:
+    - `pnpm check` green after one Biome format collapse in the new
+      spec — biome clean (130 files), `tsc --noEmit` clean, 654/654
+      vitest.
+    - Full Playwright suite (foreground, 2 workers, tablet + phone +
+      prod): 109 passed / 4 failed on the first run — all four
+      failures one real root cause: `ride-toybox-flow.spec.ts` and
+      `smoke.spec.ts` hard-coded the Critter tab at 3 slots; the frog
+      makes it 4. Updated both (`3905cc1`); `--last-failed` rerun
+      green 4/4 → suite effectively 113/113. Both new river-life
+      tests green on tablet and phone; prod test green. Only noise:
+      the pre-existing PCFSoftShadowMap deprecation warning and one
+      allowlisted WebKit blob-texture GLTFLoader trip (starter-
+      railway), per the runbook.
   - - [ ] `pnpm check` (biome + tsc + vitest) and the Playwright suite (tablet · phone · prod)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
