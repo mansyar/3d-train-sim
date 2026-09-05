@@ -43,12 +43,15 @@ import { tunnelRunsOf } from '../core/tunnels';
 import type { WorldStore } from '../state/world';
 import { createTrestleTemplate } from './bridge-model';
 import { type CritterMood, createCritterLife } from './critter-life';
+import { createDelightMotion, isDelightKind } from './delight-motion';
 import { disposeObject } from './dispose-object';
 import { GROUND_SIZE } from './ground';
 import { disableShadows, enableCastShadows } from './shadows';
 import { attachWindowGlow } from './window-glow';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
+/** Delight-toy snow-cap node names (windmill/carousel/balloon contracts). */
+const DELIGHT_CAPS = ['windmill_snow_cap', 'carousel_snow_cap', 'balloon_snow_cap'];
 
 /** Track pieces and scenery toys share one meadow renderer. */
 type MeadowItem = PlacedPiece | PlacedScenery;
@@ -295,6 +298,10 @@ export interface TrackRenderer {
   updateCrossings(dt: number, trains: ReadonlyArray<{ x: number; z: number }>, night: number): void;
   /** Winter tell: show/hide the crossing's snow cap (event-driven). */
   setCrossingSnow(visible: boolean): void;
+  /** Advance the delight toys: windmill sails, carousel spin, balloon wander. */
+  updateDelight(dt: number): void;
+  /** Winter tell: show/hide the delight toys' snow caps (event-driven). */
+  setDelightSnow(visible: boolean): void;
 
   /** Debug aid: every placed crossing's live phase ('idle'|'closing'|
    *  'active'|'lifting'), for e2e witnesses. */
@@ -318,6 +325,9 @@ export function startTrackRenderer(
   /** Placed critter ids with live idle/hop animation (see critter-life). */
   const animatedCritters = new Set<string>();
   const critterLife = createCritterLife((voice) => audio.chirp(voice));
+  /** Delight toys (windmill/carousel/balloon) with live motion appliers. */
+  const delight = createDelightMotion();
+  let delightSnow = false;
   const loader = new GLTFLoader();
   const raycaster = new Raycaster();
   const pointerNdc = new Vector2();
@@ -393,12 +403,16 @@ export function startTrackRenderer(
         rendered.delete(id);
         crossingParts.delete(id);
         crossingMotions.delete(id);
+        delight.detach(id);
       }
     }
     tracked.clear();
     for (const item of wanted.values()) {
       tracked.set(item.id, item);
       apply(item);
+      if (!isPiece(item) && isDelightKind(item.kind)) {
+        delight.attach(item.id, item.kind, rendered.get(item.id));
+      }
     }
     syncCritterAnimations(wanted);
     syncTunnelPortals(world.pieces());
@@ -893,6 +907,28 @@ export function startTrackRenderer(
     }
   }
 
+  /** Winter tell: the delight toys wear snow caps like the tunnel domes. */
+  function setDelightSnow(visible: boolean): void {
+    if (visible === delightSnow) return;
+    delightSnow = visible;
+    const setCap = (model: Object3D): void => {
+      for (const name of DELIGHT_CAPS) {
+        const cap = model.getObjectByName(name);
+        if (cap) cap.visible = visible;
+      }
+    };
+    for (const kind of ['windmill', 'carousel', 'balloon'] as const) {
+      const template = templates.get(kind);
+      if (template) setCap(template);
+    }
+    for (const [id, model] of rendered) {
+      const item = tracked.get(id);
+      if (item && !isPiece(item) && isDelightKind(item.kind)) {
+        setCap(model);
+      }
+    }
+  }
+
   let hillSnow = false;
   /** Loaded snow-crown scenes keyed by hill type (clones share geometry). */
   const hillSnowShells: Partial<Record<PieceType, Object3D>> = {};
@@ -1050,6 +1086,13 @@ export function startTrackRenderer(
         }
         // Buildings get a warm "windows lit" glow, driven by the night factor.
         attachWindowGlow(model, kind);
+        if (isDelightKind(kind)) {
+          // Snow caps author visible; settle them to the winter state known
+          // at load time (the asset race, as in syncTunnelPortals).
+          const capName = `${kind}_snow_cap`;
+          const cap = model.getObjectByName(capName);
+          if (cap) cap.visible = delightSnow;
+        }
         templates.set(kind, model);
         reconcile();
       },
@@ -1082,6 +1125,11 @@ export function startTrackRenderer(
     setSwitchRoad,
     updateCrossings,
     setCrossingSnow,
+    updateDelight: (dt: number): void => {
+      if (disposed) return;
+      delight.update(dt, reducedMotion);
+    },
+    setDelightSnow,
     // Dev/e2e witnesses: live crossing phases and the bell edge state.
     crossingPhases: () =>
       [...tracked.values()]
@@ -1112,6 +1160,7 @@ export function startTrackRenderer(
       for (const type of Object.keys(hillSnowShells) as PieceType[]) delete hillSnowShells[type];
       critterLife.dispose();
       animatedCritters.clear();
+      delight.dispose();
       scene.remove(gridLines);
       for (const geometry of gridGeometries) geometry.dispose();
       gridMaterial.dispose();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createBalloonWanderer, type BalloonPose, type BalloonWanderer } from './balloon-wander';
+import { type BalloonPose, type BalloonWanderer, createBalloonWanderer } from './balloon-wander';
 
 /** Tiny deterministic PRNG so wander trajectories are reproducible in tests. */
 function mulberry32(seed: number): () => number {
