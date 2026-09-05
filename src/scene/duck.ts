@@ -31,7 +31,7 @@ const WIGGLE_RADIUS = 1.5 * (GROUND_SIZE / MEADOW_CELLS);
 const WIGGLE_SECONDS = 0.9;
 const WIGGLE_COOLDOWN_SECONDS = 3;
 /** Above this night factor the duck tucks in (same bedtime as the critters). */
-const BEDTIME_NIGHT = 0.6;
+export const BEDTIME_NIGHT = 0.6;
 /** At this settled-snow the surface is ice: the duck stands down. */
 const FROZEN_SNOW = 0.5;
 

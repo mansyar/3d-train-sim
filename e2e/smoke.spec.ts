@@ -817,7 +817,7 @@ test('tabbed toybox walkthrough: place a critter and a station, then ride', asyn
   ).toBeVisible();
   await page.click('.drawer-tab[data-tab="critter"]');
   await expect(page.locator('.drawer-panel[data-panel="critter"]')).toBeVisible();
-  await expect(page.locator('.drawer-panel[data-panel="critter"] .scenery-slot')).toHaveCount(3);
+  await expect(page.locator('.drawer-panel[data-panel="critter"] .scenery-slot')).toHaveCount(4);
 
   // Drag a sheep from the Critters tab onto the meadow.
   const dragFrom = async (selector: string, x: number, y: number) => {

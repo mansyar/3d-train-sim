@@ -14,6 +14,7 @@ CC-BY 4.0 and credited to its author here. Everyone is credited anyway with than
 | `oink-pig.ogg/.mp3` | [Freesound — pig05.ogg](https://freesound.org/people/Erdie/sounds/44274/) | Erdie | CC-BY 4.0 |
 | `woof-pug.ogg/.mp3` | [Freesound — single bark, small to medium dog](https://freesound.org/people/haulaway/sounds/630648/) | haulaway | CC0 1.0 |
 | `crossing-bell.ogg/.mp3` | [Freesound — train crossing bell.wav](https://freesound.org/people/lipalearning/sounds/427974/) | lipalearning | CC0 1.0 |
+| `ribbit-frog.ogg/.mp3` | Synthesized in-repo (soft two-pulse croak, pond ambience) | Tiny Tracks | CC0 1.0 |
 
 Notes:
 - `chug-loop` is a 14 s foley steam-engine chuff, designed by its author to loop.

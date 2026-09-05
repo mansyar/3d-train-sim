@@ -72,7 +72,7 @@ scripts/             # Blender build recipes for original assets — determinist
                      # and re-runnable in any Blender session (e.g.
                      # blender-tunnel.py, blender-station.py,
                      # blender-hill-snow.py, blender-switch.py,
-                     # blender-switch-mirror.py)
+                     # blender-switch-mirror.py, blender-barge.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
@@ -91,7 +91,11 @@ and the Y-switch (`scripts/blender-switch.py` → `switch.glb`, whose named
 `switch_blades` node the scene eases 0 ↔ −0.21 to flip the points) and its
 left-hand twin (`scripts/blender-switch-mirror.py` → `switch-mirror.glb`,
 same node contract, eased 0 ↔ +0.21 toward the west branch)
-are the reference implementations. Original pieces are **not hand-sculpted**: each asset has a
+are the reference implementations. The full workflow is codified in the
+`threejs-blender-asset` skill (user-level skills dir) — phases, hard
+gates, a stdlib `verify-glb.py` GLB gate checker, and a
+`palette.py` style gate (palette extraction + reference-image swatch
+sampling). Original pieces are **not hand-sculpted**: each asset has a
 deterministic, checked-in Python recipe that builds and exports it, so a
 reset Blender session (or a new machine) can regenerate the asset exactly.
 Run it in any Blender session's Python console / scripting tab:
@@ -114,7 +118,12 @@ Rules of the house (learned the hard way on the tunnel):
 2. **Author z-up; export with `export_yup=True`.** Track runs along Blender
    **y** (module spans y −4..0), the mat/ground plane sits at **z = −1**,
    rails crown near z = −0.82. After export, Blender y −4..0 becomes the
-   world's z 0..4 (grid north = −z) and Blender z becomes up.
+   world's z 0..4 (grid north = −z) and Blender z becomes up. Floating
+   scene props use a different contract: the model origin IS the waterline
+   — `scripts/blender-barge.py` authors the barge with z = 0 at the river
+   surface so `src/scene/barge.ts` simply places it at the water's world
+   height (y ≈ 0.02), with the bow on Blender +y (= glTF −z, the forward
+   the drift code faces).
 3. **Size from the train, not the track.** Kit trains ride at 1.5 model
    scale on the 0.9375 asset scale — ×1.6 in asset units (the locomotive is
    ~2.3 wide with a cab at height ~2.7). Slice the actual kit GLB's vertices
