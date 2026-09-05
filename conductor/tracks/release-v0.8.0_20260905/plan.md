@@ -5,14 +5,19 @@ gates + smoke + checkpoints per `workflow.md`.
 
 ## Phase 1 - Changelog & Version Bump
 
-- [ ] Task: Promote `CHANGELOG.md` for v0.8.0
+- [x] Task: Promote `CHANGELOG.md` for v0.8.0 (f6c0e8d)
+  - Notes: Moved both `## [Unreleased]` Added blocks (crossing gate +
+    gentle bumps/banked corners) verbatim under new dated
+    `## [0.8.0] - 2026-09-05`; `## [Unreleased]` left empty; compare
+    links refreshed (`v0.7.0...v0.8.0` added, Unreleased →
+    `v0.8.0...HEAD`, all on `mansyar/3d-train-sim`). Files: `CHANGELOG.md` only.
   - Acceptance: `## [Unreleased]` Added blocks (crossing gate +
     bumps/banked corners) move verbatim into new dated
     `## [0.8.0] - 2026-09-05`; compare links refreshed
     (`v0.7.0...v0.8.0` added, Unreleased → `v0.8.0...HEAD`, all on
     `mansyar/3d-train-sim`); `## [Unreleased]` left empty.
-  - [ ] Move `## [Unreleased]` Added blocks verbatim into `## [0.8.0] - 2026-09-05`
-  - [ ] Refresh compare links (`v0.7.0...v0.8.0`, Unreleased → `v0.8.0...HEAD`); keep them on `mansyar/3d-train-sim`
+  - [x] Move `## [Unreleased]` Added blocks verbatim into `## [0.8.0] - 2026-09-05`
+  - [x] Refresh compare links (`v0.7.0...v0.8.0`, Unreleased → `v0.8.0...HEAD`); keep them on `mansyar/3d-train-sim`
 - [ ] Task: Bump `package.json` version to `0.8.0`
   - Acceptance: `package.json` version reads `0.8.0`, matching the
     eventual `v0.8.0` tag.
