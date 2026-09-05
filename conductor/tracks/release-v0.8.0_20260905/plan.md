@@ -35,7 +35,7 @@ gates + smoke + checkpoints per `workflow.md`.
     eyeballed the new `## [0.8.0]` section, compare links, and version
     bump — confirmed yes.
 
-## Phase 2 - Local Pre-Tag Verification
+## Phase 2 - Local Pre-Tag Verification [checkpoint: c7b22f1]
 
 - [x] Task: Run the full local gate suite (e10a93c)
   - Notes: `pnpm check` green (biome, tsc, 641/641 vitest — run
@@ -66,7 +66,13 @@ gates + smoke + checkpoints per `workflow.md`.
     sanity-checked vs the 6MB cap.
   - [x] `docker build` the image locally
   - [x] Run container; verify app loads, SPA fallback, cache headers (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed assets) + precache weight
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (c7b22f1)
+  - Verification Report (2026-09-05): `pnpm check` green (biome, tsc,
+    641/641 vitest). Full e2e 109/109 at `--workers=2` — the v0.7.0-era
+    Windows `blob:`-noise flake did not recur. Container
+    `tiny-tracks:0.8.0` (72.6MB) smoke green on all six curl checks per
+    `nginx.conf`; precache weight sane. Scope is verification-only
+    (`plan.md` notes, no app code). Manual: user confirmed yes to ship.
 
 ## Phase 3 - Tag & Ship
 
