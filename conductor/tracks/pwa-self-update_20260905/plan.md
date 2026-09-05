@@ -6,15 +6,33 @@
 
 ## Phase 1: Update decision logic (TDD)
 
-- [ ] Task: Write failing tests for `src/core/update-state.ts` (Red)
+- [x] Task: Write failing tests for `src/core/update-state.ts` (Red) — 5fb5621
   - `shouldReload({ rideActive, uptimeMs, alreadyReloaded })` → reload only
     when the ride is idle, uptime ≥ ~15 s, and this update hasn't been
     applied yet.
   - `shouldProbeForUpdate({ visible, msSinceLastProbe })` → probe when the
     tab regains visibility or ≥ ~60 min since the last probe.
-- [ ] Task: Implement `src/core/update-state.ts` to green (minimum code)
-- [ ] Task: Verify coverage >80% (`CI=true pnpm test -- --coverage`)
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Implement `src/core/update-state.ts` to green (minimum code) — 5fb5621
+- [x] Task: Verify coverage >80% (`CI=true pnpm test -- --coverage`) — 100% statements/branches/functions/lines — 5fb5621
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Notes
+
+### Phase 1 — Update decision logic (commit 5fb5621)
+
+- `src/core/update-state.ts` exports two pure decision functions plus the
+  tunable constants the glue layer will reuse: `shouldReload`
+  (idle + uptime ≥ `BOOT_GUARD_MS` (15 s) + not already reloaded) and
+  `shouldProbeForUpdate` (visible tab + never probed or ≥
+  `PROBE_INTERVAL_MS` (1 h) since the last probe).
+- TDD followed: Red confirmed (missing module), then green with 9 tests at
+  100% coverage (statements/branches/functions/lines).
+- Semantic choice worth recording: a hidden tab never probes; visibility
+  regain only probes once the hourly interval has elapsed. On real family
+  tablets wake cycles are far longer than an hour, so every wake probes —
+  the interval doubles as a debounce so the visibility handler and the
+  hourly timer cannot double-fire a probe.
+- Gates: `biome check`, `tsc --noEmit`, `vitest run` all clean.
 
 ## Phase 2: Service-worker glue (non-logic — acceptance criteria)
 
