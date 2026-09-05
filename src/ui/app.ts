@@ -456,6 +456,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Build the station village starter railway">${SCENERY_ICONS.station}</button>
       <button class="preset-pick" type="button" data-preset="river-crossing"
               aria-label="Build the river crossing starter railway">${PIECE_ICONS.bridge}</button>
+      <span class="app-version">v${__APP_VERSION__}</span>
     </div>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
       <button class="toy-slot" type="button" aria-label="Toybox"
