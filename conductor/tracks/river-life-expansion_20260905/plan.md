@@ -2,7 +2,7 @@
 
 **Track:** `river-life-expansion_20260905` · **Branch:** `track/river-life-expansion_20260905` · **Spec:** [spec.md](spec.md)
 
-## Phase 1 — Core Catalog & Water Placement (TDD)
+## Phase 1 — Core Catalog & Water Placement (TDD) [checkpoint: b0593e5]
 
 - [x] Task: Frog catalog entry in `src/core/scenery.ts` (logic-bearing — TDD) `c325a79`
   - - [x] **Red:** extend `scenery.test.ts` — `frog` is a `SCENERY_KINDS` member, category `critter`, url `/assets/nature-kit/frog.glb`, voice `ribbit-frog`, aria "Frog", scale & lift defined
@@ -28,7 +28,16 @@
     - The lily-pad-frog icon landed in Task 1.1 (required for typecheck of `SCENERY_ICONS`).
     - Acceptance criteria (manual, deferred to Phase checkpoint): frog button visible on Critter tab; dragging frog over river shows a green ghost and commits; tree over river stays red.
     - Gates: biome ✓ · tsc ✓ · 654 tests pass.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report (2026-09-05): automated `pnpm check` green —
+    biome clean, `tsc --noEmit` clean, 654/654 vitest pass. Coverage on
+    phase logic: `scenery.ts` 100%, `drawer.ts` 100% stmts, `world.ts`
+    96% — above the 80% target. All changed logic-bearing files have
+    test files; `ui/app.ts` is glue (acceptance criteria below). Manual
+    (user confirmed 2026-09-05): frog button visible on Critter tab;
+    frog over river → green ghost + commits; other scenery (tree) over
+    river stays red + refused; frog commits on grass too; undo/trash
+    work as for other scenery.
 
 ## Phase 2 — Blender Assets
 
