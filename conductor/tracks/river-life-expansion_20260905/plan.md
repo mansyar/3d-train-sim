@@ -88,8 +88,13 @@
     - Rendering needed no new pipeline — Phase 1's catalog entry flows through `SCENERY_URLS` → template → clone; critters (including the frog) are tracked by `critter-life.ts` via `sceneryCategory`/`sceneryVoice` in `syncCritterAnimations`.
     - Float level: `apply()` now nudges a floating toy's inner model between `sceneryLift` (land) and the river `SURFACE_LIFT` (water) — the shared surface constant exported from `river-water.ts` (barge now uses it too).
     - Gates: biome ✓ · tsc ✓ · 654 tests pass.
-- [ ] Task: Ribbit sound (glue — manual verification)
-  - - [ ] Bundle a soft CC0 ribbit; map `ribbit-frog` in the sfx registry; mute-respecting like the other critter voices
+- [x] Task: Ribbit sound (glue — manual verification) `0fc8346`
+  - - [x] Bundle a soft CC0 ribbit; map `ribbit-frog` in the sfx registry; mute-respecting like the other critter voices
+  - Notes:
+    - Followed the `click` precedent — synthesized in-repo (Node PCM: two-pulse croak, ~170/150 Hz, 34 Hz flutter, shy −14 dBFS) → ffmpeg ogg+mp3 pair (5.7/3.8 KB), `CREDITS.md` row added (CC0).
+    - `'ribbit-frog'` registered in `howler-voice.ts` at the critters' capped 0.5 voice (mute + chirp path shared with oink/baa/woof — mute-respecting for free).
+    - `CRITTER_SOUNDS` in `core/attract-clock.ts` grew to include the ribbit, so idle attract chirps may croak too; the RNG-draw test expectation updated to the new last entry.
+    - Gates: biome ✓ · tsc ✓ · 654 tests pass.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4 — E2E, Docs & Gates
