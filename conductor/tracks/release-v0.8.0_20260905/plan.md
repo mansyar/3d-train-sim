@@ -48,14 +48,24 @@ gates + smoke + checkpoints per `workflow.md`.
     green (rerun at `--workers=2` if GPU-context flakes recur).
   - [x] `pnpm check` (biome + typecheck + vitest)
   - [x] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2` if GPU-context flakes recur per the v0.5.0/v0.6.0/v0.7.0 lessons)
-- [~] Task: Local container smoke check
+- [x] Task: Local container smoke check (ba75a3d)
+  - Notes: `docker build -t tiny-tracks:0.8.0 .` green (image
+    ba75a3d, 72.6MB — on par with v0.7.0's 72MB). Curl smoke all as
+    specified: `/` 200 html no-cache; `/sw.js` 200 no-cache;
+    `/manifest.webmanifest` 200 no-cache; hashed
+    `/assets/index-Boo6pLbL.js` 200 immutable; unknown route → 200
+    html (SPA fallback). Container stopped/removed. PWA sanity: largest
+    dist entry ~753KB bundle, GLBs ~150-177KB each — all far below the
+    6MB per-file precache cap; total dist ~9.4MB (modest growth vs
+    v0.7.0's ~9.03MB from the gate + 6 hill GLBs, as expected). Files:
+    none (verification only).
   - Acceptance: local `docker build` succeeds; running container
     serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
     `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
     back to `index.html` — all per `nginx.conf`; PWA precache weight
     sanity-checked vs the 6MB cap.
-  - [ ] `docker build` the image locally
-  - [ ] Run container; verify app loads, SPA fallback, cache headers (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed assets) + precache weight
+  - [x] `docker build` the image locally
+  - [x] Run container; verify app loads, SPA fallback, cache headers (no-cache for `sw.js`/manifest/`index.html`, immutable for hashed assets) + precache weight
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - Tag & Ship
