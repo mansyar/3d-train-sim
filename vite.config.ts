@@ -1,10 +1,19 @@
+import { readFileSync } from 'node:fs';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
+
+// Injected so the parent gate can show the family which build is running.
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
+  version: string;
+};
 
 export default defineConfig({
   test: {
     // Unit tests live in src/ only; e2e/ belongs to Playwright.
     include: ['src/**/*.test.ts'],
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [
     VitePWA({

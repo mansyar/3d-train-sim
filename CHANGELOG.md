@@ -10,6 +10,17 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 ## [Unreleased]
 
 ### Added
+- **A fourth starter: Hilltop Junction.** The picture gallery behind the
+  parent gate gains a new railway that shows off what the meadow can do:
+  a climb up and over the hills on one side and a proper passing loop
+  with two switches on the other, so the train alternates main-line and
+  siding laps all by itself. Picking any starter still keeps the kid's
+  chosen engine and wagon outfits — only the rails and scenery swap —
+  and one ↩️ tap still takes the whole swap right back.
+
+## [0.8.0] - 2026-09-05
+
+### Added
 - **A railway crossing gate that really warns the trains.** The toy box's
   rail tab gains a road-level crossing piece: when a train nears, the
   little red-and-white gates swing shut, the lantern blinks, and a soft
@@ -27,13 +38,12 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   winter the new hilltops wear snow crowns that melt away with the
   snow. Older saved railways open unchanged.
 
-- **A fourth starter: Hilltop Junction.** The picture gallery behind the
-  parent gate gains a new railway that shows off what the meadow can do:
-  a climb up and over the hills on one side and a proper passing loop
-  with two switches on the other, so the train alternates main-line and
-  siding laps all by itself. Picking any starter still keeps the kid's
-  chosen engine and wagon outfits — only the rails and scenery swap —
-  and one ↩️ tap still takes the whole swap right back.
+### Changed
+- **Updates arrive quietly, between rides.** The train table now checks
+  now and then for a newer version of the app and, when it finds one, it
+  waits for a quiet moment — never mid-ride — and freshens itself with
+  one gentle reload. Grown-ups can check the current version number in
+  the picture gallery behind the parent gate.
 
 ## [0.7.0] - 2026-09-04
 
@@ -218,7 +228,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mansyar/3d-train-sim/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...v0.5.0
