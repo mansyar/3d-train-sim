@@ -9,6 +9,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-05
+
 ### Added
 - **A railway crossing gate that really warns the trains.** The toy box's
   rail tab gains a road-level crossing piece: when a train nears, the
@@ -217,7 +219,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mansyar/3d-train-sim/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/mansyar/3d-train-sim/compare/v0.4.0...v0.5.0
