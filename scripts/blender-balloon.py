@@ -15,6 +15,7 @@ finds them with getObjectByName):
   balloon_snow_cap White cap on the envelope top; scene hides it at load
                    and shows it when winter is active.
 
+
 Static dressing: balloon_basket_box, balloon_rope_0..3, balloon_envelope,
 balloon_band. Materials are flat Principled, double-sided.
 

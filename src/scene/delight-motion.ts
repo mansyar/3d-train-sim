@@ -92,8 +92,8 @@ export function createDelightMotion(): DelightMotion {
 
   function update(dt: number, reducedMotion: boolean): void {
     if (disposed) return;
+    if (reducedMotion) return; // The world keeps its toys, just still.
     for (const motion of motions.values()) {
-      if (reducedMotion) continue; // The world keeps its toys, just still.
       if (motion.kind === 'windmill') {
         // The hub rides the authored +y axis, which glTF export flips to -z.
         if (motion.sails) motion.sails.rotation.z -= WINDMILL_SPIN * dt;

@@ -56,8 +56,7 @@ const setDelightSnow = (page: import('@playwright/test').Page, visible: boolean)
 
 const waitForGlb = (page: import('@playwright/test').Page, name: string) =>
   page.waitForFunction(
-    (glb) =>
-      performance.getEntriesByType('resource').some((entry) => entry.name.includes(glb)),
+    (glb) => performance.getEntriesByType('resource').some((entry) => entry.name.includes(glb)),
     name,
   );
 
@@ -93,7 +92,7 @@ test('the three delight toys load their GLBs and the balloon takes wing', async 
   // …and it stays a gentle toy: never higher than its cruise ceiling.
   const pose = await balloonDrift(page);
   expect(pose).not.toBeNull();
-  expect(pose!.altitude).toBeLessThan(1.7);
+  expect(pose?.altitude ?? 0).toBeLessThan(1.7);
 
   const origin = new URL(page.url()).origin;
   const external = requestUrls.filter((url) => new URL(url).origin !== origin);

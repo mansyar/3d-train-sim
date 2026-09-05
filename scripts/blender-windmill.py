@@ -6,7 +6,8 @@ z = -1), z-up, exported with export_yup.
 
 Node-name contract (runtime finds these via getObjectByName; each appears
 exactly once in the GLB — renaming any of them is a breaking change):
-- windmill_sails     empty at the hub; the scene spins it about local +y
+- windmill_sails     empty at the hub; the scene spins it about glTF local
+                     z (export flips the authored +y hub to -z)
                      (the horizontal hub axis pointing away from the tower
                      face) ~0.5 rev/s
 - windmill_snow_cap  white roof cap; scene hides at load, shows when the
