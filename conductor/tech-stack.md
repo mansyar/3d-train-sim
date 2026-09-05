@@ -91,7 +91,9 @@ and the Y-switch (`scripts/blender-switch.py` → `switch.glb`, whose named
 `switch_blades` node the scene eases 0 ↔ −0.21 to flip the points) and its
 left-hand twin (`scripts/blender-switch-mirror.py` → `switch-mirror.glb`,
 same node contract, eased 0 ↔ +0.21 toward the west branch)
-are the reference implementations. Original pieces are **not hand-sculpted**: each asset has a
+are the reference implementations. The full workflow is codified in the
+`threejs-blender-asset` skill (user-level skills dir) — phases, hard
+gates, and a stdlib `verify-glb.py` GLB gate checker. Original pieces are **not hand-sculpted**: each asset has a
 deterministic, checked-in Python recipe that builds and exports it, so a
 reset Blender session (or a new machine) can regenerate the asset exactly.
 Run it in any Blender session's Python console / scripting tab:
