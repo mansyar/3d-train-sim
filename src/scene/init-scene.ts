@@ -122,6 +122,10 @@ export interface SceneHandle {
   tootWhistle(): void;
   /** Debug aid: how many trains are riding right now. */
   ridingTrainCount(): number;
+  /** Debug aid: the live crossing phases ('idle'|'closing'|'active'|'lifting'). */
+  crossingPhases(): string[];
+  /** Debug aid: whether the crossing bell edge is ringing right now. */
+  bellRinging(): boolean;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -1027,6 +1031,8 @@ export function initScene(
     notifyActivity: () => attractClock.notifyActivity(),
     cycleFilmTarget: () => cycleFilmTarget(),
     ridingTrainCount: () => rigs.size,
+    crossingPhases: () => tracks.crossingPhases(),
+    bellRinging: () => tracks.bellRinging(),
     filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);

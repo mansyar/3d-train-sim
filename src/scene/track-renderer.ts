@@ -263,6 +263,12 @@ export interface TrackRenderer {
   updateCrossings(dt: number, trains: ReadonlyArray<{ x: number; z: number }>, night: number): void;
   /** Winter tell: show/hide the crossing's snow cap (event-driven). */
   setCrossingSnow(visible: boolean): void;
+
+  /** Debug aid: every placed crossing's live phase ('idle'|'closing'|
+   *  'active'|'lifting'), for e2e witnesses. */
+  crossingPhases(): string[];
+  /** Debug aid: whether the crossing bell edge is ringing right now. */
+  bellRinging(): boolean;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -1038,6 +1044,12 @@ export function startTrackRenderer(
     setSwitchRoad,
     updateCrossings,
     setCrossingSnow,
+    // Dev/e2e witnesses: live crossing phases and the bell edge state.
+    crossingPhases: () =>
+      [...tracked.values()]
+        .filter((item) => isPiece(item) && item.type === 'crossing-gate')
+        .map((item) => crossingMotions.get(item.id)?.phase ?? 'idle'),
+    bellRinging: () => crossingBell,
     dispose(): void {
       disposed = true;
       unsubscribe();
