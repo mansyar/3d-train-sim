@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
-import { cozyOval, stationVillage } from '../core/starters';
+import { cozyOval, hilltopJunction, STARTER_PRESETS, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
 import { TRAIN_KINDS } from '../core/trains';
 import { defaultConsist, withConsistPreset } from '../core/wagons';
@@ -381,7 +381,7 @@ describe('world store wagon consist', () => {
     expect(store.consist()).toEqual(defaultConsist());
   });
 
-  it('restores the prior consist on preset undo', () => {
+  it('carries the consist forward on preset apply, restores prior on undo', () => {
     const store = createWorldStore();
     store.selectConsist('diesel', 'coal');
     store.applyPreset({
@@ -391,7 +391,7 @@ describe('world store wagon consist', () => {
       deliveries: {},
       consist: defaultConsist(),
     });
-    expect(store.consistFor('diesel')).toBe('classic');
+    expect(store.consistFor('diesel')).toBe('coal');
 
     expect(store.undo()).toBe(true);
     expect(store.consistFor('diesel')).toBe('coal');
@@ -851,5 +851,59 @@ describe('world store preset replace', () => {
     expect(store.scenery()).toEqual([]);
     expect(store.train()).toBe('steam');
     expect(store.canUndo()).toBe(false);
+  });
+});
+
+describe("world store preset apply preserves the kid's train", () => {
+  it('keeps the selected train and wagon picks when applying any gallery preset', () => {
+    const store = createWorldStore();
+    store.selectTrain('diesel');
+    store.selectConsist('diesel', 'coal');
+    store.place('straight', ORIGIN, 0);
+
+    for (const preset of STARTER_PRESETS) {
+      store.applyPreset(preset.build());
+
+      expect(store.train()).toBe('diesel');
+      expect(store.consistFor('diesel')).toBe('coal');
+      expect(store.pieces()).toEqual(preset.build().pieces);
+      expect(store.scenery()).toEqual(preset.build().scenery);
+    }
+  });
+
+  it('restores train and wagon picks exactly when undoing a preset apply', () => {
+    const store = createWorldStore();
+    store.selectTrain('tram');
+    store.selectConsist('tram', 'container');
+    store.place('straight', ORIGIN, 0);
+    const beforePieces = store.pieces();
+
+    store.applyPreset(hilltopJunction());
+    expect(store.train()).toBe('tram');
+    expect(store.consistFor('tram')).toBe('container');
+
+    expect(store.undo()).toBe(true);
+    expect(store.train()).toBe('tram');
+    expect(store.consistFor('tram')).toBe('container');
+    expect(store.pieces()).toEqual(beforePieces);
+  });
+
+  it('preserved train and picks survive a save-load round trip after apply', () => {
+    const store = createWorldStore();
+    store.selectTrain('diesel');
+    store.selectConsist('diesel', 'coal');
+    store.applyPreset(hilltopJunction());
+
+    const reloaded = createWorldStore();
+    reloaded.hydrate({
+      pieces: [...store.pieces()],
+      scenery: [...store.scenery()],
+      train: store.train(),
+      deliveries: store.deliveries(),
+      consist: store.consist(),
+    });
+
+    expect(reloaded.train()).toBe('diesel');
+    expect(reloaded.consistFor('diesel')).toBe('coal');
   });
 });

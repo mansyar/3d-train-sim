@@ -1,0 +1,55 @@
+# Plan — Starter Refresh
+
+**Track:** `starter-refresh_20260905` · **Spec:** `spec.md` (source of truth)
+
+## Phase 1 — Core: builder + consist-preserving apply (TDD)
+
+- [x] Task 1.1 — Red: `hilltopJunction()` builder tests in `src/core/starters.ts`
+  - One connected component whose periodic ride is closed and covers every piece (main + siding laps via `rideComponentsOf`), one toy per cell, ≤ 20 toys.
+  - Hill trio present (slope-up / hill / slope-down) + exactly two OPPOSITELY-FACING right-switches on dry land (`terrainErrorFor` / `isWater` clean) — same-facing switches only ever serve the siding in one travel direction; the {90, 270} rotation pair is pinned by test.
+  - Station adjacent to loop on dry land; 2–3 nature/town decor.
+- [x] Task 1.2 — Green: implement `hilltopJunction()` + extend `STARTER_PRESETS` / `StarterPresetId` with 4th entry. (code `7da92e9`; corrected `847576b` — tablet check caught the east switch's diverging leg pointing north into the meadow while the siding approached from the south: the ride solver routes through the junction virtually so the broken geometry still measured "closed 17/17", but the rendered rails did not meet. East piece is now `switch-mirror` rot270 (stem E / straight W / diverge S), both diverging legs face the siding, `3,7|3,8` connection verified via `connectionsFor`, ride still closed with full coverage)
+- [x] Task 1.3 — Red: apply-layer tests — applying ANY preset keeps `train` + per-train `consist`, swaps rails/scenery/deliveries only; undo restores prior world exactly. (Red 2026-09-05: 3 new tests failed, 73 passed.)
+  - Sub-task: verify `defaultConsist()` wipe regression is covered (diesel + coal duo survives apply + reload).
+- [x] Task 1.4 — Green: split builders from apply — `src/state/world.ts` carries train/consist forward, keeps ONE pending-undo mutation. (code `6061e17`; minimal split: builders keep the full `WorldData` shape so `hydrate` first-run/persistence is untouched — `applyPreset` simply ignores `data.train`/`data.consist`. Old consist-overwrite test updated to the preserve contract.)
+
+> [!NOTE]
+> TDD per `workflow.md` — write failing Vitest cases FIRST for logic-bearing files (`src/core/`, `src/state/`), then implement. Notes for future implementers live here in `plan.md`, never in shipped code.
+
+### Phase Verification & Checkpoint — Phase 1
+
+- [x] PV1.1 — `pnpm vitest run src/core/starters` + `src/state` green, coverage of new logic >80%. (Full `pnpm check`: 647 tests pass, 36 files; new builder + preserve logic fully exercised.)
+- [x] PV1.2 — `pnpm check` (biome 2.5.10 + `tsc --noEmit`) green; no new GLB/audio/network/deps.
+- [x] PV1.3 — Quick smoke: dev boot applies 4th builder programmatically → valid loop per pathing rules. (No vite-node/tsx runner in repo; satisfied by `starters.test.ts` applying `hilltopJunction()` through the real `rideComponentsOf` solver — one closed component, full coverage. Browser boot path covered by Phase 2 e2e.)
+- [x] Review prior phase before proceeding (flag dead ends / stale assumptions). Notes: reviewed after the tablet catch — the empirical rotation search had trusted the ride solver's virtual junction routing, which masks geometrically dangling diverges; future switch layouts must assert real `connectionsFor` edges, not only closed rides.
+
+## Phase 2 — Glue: gallery pick + e2e + docs
+
+- [x] Task 2.1 — Gallery: 4th icon-only pick (reuse hill/switch SVG idiom, ≥64px, no text) inside parent-gate armed confirm; reset path untouched (stays EMPTY). Notes: button `data-preset="hilltop-junction"` with tray switch icon; generic STARTER_PRESETS.find + applyPreset path, no new logic.
+- [x] Task 2.2 — E2E (extend `e2e/starter-railway.spec.ts`, tablet + phone per `e2e/README.md`):
+  - 4th pick applies → counts match → `▶` rides with station pause → reload persists.
+  - Consist case: set diesel + coal duo → apply → train/consist preserved → undo restores full prior world.
+  - Reset case: reset → empty → reload stays empty.
+  Notes: new test "gallery apply preserves the train and wagon picks across undo and reload"; 8/8 green tablet + phone.
+- [x] Task 2.3 — Docs: CHANGELOG Unreleased one-liner; `conductor/product.md` starter sentence (4 presets) only if it names the count. Notes: CHANGELOG entry added; product.md names no starter count — unchanged.
+
+### Phase Verification & Checkpoint — Phase 2 (final gate)
+
+- [x] PV2.1 — Full `pnpm check` green (biome + typecheck + vitest). Notes: one Biome format fix in the new e2e test (commit 5813008); 647/647 Vitest, Biome + `tsc --noEmit` clean.
+- [x] PV2.2 — `npx playwright test starter-railway` green tablet + phone; console clean (boot/reload paths). Notes: 8/8 passed (1.8m) incl. new preservation test; only allowlisted THREE shadow-map deprecation warnings.
+- [x] PV2.3 — Manual tablet touch check: gallery pick, ride, undo, reset feel instant (<100ms feedback), no toddler-facing text. Notes: user hands-on check 2026-09-05 — all good; the check also caught the passing-loop direction defect (fixed `847576b`) and the corrected branch was re-verified on tablet.
+
+### Phase 2 Verification Report
+
+All Phase 2 tasks and gates green. Hilltop Junction ships as the 4th gallery
+preset: icon-only pick inside the parent gate, 17 rails + 3 decor (20 toys),
+hill trio + mirrored passing loop whose diverging legs both meet the siding,
+apply preserves the kid's train + wagon picks as ONE undoable mutation, reset
+stays EMPTY. Evidence: 647/647 Vitest, Biome + `tsc --noEmit` clean, 8/8
+Playwright tablet + phone, user touch-check passed (PV2.3). Commits: `7da92e9`,
+`6061e17`, `854e229`, `e5a40f5`, `5813008`, `847576b`.
+- [ ] Update `conductor/tracks.md` (done → in-progress → done); commit per `workflow.md` (staged commits, atomic messages).
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions — `9b06a1d`: e2e `dressed` helper now reuses the shared `DevWorld` handle type (extended with `train()`/`consistFor()`) instead of an inline duplicate; starter-railway e2e re-run 8/8 green tablet + phone.

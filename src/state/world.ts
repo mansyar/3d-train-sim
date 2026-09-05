@@ -73,7 +73,11 @@ export interface WorldStore {
   /** A defensive copy of the delivery ledger — station id → crate count. */
   deliveries(): Record<string, number>;
   hydrate(data: WorldData): void;
-  /** Replaces the whole meadow with a preset world as ONE undoable change. */
+  /**
+   * Replaces the whole meadow with a preset world as ONE undoable change.
+   * Rails, scenery, and deliveries swap; the kid's selected train and wagon
+   * picks carry forward untouched (presets never undress the workshop).
+   */
   applyPreset(data: WorldData): void;
   /** Returns the meadow to a factory-fresh world: empty, steam selected. */
   reset(): void;
@@ -321,8 +325,10 @@ export function createWorldStore(): WorldStore {
 
     applyPreset(data) {
       // A starter-gallery pick lands as ONE mutation: the prior build is
-      // snapshotted (pieces, scenery, train, deliveries) so a single undo
-      // restores it exactly, replacing any in-progress edit undo.
+      // snapshotted (pieces, scenery, train, consist, deliveries) so a single
+      // undo restores it exactly, replacing any in-progress edit undo. The
+      // kid's train + wagon picks carry forward — only rails, scenery, and
+      // deliveries swap.
       const copyPieces = (list: PlacedPiece[]) =>
         list.map((piece) => ({ ...piece, cell: { ...piece.cell } }));
       const copyScenery = (list: PlacedScenery[]) =>
@@ -333,9 +339,7 @@ export function createWorldStore(): WorldStore {
       const priorTrain = selectedTrain;
       const priorConsist = { ...consist };
       const priorNextId = nextId;
-      selectedTrain = data.train;
       deliveries = { ...(data.deliveries ?? {}) };
-      consist = readConsist(data.consist);
       placed.splice(0, placed.length, ...copyPieces(data.pieces));
       scenery.splice(0, scenery.length, ...copyScenery(data.scenery));
       nextId = 1;
