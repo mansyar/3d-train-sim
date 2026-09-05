@@ -162,3 +162,12 @@ reload within the first ~15 s after load; no console errors.
   updates arrive quietly between rides; version readable behind the
   parent gate.
 - **User approval:** approved 2026-09-05.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions — guard the two service-worker
+  promises with `.catch()` so offline probes never surface unhandled
+  rejections or console errors: `getRegistration().then(...).catch()`
+  and `swRegistration.update().catch()`. Gates rerun green
+  (`pnpm check`: biome clean, tsc clean, vitest 650/650); e2e re-run
+  not warranted (the guarded paths never fire in a test run). — d7028df
