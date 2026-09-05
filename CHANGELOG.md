@@ -9,6 +9,17 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- **The river comes to life.** A chunky red cargo barge now putters
+  along the river, paddling slowly under the trestle bridge and bobbing
+  on the swell — and at bedtime, or when the river ices over, its engine
+  rests while it keeps gently riding the water. The Critter tab also
+  gains a little frog: drag it onto the river and it floats on its lily
+  pad, or set it on the grass like any other toy. Chug past on a ride
+  and it hops with a soft ribbit (quiet when the meadow is muted).
+  Frogs stay in the meadow between visits, and older saved worlds open
+  unchanged.
+
 ## [0.8.0] - 2026-09-05
 
 ### Added
