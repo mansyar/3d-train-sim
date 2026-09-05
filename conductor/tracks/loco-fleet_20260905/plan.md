@@ -8,7 +8,13 @@ Methodology per `workflow.md`: TDD (Red → Green → Refactor → Coverage) for
 logic-bearing code (`src/core/`, `src/state/`); observable acceptance criteria +
 Playwright smoke for scene/UI.
 
-## Phase 1 - Core: Fleet Catalog & Persistence (TDD)
+## Phase 1 - Core: Fleet Catalog & Persistence (TDD) [checkpoint: 760694b]
+
+**Verification Report (Phase 1)**
+- Changed files since prev checkpoint (`aec47d1`): plan.md, core/{trains,pace,wagons,whistle-profiles}.ts + tests, core/save.test.ts, state/world.ts — every logic-bearing file has tests.
+- `pnpm exec biome check src` clean; `tsc --noEmit` clean; `CI=true pnpm test --coverage` → 664/664 passing.
+- Coverage on new/changed logic: trains.ts 100%, pace.ts 92.3%, save.ts 91.6%, wagons.ts 100% (>80% gate met).
+- Manual verification confirmed by user (2026-09-05): 6 engines ride with family whistles, personalities visible on hills, choice persists across reload, old worlds load, console clean.
 
 - [x] Task: Extend `TRAIN_KINDS` + definitions (logic)
   - [x] Write failing tests: `express`/`freight`/`bullet` in `TRAIN_KINDS`; `modelUrl`/`aria`/`whistle` per kind; icon SVG present; whistle reuses existing profiles
