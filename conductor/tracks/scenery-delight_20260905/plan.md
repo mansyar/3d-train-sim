@@ -16,10 +16,16 @@
   - [ ] Write failing unit tests for new kinds `windmill`/`carousel`/`balloon` in `src/core/scenery.ts` (present in `SCENERY_KINDS`, category `town`, scale/lift entries, aria labels, URLs)
   - [ ] Implement catalog additions in `src/core/scenery.ts`
   - [ ] Verify: tests green, `tsc --noEmit` clean, coverage >80% on changed module
-- [ ] Task: Balloon wander state machine
-  - [ ] Write failing unit tests for `src/core/balloon-wander.ts`: drift stays within ~2–3 cell radius, altitude easing bounds, lands periodically, deterministic with injected RNG, landed ⇄ flying transitions
-  - [ ] Implement `src/core/balloon-wander.ts` (pure, injected RNG)
-  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage >80%
+- [x] Task: Balloon wander state machine (de61f7d)
+  - Expected behavior: `createBalloonWanderer` in `src/core/balloon-wander.ts` — pure module, injected RNG; starts landed at base; takes off, cruises ≤ maxHeight, drifts within `radius` (default 2.5 cells), lands periodically; deterministic for a given RNG.
+  - Notes:
+    - TDD: wrote `src/core/balloon-wander.test.ts` first (7 tests with mulberry32 seeded PRNG, dt=1/30, 600 s simulations) — confirmed red at missing module, then implemented.
+    - Design: phase machine `rest → rise → drift → descend → rest` with smoothstep altitude easing (CLIMB_SECONDS=3), jittered rest (5 s) and flight (10 s) timers, drift target sampled inside `radius` via sqrt-uniform disc pick, cruise altitude 60–100% of `maxHeight` (default 1.6). Poses are plain `{x, z, altitude, flying}` in cells; scene applies transforms.
+    - Tests: starts landed at (0,0,0); takes off and cruises; altitude clamped [0, maxHeight]; drift ≤ radius; ≥5 takeoffs & landings per 600 s; no jump >0.25 cells/frame; seed-deterministic over 1000 steps.
+    - Verify: 7/7 green, `tsc --noEmit` clean, coverage 100% stmts / 96.55% branch on `balloon-wander.ts`.
+  - [x] Write failing unit tests for `src/core/balloon-wander.ts`: drift stays within ~2–3 cell radius, altitude easing bounds, lands periodically, deterministic with injected RNG, landed ⇄ flying transitions
+  - [x] Implement `src/core/balloon-wander.ts` (pure, injected RNG)
+  - [x] Verify: tests green, `tsc --noEmit` clean, coverage >80%
 - [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
 
 ## Phase 2 — Blender authoring (non-logic; render/verify gated)
