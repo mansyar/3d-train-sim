@@ -54,12 +54,29 @@ Playwright smoke for scene/UI.
   design. No save version bump. Coverage: save.ts 91.6%, wagons.ts 100%.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 2 - Scene: New Engines Ride Everything (non-logic)
+## Phase 2 - Scene: New Engines Ride Everything (non-logic) [checkpoint: cadff4b]
 
-- [ ] Task: Puff offsets + scene wiring (non-logic)
-  - [ ] Acceptance: all 6 engines load and ride loops/shuttles/hills/tunnels/switches; each puffs from its chimney/roof; ride cap and 🎥 cycling work with 6 kinds
-  - [ ] Implement `scene/steam-puff-emitter.ts` `FALLBACK_OFFSETS` entries; confirm lazy template loading in `init-scene.ts` scales to the wider fleet
-  - [ ] Manual/tablet check per acceptance
+**Verification Report (Phase 2)**
+- Changed files since prev checkpoint (`86b086c`): scene/steam-puff-emitter.ts (+3 offset entries), e2e/smoke.spec.ts (fleet count 3→6), plan.md. No logic-bearing changes.
+- Playwright smoke spec: 40/40 passing after the boot-count fix (2 viewports × 20 tests) — clean console, zero external requests, all 6 GLBs load locally.
+- Manual verification confirmed by user (2026-09-05): engine swaps in place, puffs and whistle voices correct per family, 🎥 cycling and wagon workshop behave with 6 kinds.
+
+- [x] Task: Puff offsets + scene wiring (non-logic) `069c110`
+  - [x] Acceptance: all 6 engines load and ride loops/shuttles/hills/tunnels/switches; each puffs from its chimney/roof; ride cap and 🎥 cycling work with 6 kinds
+  - [x] Implement `scene/steam-puff-emitter.ts` `FALLBACK_OFFSETS` entries; confirm lazy template loading in `init-scene.ts` scales to the wider fleet
+  - [x] Manual/tablet check per acceptance
+
+  Notes: `init-scene.ts` needed zero changes — everything is TRAIN_KINDS-generic
+  (template Map, preload loop, swapRigKind, syncRigs). Finding: templates
+  precache for ALL kinds at startup (already true for 3 kinds) — kept, it
+  guarantees instant engine swaps; clones share geometry, ride cap 4 bounds
+  live rigs. Puff offsets: express [0,3.2,0], freight [0,2.8,0], bullet [0,3,0]
+  (chimney-position fallbacks; findChimney overrides where names match).
+  `load-locomotive.ts` generic. Playwright: full smoke spec 38/40 → the 2
+  boot failures were a hardcoded `.train-slot` count of 3 → updated to 6,
+  now 2/2 pass (clean console, zero external requests, all 6 GLBs load).
+  Known Phase 4 follow-ups: smoke "cover the fleet" loop (line ~675) and
+  wagon-workshop consist reads still reference 3 kinds.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 - Picker: Scrollable 6-Engine Row (UI)
