@@ -81,9 +81,13 @@
     - Waterline contract honoured: model origin = water surface, `baseY = 0.02` + bob (0.05 amplitude, 2.6 s period); bow −z faces travel via the duck's `atan2` idiom; wheel node (`barge_wheel`) spins about local x, travel-scaled, engine off at bedtime/frozen.
     - `BEDTIME_NIGHT` exported from `duck.ts` (one-word change) so night/frozen gates stay single-source.
     - Zero per-frame allocations (drift math on the cached path array only); `dispose()` deep-disposes via `disposeObject`.
-- [ ] Task: Frog rendering & float level (glue — manual verification)
-  - - [ ] Scenery GLB pipeline renders `frog` via `SCENERY_URLS`; on water cells the pad rests at the water-surface level instead of the ground lift
-  - - [ ] Track placed frogs in `critter-life.ts` with the `ribbit-frog` voice (hops, rain/bedtime rules come free)
+- [x] Task: Frog rendering & float level (glue — manual verification) `3b0c0dc`
+  - - [x] Scenery GLB pipeline renders `frog` via `SCENERY_URLS`; on water cells the pad rests at the water-surface level instead of the ground lift
+  - - [x] Track placed frogs in `critter-life.ts` with the `ribbit-frog` voice (hops, rain/bedtime rules come free)
+  - Notes:
+    - Rendering needed no new pipeline — Phase 1's catalog entry flows through `SCENERY_URLS` → template → clone; critters (including the frog) are tracked by `critter-life.ts` via `sceneryCategory`/`sceneryVoice` in `syncCritterAnimations`.
+    - Float level: `apply()` now nudges a floating toy's inner model between `sceneryLift` (land) and the river `SURFACE_LIFT` (water) — the shared surface constant exported from `river-water.ts` (barge now uses it too).
+    - Gates: biome ✓ · tsc ✓ · 654 tests pass.
 - [ ] Task: Ribbit sound (glue — manual verification)
   - - [ ] Bundle a soft CC0 ribbit; map `ribbit-frog` in the sfx registry; mute-respecting like the other critter voices
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
