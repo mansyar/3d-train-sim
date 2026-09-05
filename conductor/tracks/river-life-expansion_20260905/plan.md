@@ -4,9 +4,14 @@
 
 ## Phase 1 — Core Catalog & Water Placement (TDD)
 
-- [ ] Task: Frog catalog entry in `src/core/scenery.ts` (logic-bearing — TDD)
-  - - [ ] **Red:** extend `scenery.test.ts` — `frog` is a `SCENERY_KINDS` member, category `critter`, url `/assets/nature-kit/frog.glb`, voice `ribbit-frog`, aria "Frog", scale & lift defined
-  - - [ ] **Green:** add `frog` to `SCENERY_KINDS` + every per-kind record (`SCENERY_URLS`, `SCENERY_CATEGORIES_BY_KIND`, `SCENERY_SCALES`, `SCENERY_LIFTS`, `SCENERY_ARIA`, `SCENERY_VOICES`)
+- [x] Task: Frog catalog entry in `src/core/scenery.ts` (logic-bearing — TDD) `c325a79`
+  - - [x] **Red:** extend `scenery.test.ts` — `frog` is a `SCENERY_KINDS` member, category `critter`, url `/assets/nature-kit/frog.glb`, voice `ribbit-frog`, aria "Frog", scale & lift defined
+  - - [x] **Green:** add `frog` to `SCENERY_KINDS` + every per-kind record (`SCENERY_URLS`, `SCENERY_CATEGORIES_BY_KIND`, `SCENERY_SCALES`, `SCENERY_LIFTS`, `SCENERY_ARIA`, `SCENERY_VOICES`)
+  - Notes:
+    - TDD: 5 failing tests written first (catalog membership, category, url, voice, ribbit id), confirmed Red, then implemented Green. `scenery.ts` at 100% coverage.
+    - Typecheck forced two consumer records to learn about `frog`: `TAB_FOR_KIND` in `core/drawer.ts` (critter tab) and `SCENERY_ICONS` in `ui/app.ts` (inline lily-pad-frog SVG in the established icon style). `drawer.test.ts` critter-tab expectation updated to `['pig','sheep','pug','frog']`.
+    - Files: `src/core/scenery.ts`, `src/core/scenery.test.ts`, `src/core/drawer.ts`, `src/core/drawer.test.ts`, `src/ui/app.ts`.
+    - Gates: biome ✓ · tsc ✓ · 652 tests pass (full suite, coverage run).
 - [ ] Task: Floating-scenery water rule in `src/state/world.ts` (logic-bearing — TDD)
   - - [ ] **Red:** `world.test.ts` — `placeScenery('frog', waterCell)` → `'placed'`; `placeScenery('tree', waterCell)` → `'water'`; same pair for `relocateScenery`
   - - [ ] **Green:** add `sceneryFloats(kind)` helper in `src/core/scenery.ts` (only `frog` → true) and gate the two `isWater` checks (`placeScenery`, `relocateScenery`)
