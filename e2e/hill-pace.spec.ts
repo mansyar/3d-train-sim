@@ -94,11 +94,20 @@ const expectClean = (
  * instead of asserting a silence WebKit cannot keep. Scoped to the re-ride
  * only (the first ride asserts strict silence just above). Every behavioral
  * assert in that test still runs at full strength.
+ *
+ * Two log lines, one event: three.js also logs its own wrapper
+ * (`THREE.GLTFLoader: Couldn't load texture <url>`) for the same rejected
+ * fetch, and the wrapper carries neither browser affix — so the wrapper
+ * needs its own fingerprints below (embedded-`blob:` and station
+ * `colormap.png` variants, matching the two URLs this reload trips).
  */
 const KNOWN_WEBKIT_RELOAD_NOISE: readonly ((text: string) => boolean)[] = [
   // Substring on purpose: the live console text carries affixes the
   // assertion display hides (an anchored match never fires at runtime).
   (text) => text.includes('due to access control checks'),
+  (text) => text.includes("THREE.GLTFLoader: Couldn't load texture") && text.includes('blob:'),
+  (text) =>
+    text.includes("THREE.GLTFLoader: Couldn't load texture") && text.includes('colormap.png'),
 ];
 
 /** The proving ground: straight → slope-up → hill → slope-down → straight. */
