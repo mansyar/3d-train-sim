@@ -66,6 +66,17 @@ describe('personalityPace — Wide spread per loco', () => {
     expect(personalityPace('diesel')).toBeGreaterThan(personalityPace('tram'));
     expect(personalityPace('tram')).toBeGreaterThan(personalityPace('steam'));
   });
+
+  it('gives the new fleet engines their own personalities', () => {
+    expect(personalityPace('express')).toBeCloseTo(1.05, 6);
+    expect(personalityPace('freight')).toBeCloseTo(0.85, 6);
+    expect(personalityPace('bullet')).toBeCloseTo(1.3, 6);
+  });
+
+  it('spreads the six-engine fleet from steady freight to zippy bullet', () => {
+    expect(personalityPace('freight')).toBeLessThan(personalityPace('steam'));
+    expect(personalityPace('bullet')).toBeGreaterThan(personalityPace('diesel'));
+  });
 });
 
 describe('livePaceFactor — personality × grade', () => {
