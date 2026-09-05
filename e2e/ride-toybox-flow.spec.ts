@@ -106,7 +106,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
     adventure: 7,
     nature: 3,
     town: 3,
-    critter: 3,
+    critter: 4,
   };
   for (const [tab, count] of Object.entries(counts)) {
     const panel = page.locator(`.drawer-panel[data-panel="${tab}"]`);
