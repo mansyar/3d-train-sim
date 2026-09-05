@@ -93,6 +93,9 @@ function readConsist(value: TrainConsist | undefined): TrainConsist {
     steam: resolveWagonPreset(value?.steam),
     diesel: resolveWagonPreset(value?.diesel),
     tram: resolveWagonPreset(value?.tram),
+    express: resolveWagonPreset(value?.express),
+    freight: resolveWagonPreset(value?.freight),
+    bullet: resolveWagonPreset(value?.bullet),
   };
 }
 

@@ -774,6 +774,43 @@ describe('wagon consist snapshots — per-train presets', () => {
     });
   });
 
+  it('round-trips a fleet engine choice and its preset', () => {
+    const consist = withConsistPreset(defaultConsist(), 'freight', 'coal');
+    const snapshot = serializeWorld(pieces, scenery, 'bullet', false, {}, consist);
+
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery,
+      train: 'bullet',
+      deliveries: {},
+      consist,
+    });
+  });
+
+  it('round-trips a new engine chosen on an otherwise classic consist', () => {
+    const snapshot = serializeWorld(pieces, scenery, 'express');
+
+    expect(snapshot).toEqual({ version: 3, pieces, scenery, train: 'express' });
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery,
+      train: 'express',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('loads pre-fleet snapshots without a train field as all-classic steam', () => {
+    expect(deserializeWorld({ version: 3, pieces, scenery })).toEqual({
+      pieces,
+      scenery,
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
   it('round-trips per-train presets', () => {
     const consist = withConsistPreset(
       withConsistPreset(defaultConsist(), 'diesel', 'coal'),
