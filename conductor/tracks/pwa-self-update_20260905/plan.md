@@ -107,7 +107,8 @@ reload within the first ~15 s after load; no console errors.
   reads `package.json`). — 722e750
 - [x] Task: Render the version line in the parent gate panel
   (`src/ui/app.ts` + `src/style.css` — small, subtle, grown-up-facing). — 722e750
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) —
+  approved 2026-09-05. [checkpoint: 3353913]
 
 ## Phase 3 Notes (commit 722e750)
 
@@ -133,12 +134,31 @@ reload within the first ~15 s after load; no console errors.
   workflow (non-logic phase); verified by build inspection + existing
   suites.
 - **Gates:** `biome check` clean · `tsc --noEmit` clean · `vite build` green.
-- **User approval:** pending.
+- **User approval:** approved 2026-09-05.
 
 ## Phase 4: Gates, docs, close-out
 
-- [ ] Task: Full gates + e2e suite (`pnpm exec biome check .`,
-  `pnpm exec tsc --noEmit`, vitest, Playwright).
-- [ ] Task: Document — PWA update behavior note in `conductor/tech-stack.md`;
+- [x] Task: Full gates + e2e suite (`pnpm exec biome check .`,
+  `pnpm exec tsc --noEmit`, vitest, Playwright) — 650/650 unit,
+  109/109 e2e (one infra flake: dev server died mid-run, rerun green
+  with the server supervised manually)
+- [x] Task: Document — PWA update behavior note in `conductor/tech-stack.md`;
   parent-facing note in `CHANGELOG.md` `[Unreleased]`.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md) —
+  approved 2026-09-05.
+
+## Phase 4 Verification Report
+
+- **Gates:** `pnpm check` green (biome 128 files, tsc, vitest 650/650,
+  37 files); `pnpm exec playwright test` **109/109 passed** (8.9 min,
+  tablet + phone + prod projects). First e2e attempt failed 105/109 with
+  "Could not connect to server" — the shared dev server died mid-run
+  (infra flake, the known instability the config comments on); rerun
+  against a supervised server was fully green.
+- **Docs:** `conductor/tech-stack.md` PWA row now documents the quiet
+  self-update flow (autoUpdate/skipWaiting, controllerchange signal,
+  probe cadence, boot guard, ride-idle reload, `__APP_VERSION__`).
+  `CHANGELOG.md` `[Unreleased]` gained a parent-facing **Changed** entry:
+  updates arrive quietly between rides; version readable behind the
+  parent gate.
+- **User approval:** approved 2026-09-05.
