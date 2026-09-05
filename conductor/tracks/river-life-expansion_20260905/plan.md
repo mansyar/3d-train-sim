@@ -72,10 +72,15 @@
 
 ## Phase 3 — Scene & Audio Wiring
 
-- [ ] Task: Barge module `src/scene/barge.ts` (modeled on `duck.ts`; glue — manual verification)
-  - - [ ] Load `barge.glb`; drift `riverDriftPath()` ping-pong at ~0.15 cells/s; gentle bob; face travel direction
-  - - [ ] Mood handling: night pause at `BEDTIME_NIGHT 0.6`, frozen at shared `FROZEN_SNOW 0.5`; bob never stops
-  - - [ ] Zero per-frame allocations; wire into `init-scene.ts` update loop + `dispose()`
+- [x] Task: Barge module `src/scene/barge.ts` (modeled on `duck.ts`; glue — manual verification) `edd2a77`
+  - - [x] Load `barge.glb`; drift `riverDriftPath()` ping-pong at ~0.15 cells/s; gentle bob; face travel direction
+  - - [x] Mood handling: night pause at `BEDTIME_NIGHT 0.6`, frozen at shared `FROZEN_SNOW 0.5`; bob never stops
+  - - [x] Zero per-frame allocations; wire into `init-scene.ts` update loop + `dispose()`
+  - Notes:
+    - GLB loaded onto a root group that exists from frame one (spawned at the river's north end) so the barge rests in place while loading; load failure leaves an empty root — the world keeps working, as with the piece loaders.
+    - Waterline contract honoured: model origin = water surface, `baseY = 0.02` + bob (0.05 amplitude, 2.6 s period); bow −z faces travel via the duck's `atan2` idiom; wheel node (`barge_wheel`) spins about local x, travel-scaled, engine off at bedtime/frozen.
+    - `BEDTIME_NIGHT` exported from `duck.ts` (one-word change) so night/frozen gates stay single-source.
+    - Zero per-frame allocations (drift math on the cached path array only); `dispose()` deep-disposes via `disposeObject`.
 - [ ] Task: Frog rendering & float level (glue — manual verification)
   - - [ ] Scenery GLB pipeline renders `frog` via `SCENERY_URLS`; on water cells the pad rests at the water-surface level instead of the ground lift
   - - [ ] Track placed frogs in `critter-life.ts` with the `ribbit-frog` voice (hops, rain/bedtime rules come free)
