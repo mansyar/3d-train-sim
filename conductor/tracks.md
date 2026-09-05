@@ -22,6 +22,7 @@ Registry of active development tracks.
 | [hills-phase2_20260904](archive/hills-phase2_20260904/index.md) | Hills Phase 2 - Bumps, Corners & Half-Height Cruises | Feature | done |
 | [hill-grade-pace_20260904](archive/hill-grade-pace_20260904/index.md) | Hill-Grade Pace | Feature | done |
 | [release-v0.7.0_20260904](archive/release-v0.7.0_20260904/index.md) | Release v0.7.0 | Chore | done |
+| [release-v0.8.0_20260905](tracks/release-v0.8.0_20260905/index.md) | Release v0.8.0 | Chore | new |
 
 Completed tracks are archived under [conductor/archive/](archive/):
 `bootstrap-tiny-tracks`, `choo-choo-sound-box`, `train-ride`, `track-placement`,
