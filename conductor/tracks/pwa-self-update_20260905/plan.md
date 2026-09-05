@@ -56,12 +56,49 @@ probes for a new service worker; a `controllerchange` with an idle ride
 reloads once; a `controllerchange` mid-ride defers until the ride ends; no
 reload within the first ~15 s after load; no console errors.
 
-- [ ] Task: Wire update probes in `src/main.ts` — `registration.update()`
-  on visibility regain + hourly interval; register the pending update.
-- [ ] Task: Wire quiet apply — `controllerchange` marks the update pending;
+- [x] Task: Wire update probes in `src/main.ts` — `registration.update()`
+  on visibility regain + hourly interval; register the pending update. — 08ab55d
+- [x] Task: Wire quiet apply — `controllerchange` marks the update pending;
   on the ride state reaching idle, perform a single `location.reload()`;
-  connect the ride-state hook (`src/state/ride.ts`).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  connect the ride-state hook (`src/state/ride.ts`). — 08ab55d
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+## Phase 2 Notes (commit 08ab55d)
+
+- `src/main.ts` gained a self-contained update block inside the app-root
+  scope (it shares the queued `rideModeListeners` channel):
+  - Probing: `navigator.serviceWorker.getRegistration()` is captured once;
+    `registration.update()` fires on visibility regain and via an hourly
+    `setInterval`, both gated by `shouldProbeForUpdate` (hidden tabs never
+    probe; the interval doubles as a debounce).
+  - Adopting: `controllerchange` marks the update pending — but only when a
+    controller already existed (first install is not an update). A pending
+    update is applied by `applyPendingUpdate()`, gated by `shouldReload`
+    (ride idle + boot guard), via a single `location.reload()`.
+  - Deferred updates re-check on ride end (`rideModeListeners`), on
+    visibility regain, on the hourly probe, and once when the boot guard
+    expires (`setTimeout(BOOT_GUARD_MS)`) so a boot-time activation is not
+    stuck waiting for the next wake or hour.
+- The ride-state hook uses the existing queued `rideModeListeners` channel
+  (`src/state/ride.ts` itself was not modified — the scene's ride-mode
+  subscription is the authoritative signal).
+- No per-frame work added; all timers are 1 h / one-shot 15 s.
+- Gates: `biome check`, `tsc --noEmit`, full `vitest run` (650 tests) clean.
+
+## Phase 2 Verification Report
+
+- **Acceptance criteria (glue):** probes fire only on visible tabs (visibility
+  regain + hourly, debounced by the interval); `controllerchange` after an
+  existing controller marks the update pending; a pending update reloads once
+  when the ride is idle and the boot guard has passed; mid-ride it defers to
+  ride end; no reload within 15 s of load (guard); no console errors expected
+  (all paths are guarded no-ops).
+- **Test audit:** glue is DOM/lifecycle code — no unit test per workflow
+  (non-logic phase); covered by the acceptance criteria above and the
+  existing e2e suite in Phase 4.
+- **Gates:** `biome check` clean · `tsc --noEmit` clean · full `vitest run`
+  650/650.
+- **User approval:** pending.
 
 ## Phase 3: Version in the parent gate
 
