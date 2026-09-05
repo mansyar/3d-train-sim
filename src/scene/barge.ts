@@ -16,15 +16,25 @@ import { enableCastShadows } from './shadows';
  * Night is bedtime and a frozen river ices it in; the bob never stops
  * (a sleeping barge still rides the swell). The GLB is authored on the
  * waterline contract — its origin IS the water surface — so the model
- * simply sits at y ≈ 0.02. Motion writes straight onto transforms — no
- * allocations in the frame path.
+ * rides at y ≈ 0.04 (a small lift above the plane so the shallow-decked
+ * hull never dips under the water and flickers against it). Motion
+ * writes straight onto transforms — no allocations in the frame path.
  */
 
 /** A heavy hull: less than half the duck's paddle speed (cells/second). */
 const DRIFT_CELLS_PER_SECOND = 0.15;
 /** The bob: a slow, easy ride for a heavy craft. */
-const BOB_AMPLITUDE = 0.05;
+const BOB_AMPLITUDE = 0.02;
 const BOB_PERIOD_SECONDS = 2.6;
+/**
+ * Resting height above the water plane. The GLB's red deck sits only
+ * 0.02 above its waterline origin, so an unlifted hull lets the swell
+ * dip the deck below the opaque water plane — the deck and the water
+ * slice through each other and flicker red/blue. Lift + reduced swell
+ * keep the deck ≥ 0.02 clear at every bob phase while the barge's high
+ * point stays under its previously verified bridge-pass height.
+ */
+const RIDE_HEIGHT = 0.02;
 /** The stern paddle wheel's gentle churn (radians/second, travel-scaled). */
 const WHEEL_SPIN = 0.9;
 const BARGE_URL = '/assets/train-kit/barge.glb';
@@ -59,7 +69,7 @@ export function createBarge(
   if (first) {
     model.position.x = first.x;
     model.position.z = first.z;
-    model.position.y = SURFACE_LIFT;
+    model.position.y = SURFACE_LIFT + RIDE_HEIGHT;
   }
 
   new GLTFLoader().load(
@@ -122,7 +132,7 @@ export function createBarge(
       if (moving && wheel) wheel.rotation.x += dt * WHEEL_SPIN * direction;
 
       const bob = Math.sin(elapsed * ((Math.PI * 2) / BOB_PERIOD_SECONDS)) * BOB_AMPLITUDE;
-      model.position.y = SURFACE_LIFT + bob;
+      model.position.y = SURFACE_LIFT + RIDE_HEIGHT + bob;
     },
     dispose() {
       scene.remove(model);
