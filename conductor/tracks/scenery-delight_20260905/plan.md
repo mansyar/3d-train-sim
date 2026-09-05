@@ -6,7 +6,13 @@
 
 ## Phase 1 — Pure logic (TDD, `src/core`)
 
-- [ ] Task: Extend scenery catalog
+- [x] Task: Extend scenery catalog (a8bedb6)
+  - Expected behavior: kinds `windmill`/`carousel`/`balloon` join `SCENERY_KINDS`, categorized `town`, served from `/assets/train-kit/<kind>.glb`, scaled to toy proportions, lifted off the mat, aria-labeled, voiceless.
+  - Notes:
+    - TDD: added failing tests to `src/core/scenery.test.ts` first (catalog count 12, town grouping, train-kit URLs) — confirmed 3 failures, then implemented.
+    - Changes: `src/core/scenery.ts` (kinds/URLs/categories/scales/lifts/aria; doc comment now mentions delight toys), `src/core/drawer.ts` (TAB_FOR_KIND town entries), `src/ui/app.ts` (three chunky inline SVG drawer icons in the established 48×48 `var(--toy-*)` style), plus expectation updates in `scenery.test.ts` and `drawer.test.ts` (town tab order).
+    - Why: catalog is the single source of truth — drawer, renderer, and world store all read from it; adding kinds here is the pure-data foundation before any GLB exists.
+    - Scales chosen: windmill 1.1 (landmark), carousel 1, balloon 0.9; lifts 0.02.
   - [ ] Write failing unit tests for new kinds `windmill`/`carousel`/`balloon` in `src/core/scenery.ts` (present in `SCENERY_KINDS`, category `town`, scale/lift entries, aria labels, URLs)
   - [ ] Implement catalog additions in `src/core/scenery.ts`
   - [ ] Verify: tests green, `tsc --noEmit` clean, coverage >80% on changed module
