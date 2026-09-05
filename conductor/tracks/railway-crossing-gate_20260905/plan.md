@@ -80,22 +80,69 @@ final gates.
     glTF Y axis), `crossing_lantern` + `crossing_lamp_0`/`_1` (separate
     materials for alternating blink), `crossing_snow_cap` (hidden at
     load, tunnel precedent). 12 nodes, 8 materials.
-- [ ] Task: Source & bundle the bell sound
-  - [ ] Real railroad-crossing bell recording (CC0/public-domain
+- [x] Task: Source & bundle the bell sound
+  - [x] Real railroad-crossing bell recording (CC0/public-domain
         preferred), softened + volume-capped; `public/audio/CREDITS.md`
         updated if attribution required; documented synthesized fallback
         if no suitable real recording is found; fully local
-- [ ] Task: Scene wiring & animation (acceptance-criteria verified; no
+
+  > **Notes — bell**: found CC0 candidates on Freesound after Commons hits
+  > all proved license-incompatible (CC BY-SA). Chose lipalearning's
+  > "train crossing bell.wav" (#427974, CC0) — a single soft tubular-bell
+  > ding, toy-appropriate; the WCH Mechanical Bell (#857864, CC0) was the
+  > backup. Downloaded the public hq preview CDN mp3, trimmed to the
+  > 1.147 s ding with ffmpeg (band-pass 150–5200 Hz, 4 ms fade-in,
+  > 95 ms fade-out, +10.5 dB, loudnorm I=−24 TP=−6, limiter −6 dB, mono
+  > 44.1 kHz), bundled as `public/audio/crossing-bell.ogg` (12.5 KB) +
+  > `.mp3` (14.5 KB) per the dual-format convention. CREDITS.md row added
+  > (Freesound / lipalearning / CC0 1.0). No synthesized fallback needed.
+  > Commit `11ddea9`.
+- [x] Task: Scene wiring & animation (acceptance-criteria verified; no
   unit tests for glue)
-  - [ ] Gate swing tween driven by the Phase 1 state machine;
+  - [x] Gate swing tween driven by the Phase 1 state machine;
         squash-and-stretch on close/lift; instant snap under
         `prefers-reduced-motion`; event-driven, no per-frame cost outside
         tweens
-  - [ ] Lantern blinks red while active (day or night); soft idle blink
+  - [x] Lantern blinks red while active (day or night); soft idle blink
         at night only (reuse window-glow/portal-glow patterns)
-  - [ ] Bell plays on closing, rings while active, stops on clear;
+  - [x] Bell plays on closing, rings while active, stops on clear;
         mute-respecting and instant; snow cap applies in winter
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  > **Notes — scene wiring** (commits `b10f5a6`, `8991caa`): the core machine
+  > gained an optional `out` target on `advanceCrossing` (`b10f5a6`, with its
+  > own reuse test) so the frame loop reuses one motion per crossing instead
+  > of allocating. `track-renderer.ts` carries the pose layer: `PIECE_URLS`
+  > swapped to `crossing-gate.glb`; `trackCrossing` caches arm pivots and
+  > clones the two lamp materials per placed clone so lanterns blink
+  > independently; `updateCrossings(dt, trains, night)` converts world spots
+  > to cell space through preallocated pools (`trainPool`/`trainView`),
+  > advances each gate with the reused motion, poses arms with ease-out
+  > swing (east −90°, west +90° about +y) + squash-stretch bump peaking
+  > mid-swing (reduced motion snaps, no wobble), blinks lanterns (2 Hz
+  > alternating while awake, 0.8 Hz soft paired night idle past night 0.35),
+  > and nudges `audio.setCrossingBell` on awake↔idle edges (bell rings from
+  > closing until the last gate rests). `setCrossingSnow` mirrors
+  > `setTunnelSnow` (`crossing_snow_cap`); the template load honors live
+  > snow state; reconcile removals + kind swaps prune motion/parts; dispose
+  > clears both. `init-scene.ts` collects riding rigs' spots into a
+  > 4-slot pool inside the existing rig loop and calls
+  > `tracks.updateCrossings(dt, view, night)` after `updateCritters`;
+  > `paintAmbience` calls `setCrossingSnow(base.snow >= FROZEN_SNOW)`.
+  > No allocations in the frame path; tests 619/619, tsc + biome clean.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  > **Notes — Phase 2 verification**: gates at `8991caa`: Vitest 619/619
+  > (36 files), `tsc --noEmit` clean, `biome check src` clean. Asset
+  > verified with real renders + numeric bboxes (closed arms span the road
+  > y −2.99..−2.07, open arms rest on the shoulder x ±1.98, wheel line
+  > −0.84 vs rail crowns −0.82, road top −0.96); GLB 84,456 bytes (over
+  > the ~60 KB soft target, within the 150 KB house limit — deviation
+  > accepted, the kit straight's 640-vert rail mesh is most of it). Bell
+  > logic covered by 6 new controller tests (mute/suspend/unmute paths).
+  > Visual scene behavior (swing, blink, bell, snow) is e2e-verified in
+  > Phase 3 per the workflow's glue rule.
+
+  [checkpoint: 8991caa]
 
 ## Phase 3 — E2E, Docs & Wrap-Up
 
