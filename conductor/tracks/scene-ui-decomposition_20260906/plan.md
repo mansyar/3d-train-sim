@@ -58,9 +58,34 @@ verification, not unit tests. Every task ends with a plan note + commit
     `context.renderScale.render`); the `reducedMotion` sample was hoisted
     above the guardrail block so the context is complete at build time.
   - Gates: biome clean, `tsc --noEmit` clean, 676/676 unit tests green.
-- [ ] Task: Extract environment & day-night wiring
-  - [ ] Sky palette application, lights/shadow updates, weather cross-fade
-  - [ ] Fireflies, window glow, portal glow, headlight, snow caps
+- [x] Task: Extract environment & day-night wiring `ce18fd4`
+  - [x] Sky palette application, lights/shadow updates, weather cross-fade
+  - [x] Fireflies, window glow, portal glow, headlight, snow caps
+
+  Notes:
+  - New `src/scene/day-ambience.ts` (193 lines): day/weather clocks,
+    `paint()` (sky palette, lights, window glow, headlights, weather
+    particles + quality-scaled bed, snow gates on tunnel/hill/crossing/
+    delight/ground, river water, ambience, babble proximity, fireflies),
+    `tick()`, `nightFactor()`/`weather()` accessors, portal cache
+    (world-subscribed rebuild) + `updatePortalGlow()`, and a fan-out
+    `dispose()` — all state moved verbatim from `init-scene.ts`.
+  - `init-scene.ts` (1,108 → 954 lines) now creates the module with
+    `{ context, headlights, ambience, babble, ground }` and calls
+    `dayAmbience.tick()/paint(dt)/nightFactor()/weather()/
+    updatePortalGlow(star)` at the exact old call sites; the chirp gate,
+    critter mood, and barge/duck mood reads are unchanged. The portal
+    cache unsubscribe moved into the module's dispose.
+  - Divergence caught & fixed during extraction: the first cut returned
+    the shared `intensity` scratch from `weather()`, but `paint()` only
+    writes that scratch during a cross-fade — a no-blend frame would
+    have read stale values (`intensityOf` returns a shared constant).
+    `weather()` now recomputes the live bed on read (zero-alloc: blend
+    path reuses the scratch, no-blend path returns the shared constant),
+    matching the pre-extraction critter path. Visible consumers only
+    read `.rain`/`.snow`, so no behavior change either way.
+  - Files: `src/scene/day-ambience.ts` (new), `src/scene/init-scene.ts`.
+  - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
 - [ ] Task: Extract ride & train wiring
   - [ ] Ride-motion updates, station pauses
   - [ ] Cargo/confetti/steam triggers, crossings, switch flips, chug pacing
