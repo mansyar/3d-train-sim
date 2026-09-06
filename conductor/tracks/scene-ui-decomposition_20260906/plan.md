@@ -86,9 +86,40 @@ verification, not unit tests. Every task ends with a plan note + commit
     read `.rain`/`.snow`, so no behavior change either way.
   - Files: `src/scene/day-ambience.ts` (new), `src/scene/init-scene.ts`.
   - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
-- [ ] Task: Extract ride & train wiring
-  - [ ] Ride-motion updates, station pauses
-  - [ ] Cargo/confetti/steam triggers, crossings, switch flips, chug pacing
+- [x] Task: Extract ride & train wiring `02e2ae8`
+  - [x] Ride-motion updates, station pauses
+  - [x] Cargo/confetti/steam triggers, crossings, switch flips, chug pacing
+
+  Notes:
+  - New `src/scene/train-fleet.ts` (493 lines): `TrainRig`, rigs/spares
+    registries, loco/wagon/crate template loading, `createRig`/
+    `swapRigKind`/`dressRigWagons`/`syncRigs`/`nearestSpareTo`, the
+    chug-pause + tunnel sets (`syncChugSoftened` → `rideAudio.setPaused`),
+    station dings/bump crests, the per-frame rig loop (motion, puffs,
+    cargo pops, crossing-spot pool, per-train chug beats), and the world
+    subscription for kind/preset changes — all moved verbatim.
+  - Fleet breaching the ~400-line target triggered the planned cargo
+    split: new `src/scene/rig-cargo.ts` (117 lines) owns the wagon
+    cargo cycle (crate template + attach, pop-in, load/deliver at stops,
+    confetti burst) behind a `RigCargo` interface; the fleet holds only
+    `cargo: RigCargo` and `TrainRig` satisfies `CargoRig` structurally.
+  - Orchestrator keeps camera-owned state (`filmed`, `syncFilmed`,
+    `cycleFilmTarget`) and delegates: `filmedRig()` → `fleet.rigFor`,
+    chug voice/`trainPace` → `filmedRig() ?? fleet.primary()`,
+    `tootWhistle` → `filmedRig() ?? fleet.nearest()` + `fleet.inTunnel`,
+    crossings → `fleet.crossingSpots()` (preallocated 4-slot pool,
+    zero-alloc view), HUD witnesses → `fleet.wagonCount()/
+    ridingCount()` and `update()`'s return (visible puff count).
+  - Placeholder-crate retirement moved behind an `onFirstTrain()`
+    callback (orchestrator removes `crate.mesh` + nulls `spinTarget`);
+    rides subscription order preserved (syncFilmed → fleet.sync →
+    setEmitting → listeners).
+  - Note: the first write of the two new modules was lost to an
+    environment restart; both were recreated identically and gates
+    re-run green — no drift.
+  - Files: `src/scene/train-fleet.ts` (new), `src/scene/rig-cargo.ts`
+    (new), `src/scene/init-scene.ts` (954 → 488 lines).
+  - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
 - [ ] Task: Extract camera wiring
   - [ ] Follow-camera targeting, 🎥 cycle state, attract drift
 - [ ] Task: Extract frame-loop wiring
