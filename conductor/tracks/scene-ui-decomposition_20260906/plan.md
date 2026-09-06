@@ -187,10 +187,20 @@ verification, not unit tests. Every task ends with a plan note + commit
     noUnusedVariables pass over all 141 files is also clean.
   - [x] Remove only move-orphaned code (grep-verified); document dead-code
         findings in plan notes
-- [ ] Task: Gates + e2e
-  - [ ] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` +
+- [x] Task: Gates + e2e `b3c3827`
+  - [x] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` +
         `CI=true pnpm test` + full Playwright suite green
-  - [ ] No `src/core/`/`src/state/` diffs; no e2e assertion changes
+  - [x] No `src/core/`/`src/state/` diffs; no e2e assertion changes
+
+  Notes:
+  - Gates: biome ✓ (141 files) · tsc ✓ · vitest 676/676 ✓ · Playwright
+    121/121 ✓ (tablet + phone + prod projects, 9.6 min).
+  - e2e run 1 collapsed with 97 × "Could not connect to server" — the
+    documented shared-dev-server failure mode (playwright.config.ts note);
+    a single-test probe was green, and rerun 2 passed all 121 with no
+    connection errors. Transient, no code or config change made.
+  - `git diff main...HEAD -- src/core src/state e2e` is empty — Phase A
+    touched only `src/scene/` and `conductor/`, as the refactor requires.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
