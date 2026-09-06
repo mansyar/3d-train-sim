@@ -4,7 +4,6 @@ import {
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
-  Vector3,
   WebGLRenderer,
 } from 'three';
 import { createAmbienceAudio } from '../audio/ambience-audio';
@@ -16,14 +15,14 @@ import { createPerfMonitor, createQualityController } from '../core/perf-monitor
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createVisibilityController } from '../core/visibility-controller';
-import { createRideController, type RideState } from '../state/ride';
+import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
-import { createAttractCamera } from './attract-camera';
 import { createBarge } from './barge';
 import { createConfetti } from './confetti';
 import { createDayAmbience } from './day-ambience';
 import { createDuck } from './duck';
-import { createGround, GROUND_SIZE } from './ground';
+import { createFilmCamera } from './film-camera';
+import { createGround } from './ground';
 import type { Headlight } from './headlight';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
@@ -34,21 +33,10 @@ import { createRigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { startSpinLoop } from './spin-loop';
 import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
-import { createTrainFleet, type TrainRig } from './train-fleet';
+import { createTrainFleet } from './train-fleet';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
-
-/** Elevated oblique view framing the whole 60-unit meadow in landscape. */
-const OVERVIEW_POSITION = new Vector3(0, 52, 44);
-const OVERVIEW_LOOK = new Vector3(0, 0, 0);
-/** The live overview home — stays at OVERVIEW_POSITION in landscape, pulls
- * back in tall viewports so the square meadow still fits the frame. */
-const overviewBase = OVERVIEW_POSITION.clone();
-/** Chase offset over/behind the locomotive while riding (world-relative). */
-const FOLLOW_OFFSET = new Vector3(0, 9, 11);
-/** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
-const CAMERA_EASE = 2.5;
 /** Inactivity before the meadow comes alive with a slow camera drift. */
 const ATTRACT_IDLE_MS = 25_000;
 /** How often the attract clock re-checks its timers (cheap, timer-driven). */
@@ -120,8 +108,6 @@ export function initScene(
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(45, 1, 0.1, 200);
-  camera.position.copy(overviewBase);
-  camera.lookAt(OVERVIEW_LOOK);
 
   const disposables: Array<() => void> = [];
   const lights = createLights(scene);
@@ -191,29 +177,16 @@ export function initScene(
   const rideAudio = bindRideAudio(rides, audio);
 
   // Attract life: after a quiet 25 s the meadow stirs — a slow camera drift
-  // (this phase) and, later in the track, quiet critter chirps. The clock is
-  // pure logic driven by a cheap interval, so it stays alive even under
-  // reduced motion (static frame, no RAF loop). Any toddler touch calls
-  // notifyActivity() through the SceneHandle.
+  // (the film camera's idle phase) and, later in the track, quiet critter
+  // chirps. The clock is pure logic driven by a cheap interval, so it stays
+  // alive even under reduced motion (static frame, no RAF loop). Any toddler
+  // touch calls notifyActivity() through the SceneHandle.
   // The delivery celebration: a pooled burst at the station. Reduced motion
   // keeps the delivery (crates, count) but skips the flying particles.
   const confetti = createConfetti(scene, () => !reducedMotion);
-  const attract = createAttractCamera(overviewBase, OVERVIEW_LOOK, { reducedMotion });
   const attractClock = createAttractClock(ATTRACT_IDLE_MS, {
     now: () => performance.now(),
     reducedMotion,
-  });
-  const unsubscribeAttract = attractClock.subscribe((event) => {
-    if (event.kind === 'drift') attract.enterIdle();
-    else if (event.kind === 'state' && event.state === 'active') attract.exitIdle();
-    else if (event.kind === 'chirp') {
-      // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
-      if (rides.mode() === 'riding') return;
-      // ...and the critters are asleep at night (fireflies take the shift).
-      if (dayAmbience.nightFactor() >= 0.6) return;
-      audio.chirp(event.critter);
-      tracks.hopCritter(event.critter);
-    }
   });
   let attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
 
@@ -233,98 +206,42 @@ export function initScene(
     },
   });
 
-  /** What the chase camera films: one riding train, or the whole meadow. */
-  type FilmedTarget = { kind: 'train'; anchor: string } | { kind: 'overview' };
-  let filmed: FilmedTarget = { kind: 'overview' };
-
-  /** The rig the camera is currently filming, or null for the overview. */
-  const filmedRig = (): TrainRig | null =>
-    filmed.kind === 'train' ? fleet.rigFor(filmed.anchor) : null;
-
-  /**
-   * Keeps the camera's chosen star sticky: a running ride keeps the camera
-   * even as more trains join (a second ▶ never yanks the view), and a filmed
-   * train that stops hands the camera to the next riding train — or eases
-   * home to the overview when the last ride ends. An overview the kid chose
-   * with 🎥 stays put until the rides themselves end.
-   */
-  let ridesWereActive = false;
-  const syncFilmed = (ridesList: readonly RideState[]): void => {
-    const active = ridesList.length > 0;
-    if (filmed.kind === 'train') {
-      const anchor = filmed.anchor;
-      if (ridesList.some((ride) => ride.anchor === anchor)) {
-        ridesWereActive = active;
-        return; // Still filming a running train.
-      }
-    } else if (ridesWereActive && active) {
-      ridesWereActive = active;
-      return; // The kid chose the overview mid-ride — keep it.
-    }
-    filmed = ridesList[0] ? { kind: 'train', anchor: ridesList[0].anchor } : { kind: 'overview' };
-    ridesWereActive = active;
-  };
-
-  /** Each 🎥 tap: filmed train → next train → overview → wrap. */
-  const cycleFilmTarget = (): void => {
-    const ridesList = rides.rides();
-    if (filmed.kind === 'train') {
-      const anchor = filmed.anchor;
-      const index = ridesList.findIndex((ride) => ride.anchor === anchor);
-      const next = ridesList[index + 1];
-      filmed = next ? { kind: 'train', anchor: next.anchor } : { kind: 'overview' };
-      return;
-    }
-    filmed = ridesList[0] ? { kind: 'train', anchor: ridesList[0].anchor } : { kind: 'overview' };
-  };
-
   /** The UI shows the 🎥 button only while two or more trains ride. */
   const filmCountListeners = new Set<(count: number) => void>();
 
   /** The UI's ▶/⏹ face follows the real ride state (scoped edits keep riding). */
   const rideModeListeners = new Set<(riding: boolean) => void>();
 
+  // The chase camera: film-target stickiness, the 🎥 cycle, the overview
+  // framing, the follow glide, and the idle drift (one module, one job).
+  const filmCamera = createFilmCamera({
+    camera,
+    canvas,
+    rides,
+    reducedMotion,
+    rigFor: (anchor) => fleet.rigFor(anchor),
+  });
+
+  const unsubscribeAttract = attractClock.subscribe((event) => {
+    if (event.kind === 'drift') filmCamera.enterIdle();
+    else if (event.kind === 'state' && event.state === 'active') filmCamera.exitIdle();
+    else if (event.kind === 'chirp') {
+      // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
+      if (rides.mode() === 'riding') return;
+      // ...and the critters are asleep at night (fireflies take the shift).
+      if (dayAmbience.nightFactor() >= 0.6) return;
+      audio.chirp(event.critter);
+      tracks.hopCritter(event.critter);
+    }
+  });
+
   const unsubscribeRides = rides.subscribe((mode, ridesList) => {
-    syncFilmed(ridesList);
+    filmCamera.sync(ridesList);
     fleet.sync(ridesList);
     fleet.setEmitting(mode === 'riding');
     for (const listener of filmCountListeners) listener(ridesList.length);
     for (const listener of rideModeListeners) listener(mode === 'riding');
   });
-
-  // In tall viewports the square meadow's far corners slip out of frame. Pull
-  // the overview camera back along the same oblique line until the whole
-  // 60×60 meadow fits — landscape always keeps the classic framing untouched.
-  const frameOverview = () => {
-    if (canvas.clientWidth >= canvas.clientHeight) {
-      // Landscape: the original framing already fits — never move it.
-      if (overviewBase.equals(OVERVIEW_POSITION)) return;
-      overviewBase.copy(OVERVIEW_POSITION);
-      camera.position.copy(overviewBase);
-      camera.lookAt(OVERVIEW_LOOK);
-      return;
-    }
-    const half = GROUND_SIZE / 2;
-    const corners = [-half, half].flatMap((x) => [-half, half].map((z) => ({ x, z })));
-    // Iterate camera distance until every projected corner fits inside 92% of
-    // the NDC half-width — a screen-space fit, robust to near/far asymmetry.
-    let scale = 1;
-    for (let i = 0; i < 8; i += 1) {
-      camera.position.copy(OVERVIEW_POSITION).multiplyScalar(scale);
-      camera.lookAt(OVERVIEW_LOOK);
-      camera.updateMatrixWorld();
-      let widestHalf = 0;
-      for (const corner of corners) {
-        const p = new Vector3(corner.x, 0, corner.z).project(camera);
-        widestHalf = Math.max(widestHalf, Math.abs(p.x));
-      }
-      if (widestHalf <= 0.92) break;
-      scale *= 1.03;
-    }
-    overviewBase.copy(OVERVIEW_POSITION).multiplyScalar(scale);
-    camera.position.copy(overviewBase);
-    camera.lookAt(OVERVIEW_LOOK);
-  };
 
   const resize = () => {
     const width = canvas.clientWidth || window.innerWidth;
@@ -332,31 +249,10 @@ export function initScene(
     renderer.setSize(width, height, false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-    frameOverview();
+    filmCamera.frameOverview();
   };
   resize();
   window.addEventListener('resize', resize);
-
-  // The camera glides after the train while riding, eases home on stop, and
-  // wanders slowly while the meadow sits idle. Reduced-motion users keep the
-  // fixed overview — no chase, no drift.
-  const camLook = OVERVIEW_LOOK.clone();
-  const desiredPosition = new Vector3();
-  const desiredLook = new Vector3();
-  const updateCamera = (dt: number): void => {
-    if (reducedMotion) return;
-    const star = filmedRig();
-    if (star) {
-      desiredPosition.copy(star.model.position).add(FOLLOW_OFFSET);
-      desiredLook.copy(star.model.position);
-    } else {
-      attract.update(dt, desiredPosition, desiredLook);
-    }
-    const ease = 1 - Math.exp(-CAMERA_EASE * dt);
-    camera.position.lerp(desiredPosition, ease);
-    camLook.lerp(desiredLook, ease);
-    camera.lookAt(camLook);
-  };
 
   let visibleSteamPuffs = 0;
 
@@ -378,7 +274,7 @@ export function initScene(
       // One capped chug loop, riding the filmed train's live pace — the
       // camera's train sets the tempo. The rate glides with the pace ramp
       // (never a jump) and waits silently while muted or parked.
-      const voice = filmedRig() ?? fleet.primary();
+      const voice = filmCamera.filmedRig() ?? fleet.primary();
       audio.setChugRate(voice?.motion.pace() ?? 1);
       confetti.update(dt);
       // Critters idle always and hop while a riding train passes close.
@@ -411,7 +307,7 @@ export function initScene(
       dayAmbience.updatePortalGlow(
         star ? { x: star.model.position.x, z: star.model.position.z } : null,
       );
-      updateCamera(dt);
+      filmCamera.update(dt);
     },
     // Render-scale trims go through the offscreen blit — the canvas drawing
     // buffer never resizes, so the compositor keeps presenting frames.
@@ -460,25 +356,25 @@ export function initScene(
     steamPuffCount: () => visibleSteamPuffs,
     // Dev/e2e witness: the filmed (or primary) train's live pace factor —
     // personality × grade, eased. Lets specs prove labor/breeze directly.
-    trainPace: () => (filmedRig() ?? fleet.primary())?.motion.pace() ?? 1,
+    trainPace: () => (filmCamera.filmedRig() ?? fleet.primary())?.motion.pace() ?? 1,
     tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
       // does; before any ride, the parked opener train answers. Inside a
       // tunnel run the toot trails its soft echo.
-      const target = filmedRig() ?? fleet.nearest();
+      const target = filmCamera.filmedRig() ?? fleet.nearest();
       audio.whistle(world.train(), target !== null && fleet.inTunnel(target));
       target?.puffs.burst();
     },
     startRide: () => rides.start(),
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),
-    cycleFilmTarget: () => cycleFilmTarget(),
+    cycleFilmTarget: () => filmCamera.cycle(),
     ridingTrainCount: () => fleet.ridingCount(),
     crossingPhases: () => tracks.crossingPhases(),
     bellRinging: () => tracks.bellRinging(),
     delightBalloonDrift: () => tracks.delightBalloonDrift(),
     setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
-    filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
+    filmedAnchor: () => filmCamera.filmedAnchor(),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
       return () => {
