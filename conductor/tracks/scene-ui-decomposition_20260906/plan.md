@@ -398,8 +398,17 @@ verification, not unit tests. Every task ends with a plan note + commit
 
 ## Phase C — Docs & Final Verification
 
-- [ ] Task: Update `conductor/tech-stack.md`
-  - [ ] Folder-structure section: new `src/ui/` modules, `scene-context.ts`
+- [x] Task: Update `conductor/tech-stack.md` (commit `07c22fd`)
+  - [x] Folder-structure section: new `src/ui/` modules, `scene-context.ts`
+  - Notes:
+    - The scene block now documents the assembler pattern
+      (`init-scene.ts` = wiring & frame tick only, `scene-context.ts`
+      = shared-refs bundle) and lists the subsystem modules
+      (day-ambience, train-fleet, rig-cargo, film-camera, lifecycle).
+    - The ui block now documents the shell pattern (`app.ts` = thin
+      wiring, AppOptions facade) and lists the flat modules
+      (toy-icons, toy-drawer, toy-drag, ride-controls, train-picker,
+      parent-gate). Everything else (audio/state/public/…) untouched.
 - [ ] Task: Final full gates + manual tablet checklist
   - [ ] Build/decorate/ride, camera cycle, whistle, mute, parent-gate reset,
         starter swap — confirm byte-identical behavior
