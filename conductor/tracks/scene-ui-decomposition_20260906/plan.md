@@ -232,9 +232,9 @@ verification, not unit tests. Every task ends with a plan note + commit
 
 ## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
 
-- [~] Task: Map extraction boundaries
+- [x] Task: Map extraction boundaries
   - [x] Categorize all 1,238 lines of `app.ts` into target modules
-  - [ ] Record the module map as a note under this task
+  - [x] Record the module map as a note under this task (commit `d63274e`)
   Notes:
   - Full verbatim read of `src/ui/app.ts` (1,238 non-blank / ~1,299 total
     lines). Target modules (flat under `src/ui/`, all markup moved
