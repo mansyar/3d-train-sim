@@ -141,9 +141,25 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Files: `src/scene/film-camera.ts` (new), `src/scene/init-scene.ts`
     (488 → 389 lines).
   - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
-- [ ] Task: Extract frame-loop wiring
-  - [ ] Spin-loop suspend/resume, visibility handling
-  - [ ] Perf/quality tier application, render-scale blit
+- [x] Task: Extract frame-loop wiring `8f332aa`
+  - [x] Spin-loop suspend/resume, visibility handling
+  - [x] Perf/quality tier application, render-scale blit
+
+  Notes:
+  - New `src/scene/lifecycle.ts` (83 lines): owns the spin RAF loop with its
+    frame gate (perf sample → quality tier → applier update → perf HUD →
+    scene choreography) and the closing render-scale blit, plus the
+    visibility controller (hidden tab ⇒ suspend loop + perf pause + host
+    `onPause` hook; visible ⇒ resume). Dispose stops the loop and drops the
+    listener — the orchestrator's dispose now starts with
+    `lifecycle.dispose()`.
+  - The orchestrator keeps only the subsystem choreography in `onFrame`
+    (ambience → fleet → chug voice → confetti → critters → crossings →
+    delight → duck → barge → portal glow → camera — order verbatim), and
+    the audio/attract side effects in `onPause`/`onResume` hooks.
+  - Files: `src/scene/lifecycle.ts` (new), `src/scene/init-scene.ts`
+    (389 → 369 lines).
+  - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
 - [ ] Task: Light cleanup
   - [ ] Dedupe repeated wiring, rename unclear locals
   - [ ] Remove only move-orphaned code (grep-verified); document dead-code
