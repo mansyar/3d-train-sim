@@ -426,6 +426,27 @@ verification, not unit tests. Every task ends with a plan note + commit
     the Phase A and B checkpoints). Phase C complete. Last functional
     commit: `07c22fd` (tech-stack folder-structure docs).
 
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions (commit `ba816eb`)
+  - [x] Trim unused exported API surface + document the deferred-fire closure
+  - Notes:
+    - Finding 1 (Low): toy-drawer.ts exported `close()`, `showTab()`, and an
+      `activeTab` getter, and train-picker.ts exported `element` — all with no
+      consumers (the Light-cleanup note's "every module export is consumed"
+      was inaccurate for these four; biome cannot flag unused exports). The
+      track's own conservative rule applies — the moves created these orphans
+      — so the `ToyDrawer`/`TrainPicker` public interfaces were trimmed to
+      `setOpen`/`isOpen`/`refreshRide`/`refreshUndo` surface. Internal use of
+      `showTab`/`activeTab` (tab clicks, `setOpen`) is unchanged.
+    - Finding 2 (Low): app.ts's `createToyDrawer` deps closure referenced the
+      later-declared `toyDrag` const (safe — deferred fire on user input, but
+      TDZ-fragile under future wiring). A comment now documents the
+      deferred-fire contract.
+    - Gates after fixes: biome clean (7 ui files, no fixes),
+      `tsc --noEmit` clean, `CI=true pnpm test` 676/676 ✓. Pure API-surface
+      trim (no consumers existed), so no e2e rerun warranted.
+
 ## Notes
 
 (task notes appended under their tasks as work completes)
