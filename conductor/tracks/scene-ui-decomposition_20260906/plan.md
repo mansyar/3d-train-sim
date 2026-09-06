@@ -233,8 +233,39 @@ verification, not unit tests. Every task ends with a plan note + commit
 ## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
 
 - [~] Task: Map extraction boundaries
-  - [ ] Categorize all 1,238 lines of `app.ts` into target modules
+  - [x] Categorize all 1,238 lines of `app.ts` into target modules
   - [ ] Record the module map as a note under this task
+  Notes:
+  - Full verbatim read of `src/ui/app.ts` (1,238 non-blank / ~1,299 total
+    lines). Target modules (flat under `src/ui/`, all markup moved
+    verbatim — e2e selectors depend on exact classes/data attributes):
+    1. `toy-icons.ts` (~395): `isPieceKind`, `PIECE_LABELS`,
+       `SCENERY_ICONS` (11), `PIECE_ICONS` (17), `toySlot` builder.
+       Pure catalogs, zero behavior.
+    2. `toy-drawer.ts` (~120): tab strip/panels builders, `showTab`,
+       tab clicks, toy-slot pointerdown → beginDrag, cap dimming.
+    3. `toy-drag.ts` (~330): drag/press state, `canPlaceAt`, ghost,
+       rotate tap + bounce, ✕ chip, trash zone, ping/wobble-return,
+       `endDrag`, window pointermove/up/cancel + `R` key, `overToolbarAt`.
+    4. `ride-controls.ts` (~190): `RIDE_ICONS`, ride toggle + `refreshRide`,
+       ride-ready invitation (pulse/pop via `closesLoop`), undo, 🎺
+       whistle, 🎥 film toggle.
+    5. `train-picker.ts` (~115): train drawer + loco row + wagon row DOM,
+       refresh pressed states, selection click handler, world subs.
+    6. `parent-gate.ts` (~150): hold/confirm gate, preset tray, mute.
+    7. `app.ts` (~200 target): `AppOptions` (public facade, unchanged),
+       frame template, canvas, dev grid toggle, window activity/dismiss
+       listeners, and all module wiring.
+  - Shared-state decisions (mirrors the scene's explicit-context rule):
+    `riding` is owned by app.ts and passed as an accessor; ride-controls
+    reports changes via a callback (its ride-mode handler currently
+    reaches into drawers/chip/undo — app.ts composes those calls).
+    `prefersStill` is sampled once in app.ts and passed explicitly.
+    Drawer coordination (`setDrawer` toggles toys + trains): toy-drawer
+    exposes toys open/close, train-picker exposes train drawer open/close,
+    app.ts composes the one-drawer-at-a-time rule — no cross-module reach.
+  - No `src/core`/`src/state` changes planned; UI is non-logic per
+    workflow.md, so verification stays gates + e2e.
 - [ ] Task: Extract toybox drawer
   - [ ] Tab bar, toy slots, drag/chip placement, trash bin
 - [ ] Task: Extract ride controls
