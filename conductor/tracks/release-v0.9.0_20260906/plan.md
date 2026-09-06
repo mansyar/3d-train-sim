@@ -5,7 +5,7 @@ gates + smoke + checkpoints per `workflow.md`. Branch
 `track/release-v0.9.0_20260906` (cut from `origin/main` @ `e4a02e5`)
 already exists.
 
-## Phase 1 — Changelog & Version Bump
+## Phase 1 — Changelog & Version Bump [checkpoint: 5f6e353]
 
 - [x] Task: Promote `CHANGELOG.md` for v0.9.0 (579e06e)
   - Notes: `## [Unreleased]` Added blocks (six-loco fleet, Hilltop
@@ -27,7 +27,14 @@ already exists.
     clean. Files: `package.json` only.
   - Acceptance: `package.json` version reads `0.9.0`, matching the
     eventual `v0.9.0` tag.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (5f6e353)
+  - Verification Report (2026-09-06): automated `pnpm check` green —
+    biome clean (135 files), `tsc --noEmit` clean, 676/676 vitest
+    pass. Scope is docs/data only (`CHANGELOG.md`, `package.json`,
+    `conductor/` — no logic-bearing files), so no new unit tests
+    required. Manual: user eyeballed the new `## [0.9.0]` section
+    (four entries, duplicated sentence gone, empty `[Unreleased]`,
+    refreshed compare links) and the version bump — confirmed yes.
 
 ## Phase 2 — Local Pre-Tag Verification
 
