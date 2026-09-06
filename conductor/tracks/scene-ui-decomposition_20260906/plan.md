@@ -8,7 +8,7 @@ verification, not unit tests. Every task ends with a plan note + commit
 
 ## Phase A — Scene Split (`init-scene.ts` → orchestrator + modules)
 
-- [~] Task: Map extraction boundaries
+- [x] Task: Map extraction boundaries (`2e10a0d`)
   - [x] Categorize all 1,057 lines of `init-scene.ts` into target modules
   - [x] Record the module map as a note under this task before any code moves
 
