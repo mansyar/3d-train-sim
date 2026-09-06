@@ -266,8 +266,29 @@ verification, not unit tests. Every task ends with a plan note + commit
     app.ts composes the one-drawer-at-a-time rule — no cross-module reach.
   - No `src/core`/`src/state` changes planned; UI is non-logic per
     workflow.md, so verification stays gates + e2e.
-- [ ] Task: Extract toybox drawer
-  - [ ] Tab bar, toy slots, drag/chip placement, trash bin
+- [x] Task: Extract toybox drawer
+  - [x] Tab bar, toy slots, drag/chip placement, trash bin
+  Notes:
+  - Commit `07d82ec`. Three modules landed per the map:
+    `toy-icons.ts` (411 — catalogs verbatim, now exported; `toySlot`
+    builder), `toy-drawer.ts` (102 — tab strip/panels markup + tab
+    logic + toy-slot pointerdown + cap dimming; exposes
+    `setOpen/close/showTab/activeTab`), `toy-drag.ts` (347 — full drag
+    system verbatim with `options.`→`deps.` rename; the window
+    pointerup riding-branch became a named `cancelForRide()` the api
+    exposes, identical statements; `ping` exposed for the undo
+    hand-off; owns the trash-slot query + guard).
+  - `app.ts` 1,238 → 499 non-blank lines. It keeps `AppOptions`,
+    the frame template (interpolating exported `toyTabStrip`/
+    `toyTabPanels`), `setDrawer` composition (one drawer at a time;
+    toys side delegated to the module), dev grid toggle, and the
+    not-yet-extracted sections. `CellFromPoint` moved to toy-drag,
+    re-exported from app for API stability.
+  - Zero-behavior checks: tsc ✓, biome ✓, vitest 676/676 ✓, targeted
+    e2e (toybox / ride-toybox-flow / undo / smoke) 50/50 ✓.
+  - Deviations: none beyond the documented renames; trash-slot chrome
+    guard extended to cover `trashSlot` (its guard moved with the trash
+    zone into toy-drag, so app re-asserts the bin exists).
 - [ ] Task: Extract ride controls
   - [ ] ▶/⏹ invitation + pulse, ↩️ undo, 🎺 whistle, 🎥 cycle button
 - [ ] Task: Extract train picker & wagon workshop row
