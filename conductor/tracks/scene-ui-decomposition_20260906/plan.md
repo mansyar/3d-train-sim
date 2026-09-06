@@ -6,7 +6,7 @@ observable acceptance criteria verified by the gates + e2e suite + manual
 verification, not unit tests. Every task ends with a plan note + commit
 (workflow steps 8–11).
 
-## Phase A — Scene Split (`init-scene.ts` → orchestrator + modules)
+## Phase A — Scene Split (`init-scene.ts` → orchestrator + modules) [checkpoint: b3c3827]
 
 - [x] Task: Map extraction boundaries (`2e10a0d`)
   - [x] Categorize all 1,057 lines of `init-scene.ts` into target modules
@@ -201,7 +201,7 @@ verification, not unit tests. Every task ends with a plan note + commit
     connection errors. Transient, no code or config change made.
   - `git diff main...HEAD -- src/core src/state e2e` is empty — Phase A
     touched only `src/scene/` and `conductor/`, as the refactor requires.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
   Notes:
   - Takeover re-verification (original session was lost to an environment
     restart; a duplicate implementer was stopped by the user; this session
@@ -217,6 +217,18 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Known deviation candidate: `init-scene.ts` orchestrator is 375 lines
     vs the spec's soft ~300 cap (modules all < 400). Raised to the user at
     this checkpoint for accept-or-trim decision.
+  - Verification Report (2026-09-06):
+    - Automated: biome ✓ (141 files) · `tsc --noEmit` ✓ · `CI=true pnpm
+      test` 676/676 ✓ · Playwright 121/121 ✓ (single clean run, 9.3 min).
+    - Manual checklist (boot <5s, build/ride/cargo/crossings/whistle,
+      day-night + weather, river life, camera cycle, tab hide/resume,
+      parent gate + mute, `?perf=debug`) — approved by the user via
+      structured question; checkpoint closed.
+    - Deviation: `init-scene.ts` at 375 lines vs the spec's soft ~300
+      orchestrator cap — accepted and documented by the user; all
+      extracted modules remain under 400 lines.
+  - Phase A complete. Last functional commit: `b3c3827`.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
 
