@@ -160,8 +160,23 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Files: `src/scene/lifecycle.ts` (new), `src/scene/init-scene.ts`
     (389 → 369 lines).
   - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
-- [ ] Task: Light cleanup
-  - [ ] Dedupe repeated wiring, rename unclear locals
+- [x] Task: Light cleanup `b3c3827`
+  - [x] Dedupe repeated wiring, rename unclear locals
+
+  Notes:
+  - `basePixelRatio` local: `Math.min(devicePixelRatio, MAX_PIXEL_RATIO)` was
+    computed twice (renderer + quality applier) — now once, shared.
+  - `startAttractTimer()` helper: the attract-interval wiring was written
+    twice (setup + visibility resume) — now one helper; pause/dispose still
+    `clearInterval` directly.
+  - `starSpot` in the frame tick: the primary rig's meadow position was read
+    three times (critters, duck, portal glow) — now one `{x, z} | null`
+    shared spot (also removes a per-frame allocation for the portal glow).
+  - Behavior-neutral; no renames needed — the extracted modules left the
+    orchestrator's locals clear.
+  - Files: `src/scene/init-scene.ts` (369 → 375 lines; net +6 from helper
+    docs/comments).
+  - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
   - [ ] Remove only move-orphaned code (grep-verified); document dead-code
         findings in plan notes
 - [ ] Task: Gates + e2e
