@@ -7,26 +7,26 @@ already exists.
 
 ## Phase 1 — Changelog & Version Bump
 
-- [~] Task: Promote `CHANGELOG.md` for v0.9.0
-  - Acceptance: `## [Unreleased]` Added blocks (loco fleet, Hilltop
-    Junction starter, river life) move verbatim into new dated
-    `## [0.9.0] - 2026-09-06`; a new parent-voice entry covers the
-    Scenery Delight toys (windmill, carousel, hot-air balloon, snow
-    caps, balloon wander); the duplicated river-life sentence
-    ("…and it hops with a soft ribbit (quiet when the meadow is
-    muted)." twice) is removed; compare links refreshed
-    (`v0.8.0...v0.9.0` added, Unreleased → `v0.9.0...HEAD` on
-    `mansyar/3d-train-sim`); `## [Unreleased]` left empty.
-  - [ ] Move `## [Unreleased]` blocks verbatim into `## [0.9.0] - 2026-09-06`
-  - [ ] Add the missing Scenery Delight toys entry
-  - [ ] Remove the duplicated river-life sentence
-  - [ ] Refresh compare links
-- [ ] Task: Bump `package.json` version to `0.9.0`
+- [x] Task: Promote `CHANGELOG.md` for v0.9.0 (579e06e)
+  - Notes: `## [Unreleased]` Added blocks (six-loco fleet, Hilltop
+    Junction starter, river life) moved verbatim under new dated
+    `## [0.9.0] - 2026-09-06`. New parent-voice entry added for the
+    Scenery Delight toys (town tab: windmill, carousel, hot-air
+    balloon; winter snow caps; balloon takeoff/drift — tab confirmed
+    via `src/core/scenery.ts` catalog). Duplicated river-life sentence
+    removed. Compare links refreshed (added `v0.8.0...v0.9.0`,
+    Unreleased → `v0.9.0...HEAD`, all on `mansyar/3d-train-sim`);
+    `## [Unreleased]` left empty. Files: `CHANGELOG.md` only.
+  - Acceptance: Unreleased blocks moved verbatim; delight-toys entry
+    present; duplicated sentence removed; compare links refreshed.
+- [x] Task: Bump `package.json` version to `0.9.0` (5f6e353)
+  - Notes: Single-line version bump. Verified no other in-repo version
+    references need changing: a repo-wide grep for `0.8.0` across
+    ts/json/html/css hits only the archived v0.8.0 track metadata
+    (history) — `package.json` itself, `index.html`, and `src/` are
+    clean. Files: `package.json` only.
   - Acceptance: `package.json` version reads `0.9.0`, matching the
-    eventual `v0.9.0` tag; no other in-repo version references need
-    changing (remaining `0.8.0` strings are history, compare links,
-    archive docs).
-  - [ ] Single-line version bump; verify no other version references need changing
+    eventual `v0.9.0` tag.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Local Pre-Tag Verification
