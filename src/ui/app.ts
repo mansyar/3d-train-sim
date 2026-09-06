@@ -120,6 +120,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // stays here in setDrawer.
   const toyDrawer = createToyDrawer(root, drawer, {
     world: options.world,
+    // Deferred fire: beginDrag only runs on a user pointerdown, after the
+    // toyDrag const below has been initialized (a wiring-time call would TDZ).
     beginDrag: (kind) => toyDrag.beginDrag(kind),
     requestClose: () => setDrawer(null),
   });

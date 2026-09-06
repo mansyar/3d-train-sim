@@ -13,8 +13,6 @@ export interface TrainPickerDeps {
 }
 
 export interface TrainPicker {
-  /** The train drawer element (the wiring toggles it as one of the toybox drawers). */
-  readonly element: HTMLDivElement;
   setOpen(open: boolean): void;
   isOpen(): boolean;
 }
@@ -109,7 +107,6 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   world.subscribe(refreshWagonChoices);
 
   return {
-    element: trainDrawer,
     setOpen(open) {
       trainDrawer.toggleAttribute('hidden', !open);
     },

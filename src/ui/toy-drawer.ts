@@ -30,10 +30,6 @@ export interface ToyDrawerDeps {
 export interface ToyDrawer {
   /** Show the toys drawer and re-show the remembered tab, or hide it. */
   setOpen(open: boolean): void;
-  /** Hide the drawer without touching tabs (the close side of the toggle). */
-  close(): void;
-  showTab(tab: DrawerTabId | null): void;
-  readonly activeTab: DrawerTabId | null;
 }
 
 export function createToyDrawer(
@@ -100,13 +96,6 @@ export function createToyDrawer(
     setOpen(open) {
       drawer.toggleAttribute('hidden', !open);
       if (open) showTab(activeTab ?? 'rails');
-    },
-    close() {
-      drawer.toggleAttribute('hidden', true);
-    },
-    showTab,
-    get activeTab() {
-      return activeTab;
     },
   };
 }
