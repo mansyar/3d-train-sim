@@ -329,7 +329,7 @@ verification, not unit tests. Every task ends with a plan note + commit
       temporary instrumented probe (module `isOpen`/`setOpen` +
       app `setDrawer` logs); probe spec deleted after diagnosis.
     - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, wagon-workshop e2e 4/4 ✓.
-- [ ] Task: Extract parent gate & starter gallery
+- [~] Task: Extract parent gate & starter gallery
   - [ ] Press-and-hold, confirm tray, starter presets, version display,
         mute toggle
 - [ ] Task: Light cleanup
