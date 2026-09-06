@@ -307,8 +307,28 @@ verification, not unit tests. Every task ends with a plan note + commit
     whistle, app guards the mute toggle.
   - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, targeted e2e
     (ride-toybox-flow / undo / smoke) 50/50 ✓.
-- [ ] Task: Extract train picker & wagon workshop row
-  - [ ] Selection persistence hooks
+- [x] Task: Extract train picker & wagon workshop row (commit `6e90a10`)
+  - [x] Selection persistence hooks
+  - Notes:
+    - `train-picker.ts` (~125 lines) owns the train drawer DOM (loco row +
+      wagon row, verbatim), the pressed-state refreshers, the selection
+      click handler (wagon → selectConsist + ding + pop unless
+      prefersStill; train → selectTrain + both refreshers), the wagonRow
+      animationend pop removal, and the two `world.subscribe` refreshers.
+      Exposes `element / setOpen / isOpen`; the app's `setDrawer`
+      composition calls `setOpen`, and the rail toggle reads `isOpen`.
+    - `app.ts` 400 → 320 non-blank. Keeps `AppOptions`, the frame
+      template, `setDrawer` composition, chrome guard, dev grid toggle;
+      `TRAIN_KINDS`/`WAGON_PRESETS` and their icon/aria imports moved out.
+    - Regression caught by e2e and fixed before commit: the extracted
+      rail toggle had the drawer test inverted
+      (`isOpen() ? 'trains' : null` instead of the original
+      `hidden ? 'trains' : null`), so tapping the trains toggle always
+      produced `setDrawer(null)` and the drawer never opened
+      (wagon-workshop 4/8 fail → after fix 4/4 pass). Diagnosed with a
+      temporary instrumented probe (module `isOpen`/`setOpen` +
+      app `setDrawer` logs); probe spec deleted after diagnosis.
+    - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, wagon-workshop e2e 4/4 ✓.
 - [ ] Task: Extract parent gate & starter gallery
   - [ ] Press-and-hold, confirm tray, starter presets, version display,
         mute toggle
