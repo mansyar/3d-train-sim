@@ -230,7 +230,7 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Phase A complete. Last functional commit: `b3c3827`.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
+## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules) [checkpoint: 36de74e]
 
 - [x] Task: Map extraction boundaries
   - [x] Categorize all 1,238 lines of `app.ts` into target modules
@@ -374,7 +374,7 @@ verification, not unit tests. Every task ends with a plan note + commit
       `git diff main...HEAD --stat -- src/core src/state e2e` empty.
     - Full Playwright suite in a single clean uncontended run:
       121/121 passed (9.3m). No flakes this time.
-- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
   - Automated gates: biome 147 files ✓, tsc ✓, CI=true pnpm test
     676/676 ✓, Playwright full suite 121/121 ✓ (single clean 9.3m run).
   - `git diff main...HEAD -- src/core src/state e2e` empty — logic layer
@@ -388,6 +388,13 @@ verification, not unit tests. Every task ends with a plan note + commit
     cosmetic; accept-or-trim at this checkpoint.
   - Coverage check: no logic files changed (git diff empty) — no new
     coverage obligations.
+  - Verification report: manual tablet checklist walked by the user
+    (drawer one-at-a-time, drag ghost + validity tint, rotate tap,
+    trash, chip delete, undo ping, ride/whistle/camera, wagon workshop,
+    parent gate + starter swap + outside dismissal, mute persistence,
+    tab hide/resume) — behavior identical; approved. Deviation accepted:
+    toy-icons.ts 411 lines (pure icon/catalog data) vs the ~400 soft
+    cap. Phase B complete. Last functional commit: `36de74e`.
 
 ## Phase C — Docs & Final Verification
 
