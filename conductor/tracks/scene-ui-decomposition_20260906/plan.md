@@ -289,7 +289,7 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Deviations: none beyond the documented renames; trash-slot chrome
     guard extended to cover `trashSlot` (its guard moved with the trash
     zone into toy-drag, so app re-asserts the bin exists).
-- [ ] Task: Extract ride controls
+- [~] Task: Extract ride controls
   - [ ] ▶/⏹ invitation + pulse, ↩️ undo, 🎺 whistle, 🎥 cycle button
 - [ ] Task: Extract train picker & wagon workshop row
   - [ ] Selection persistence hooks
