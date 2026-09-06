@@ -374,7 +374,20 @@ verification, not unit tests. Every task ends with a plan note + commit
       `git diff main...HEAD --stat -- src/core src/state e2e` empty.
     - Full Playwright suite in a single clean uncontended run:
       121/121 passed (9.3m). No flakes this time.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [~] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Automated gates: biome 147 files ✓, tsc ✓, CI=true pnpm test
+    676/676 ✓, Playwright full suite 121/121 ✓ (single clean 9.3m run).
+  - `git diff main...HEAD -- src/core src/state e2e` empty — logic layer
+    byte-identical, confirming the track's zero-behavior contract on the
+    model side.
+  - Line-count ledger vs spec caps: `app.ts` 206 (cap ~300 ✓, from
+    1,238); `toy-drawer.ts` 102, `train-picker.ts` ~125,
+    `parent-gate.ts` 130, `ride-controls.ts` 154, `toy-drag.ts` 347 —
+    all under ~400 ✓. Deviation: `toy-icons.ts` 411 vs the ~400 soft
+    cap — it is pure SVG/catalog data (no logic), split would be
+    cosmetic; accept-or-trim at this checkpoint.
+  - Coverage check: no logic files changed (git diff empty) — no new
+    coverage obligations.
 
 ## Phase C — Docs & Final Verification
 
