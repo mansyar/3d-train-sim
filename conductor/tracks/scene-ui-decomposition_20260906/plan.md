@@ -8,9 +8,38 @@ verification, not unit tests. Every task ends with a plan note + commit
 
 ## Phase A — Scene Split (`init-scene.ts` → orchestrator + modules)
 
-- [ ] Task: Map extraction boundaries
-  - [ ] Categorize all 1,057 lines of `init-scene.ts` into target modules
-  - [ ] Record the module map as a note under this task before any code moves
+- [~] Task: Map extraction boundaries
+  - [x] Categorize all 1,057 lines of `init-scene.ts` into target modules
+  - [x] Record the module map as a note under this task before any code moves
+
+  Notes:
+  - Actual size: 1,108 lines (1,057 non-blank). Module map (each target
+    < ~400 lines; orchestrator < ~300):
+    - `scene-context.ts` (~60) — `SceneContext` type: renderer, scene,
+      camera, canvas, world, audio, tracks handle, lights, qualityApplier,
+      renderScale, reducedMotion. Explicitly passed; no singletons.
+    - `day-ambience.ts` (~150) — day/weather clocks, `paintAmbience` (sky,
+      lights, window/headlight night, weather particles, snow gates, water,
+      ambience, babble, fireflies), portal cache + glow update.
+    - `train-fleet.ts` (~420) — `TrainRig`, rigs/spares, loco/wagon/crate
+      template loading, `createRig`, `swapRigKind`, `dressRigWagons`,
+      `syncRigs`, `nearestSpareTo`, chug pause/tunnel sets, cargo cycle
+      (crate attach/pop/deliver + confetti). Largest module — if it breaches
+      ~400 lines on extraction, split the cargo cycle into `rig-cargo.ts`.
+    - `film-camera.ts` (~170) — filmed-target state, `syncFilmed`,
+      `cycleFilmTarget`, film-count & ride-mode listener sets,
+      `updateCamera` ease, `frameOverview`/`resize`.
+    - `lifecycle.ts` (~80) — visibility controller wiring (suspend/resume
+      fan-out to spin loop, audio, ambience, babble, perf, attract timer).
+    - `init-scene.ts` (orchestrator, ~280) — renderer/scene/camera creation,
+      subsystem construction, frame-tick composition calling each
+      subsystem's `update`, `SceneHandle` facade, dispose fan-out.
+  - Interdependence notes: the frame tick is the only place subsystems
+    interleave — it stays in the orchestrator and calls `fleet.update(dt)`,
+    `ambience.update(dt)`, `camera.update(dt)`, etc. `train-fleet` needs the
+    audio (dings/whistle), confetti, tracks handle (switch roads), and cell
+    mapping — all read via `SceneContext`; no mutable sharing beyond what
+    exists today.
 - [ ] Task: Define `SceneContext` + thin orchestrator shell
   - [ ] Create `src/scene/scene-context.ts`: one type carrying shared refs
         (scene, camera, renderer, audio, state stores, ride controller, frame
