@@ -53,13 +53,31 @@ src/
     pathing.ts     #   train path along track, speed, looping
     save.ts        #   serialize/deserialize world
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
-  scene/           # three.js wiring: renderer, cameras, environment, model loading
+  scene/           # three.js wiring; init-scene.ts is the thin assembler that
+                   #   builds one SceneContext (scene-context.ts) and hands it to
+                   #   the subsystem modules below — wiring & the frame tick only
+    scene-context.ts # shared refs bundle (renderer/scene/camera/world/audio/
+                     #   tracks/lights/quality/render-scale/reduced-motion);
+                     #   built once, passed explicitly, no singletons
+    day-ambience.ts  # day/weather clocks + repaint (sky, water, snow, fireflies,
+                     #   window glow, portal glow)
+    train-fleet.ts   # locomotive rigs: templates, loading, ride motion wiring
+    rig-cargo.ts     # crate attach/cycle on wagons (train-fleet's cargo half)
+    film-camera.ts   # chase-camera follow + attract drift + filmed-target cycle
+    lifecycle.ts     # visibility wiring + the spin loop suspend/resume pair
     render-scale.ts#   offscreen downscale blit — the guardrails' render trims go
                    #   through an offscreen target; the canvas drawing buffer
                    #   never resizes after boot (resizing it mid-run freezes
                    #   frame presentation in some compositors, e.g. headless
                    #   Chromium — see perf-guardrails plan fix notes)
-  ui/              # DOM overlay: toybox, play/stop/whistle, parent gate
+  ui/              # DOM overlay; app.ts is the thin wiring shell that composes
+                   #   the modules below (AppOptions is the public facade)
+    toy-icons.ts     # piece/scenery SVG catalogs + slot button builder
+    toy-drawer.ts    # tabbed toybox drawer (open/close, cap dimming)
+    toy-drag.ts      # drag machine: ghost, rotate tap, ✕ chip, trash, ping
+    ride-controls.ts # ▶/⏹ ride toggle + pulse, undo, whistle, 🎥 cycle
+    train-picker.ts  # train drawer: locomotive row + wagon workshop row
+    parent-gate.ts   # hold-to-confirm gate, starter presets, mute toggle
   audio/           # Howler wrappers + sfx registry
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
