@@ -44,7 +44,7 @@ verification is gates + content review per `workflow.md`. Branch
 - [x] Task: Phase Verification & Checkpoint (49e159b)
   - Verification Report (2026-09-06, consolidated): see Phase 1 report.
 
-## Phase 3 — Verification & Wrap-up [checkpoint: pending-pr]
+## Phase 3 — Verification & Wrap-up [checkpoint: 125287e]
 
 - [x] Task: Run `pnpm check` and eyeball both files rendered on GitHub
       (headings, links, tables intact)
@@ -56,14 +56,25 @@ verification is gates + content review per `workflow.md`. Branch
     `biome.json` matches the worktree's own path segment —
     environmental, not caused by this change; scoping to `src e2e`
     verified clean. GitHub render eyeballed by user at checkpoint.
-- [ ] Task: Push branch, open PR "README & Contributor Onboarding Docs",
-      merge to `main`
-  - Acceptance: CI green on the PR (docs-only commits may skip jobs per
-    `tech-stack.md`); squash-merged.
-- [ ] Task: Mark track done, archive under `conductor/archive/`, update
+- [x] Task: Push branch, open PR "README & Contributor Onboarding Docs",
+      merge to `main` (125287e)
+  - Notes: branch pushed, PR #52 opened; **no CI jobs triggered — docs-
+    only commits skip gates by design** (`tech-stack.md`, CI section);
+    local `pnpm check` served as the gate per the acceptance criteria.
+    Squash-merged 2026-09-06 as `43141f6`. Files: none on branch
+    (merge only).
+  - [x] Push `track/readme-onboarding-docs_20260906`, open PR, merge
+- [~] Task: Mark track done, archive under `conductor/archive/`, update
       `conductor/tracks.md` registry
   - Acceptance: `metadata.json` status → `done`; registry row moved to
     archive; track folder relocated per house convention.
+
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 1b60865
+  - Finding (Low, factual accuracy): README described cargo gameplay as
+    loading "at one station"; `conductor/product.md` specifies
+    load-at-first-station / deliver-at-next. Wording corrected.
 
 ## Notes
 

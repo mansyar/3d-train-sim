@@ -5,8 +5,8 @@ Registry of active development tracks.
 | Track | Title | Type | Status |
 |---|---|---|---|
 | [release-v0.9.0_20260906](tracks/release-v0.9.0_20260906/index.md) | Release v0.9.0 | Chore | in progress |
-| [readme-onboarding-docs_20260906](tracks/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | in progress |
 | [scenery-delight_20260905](archive/scenery-delight_20260905/index.md) | Scenery Delight — Three Animated Toys | Feature | done |
+| [readme-onboarding-docs_20260906](archive/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | done |
 | [loco-fleet_20260905](archive/loco-fleet_20260905/index.md) | Locomotive Fleet Expansion | Feature | done |
 | [railway-crossing-gate_20260905](archive/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | done |
 | [e2e-stability_20260904](archive/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | done |
@@ -44,4 +44,4 @@ Completed tracks are archived under [conductor/archive/](archive/):
 `ride-toybox-flow_20260903`, `release-v0.6.0_20260903`,
 `e2e-stability_20260904`, `railway-crossing-gate_20260905`,
 `release-v0.8.0_20260905`, `river-life-expansion_20260905`,
-`loco-fleet_20260905`.
+`loco-fleet_20260905`, `readme-onboarding-docs_20260906`.
