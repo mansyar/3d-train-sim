@@ -14,7 +14,6 @@ import { createAttractClock } from '../core/attract-clock';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
-import { createVisibilityController } from '../core/visibility-controller';
 import { createRideController } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createBarge } from './barge';
@@ -24,6 +23,7 @@ import { createDuck } from './duck';
 import { createFilmCamera } from './film-camera';
 import { createGround } from './ground';
 import type { Headlight } from './headlight';
+import { createSceneLifecycle } from './lifecycle';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
@@ -31,7 +31,6 @@ import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
-import { startSpinLoop } from './spin-loop';
 import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
 
@@ -256,18 +255,13 @@ export function initScene(
 
   let visibleSteamPuffs = 0;
 
-  const spinLoop = startSpinLoop(
-    renderer,
-    scene,
-    camera,
-    () => spinTarget,
-    (dt) => {
-      perfMonitor.sample(dt);
-      qualityController.update(perfMonitor.verdict(), dt);
-      qualityApplier.update(dt);
-      // The HUD is the only consumer of the window average — skip the scan
-      // when the overlay isn't mounted.
-      if (perfDebug) perfDebug.update(perfMonitor.averageFps(), qualityController.level);
+  // The frame loop lives in the lifecycle module — quality tiers, visibility
+  // suspend/resume, and the render-scale blit. The orchestrator only
+  // choreographs the subsystem updates, in this exact order.
+  const lifecycle = createSceneLifecycle({
+    context,
+    spinTarget: () => spinTarget,
+    onFrame: (dt) => {
       dayAmbience.tick();
       dayAmbience.paint(dt);
       visibleSteamPuffs = fleet.update(dt);
@@ -309,38 +303,24 @@ export function initScene(
       );
       filmCamera.update(dt);
     },
-    // Render-scale trims go through the offscreen blit — the canvas drawing
-    // buffer never resizes, so the compositor keeps presenting frames.
-    () => context.renderScale.render(scene, camera, context.qualityApplier.renderScale),
-  );
-
-  // Tab hidden: stop rendering, quiet the chug (and any ringing one-shot),
-  // and pause the attract clock — no sound, no drift, no idle chirps in a
-  // hidden tab. Tab visible again: everything resumes on the next sync — one
-  // shared controller so a flurry of visibility events never double-fires.
-  const visibility = createVisibilityController({
-    isHidden: () => document.hidden,
+    perfMonitor,
+    qualityController,
+    perfDebug,
     onPause: () => {
-      spinLoop.suspend();
       audio.suspend();
       ambience.suspend();
       babble.suspend();
-      perfMonitor.setPaused(true); // Hidden tab ≠ device strain (spec FR1).
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
     },
     onResume: () => {
-      spinLoop.resume();
       audio.resume();
       ambience.resume();
       babble.resume();
-      perfMonitor.setPaused(false);
       attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
     },
   });
-  const onVisibility = () => visibility.sync();
-  document.addEventListener('visibilitychange', onVisibility);
 
   return {
     // Ground→cell mapping lives in the track renderer, next to cellToWorld.
@@ -388,8 +368,7 @@ export function initScene(
       };
     },
     dispose(): void {
-      spinLoop.stop();
-      document.removeEventListener('visibilitychange', onVisibility);
+      lifecycle.dispose();
       clearInterval(attractTimer);
       unsubscribeAttract();
       window.removeEventListener('resize', resize);
