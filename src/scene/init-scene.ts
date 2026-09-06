@@ -14,43 +14,20 @@ import { bindRideAudio } from '../audio/ride-audio';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import { actionAtStop, type CargoLoad, loadAfterAction } from '../core/cargo';
-import { createDayClock } from '../core/day-clock';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
-import { riverProximity } from '../core/river';
 import type { SceneryKind } from '../core/scenery';
-import {
-  type Celestial,
-  celestialAt,
-  nightFactorAt,
-  type SkyColors,
-  skyColorsAt,
-} from '../core/sky-palette';
-import {
-  type Cell,
-  type Edge,
-  MEADOW_CELLS,
-  neighbourOf,
-  type PieceType,
-  type Rotation,
-} from '../core/track-graph';
+import type { Cell, Edge, PieceType, Rotation } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
-import { type PortalGlow, portalGlowAt, tunnelRunsOf } from '../core/tunnels';
 import { createVisibilityController } from '../core/visibility-controller';
 import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
-import {
-  createWeatherClock,
-  intensityOf,
-  lerpIntensity,
-  type WeatherIntensity,
-} from '../core/weather-cycle';
 import { createRideController, type RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createAttractCamera } from './attract-camera';
 import { createBarge } from './barge';
 import { createConfetti } from './confetti';
+import { createDayAmbience } from './day-ambience';
 import { disposeObject } from './dispose-object';
-import { createDuck, FROZEN_SNOW } from './duck';
-import { createFireflies } from './fireflies';
+import { createDuck } from './duck';
 import { createGround, GROUND_SIZE } from './ground';
 import { attachHeadlight, type Headlight } from './headlight';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
@@ -58,18 +35,13 @@ import { loadLocomotive } from './load-locomotive';
 import { loadCrate, loadWagon } from './load-wagons';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
-import { createPortalGlow } from './portal-glow';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
-import { createRiverWater } from './river-water';
 import type { SceneContext } from './scene-context';
-import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
-import { createWeatherParticles } from './weather-particles';
-import { disposeWindowGlows, setGlowNight } from './window-glow';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -94,8 +66,6 @@ const STATION_DING_GAP_MS = 350;
 const ATTRACT_IDLE_MS = 25_000;
 /** How often the attract clock re-checks its timers (cheap, timer-driven). */
 const ATTRACT_TICK_MS = 250;
-/** Portal glow reach in cell units — the mouth flares as the engine nears. */
-const PORTAL_GLOW_RADIUS = 2.5;
 
 export interface SceneHandle {
   dispose(): void;
@@ -172,12 +142,8 @@ export function initScene(
   const ground = createGround(scene);
   disposables.push(ground.dispose);
   const tracks = startTrackRenderer(scene, camera, canvas, world, audio);
-  const weather = createWeatherParticles(scene);
-  disposables.push(weather.dispose);
   const ambience = createAmbienceAudio(audio);
   const babble = createRiverBabble(audio);
-  const fireflies = createFireflies(scene);
-  disposables.push(fireflies.dispose);
   const duck = createDuck(scene, cellToWorld);
   disposables.push(duck.dispose);
   const barge = createBarge(scene, cellToWorld);
@@ -223,80 +189,11 @@ export function initScene(
   // the sky, ease the lights, drive particles and whiten the meadow. Painted
   // once up front so the reduced-motion static frame still shows a lit
   // mid-morning meadow (frozen ambience under reduced motion).
-  const dayClock = createDayClock({ now: () => performance.now() });
-  const weatherClock = createWeatherClock({ now: () => performance.now() });
-  const sky = createSkyDome(scene);
-  const water = createRiverWater(scene);
   /** One night beam per little train — parked spares included. */
   const headlights: Headlight[] = [];
-  /** The portals catching those beams at night (one shared warm light). */
-  const portalGlowVisual = createPortalGlow(scene);
-  disposables.push(portalGlowVisual.dispose);
-  /** Open portal mouths in flat [x, z, ...] cell units — rebuilt on edits. */
-  const openPortals: number[] = [];
-  /** Scratch for the per-frame proximity lookup (zero-alloc frame path). */
-  const portalGlow: PortalGlow = { x: 0, z: 0, intensity: 0 };
-  const rebuildPortalCache = (): void => {
-    openPortals.length = 0;
-    const byId = new Map(world.pieces().map((p) => [p.id, p] as const));
-    for (const run of tunnelRunsOf(world.pieces())) {
-      const piece = byId.get(run.pieceId);
-      if (!piece) continue;
-      for (const edge of run.openPortals) {
-        const n = neighbourOf(piece.cell, edge);
-        openPortals.push((piece.cell.x + n.x) / 2, (piece.cell.y + n.y) / 2);
-      }
-    }
-  };
-  rebuildPortalCache();
-  const unsubscribePortals = world.subscribe(rebuildPortalCache);
-  // Scratch objects for the frame path — the palette/intensity calls write
-  // into these instead of allocating (spec NFR: no per-frame allocation).
-  const skyColors: SkyColors = { top: 0, horizon: 0 };
-  const celestial: Celestial = { sun: 0, moon: 0 };
-  const intensity: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
-  /** Quality-scaled copy of the weather bed fed to the particle emitter. */
-  const scaledWeather: WeatherIntensity = { rain: 0, snow: 0, cloud: 0 };
-  /** Scratch cell for the river-proximity lookup (zero-alloc frame path). */
-  const proximityCell: Cell = { x: 0, y: 0 };
-  /** World units per meadow cell — matches the track renderer's grid. */
-  const cellSize = GROUND_SIZE / MEADOW_CELLS;
-  const paintAmbience = (dt = 0.016): void => {
-    const fraction = dayClock.fraction;
-    sky.update(fraction, skyColorsAt(fraction, skyColors), celestialAt(fraction, celestial));
-    const night = nightFactorAt(fraction);
-    lights.update(night);
-    setGlowNight(night);
-    for (const light of headlights) light.update(night);
-    // Weather intensity lerps across any active cross-fade.
-    const blend = weatherClock.blend;
-    const base = blend
-      ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t, intensity)
-      : intensityOf(weatherClock.weather);
-    // The guardrail's L2 halves the particle bed; the emitter's opacity
-    // easing makes the trim fade in, and snow accumulation stays full.
-    const weatherScale = qualityApplier.weatherScale;
-    scaledWeather.rain = base.rain * weatherScale;
-    scaledWeather.snow = base.snow * weatherScale;
-    scaledWeather.cloud = base.cloud * weatherScale;
-    weather.update(dt, scaledWeather);
-    ground.setSnow(base.snow);
-    tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
-    tracks.setHillSnow(base.snow >= FROZEN_SNOW); // The hill run's crowns share the gate.
-    tracks.setCrossingSnow(base.snow >= FROZEN_SNOW); // The crossing wears winter too.
-    tracks.setDelightSnow(base.snow >= FROZEN_SNOW); // The delight toys join winter.
-    water.update(skyColors, base.snow, dt); // The river mirrors the sky and ices over.
-    ambience.update(base); // Rain patter + wind follow the weather bed.
-    // River babble whispers near the water; a frozen river stands the babble
-    // down with the duck (same snow gate).
-    proximityCell.x = Math.floor((camera.position.x + GROUND_SIZE / 2) / cellSize);
-    proximityCell.y = Math.floor((camera.position.z + GROUND_SIZE / 2) / cellSize);
-    babble.update(base.snow >= FROZEN_SNOW ? 0 : riverProximity(proximityCell));
-    fireflies.update(dt, night, base.rain); // Fireflies own the dry night.
-  };
-  paintAmbience();
-  disposables.push(sky.dispose);
-  disposables.push(water.dispose);
+  const dayAmbience = createDayAmbience({ context, headlights, ambience, babble, ground });
+  dayAmbience.paint();
+  disposables.push(dayAmbience.dispose);
 
   const crate = createPlaceholderCrate();
   scene.add(crate.mesh);
@@ -325,7 +222,7 @@ export function initScene(
       // Quiet meadow chirps stay out of the train's moment — no chirping mid-ride.
       if (rides.mode() === 'riding') return;
       // ...and the critters are asleep at night (fireflies take the shift).
-      if (nightFactorAt(dayClock.fraction) >= 0.6) return;
+      if (dayAmbience.nightFactor() >= 0.6) return;
       audio.chirp(event.critter);
       tracks.hopCritter(event.critter);
     }
@@ -916,9 +813,8 @@ export function initScene(
       // The HUD is the only consumer of the window average — skip the scan
       // when the overlay isn't mounted.
       if (perfDebug) perfDebug.update(perfMonitor.averageFps(), qualityController.level);
-      dayClock.tick();
-      weatherClock.tick();
-      paintAmbience(dt);
+      dayAmbience.tick();
+      dayAmbience.paint(dt);
       visibleSteamPuffs = 0;
       crossingTrainCount = 0;
       // Every little train ticks — parked spares too, so a pre-ride whistle
@@ -964,11 +860,8 @@ export function initScene(
       // Parked spares report null — hops read as passing, not presence.
       // Mood: rain shrinks their excitement radius, night is bedtime.
       const star = primaryRig();
-      const night = nightFactorAt(dayClock.fraction);
-      const blend = weatherClock.blend;
-      const weatherNow = blend
-        ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t)
-        : intensityOf(weatherClock.weather);
+      const night = dayAmbience.nightFactor();
+      const weatherNow = dayAmbience.weather();
       tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
         rain: weatherNow.rain,
         night,
@@ -990,18 +883,9 @@ export function initScene(
       barge.update(dt, { night, snow: weatherNow.snow });
       // The headlight catches the portals at night: a warm glow at the open
       // arch mouth nearest the engine, keyed to night factor and proximity.
-      if (star && night > 0 && openPortals.length > 0) {
-        portalGlowAt(
-          openPortals,
-          (star.model.position.x + GROUND_SIZE / 2) / cellSize - 0.5,
-          (star.model.position.z + GROUND_SIZE / 2) / cellSize - 0.5,
-          PORTAL_GLOW_RADIUS,
-          portalGlow,
-        );
-      } else {
-        portalGlow.intensity = 0;
-      }
-      portalGlowVisual.update(portalGlow, night);
+      dayAmbience.updatePortalGlow(
+        star ? { x: star.model.position.x, z: star.model.position.z } : null,
+      );
       updateCamera(dt);
     },
     // Render-scale trims go through the offscreen blit — the canvas drawing
@@ -1093,7 +977,6 @@ export function initScene(
       rideAudio.dispose();
       unsubscribeRides();
       unsubscribeTrain();
-      unsubscribePortals();
       audio.dispose();
       tracks.dispose();
       crate.dispose();
@@ -1116,7 +999,6 @@ export function initScene(
       for (const dispose of disposables) dispose();
       ambience.dispose();
       babble.dispose();
-      disposeWindowGlows();
       renderer.dispose();
     },
   };
