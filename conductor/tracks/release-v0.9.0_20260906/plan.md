@@ -38,13 +38,22 @@ already exists.
 
 ## Phase 2 — Local Pre-Tag Verification
 
-- [~] Task: Run the full local gate suite
-  - Acceptance: `pnpm check` green (biome + typecheck + vitest, expect
-    ~676 tests) and the full Playwright e2e suite green (now includes
-    the delight-toys smoke; rerun at `--workers=2` if GPU-context
-    flakes recur per the v0.5.0–v0.8.0 lessons).
-  - [ ] `pnpm check` (biome + typecheck + vitest)
-  - [ ] `pnpm exec playwright test` (e2e smoke)
+- [x] Task: Run the full local gate suite (671fa14)
+  - Notes: `pnpm check` green (biome, tsc, 676/676 vitest — run
+    2026-09-06, only conductor docs changed since). Full Playwright
+    e2e: **121 passed, 0 failed** (9.7m). First attempt ran 82
+    failed/39 passed — pure infrastructure collapse (dev/prod servers
+    died mid-run: `Could not connect to server`, `Page crashed`,
+    websocket 500s) caused by running the Docker build concurrently
+    with the suite; solo rerun green immediately with zero app-side
+    flakes. Lesson for future releases: never run `docker build`
+    concurrently with the e2e suite on this machine. No
+    `--workers=2` manual retry needed (Playwright self-configured 2
+    workers). Files: none (verification only).
+  - Acceptance: `pnpm check` green and the full Playwright e2e suite
+    green (rerun at `--workers=2` if GPU-context flakes recur).
+  - [x] `pnpm check` (biome + typecheck + vitest)
+  - [x] `pnpm exec playwright test` (e2e smoke; rerun at `--workers=2` if GPU-context flakes recur per the v0.5.0–v0.8.0 lessons)
 - [x] Task: Local container smoke check (db5bfa16)
   - Notes: `docker build -t tiny-tracks:0.9.0 .` green (image
     db5bfa16, pnpm 11.24.0, vite 8.2.2, 84 modules). Precache: 171
