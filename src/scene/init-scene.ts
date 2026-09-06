@@ -98,7 +98,8 @@ export function initScene(
   audio: AudioController,
 ): SceneHandle {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
+  const basePixelRatio = Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO);
+  renderer.setPixelRatio(basePixelRatio);
   // Soft shadow maps pair with the shadowed sun in lights.ts; neutral tone
   // mapping keeps bright toy surfaces from clipping to white.
   renderer.shadowMap.enabled = true;
@@ -129,7 +130,7 @@ export function initScene(
   const perfMonitor = createPerfMonitor();
   const qualityApplier = createQualityApplier({
     shadowLight: lights.sun,
-    basePixelRatio: Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO),
+    basePixelRatio,
     baseShadowMapSize: SHADOW_MAP_SIZE,
   });
   const renderScale = createRenderScale(renderer);
@@ -187,7 +188,12 @@ export function initScene(
     now: () => performance.now(),
     reducedMotion,
   });
-  let attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+  let attractTimer = 0;
+  /** (Re)starts the cheap interval that drives the idle-attract clock. */
+  const startAttractTimer = (): void => {
+    attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+  };
+  startAttractTimer();
 
   // The little-train fleet: rigs, template loading, the cargo cycle. The
   // assembler hands it the shared context and stays out of its internals.
@@ -274,10 +280,12 @@ export function initScene(
       // Critters idle always and hop while a riding train passes close.
       // Parked spares report null — hops read as passing, not presence.
       // Mood: rain shrinks their excitement radius, night is bedtime.
+      // Critters, the duck, and the portal glow all read this one spot.
       const star = fleet.primary();
+      const starSpot = star ? { x: star.model.position.x, z: star.model.position.z } : null;
       const night = dayAmbience.nightFactor();
       const weatherNow = dayAmbience.weather();
-      tracks.updateCritters(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
+      tracks.updateCritters(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
         rain: weatherNow.rain,
         night,
       });
@@ -289,7 +297,7 @@ export function initScene(
       tracks.updateDelight(dt);
       // The duck drifts the S-curve and wiggles for passing trains; night is
       // bedtime, and a frozen river (snow) parks it on the ice.
-      duck.update(dt, star?.model.position.x ?? null, star?.model.position.z ?? null, {
+      duck.update(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
         night,
         snow: weatherNow.snow,
       });
@@ -298,9 +306,7 @@ export function initScene(
       barge.update(dt, { night, snow: weatherNow.snow });
       // The headlight catches the portals at night: a warm glow at the open
       // arch mouth nearest the engine, keyed to night factor and proximity.
-      dayAmbience.updatePortalGlow(
-        star ? { x: star.model.position.x, z: star.model.position.z } : null,
-      );
+      dayAmbience.updatePortalGlow(starSpot);
       filmCamera.update(dt);
     },
     perfMonitor,
@@ -318,7 +324,7 @@ export function initScene(
       audio.resume();
       ambience.resume();
       babble.resume();
-      attractTimer = window.setInterval(() => attractClock.tick(), ATTRACT_TICK_MS);
+      startAttractTimer();
     },
   });
 
