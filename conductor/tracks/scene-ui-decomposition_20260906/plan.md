@@ -177,7 +177,15 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Files: `src/scene/init-scene.ts` (369 → 375 lines; net +6 from helper
     docs/comments).
   - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
-  - [ ] Remove only move-orphaned code (grep-verified); document dead-code
+  - Dead-code sweep (grep-verified): none found. Every helper that moved or
+    stayed kept a live consumer — `spin-loop` → lifecycle, `attract-camera`
+    → film-camera, `dispose-object` → barge/rig-cargo/track-renderer/
+    train-fleet, `headlight` → day-ambience/init-scene/train-fleet,
+    `load-locomotive`/`load-wagons`/`ride-motion` (incl. `parkFollowersBehind`)/
+    `steam-puff-emitter` → train-fleet, `placeholder-crate` → init-scene,
+    `wagonSlots`/`wagonPresetUrls` → train-fleet + tests. Biome's
+    noUnusedVariables pass over all 141 files is also clean.
+  - [x] Remove only move-orphaned code (grep-verified); document dead-code
         findings in plan notes
 - [ ] Task: Gates + e2e
   - [ ] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` +
