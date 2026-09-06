@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [readme-onboarding-docs_20260906](tracks/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | in progress |
 | [scenery-delight_20260905](archive/scenery-delight_20260905/index.md) | Scenery Delight — Three Animated Toys | Feature | done |
 | [loco-fleet_20260905](archive/loco-fleet_20260905/index.md) | Locomotive Fleet Expansion | Feature | done |
 | [railway-crossing-gate_20260905](archive/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | done |
