@@ -7,7 +7,7 @@ already exists.
 
 ## Phase 1 — Changelog & Version Bump
 
-- [ ] Task: Promote `CHANGELOG.md` for v0.9.0
+- [~] Task: Promote `CHANGELOG.md` for v0.9.0
   - Acceptance: `## [Unreleased]` Added blocks (loco fleet, Hilltop
     Junction starter, river life) move verbatim into new dated
     `## [0.9.0] - 2026-09-06`; a new parent-voice entry covers the
