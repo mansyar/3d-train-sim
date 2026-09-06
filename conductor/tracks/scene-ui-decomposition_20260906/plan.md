@@ -366,7 +366,7 @@ verification, not unit tests. Every task ends with a plan note + commit
     - Tidied two section comments in app.ts that still described the
       extracted blocks (drawer heading now describes the composition,
       drag heading points at toy-drag.ts). Comments only — zero behavior.
-- [ ] Task: Gates + e2e
+- [~] Task: Gates + e2e
   - [ ] Same gate set, full Playwright suite green
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
