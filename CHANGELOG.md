@@ -9,6 +9,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-06
+
 ### Added
 - **A bigger engine shed: six locomotives to choose from.** Three new
   engines join the trains drawer — the **Express** (a bright orange
@@ -21,6 +23,7 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   keeps its own wagon outfits in the wagon workshop. The choice stays
   saved across visits, and everything still works offline with no new
   downloads.
+
 - **A fourth starter: Hilltop Junction.** The picture gallery behind the
   parent gate gains a new railway that shows off what the meadow can do:
   a climb up and over the hills on one side and a proper passing loop
@@ -36,9 +39,16 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   gains a little frog: drag it onto the river and it floats on its lily
   pad, or set it on the grass like any other toy. Chug past on a ride
   and it hops with a soft ribbit (quiet when the meadow is muted).
-  and it hops with a soft ribbit (quiet when the meadow is muted).
   Frogs stay in the meadow between visits, and older saved worlds open
   unchanged.
+
+- **Three new toys bring the town to life.** The town tab gains a
+  spinning **windmill**, a merry **carousel** with little horses that
+  go round and round, and a **hot-air balloon** that lifts off and
+  drifts lazily over the meadow — the world plays by itself, no
+  wind-up needed. Each toy wears its own tiny snow cap in winter,
+  older saved worlds open unchanged, and everything still works
+  offline with no new downloads.
 
 ## [0.8.0] - 2026-09-05
 
@@ -250,7 +260,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/mansyar/3d-train-sim/compare/v0.5.0...v0.6.0
