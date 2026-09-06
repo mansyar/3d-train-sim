@@ -350,8 +350,22 @@ verification, not unit tests. Every task ends with a plan note + commit
       ride-toybox-flow + smoke 52/52 ✓ (two smoke flakes under full
       local contention; solo smoke rerun 40/40 ✓ — the documented
       shared-dev-server failure mode, no config change).
-- [ ] Task: Light cleanup
-  - [ ] Same conservative dead-code rule; document findings
+- [x] Task: Light cleanup (commit `36de74e`)
+  - [x] Same conservative dead-code rule; document findings
+  - Notes:
+    - Repo-wide dead-code sweep over the touched UI files: none found.
+      biome `noUnusedVariables`/`noUnusedImports` clean over all 7 ui
+      files; no stray `options.` refs remain in the extracted modules;
+      every module export is consumed (`isPieceKind`, `CellFromPoint`,
+      `RIDE_ICONS`, `toyTabStrip/Panels`, `PIECE_ICONS`, `SCENERY_ICONS`,
+      `ping`, `cancelForRide`, `hideChip`, `setOpen/isOpen`,
+      `refreshRide/refreshUndo`).
+    - Kept (not dead): `CellFromPoint` re-export from app.ts — it was a
+      public export pre-refactor (zero external consumers today, but the
+      conservative rule says document, not delete).
+    - Tidied two section comments in app.ts that still described the
+      extracted blocks (drawer heading now describes the composition,
+      drag heading points at toy-drag.ts). Comments only — zero behavior.
 - [ ] Task: Gates + e2e
   - [ ] Same gate set, full Playwright suite green
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
