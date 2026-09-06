@@ -38,21 +38,32 @@ already exists.
 
 ## Phase 2 — Local Pre-Tag Verification
 
-- [ ] Task: Run the full local gate suite
+- [~] Task: Run the full local gate suite
   - Acceptance: `pnpm check` green (biome + typecheck + vitest, expect
     ~676 tests) and the full Playwright e2e suite green (now includes
     the delight-toys smoke; rerun at `--workers=2` if GPU-context
     flakes recur per the v0.5.0–v0.8.0 lessons).
   - [ ] `pnpm check` (biome + typecheck + vitest)
   - [ ] `pnpm exec playwright test` (e2e smoke)
-- [ ] Task: Local container smoke check
-  - Acceptance: `docker build -t tiny-tracks:0.9.0 .` succeeds; running
-    container serves `/` 200 `text/html` `no-cache`, `/sw.js` +
-    manifest `no-cache`, hashed `/assets/*.js` immutable, unknown route
-    → `index.html` SPA fallback (per `nginx.conf`); precache weight
-    sanity vs the 6MB per-file cap.
-  - [ ] `docker build` the image locally
-  - [ ] Run container; verify cache headers, SPA fallback, precache weight
+- [x] Task: Local container smoke check (db5bfa16)
+  - Notes: `docker build -t tiny-tracks:0.9.0 .` green (image
+    db5bfa16, pnpm 11.24.0, vite 8.2.2, 84 modules). Precache: 171
+    entries, 10,199 KiB total (~10.0MB, up from v0.8.0's ~9.4MB with
+    the loco fleet + delight toy GLBs — expected); largest hashed JS
+    `index-BZxK0yUJ.js` 776.5KB (204KB gzip) — far below the 6MB
+    per-file precache cap. Container curl smoke all as specified:
+    `/` 200 text/html no-cache; `/sw.js` 200 no-cache;
+    `/manifest.webmanifest` 200 no-cache; hashed
+    `/assets/index-BZxK0yUJ.js` 200 immutable; unknown route → 200
+    html (SPA fallback). Container stopped/removed. Files: none
+    (verification only).
+  - Acceptance: local `docker build` succeeds; running container
+    serves `/` as 200 `text/html` `no-cache`, `/sw.js` + manifest
+    `no-cache`, hashed `/assets/*.js` immutable, unknown route falls
+    back to `index.html` — all per `nginx.conf`; PWA precache weight
+    sanity-checked vs the 6MB cap.
+  - [x] `docker build` the image locally
+  - [x] Run container; verify cache headers, SPA fallback, precache weight
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 3 — Tag & Ship
