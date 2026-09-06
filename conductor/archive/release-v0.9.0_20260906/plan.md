@@ -85,7 +85,7 @@ already exists.
     code; diff `5f6e353..HEAD` outside `conductor/` is empty), so no
     new unit tests required. Manual: user confirmed yes to ship.
 
-## Phase 3 — Tag & Ship
+## Phase 3 — Tag & Ship [checkpoint: be60c4d]
 
 - [x] Task: Push branch, open PR "Release v0.9.0", merge to `main` (be60c4d)
   - Notes: PR #53 opened; two `main` races while CI ran — PR #52
@@ -110,10 +110,19 @@ already exists.
   - [x] Gates pass in CI (biome + tsc + vitest + full e2e)
   - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.9.0` + `:latest`
   - [x] Coolify webhook fired; prod deploy triggered
-  - [ ] Family-device verification: cold-load, build a loop, press ▶,
+  - [x] Family-device verification: cold-load, build a loop, press ▶,
         hear the whistle; parent-gate tray shows **0.9.0**; six
         locomotives and the delight toys visible on the meadow
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (be60c4d)
+  - Verification Report (2026-09-06): PR #53 CI green twice (biome+
+    typecheck, vitest, full e2e on two heads); squash-merged as
+    `be60c4d`; tag `v0.9.0` pushed; Release run `34021913046` all
+    green (gates + publish 1m13s — image `ghcr.io/mansyar/tiny-tracks:0.9.0`
+    + `:latest`, Coolify webhook fired). Family device verified by the
+    user: cold-load, build a loop, ride + whistle, tray shows 0.9.0,
+    six locomotives and the delight toys visible. Scope: no app code
+    in this phase beyond the release merge; no new unit tests
+    required. Manual: user confirmed yes on the device.
 
 ## Notes
 
