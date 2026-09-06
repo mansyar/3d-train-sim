@@ -110,13 +110,14 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     throw new Error('toybox chrome missing from app frame');
   }
 
-  // ---- Tabbed toybox drawer (Rails / Adventure / Nature / Town / Critters) -----------
-  // One tab active at a time; the drawer itself is one of the three
-  // toybox drawers (toys / trains) — never two at once.
   // Whether trains are rolling. Declared up top so every build entry point
   // below can refuse work mid-ride; the scene pushes the real value.
   let riding = false;
 
+  // ---- Toybox drawers (toys / trains), one open at a time ----------------
+  // The tabbed drawer lives in toy-drawer.ts, the train drawer in
+  // train-picker.ts; the composition (never two at once, shut mid-ride)
+  // stays here in setDrawer.
   const toyDrawer = createToyDrawer(root, drawer, {
     world: options.world,
     beginDrag: (kind) => toyDrag.beginDrag(kind),
@@ -142,9 +143,10 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   trainSlot.addEventListener('click', () => {
     setDrawer(!trainPicker.isOpen() ? 'trains' : null);
   });
-  // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
+  // ---- Drag machine wiring: the drag lives in toy-drag.ts ----------------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or
-  // trash); null ⇒ a fresh toy from the drawer.
+  // trash); null ⇒ a fresh toy from the drawer. The scene facade calls
+  // and the `riding` flag pass through deps.
   const toyDrag = createToyDrag(canvas, {
     root,
     world: options.world,
