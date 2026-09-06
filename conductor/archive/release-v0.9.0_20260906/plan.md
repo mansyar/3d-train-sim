@@ -85,20 +85,44 @@ already exists.
     code; diff `5f6e353..HEAD` outside `conductor/` is empty), so no
     new unit tests required. Manual: user confirmed yes to ship.
 
-## Phase 3 — Tag & Ship
+## Phase 3 — Tag & Ship [checkpoint: be60c4d]
 
-- [ ] Task: Push branch, open PR "Release v0.9.0", merge to `main`
-  - [ ] Push `track/release-v0.9.0_20260906`, open PR, verify CI green, merge
-- [ ] Task: Tag `v0.9.0` on the release merge commit and push the tag
-  - [ ] `git tag v0.9.0 <merge-sha> && git push origin v0.9.0`
-- [ ] Task: Watch the Release workflow to green
-  - [ ] Gates pass in CI (biome + tsc + vitest + full e2e)
-  - [ ] Image published as `ghcr.io/mansyar/tiny-tracks:0.9.0` + `:latest`
-  - [ ] Coolify webhook fired; prod deploy triggered
-  - [ ] Family-device verification: cold-load, build a loop, press ▶,
+- [x] Task: Push branch, open PR "Release v0.9.0", merge to `main` (be60c4d)
+  - Notes: PR #53 opened; two `main` races while CI ran — PR #52
+    (README/CONTRIBUTING, merge commit `b5d30ec`) and PR #54 (merged
+    on main as `112e1d9`, merge commit `b192dfd`). Both conflicts were
+    conductor-registry-only (`conductor/tracks.md` rows); zero
+    app-code impact. CI green on both heads (e2e 15m58s and 15m38s),
+    then squash-merged as `be60c4d` "Release v0.9.0 (#53)". Files:
+    `conductor/tracks.md` (conflict resolutions only).
+  - [x] Push `track/release-v0.9.0_20260906`, open PR, verify CI green, merge
+- [x] Task: Tag `v0.9.0` on the release merge commit and push the tag (be60c4d)
+  - Notes: Tag `v0.9.0` on the squash merge commit `be60c4d`, pushed.
+    Local `main` fast-forward skipped (branch checked out in the idle
+    `3d-train-sim` worktree); `origin/main` is authoritative.
+  - [x] `git tag v0.9.0 <merge-sha> && git push origin v0.9.0`
+- [x] Task: Watch the Release workflow to green (be60c4d)
+  - Notes: Run `34021913046` all green — biome+typecheck 19s,
+    vitest 16s, e2e 16m11s, publish 1m13s (Buildx build + push
+    `ghcr.io/mansyar/tiny-tracks:0.9.0` + `:latest`, Coolify webhook
+    fired → prod deploy triggered). Benign annotation only (Node 20
+    deprecation on actions/*, forced to Node 24).
+  - [x] Gates pass in CI (biome + tsc + vitest + full e2e)
+  - [x] Image published as `ghcr.io/mansyar/tiny-tracks:0.9.0` + `:latest`
+  - [x] Coolify webhook fired; prod deploy triggered
+  - [x] Family-device verification: cold-load, build a loop, press ▶,
         hear the whistle; parent-gate tray shows **0.9.0**; six
         locomotives and the delight toys visible on the meadow
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (be60c4d)
+  - Verification Report (2026-09-06): PR #53 CI green twice (biome+
+    typecheck, vitest, full e2e on two heads); squash-merged as
+    `be60c4d`; tag `v0.9.0` pushed; Release run `34021913046` all
+    green (gates + publish 1m13s — image `ghcr.io/mansyar/tiny-tracks:0.9.0`
+    + `:latest`, Coolify webhook fired). Family device verified by the
+    user: cold-load, build a loop, ride + whistle, tray shows 0.9.0,
+    six locomotives and the delight toys visible. Scope: no app code
+    in this phase beyond the release merge; no new unit tests
+    required. Manual: user confirmed yes on the device.
 
 ## Notes
 
