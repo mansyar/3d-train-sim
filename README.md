@@ -18,8 +18,8 @@ of cause and effect.
   bridges, and a railway crossing gate that really warns the trains
 - **A living meadow** — a winding river with a barge and a frog,
   windmills, carousels, and a hot-air balloon that wanders the sky
-- **Real work** — wagons load crates at one station and deliver them at
-  the next, with a confetti burst and a growing platform pile
+- **Real work** — wagons load crates at the first station and deliver
+  them at the next, with a confetti burst and a growing platform pile
 - **Day, night, and weather** — sunny mornings, golden sunsets, starry
   nights, rain, and snow (the river even freezes over)
 
