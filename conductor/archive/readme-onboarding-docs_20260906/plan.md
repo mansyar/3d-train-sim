@@ -69,6 +69,13 @@ verification is gates + content review per `workflow.md`. Branch
   - Acceptance: `metadata.json` status → `done`; registry row moved to
     archive; track folder relocated per house convention.
 
+## Phase: Review Fixes
+
+- [x] Task: Apply review suggestions 1b60865
+  - Finding (Low, factual accuracy): README described cargo gameplay as
+    loading "at one station"; `conductor/product.md` specifies
+    load-at-first-station / deliver-at-next. Wording corrected.
+
 ## Notes
 
 (task notes appended under their tasks as work completes)
