@@ -63,6 +63,7 @@ import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import { createRiverWater } from './river-water';
+import type { SceneContext } from './scene-context';
 import { createSkyDome } from './sky-dome';
 import { startSpinLoop } from './spin-loop';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
@@ -186,6 +187,7 @@ export function initScene(
   // that trims the heaviest effects when frame rate sags (render scale,
   // shadow maps, weather particles). Invisible to the toddler; the only
   // trace is the ?perf=debug overlay for parents debugging a slow device.
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const perfMonitor = createPerfMonitor();
   const qualityApplier = createQualityApplier({
     shadowLight: lights.sun,
@@ -194,8 +196,22 @@ export function initScene(
   });
   const renderScale = createRenderScale(renderer);
   disposables.push(renderScale.dispose);
+  /** The shared refs every scene subsystem reads (built once, passed down). */
+  const context: SceneContext = {
+    renderer,
+    scene,
+    camera,
+    canvas,
+    world,
+    audio,
+    tracks,
+    lights,
+    qualityApplier,
+    renderScale,
+    reducedMotion,
+  };
   const qualityController = createQualityController({
-    onLevelChange: (level) => qualityApplier.apply(level),
+    onLevelChange: (level) => context.qualityApplier.apply(level),
   });
   const perfDebug = mountPerfDebugOverlay();
   disposables.push(() => perfDebug?.dispose());
@@ -294,7 +310,6 @@ export function initScene(
   // pure logic driven by a cheap interval, so it stays alive even under
   // reduced motion (static frame, no RAF loop). Any toddler touch calls
   // notifyActivity() through the SceneHandle.
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // The delivery celebration: a pooled burst at the station. Reduced motion
   // keeps the delivery (crates, count) but skips the flying particles.
   const confetti = createConfetti(scene, () => !reducedMotion);
@@ -991,7 +1006,7 @@ export function initScene(
     },
     // Render-scale trims go through the offscreen blit — the canvas drawing
     // buffer never resizes, so the compositor keeps presenting frames.
-    () => renderScale.render(scene, camera, qualityApplier.renderScale),
+    () => context.renderScale.render(scene, camera, context.qualityApplier.renderScale),
   );
 
   // Tab hidden: stop rendering, quiet the chug (and any ringing one-shot),
