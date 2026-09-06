@@ -2,6 +2,8 @@
 
 Source-of-truth index for the Tiny Tracks project (web-based 3D toy train
 simulator for toddlers). All project management documents live in `conductor/`.
+New to the repo? Start with the top-level [README](../README.md) and the
+[contributing guide](../CONTRIBUTING.md); this folder is the deep source of truth.
 
 ## Core Documents
 

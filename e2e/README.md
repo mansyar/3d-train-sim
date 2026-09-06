@@ -1,7 +1,9 @@
 # E2E Stability Runbook
 
 How to run the Playwright suite and, more importantly, how to read it when
-something goes red. The suite asserts **zero console errors** on a toy app
+something goes red. (New to the repo? See [CONTRIBUTING.md](../CONTRIBUTING.md)
+for setup and the project workflow first.) The suite asserts **zero console
+errors** on a toy app
 that loads 3D models and plays audio — which makes it sensitive to
 environmental noise. This document is the accumulated stability record of
 releases v0.5.0 → v0.7.0 (track `e2e-stability_20260904`).
