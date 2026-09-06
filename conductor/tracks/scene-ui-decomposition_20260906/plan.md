@@ -40,12 +40,24 @@ verification, not unit tests. Every task ends with a plan note + commit
     audio (dings/whistle), confetti, tracks handle (switch roads), and cell
     mapping — all read via `SceneContext`; no mutable sharing beyond what
     exists today.
-- [ ] Task: Define `SceneContext` + thin orchestrator shell
-  - [ ] Create `src/scene/scene-context.ts`: one type carrying shared refs
+- [x] Task: Define `SceneContext` + thin orchestrator shell (`abf811f`)
+  - [x] Create `src/scene/scene-context.ts`: one type carrying shared refs
         (scene, camera, renderer, audio, state stores, ride controller, frame
         loop handle) — explicitly passed, no singletons
-  - [ ] `init-scene.ts` becomes the assembler that builds the context and
+  - [x] `init-scene.ts` becomes the assembler that builds the context and
         hands it to subsystems
+
+  Notes:
+  - `scene-context.ts` (41 lines): renderer, scene, camera, canvas, world,
+    audio, tracks, lights, qualityApplier, renderScale, reducedMotion — all
+    explicitly passed, no singletons. (Ride controller + confetti join when
+    the fleet module consumes them; the frame loop stays owned by the
+    orchestrator and is handed to subsystems as a suspend/resume pair.)
+  - `init-scene.ts` now builds the context once and the quality-trim callback
+    + render-blit path already read from it (`context.qualityApplier.apply`,
+    `context.renderScale.render`); the `reducedMotion` sample was hoisted
+    above the guardrail block so the context is complete at build time.
+  - Gates: biome clean, `tsc --noEmit` clean, 676/676 unit tests green.
 - [ ] Task: Extract environment & day-night wiring
   - [ ] Sky palette application, lights/shadow updates, weather cross-fade
   - [ ] Fireflies, window glow, portal glow, headlight, snow caps
