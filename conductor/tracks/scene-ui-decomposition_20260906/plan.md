@@ -232,7 +232,7 @@ verification, not unit tests. Every task ends with a plan note + commit
 
 ## Phase B — UI Split (`app.ts` → wiring shell + flat `src/ui/` modules)
 
-- [ ] Task: Map extraction boundaries
+- [~] Task: Map extraction boundaries
   - [ ] Categorize all 1,238 lines of `app.ts` into target modules
   - [ ] Record the module map as a note under this task
 - [ ] Task: Extract toybox drawer
