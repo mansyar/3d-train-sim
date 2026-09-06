@@ -36,7 +36,7 @@ already exists.
     (four entries, duplicated sentence gone, empty `[Unreleased]`,
     refreshed compare links) and the version bump — confirmed yes.
 
-## Phase 2 — Local Pre-Tag Verification
+## Phase 2 — Local Pre-Tag Verification [checkpoint: 0df5ae5]
 
 - [x] Task: Run the full local gate suite (671fa14)
   - Notes: `pnpm check` green (biome, tsc, 676/676 vitest — run
@@ -73,7 +73,17 @@ already exists.
     sanity-checked vs the 6MB cap.
   - [x] `docker build` the image locally
   - [x] Run container; verify cache headers, SPA fallback, precache weight
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (0df5ae5)
+  - Verification Report (2026-09-06): `pnpm check` green (biome, tsc,
+    676/676 vitest). Full e2e 121/121 (9.7m) — the first attempt's 82
+    failures were infrastructure (dev/prod servers starved by a
+    concurrent `docker build`; lesson recorded under the gate task),
+    solo rerun green with zero app-side flakes. Container
+    `tiny-tracks:0.9.0` (db5bfa16) smoke green on all five curl checks
+    per `nginx.conf`; precache 171 entries / ~10.2MB, largest file
+    776KB — far under the 6MB cap. Scope is verification-only (no app
+    code; diff `5f6e353..HEAD` outside `conductor/` is empty), so no
+    new unit tests required. Manual: user confirmed yes to ship.
 
 ## Phase 3 — Tag & Ship
 
