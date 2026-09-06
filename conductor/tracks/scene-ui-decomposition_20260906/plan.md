@@ -120,8 +120,27 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Files: `src/scene/train-fleet.ts` (new), `src/scene/rig-cargo.ts`
     (new), `src/scene/init-scene.ts` (954 → 488 lines).
   - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
-- [ ] Task: Extract camera wiring
-  - [ ] Follow-camera targeting, 🎥 cycle state, attract drift
+- [x] Task: Extract camera wiring `dece9bd`
+  - [x] Follow-camera targeting, 🎥 cycle state, attract drift
+
+  Notes:
+  - New `src/scene/film-camera.ts` (154 lines): the filmed-target state and
+    its sticky sync, the 🎥 cycle, `frameOverview()` (tall-viewport pull-back),
+    the follow-camera glide (FOLLOW_OFFSET/CAMERA_EASE now module-private),
+    and the attract drift — `createAttractCamera` moved inside the module,
+    driven by the idle clock through new `enterIdle()`/`exitIdle()` hooks.
+  - Orchestrator keeps the renderer/aspect resize and delegates: frame tick
+    calls `filmCamera.update(dt)` last (order preserved); chug voice,
+    `trainPace`, and `tootWhistle` read `filmCamera.filmedRig()`; the
+    SceneHandle's `cycleFilmTarget`/`filmedAnchor` proxy to the module.
+    The camera's initial overview pose is now set by the module at
+    construction (before the first resize).
+  - Wiring order preserved: rides subscription still runs film sync →
+    fleet sync → setEmitting → listeners; attract chirp gating (riding +
+    night) stays in the orchestrator.
+  - Files: `src/scene/film-camera.ts` (new), `src/scene/init-scene.ts`
+    (488 → 389 lines).
+  - Gates: biome ✓ · tsc ✓ · 676/676 tests pass.
 - [ ] Task: Extract frame-loop wiring
   - [ ] Spin-loop suspend/resume, visibility handling
   - [ ] Perf/quality tier application, render-scale blit
