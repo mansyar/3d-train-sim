@@ -366,8 +366,14 @@ verification, not unit tests. Every task ends with a plan note + commit
     - Tidied two section comments in app.ts that still described the
       extracted blocks (drawer heading now describes the composition,
       drag heading points at toy-drag.ts). Comments only — zero behavior.
-- [~] Task: Gates + e2e
-  - [ ] Same gate set, full Playwright suite green
+- [x] Task: Gates + e2e (commit pending — pure verification task)
+  - [x] Same gate set, full Playwright suite green
+  - Notes:
+    - biome check . ✓ (147 files, no fixes), `tsc --noEmit` ✓,
+      `CI=true pnpm test` 676/676 ✓ (38 files),
+      `git diff main...HEAD --stat -- src/core src/state e2e` empty.
+    - Full Playwright suite in a single clean uncontended run:
+      121/121 passed (9.3m). No flakes this time.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase C — Docs & Final Verification
