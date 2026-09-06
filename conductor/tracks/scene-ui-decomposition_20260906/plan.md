@@ -396,7 +396,7 @@ verification, not unit tests. Every task ends with a plan note + commit
     toy-icons.ts 411 lines (pure icon/catalog data) vs the ~400 soft
     cap. Phase B complete. Last functional commit: `36de74e`.
 
-## Phase C — Docs & Final Verification
+## Phase C — Docs & Final Verification [checkpoint: 07c22fd]
 
 - [x] Task: Update `conductor/tech-stack.md` (commit `07c22fd`)
   - [x] Folder-structure section: new `src/ui/` modules, `scene-context.ts`
@@ -409,10 +409,22 @@ verification, not unit tests. Every task ends with a plan note + commit
       wiring, AppOptions facade) and lists the flat modules
       (toy-icons, toy-drawer, toy-drag, ride-controls, train-picker,
       parent-gate). Everything else (audio/state/public/…) untouched.
-- [ ] Task: Final full gates + manual tablet checklist
-  - [ ] Build/decorate/ride, camera cycle, whistle, mute, parent-gate reset,
+- [x] Task: Final full gates + manual tablet checklist (gates on this tree)
+  - [x] Build/decorate/ride, camera cycle, whistle, mute, parent-gate reset,
         starter swap — confirm byte-identical behavior
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Notes:
+    - Final gate run: biome ✓ (147 files, no fixes), `tsc --noEmit` ✓,
+      `CI=true pnpm test` 676/676 ✓ (38 files, 2.26s),
+      `git diff main...HEAD --stat -- src/core src/state e2e` empty.
+    - Full Playwright suite, single clean run: 121/121 passed (9.5m),
+      zero flakes.
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification report: final-tree gates all green (biome 147 ✓,
+    tsc ✓, Vitest 676/676 ✓, Playwright 121/121 ✓ single clean 9.5m
+    run); logic layer byte-identical to main; manual tablet checklist
+    confirmed by the user as identical behavior (same set approved at
+    the Phase A and B checkpoints). Phase C complete. Last functional
+    commit: `07c22fd` (tech-stack folder-structure docs).
 
 ## Notes
 
