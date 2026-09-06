@@ -289,8 +289,24 @@ verification, not unit tests. Every task ends with a plan note + commit
   - Deviations: none beyond the documented renames; trash-slot chrome
     guard extended to cover `trashSlot` (its guard moved with the trash
     zone into toy-drag, so app re-asserts the bin exists).
-- [~] Task: Extract ride controls
-  - [ ] ▶/⏹ invitation + pulse, ↩️ undo, 🎺 whistle, 🎥 cycle button
+- [x] Task: Extract ride controls
+  - [x] ▶/⏹ invitation + pulse, ↩️ undo, 🎺 whistle, 🎥 cycle button
+  Notes:
+  - Commit `98d8606`. `ride-controls.ts` (154): `RIDE_ICONS` (now
+    exported — the frame template still interpolates the ▶ face),
+    refreshRide, ride-toggle click, ride-ready invitation
+    (closesLoop pulse/pop), undo (with `ping` hand-off), whistle,
+    🎥 film toggle. Deps carry `isRiding/isReady/prefersStill` plus the
+    scene facade calls; exposes `refreshRide/refreshUndo` for the
+    ride-mode push the app composes.
+  - `app.ts` 499 → 400 non-blank. Keeps the `subscribeRideMode`
+    composition (drawer/slot hiding + chip + undo refresh), mute
+    block (moves with the parent-gate task), and `prefersStill`
+    sampling (passed explicitly; the wagon workshop still reads it).
+    The old combined sound-box guard split: ride-controls guards the
+    whistle, app guards the mute toggle.
+  - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, targeted e2e
+    (ride-toybox-flow / undo / smoke) 50/50 ✓.
 - [ ] Task: Extract train picker & wagon workshop row
   - [ ] Selection persistence hooks
 - [ ] Task: Extract parent gate & starter gallery
