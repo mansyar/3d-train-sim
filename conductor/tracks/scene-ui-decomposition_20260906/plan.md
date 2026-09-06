@@ -329,9 +329,27 @@ verification, not unit tests. Every task ends with a plan note + commit
       temporary instrumented probe (module `isOpen`/`setOpen` +
       app `setDrawer` logs); probe spec deleted after diagnosis.
     - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, wagon-workshop e2e 4/4 ✓.
-- [~] Task: Extract parent gate & starter gallery
-  - [ ] Press-and-hold, confirm tray, starter presets, version display,
+- [x] Task: Extract parent gate & starter gallery (commit `fa7f616`)
+  - [x] Press-and-hold, confirm tray, starter presets, version display,
         mute toggle
+  - Notes:
+    - `parent-gate.ts` (~130 lines) owns the mute toggle (refreshMute +
+      audio.subscribe), the hold/confirm gate (HOLD_MS/DRIFT_PX consts,
+      hold raf/timer, is-holding/is-confirm classes, --hold progress),
+      the starter gallery picks, and the window pointerdown that
+      disarms the gate on outside taps (module-internal `confirmArmed`,
+      so the dismissal moved with it). Deps: `world / audio / isReady`;
+      guards per element ("mute toggle / parent gate / preset tray
+      missing from app frame").
+    - `app.ts` 320 → 206 non-blank. The activity-notify window listener
+      (attract dismissal) stays in app — it is scene wiring, not gate
+      state. `STARTER_PRESETS` import moved out with the gallery.
+    - Note: version display (`__APP_VERSION__`) remains in the frame
+      template — pure markup, no behavior to extract.
+    - Gates: tsc ✓, biome ✓, vitest 676/676 ✓, e2e starter-railway +
+      ride-toybox-flow + smoke 52/52 ✓ (two smoke flakes under full
+      local contention; solo smoke rerun 40/40 ✓ — the documented
+      shared-dev-server failure mode, no config change).
 - [ ] Task: Light cleanup
   - [ ] Same conservative dead-code rule; document findings
 - [ ] Task: Gates + e2e
