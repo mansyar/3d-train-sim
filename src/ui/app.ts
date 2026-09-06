@@ -1,5 +1,4 @@
 import type { AudioController } from '../audio/audio-controller';
-import { closesLoop } from '../core/ride-ready';
 import type { SceneryKind } from '../core/scenery';
 import { STARTER_PRESETS } from '../core/starters';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
@@ -7,24 +6,12 @@ import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/train
 import { WAGON_PRESETS, type WagonPreset, wagonPresetAria, wagonPresetIcon } from '../core/wagons';
 import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
+import { createRideControls, RIDE_ICONS } from './ride-controls';
 import { type CellFromPoint, createToyDrag } from './toy-drag';
 import { createToyDrawer, toyTabPanels, toyTabStrip } from './toy-drawer';
 import { PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 
 export type { CellFromPoint };
-
-const RIDE_ICONS = {
-  play: `
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <path d="M17 9 L39 24 L17 39 Z" fill="currentColor"
-            stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
-    </svg>`,
-  stop: `
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="11" y="11" width="26" height="26" rx="6" fill="currentColor"
-            stroke="var(--toy-brown)" stroke-width="3"/>
-    </svg>`,
-};
 
 export interface AppOptions {
   world: WorldStore;
@@ -167,6 +154,9 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   // below can refuse work mid-ride; the scene pushes the real value.
   let riding = false;
 
+  // Reduced motion: no pop/bounce animation, dings stay. Sampled once.
+  const prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const toyDrawer = createToyDrawer(root, drawer, {
     world: options.world,
     beginDrag: (kind) => toyDrag.beginDrag(kind),
@@ -265,31 +255,27 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   });
 
   // ---- Ride trigger: one chunky button, ▶ or ⏹ ---------------------------
-  const rideToggle = root.querySelector<HTMLButtonElement>('.ride-toggle');
-  if (!rideToggle) {
-    throw new Error('ride toggle missing from app frame');
-  }
-
-  const refreshRide = () => {
-    const empty = options.world.pieces().length === 0;
-    // An empty meadow dims the button — but a train easing to a stop (a
-    // mid-ride edit just emptied the world) keeps its ⏹ face until parked.
-    const parked = empty && !riding;
-    rideToggle.classList.toggle('is-dimmed', parked);
-    rideToggle.toggleAttribute('disabled', parked);
-    rideToggle.classList.toggle('is-riding', riding);
-    rideToggle.innerHTML = riding ? RIDE_ICONS.stop : RIDE_ICONS.play;
-    rideToggle.setAttribute('aria-label', riding ? 'Stop the train' : 'Ride the train');
-    // The invitation is spent once trains roll, and moot on an empty meadow.
-    if (riding || empty) rideToggle.classList.remove('is-ready-pulse');
-  };
-
   // The ▶/⏹ face follows the real ride state pushed by the scene: scoped
   // mid-ride edits and 🚂 kind switches keep trains rolling, so a world
   // change alone never flips the button.
+  const rideControls = createRideControls({
+    root,
+    world: options.world,
+    audio: options.audio,
+    isRiding: () => riding,
+    isReady: options.isReady,
+    prefersStill,
+    startRide: options.startRide,
+    stopRide: options.stopRide,
+    tootWhistle: options.tootWhistle,
+    cycleFilmTarget: options.cycleFilmTarget,
+    subscribeFilmCount: options.subscribeFilmCount,
+    cellToScreen: options.cellToScreen,
+    ping: (x, y) => toyDrag.ping(x, y),
+  });
   options.subscribeRideMode((isRiding) => {
     riding = isRiding;
-    refreshRide();
+    rideControls.refreshRide();
     // Ride mode sheds the build tools; the stop hands them back untouched.
     // ⏹, whistle, 🎥, mute, and the parent gate stay on the rail.
     if (riding) setDrawer(null);
@@ -298,107 +284,14 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     trashSlot.hidden = riding;
     if (gridToggle) gridToggle.hidden = riding;
     toyDrag.hideChip();
-    refreshUndo();
-  });
-
-  rideToggle.addEventListener('click', () => {
-    if (options.isReady && !options.isReady()) return;
-    if (riding) options.stopRide();
-    else options.startRide();
-  });
-
-  // Any world edit refreshes the empty-meadow dim.
-  options.world.subscribe(() => refreshRide());
-  refreshRide();
-
-  // ---- Ride-ready invitation: ▶ pulses when the meadow turns rideable,
-  // and pops with a happy ding when a drop closes a loop ------------------
-  // Edit-time only — closesLoop's union-find never touches the render loop.
-  // The ding is mute-respecting by construction; reduced-motion hands get
-  // the ding but no motion.
-  const prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let prevPieces = options.world.pieces();
-  rideToggle.addEventListener('animationend', () => rideToggle.classList.remove('pop'));
-  options.world.subscribe(() => {
-    const after = options.world.pieces();
-    if (!riding) {
-      if (prevPieces.length === 0 && after.length > 0 && !prefersStill) {
-        rideToggle.classList.add('is-ready-pulse');
-      }
-      if (closesLoop(prevPieces, after)) {
-        options.audio.ding();
-        if (!prefersStill) {
-          // Restart the pop when loops close back-to-back.
-          rideToggle.classList.remove('pop');
-          void rideToggle.offsetWidth;
-          rideToggle.classList.add('pop');
-        }
-      }
-    }
-    prevPieces = after;
-  });
-
-  // ---- Undo: joins the rail after a change, takes back the last one -----
-  // Session-only by construction: a reload restores the exact world but arms
-  // no undo, so the button stays hidden until the next change.
-  const undoToggle = root.querySelector<HTMLButtonElement>('.undo-toggle');
-  if (!undoToggle) {
-    throw new Error('undo toggle missing from app frame');
-  }
-  const refreshUndo = () => {
-    undoToggle.hidden = riding || !options.world.canUndo();
-  };
-  options.world.subscribe(refreshUndo);
-  refreshUndo();
-  undoToggle.addEventListener('click', () => {
-    const before = new Map<string, Cell>();
-    for (const toy of [...options.world.pieces(), ...options.world.scenery()]) {
-      before.set(toy.id, toy.cell);
-    }
-    if (!options.world.undo()) return;
-    // undo() notified, so the button already hid itself again.
-    options.audio.ding(); // The happy pop, mirror of a placement.
-    const after = new Map<string, Cell>();
-    for (const toy of [...options.world.pieces(), ...options.world.scenery()]) {
-      after.set(toy.id, toy.cell);
-    }
-    // A restored toy pops where it came back; a taken-back placement pops
-    // where it vanished. A same-cell rotate has no anchor — ding only.
-    const moved = [...after.entries()].find(([id, cell]) => {
-      const was = before.get(id);
-      return !was || was.x !== cell.x || was.y !== cell.y;
-    });
-    const gone = moved ? undefined : [...before.entries()].find(([id]) => !after.has(id));
-    const anchor = moved?.[1] ?? gone?.[1];
-    const screen = anchor ? options.cellToScreen(anchor) : null;
-    if (screen) toyDrag.ping(screen.x, screen.y);
+    rideControls.refreshUndo();
   });
 
   // ---- Sound box: a big toot anytime, and a parent-friendly mute ---------
-  const whistleToot = root.querySelector<HTMLButtonElement>('.whistle-toot');
   const muteToggle = root.querySelector<HTMLButtonElement>('.mute-toggle');
-  if (!whistleToot || !muteToggle) {
-    throw new Error('sound box missing from app frame');
+  if (!muteToggle) {
+    throw new Error('mute toggle missing from app frame');
   }
-
-  whistleToot.addEventListener('click', () => {
-    options.tootWhistle(); // Whistle, echo inside tunnels, and the steam puff.
-  });
-
-  // ---- 🎥 camera cycle: joins the rail while two or more trains ride -----
-  // Each tap glides the chase camera to the next train, then the overview,
-  // then wraps; hidden under reduced motion (no chase to cycle).
-  const filmToggle = root.querySelector<HTMLButtonElement>('.film-toggle');
-  if (!filmToggle) {
-    throw new Error('film toggle missing from app frame');
-  }
-  filmToggle.addEventListener('click', () => {
-    options.audio.click();
-    options.cycleFilmTarget();
-  });
-  options.subscribeFilmCount((count) => {
-    filmToggle.hidden = count < 2;
-  });
 
   const refreshMute = () => {
     const muted = options.audio.isMuted();
