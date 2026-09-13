@@ -187,6 +187,41 @@ export function segmentForStep(piece: PlacedPiece, step: PathStep): Segment {
 }
 
 /**
+ * The world pose at a ride step's entry edge — path fraction 0 of the same
+ * segment the ride poses from, so a train parked here rolls on without a
+ * snap. `y` is the height carried across the entry edge; the facing is the
+ * forward-travel yaw at the entry point.
+ */
+export function stepEntryPose(
+  piece: PlacedPiece,
+  step: PathStep,
+): { x: number; y: number; z: number; yaw: number } {
+  const segment = segmentForStep(piece, step);
+  let x: number;
+  let z: number;
+  let tangentX: number;
+  let tangentZ: number;
+  if (segment.kind === 'line') {
+    x = segment.ax;
+    z = segment.az;
+    tangentX = segment.bx - segment.ax;
+    tangentZ = segment.bz - segment.az;
+  } else {
+    const angle = segment.a0;
+    x = segment.cx + Math.cos(angle) * segment.r;
+    z = segment.cz + Math.sin(angle) * segment.r;
+    tangentX = -Math.sin(angle) * Math.sign(segment.sweep);
+    tangentZ = Math.cos(angle) * Math.sign(segment.sweep);
+  }
+  return {
+    x,
+    y: step.entryHeight,
+    z,
+    yaw: Math.atan2(-tangentX, -tangentZ) + MODEL_YAW_OFFSET,
+  };
+}
+
+/**
  * Makes one locomotive follow one solved path: closed loops cycle forever,
  * open layouts ride to the dead end, pause a beat, and shuttle back. Mid-ride
  * edits ease the train to a gentle standstill right where it is — a toy left
