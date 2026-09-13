@@ -1,37 +1,42 @@
-"""Build the Tiny Tracks mirror-switch GLB (deterministic, re-runnable).
+"""Build the Tiny Tracks three-way switch GLB (deterministic, re-runnable).
 
-The left-hand twin of scripts/blender-switch.py: the same kit-measured
-turnout with the diverging road mirrored, so the branch peels WEST
-(stem south -> through north / diverge west) instead of east.
+The third junction piece: one stem (south) and three roads — through
+(north), right (east), and left (west) — built from the kit's own rail
+geometry like its two Y siblings so the look and the runtime contracts
+transfer unchanged:
 
-Construction mirrors the right switch exactly:
-- the through-road is the kit straight's own sleepers + rails, unmoved;
-- the diverging road is the kit corner-small's sleepers + rails flipped
-  onto the south-west quarter-arc (pivot the SW corner at (-2, -4)):
-  ends land on the south edge midpoint (0, -4) and the west edge
-  midpoint (-2, -2) — the x-mirror of the right switch's diverge, hence
-  the same corner-style ride arc the solver and ride-motion share;
-- the point blades keep the SAME named `switch_blades` node contract so
-  the renderer reuses the flip path untouched: 0 = closed for the
-  through road, positive about +z tips them west toward the diverging
-  road (arrives as glTF +y via export_yup, mirrored from the right
-  switch's -0.21);
-- the `switch_lever` node is a chunky signal lever (ground pad + post +
-  pointer arm) on the north-west side, clear of the rail bed and of the
-  locomotive envelope; its arm points north in the neutral pose and the
-  renderer turns the node about its vertical to follow the points — two
-  poses here (0 through / +90 west, the x-mirror of the right switch's
-  pair).
+- the through-road is the kit straight's own sleepers + rails, unmoved
+  (stem south, y=-4, to straight north, y=0);
+- the right-hand road is the kit corner-small flipped onto the
+  south-east quarter-arc exactly like blender-switch.py (both x and y
+  flipped; ends at the south edge midpoint (0,-4) and the east edge
+  midpoint (2,-2));
+- the left-hand road is the same corner-small flipped y-only onto the
+  south-west quarter-arc exactly like blender-switch-mirror.py (ends at
+  the south edge midpoint (0,-4) and the west edge midpoint (-2,-2));
+- the point blades keep the SAME named `switch_blades` node contract as
+  the Y switches: 0 = closed for the through road, -0.21 about +z tips
+  them east toward the right-hand road, +0.21 tips them west toward the
+  left-hand road (arrives as glTF +y via export_yup);
+- the new `switch_lever` node is a chunky signal lever (ground pad +
+  post + pointer arm) on the north-west side, clear of the rail bed and
+  of the locomotive envelope: its arm
+  points north (toward y=0) in the neutral pose, and the renderer turns
+  the node about its vertical (authored about +z, arriving as glTF +y)
+  to point at whichever road the points are set for — two poses on the
+  Y switches, three here.
 
 No ballast base: bare sleepers + rails on the meadow mat, like the kit.
 
 Usage headless:
 
-    blender --background --python scripts/blender-switch-mirror.py
+    blender --background --python scripts/blender-switch-3way.py
 
 Coordinate convention (matches the straight kit / KIT_ANCHORS in
 track-renderer.ts): Blender y -4..0 becomes glTF z 0..4 after export_yup;
-world north (grid -z) is Blender y = 0, west is -x.
+world north (grid -z) is Blender y = 0, east is +x. The ride plane is
+0.1 above the model origin's ground line, so the renderer's KIT_ANCHOR
+[0, -1, 2] lands the rails exactly where the kit straight's sit.
 """
 
 import bmesh
@@ -49,8 +54,8 @@ STRAIGHT_GLB = KIT_DIR + "/railroad-straight.glb"
 CORNER_GLB = KIT_DIR + "/railroad-corner-small.glb"
 
 # Point blades: two thin bars hinged at the heel just north of the south
-# edge, tips reaching toward the south edge where both roads meet.
-# Symmetric about x = 0, so identical to the right switch.
+# edge, tips reaching toward the south edge where all three roads meet.
+# Symmetric about x = 0, so identical to both Y switches.
 BLADE_HEEL = (0.0, -3.62, -0.95)  # the switch_blades node origin
 BLADE_HALF_LEN = 0.26
 BLADE_HALF_W = 0.035
@@ -59,11 +64,12 @@ BLADE_OFFSET_X = 0.16  # the pair straddles the through road's rails
 BLADE_Y_OFFSET = -0.08  # bars span y [-0.34, +0.18] local: toe near the edge
 BLADE_RISE = 0.06  # blade tops ride just proud of the rail crowns
 
-# Signal lever (shared contract with the three-way recipe): a wooden base
-# pad + post with a steel arm + knob, rooted on the north-west side. The
-# pivot clears the through road's bed (|x| <= 0.5) and the locomotive
-# envelope (2.3 wide at ride scale => |x| <= ~1.23 asset units) even with
-# the arm swung west; the pad keeps it planted in the grass.
+# Signal lever: a wooden base pad + post with a steel arm + knob, rooted
+# on the north-west side. The pivot clears the through road's bed
+# (|x| <= 0.5) and the locomotive envelope (2.3 wide at ride scale =>
+# |x| <= ~1.23 asset units) even with the arm swung east; the arm reads
+# as a pointer at tablet distance (0.36 long with a chunky knob), and
+# the pad keeps it planted instead of floating in the grass.
 LEVER_PIVOT = (-1.78, -0.5, -1.0)  # the switch_lever node origin (ground)
 LEVER_PAD_W = 0.44  # ground pad: a planted footprint under the post
 LEVER_PAD_H = 0.12
@@ -76,7 +82,7 @@ LEVER_KNOB = 0.2
 
 MATERIALS = {
     "switch_steel": (0.53, 0.56, 0.62, 1.0),  # rail steel, slightly blue
-    "lever_wood": (0.52, 0.38, 0.26, 1.0),  # sleeper brown for the lever
+    "lever_wood": (0.52, 0.38, 0.26, 1.0),  # sleeper brown for the post
 }
 
 
@@ -127,27 +133,37 @@ def _through_road(coll):
     return _mesh_object(coll, me, "switch_through")
 
 
-def _diverge_road(coll):
-    """The kit corner-small's own sleepers + rails, flipped from its native
-    north-west quarter-arc (pivot the NW corner at (-2, 0)) onto the
+def _diverge_east_road(coll):
+    """The kit corner-small's own sleepers + rails, rotated from its native
+    north-west quarter-arc onto the south-east quarter-arc (pivot the SE
+    corner at (2, -4)): a 180 degree turn about the cell centre (0, -2).
+    Ends land on the south edge midpoint (0, -4) and the east edge
+    midpoint (2, -2) — the exact right switch diverge (blender-switch.py)."""
+    me = _import_kit_mesh(CORNER_GLB, "switch_diverge_east")
+    for v in me.vertices:
+        v.co.x = -v.co.x
+        v.co.y = -4.0 - v.co.y
+    return _mesh_object(coll, me, "switch_diverge_east")
+
+
+def _diverge_west_road(coll):
+    """The kit corner-small's own sleepers + rails flipped onto the
     south-west quarter-arc (pivot the SW corner at (-2, -4)): a vertical
     flip about the cell mid-line y = -2. Ends land on the south edge
     midpoint (0, -4) and the west edge midpoint (-2, -2) — the exact
-    x-mirror of the right switch's diverge (which flips both x and y),
-    so the renderer mount and the solver's corner-style arc transfer
-    unchanged."""
-    me = _import_kit_mesh(CORNER_GLB, "switch_diverge")
+    mirror switch diverge (blender-switch-mirror.py)."""
+    me = _import_kit_mesh(CORNER_GLB, "switch_diverge_west")
     for v in me.vertices:
         v.co.y = -4.0 - v.co.y
-    return _mesh_object(coll, me, "switch_diverge")
+    return _mesh_object(coll, me, "switch_diverge_west")
 
 
 def _blades(coll):
     """The point blades: a named node the renderer flips toward the chosen
     road. An empty at the heel, carrying two thin steel bars pointing
     north (toward the toe at the south edge of the roads). Symmetric, so
-    shared verbatim with the right switch — only the flip angle differs
-    (+0.21 tips the pair west)."""
+    shared verbatim with both Y switches — 0 closed, -0.21 tips the pair
+    east, +0.21 west."""
     root = bpy.data.objects.new("switch_blades", None)
     root.empty_display_size = 0.2
     root.location = BLADE_HEEL
@@ -225,7 +241,7 @@ def _lever(coll):
 
 
 def _switch_collection():
-    old = bpy.data.collections.get("SwitchMirror")
+    old = bpy.data.collections.get("Switch3Way")
     if old:
         for ob in list(old.objects):
             data = ob.data
@@ -233,19 +249,20 @@ def _switch_collection():
             if data and data.users == 0:
                 bpy.data.meshes.remove(data)
         bpy.data.collections.remove(old)
-    coll = bpy.data.collections.new("SwitchMirror")
+    coll = bpy.data.collections.new("Switch3Way")
     bpy.context.scene.collection.children.link(coll)
     return coll
 
 
-def build_switch():
-    """Recreate the mirror-switch piece from scratch. Safe to re-run."""
+def build_switch_3way():
+    """Recreate the three-way switch piece from scratch. Safe to re-run."""
     coll = _switch_collection()
     _through_road(coll)
-    _diverge_road(coll)
+    _diverge_east_road(coll)
+    _diverge_west_road(coll)
     _blades(coll)
     _lever(coll)
-    print("built: switch_through, switch_diverge, switch_blades, switch_lever (mirror)")
+    print("built: switch_through, switch_diverge_east, switch_diverge_west, switch_blades, switch_lever")
 
 
 def _setup_check_env():
@@ -259,9 +276,9 @@ def _setup_check_env():
             bpy.data.objects.remove(ob, do_unlink=True)
             if isinstance(data, bpy.types.Mesh) and data.users == 0:
                 bpy.data.meshes.remove(data)
-    cam = bpy.data.objects.get("SwitchMirrorCheckCam")
+    cam = bpy.data.objects.get("Switch3WayCheckCam")
     if cam is None:
-        cam = bpy.data.objects.new("SwitchMirrorCheckCam", bpy.data.cameras.new("SwitchMirrorCheckCam"))
+        cam = bpy.data.objects.new("Switch3WayCheckCam", bpy.data.cameras.new("Switch3WayCheckCam"))
         bpy.context.collection.objects.link(cam)
     sun = bpy.data.objects.get("check_sun")
     if sun is None:
@@ -290,22 +307,33 @@ def _setup_check_env():
 
 
 def render_checks():
-    """Top, three-quarter, and a diverge-set fit view per the house rules."""
+    """Top, quarter, and both diverge-set fit views per the house rules."""
     import os
     import tempfile
 
     from mathutils import Vector
 
     cam = _setup_check_env()
-    coll = bpy.data.collections.get("SwitchMirror")
+    coll = bpy.data.collections.get("Switch3Way")
     scene = bpy.context.scene
     scene.camera = cam
 
-    def shoot(fname, loc, target, lens, blade_angle=0.0, loco=None, loco_at=None):
-        root = coll.objects["switch_blades"]
-        root.rotation_euler = (0.0, 0.0, blade_angle)
+    def shoot(
+        fname,
+        loc,
+        target,
+        lens,
+        blade_angle=0.0,
+        lever_angle=0.0,
+        loco=None,
+        loco_at=None,
+        loco_rot=-2.356,
+    ):
+        coll.objects["switch_blades"].rotation_euler = (0.0, 0.0, blade_angle)
+        coll.objects["switch_lever"].rotation_euler = (0.0, 0.0, lever_angle)
         if loco is not None and loco_at is not None:
             loco.location = loco_at
+            loco.rotation_euler = (0.0, 0.0, loco_rot)
             loco.hide_render = False
         cam.location = loc
         cam.data.lens = lens
@@ -319,22 +347,52 @@ def render_checks():
             loco.hide_render = True
 
     loco = _import_loco()
-    shoot("switch_mirror_top.png", (0.0, -2.0, 9.0), (0.0, -2.0, -1.0), 50.0)
-    shoot("switch_mirror_quarter.png", (6.5, -9.0, 4.5), (-0.8, -2.0, -0.6), 45.0)
-    # Blades set for the diverge (positive z rotation points them west),
-    # with the kit locomotive standing mid-way on the diverging road's
-    # arc — the fit check: wheels on the kit rails, nothing clipping the
-    # blades. The arc: pivot (-2, -4), radius 2, mid-arc at 45° ->
-    # (-0.59, -2.59); its tangent there heads (-0.71, +0.71), i.e. the
-    # x-mirror of the right switch's fit pose, rotation z = +135°.
+    # 0 / neutral: through road set, blades closed, arm pointing north.
+    shoot("switch_3way_top.png", (0.0, -2.0, 9.0), (0.0, -2.0, -1.0), 50.0)
+    # East set: blades tip east, arm swung east, seen from the south-west.
     shoot(
-        "switch_mirror_diverge_fit.png",
+        "switch_3way_quarter_east.png",
+        (-5.5, -9.5, 5.5),
+        (0.2, -2.0, -0.6),
+        45.0,
+        blade_angle=-0.21,
+        lever_angle=-1.5708,
+    )
+    # Lever close-up (east pose): the arm should point east, toward the
+    # right-hand road, so the pointer reads at toddler-eye height.
+    shoot(
+        "switch_3way_lever_close.png",
+        (-4.6, -4.2, 0.6),
+        (-1.78, -0.5, -0.55),
+        50.0,
+        blade_angle=-0.21,
+        lever_angle=-1.5708,
+    )
+    # East fit: the kit locomotive mid-way on the east arc, wheels on the
+    # kit rails, nothing clipping the tipped blades (arc pivot (2, -4),
+    # radius 2, mid-arc at 135 deg -> (0.59, -2.59), tangent -135 deg).
+    shoot(
+        "switch_3way_east_fit.png",
+        (-4.0, -7.0, 1.4),
+        (1.2, -2.4, -0.85),
+        40.0,
+        blade_angle=-0.21,
+        lever_angle=-1.5708,
+        loco=loco,
+        loco_at=(0.59, -2.59, -1.0),
+    )
+    # West fit: same checkpoint on the west arc (pivot (-2, -4), mid-arc
+    # at (-0.59, -2.59), tangent +135 deg), blades and arm swung west.
+    shoot(
+        "switch_3way_west_fit.png",
         (4.0, -7.0, 1.4),
         (-1.2, -2.4, -0.85),
         40.0,
         blade_angle=0.21,
+        lever_angle=1.5708,
         loco=loco,
         loco_at=(-0.59, -2.59, -1.0),
+        loco_rot=2.356,
     )
     if loco is not None:
         for ob in list(loco.children_recursive) + [loco]:
@@ -343,7 +401,7 @@ def render_checks():
 
 def _import_loco():
     """The kit locomotive (asset scale x1.6 per tech-stack rule 3) for the
-    fit-check render, parked on the diverging road."""
+    fit-check renders, parked on whichever arc the shot names."""
     before = set(bpy.data.objects)
     try:
         bpy.ops.import_scene.gltf(filepath=KIT_DIR + "/train-locomotive-a.glb")
@@ -352,7 +410,6 @@ def _import_loco():
     roots = [o for o in set(bpy.data.objects) - before if o.parent is None or o.parent not in set(bpy.data.objects) - before]
     root = roots[0]
     root.scale = (1.6, 1.6, 1.6)
-    root.rotation_euler = (0.0, 0.0, 2.356)  # aligned with the diverge tangent
     for ob in set(bpy.data.objects) - before:
         ob.hide_render = True
     return root
@@ -375,20 +432,21 @@ def _export_selected(filepath, names):
     print("exported:", filepath, os.path.getsize(filepath), "bytes")
 
 
-def export_switch():
+def export_switch_3way():
     # Park the control nodes at their authored neutral before export: the
     # last render shot leaves its pose on them, and the shipped GLB must
     # rest at 0 (blades closed, arm pointing north).
-    coll = bpy.data.collections["SwitchMirror"]
+    coll = bpy.data.collections["Switch3Way"]
     for name in ("switch_blades", "switch_lever"):
         node = coll.objects.get(name)
         if node is not None:
             node.rotation_euler = (0.0, 0.0, 0.0)
     _export_selected(
-        f"{KIT_DIR}/switch-mirror.glb",
+        f"{KIT_DIR}/switch-3way.glb",
         {
             "switch_through",
-            "switch_diverge",
+            "switch_diverge_east",
+            "switch_diverge_west",
             "switch_blades",
             "switch_blade_-1",
             "switch_blade_1",
@@ -404,7 +462,7 @@ def verify_glb():
     import os
     import struct
 
-    path = f"{KIT_DIR}/switch-mirror.glb"
+    path = f"{KIT_DIR}/switch-3way.glb"
     with open(path, "rb") as fh:
         data = fh.read()
     chunk_len = struct.unpack_from("<I", data, 12)[0]
@@ -420,7 +478,7 @@ def verify_glb():
 
 
 if __name__ == "__main__":
-    build_switch()
+    build_switch_3way()
     render_checks()
-    export_switch()
+    export_switch_3way()
     verify_glb()

@@ -11,7 +11,13 @@ carrying the kit's actual rail geometry so the look stays Kenney:
 - the point blades are a named `switch_blades` node the renderer flips
   toward whichever road the train will take (spec FR5) — rotating the
   node about +z: 0 = closed for the through road, negative = angled east
-  toward the diverging road.
+  toward the diverging road;
+- the `switch_lever` node is a chunky signal lever (ground pad + post +
+  pointer arm) on the north-west side, clear of the rail bed and of the
+  locomotive envelope; its arm points north in the neutral pose and the
+  renderer turns the node about its vertical to follow the points — two
+  poses here (0 through / -90 east, the same sign convention as the
+  blades).
 
 No ballast base: kit track pieces are bare sleepers + rails resting on
 the meadow mat, and the switch keeps that look (the two roads interlace
@@ -60,8 +66,24 @@ BLADE_OFFSET_X = 0.16  # the pair straddles the through road's rails
 BLADE_Y_OFFSET = -0.08  # bars span y [-0.34, +0.18] local: toe near the edge
 BLADE_RISE = 0.06  # blade tops ride just proud of the rail crowns
 
+# Signal lever (shared contract with the three-way recipe): a wooden base
+# pad + post with a steel arm + knob, rooted on the north-west side. The
+# pivot clears the through road's bed (|x| <= 0.5) and the locomotive
+# envelope (2.3 wide at ride scale => |x| <= ~1.23 asset units) even with
+# the arm swung east; the pad keeps it planted in the grass.
+LEVER_PIVOT = (-1.78, -0.5, -1.0)  # the switch_lever node origin (ground)
+LEVER_PAD_W = 0.44  # ground pad: a planted footprint under the post
+LEVER_PAD_H = 0.12
+LEVER_POST_W = 0.16
+LEVER_POST_H = 0.55  # post top sits at z = -0.33
+LEVER_ARM_LEN = 0.36  # arm spans local y [0.02, 0.38]: points north
+LEVER_ARM_W = 0.12
+LEVER_ARM_H = 0.14  # arm top at z = -0.19
+LEVER_KNOB = 0.2
+
 MATERIALS = {
     "switch_steel": (0.53, 0.56, 0.62, 1.0),  # rail steel, slightly blue
+    "lever_wood": (0.52, 0.38, 0.26, 1.0),  # sleeper brown for the lever
 }
 
 
@@ -152,6 +174,60 @@ def _blades(coll):
     return root
 
 
+def _lever(coll):
+    """The signal lever: a named `switch_lever` node at its ground pivot,
+    carrying a wooden base pad + post and a steel arm + knob. The arm
+    points north (toward y=0) in the neutral pose; the renderer rotates
+    the node about its vertical to point at the chosen road (0 through /
+    -90 east / +90 west in glTF +y terms — same sign convention as the
+    blades)."""
+    root = bpy.data.objects.new("switch_lever", None)
+    root.empty_display_size = 0.2
+    root.location = LEVER_PIVOT
+    coll.objects.link(root)
+
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)  # ground pad
+    for v in bm.verts:
+        v.co.x = v.co.x * LEVER_PAD_W
+        v.co.y = v.co.y * LEVER_PAD_W
+        v.co.z = v.co.z * LEVER_PAD_H + LEVER_PAD_H / 2
+    bmesh.ops.create_cube(bm, size=1.0)  # post on the pad
+    for v in bm.verts[-8:]:
+        v.co.x = v.co.x * LEVER_POST_W
+        v.co.y = v.co.y * LEVER_POST_W
+        v.co.z = v.co.z * LEVER_POST_H + LEVER_PAD_H + LEVER_POST_H / 2
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new("switch_lever_base")
+    bm.to_mesh(me)
+    bm.free()
+    me.materials.append(_material("lever_wood"))
+    base = bpy.data.objects.new("switch_lever_base", me)
+    base.parent = root
+    coll.objects.link(base)
+
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)  # arm
+    for v in bm.verts:
+        v.co.x = v.co.x * LEVER_ARM_W
+        v.co.y = v.co.y * LEVER_ARM_LEN + LEVER_ARM_LEN / 2 + 0.02
+        v.co.z = v.co.z * LEVER_ARM_H + LEVER_PAD_H + LEVER_POST_H + LEVER_ARM_H / 2
+    bmesh.ops.create_cube(bm, size=1.0)  # knob at the tip
+    for v in bm.verts[-8:]:
+        v.co.x = v.co.x * LEVER_KNOB
+        v.co.y = v.co.y * LEVER_KNOB + LEVER_ARM_LEN + 0.04
+        v.co.z = v.co.z * LEVER_KNOB + LEVER_PAD_H + LEVER_POST_H + LEVER_ARM_H / 2
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new("switch_lever_arm")
+    bm.to_mesh(me)
+    bm.free()
+    me.materials.append(_material("switch_steel"))
+    arm = bpy.data.objects.new("switch_lever_arm", me)
+    arm.parent = root
+    coll.objects.link(arm)
+    return root
+
+
 def _switch_collection():
     old = bpy.data.collections.get("Switch")
     if old:
@@ -172,7 +248,8 @@ def build_switch():
     _through_road(coll)
     _diverge_road(coll)
     _blades(coll)
-    print("built: switch_through, switch_diverge, switch_blades")
+    _lever(coll)
+    print("built: switch_through, switch_diverge, switch_blades, switch_lever")
 
 
 def _setup_check_env():
@@ -302,9 +379,26 @@ def _export_selected(filepath, names):
 
 
 def export_switch():
+    # Park the control nodes at their authored neutral before export: the
+    # last render shot leaves its pose on them, and the shipped GLB must
+    # rest at 0 (blades closed, arm pointing north).
+    coll = bpy.data.collections["Switch"]
+    for name in ("switch_blades", "switch_lever"):
+        node = coll.objects.get(name)
+        if node is not None:
+            node.rotation_euler = (0.0, 0.0, 0.0)
     _export_selected(
         f"{KIT_DIR}/switch.glb",
-        {"switch_through", "switch_diverge", "switch_blades", "switch_blade_-1", "switch_blade_1"},
+        {
+            "switch_through",
+            "switch_diverge",
+            "switch_blades",
+            "switch_blade_-1",
+            "switch_blade_1",
+            "switch_lever",
+            "switch_lever_base",
+            "switch_lever_arm",
+        },
     )
 
 

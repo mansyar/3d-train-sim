@@ -20,7 +20,7 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, crossing gate, bridge, tunnel, the hill run, both switches, the bump half-run, and the elevated corner run', () => {
+  it('offers exactly the piece set: straight, corner, crossing, crossing gate, bridge, tunnel, the hill run, all three switches, the bump half-run, and the elevated corner run', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
       'bump-down',
@@ -37,6 +37,7 @@ describe('piece catalog', () => {
       'slope-up',
       'straight',
       'switch',
+      'switch-3way',
       'switch-mirror',
       'tunnel',
     ]);
@@ -61,6 +62,7 @@ describe('piece catalog', () => {
       'hill-half',
       'bump-down',
       'switch',
+      'switch-3way',
       'switch-mirror',
     ];
     for (const type of others) expect(isCornerPiece(type)).toBe(false);
@@ -82,6 +84,7 @@ describe('piece catalog', () => {
       'hill-corner',
       'corner-down',
       'switch',
+      'switch-3way',
       'switch-mirror',
     ];
     for (const type of others) expect(isBumpPiece(type)).toBe(false);
@@ -221,6 +224,24 @@ describe('switch-mirror piece geometry', () => {
   it('gives the mirror exactly three endpoints at every rotation', () => {
     for (const rotation of ALL_ROTATIONS) {
       expect(endpointsFor('switch-mirror', rotation)).toHaveLength(3);
+    }
+  });
+});
+
+describe('switch-3way piece geometry', () => {
+  it('joins all four edges at yaw 0: stem south, straight branch north, diverging branches east and west', () => {
+    expect(endpointsFor('switch-3way', 0)).toEqual(['north', 'east', 'south', 'west']);
+  });
+
+  it('keeps the same four edges at every rotation, canonical order kept', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch-3way', rotation)).toEqual(CANONICAL);
+    }
+  });
+
+  it('gives the three-way switch exactly four endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch-3way', rotation)).toHaveLength(4);
     }
   });
 });

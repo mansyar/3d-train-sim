@@ -103,7 +103,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
 
   const counts: Record<string, number> = {
     rails: 10,
-    adventure: 7,
+    adventure: 8,
     nature: 3,
     town: 7,
     critter: 4,
@@ -119,7 +119,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
     await expect(panel.locator('.piece-slot, .scenery-slot')).toHaveCount(count);
   }
 
-  // The 7-toy Adventure row overflows narrow phones and swipes instead of
+  // The 8-toy Adventure row overflows narrow phones and swipes instead of
   // wrapping; roomy viewports fit it whole.
   await page.locator('.drawer-tab[data-tab="adventure"]').click();
   const adventure = page.locator('.drawer-panel[data-panel="adventure"]');

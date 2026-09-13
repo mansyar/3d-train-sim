@@ -110,6 +110,14 @@ describe('validatePlacement terrain rules (piece type given)', () => {
     expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-mirror')).toBeNull();
   });
 
+  it('rejects the three-way switch on river water — dry-land toy like its siblings', () => {
+    expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'switch-3way')).toBe('water');
+  });
+
+  it('accepts a three-way switch on dry land', () => {
+    expect(validatePlacement([], (land ?? { x: 0, y: 8 }) as Cell, 'switch-3way')).toBeNull();
+  });
+
   it('rejects the crossing gate on river water - a road meets the rail on dry land', () => {
     expect(validatePlacement([], (water ?? { x: 8, y: 8 }) as Cell, 'crossing-gate')).toBe('water');
   });
@@ -279,6 +287,46 @@ describe('endpointEdgesFor — mirror switch', () => {
     expect(connections).toContainEqual(['s', 'n', '2,2|2,3']);
     expect(connections).toContainEqual(['s', 'w', '1,3|2,3']);
     expect(connections).toContainEqual(['s', 'stem', '2,3|2,4']);
+  });
+});
+
+describe('endpointEdgesFor — switch-3way', () => {
+  it('bridges all four cell edges at 0° (stem south, straight north, branches east and west)', () => {
+    expect(endpointEdgesFor(piece('s', 'switch-3way', 2, 3, 0))).toEqual([
+      '2,2|2,3', // north — straight-through branch
+      '2,3|3,3', // east — right diverging branch
+      '2,3|2,4', // south — stem
+      '1,3|2,3', // west — left diverging branch
+    ]);
+  });
+
+  it('is rotation-invariant: the same four boundaries at every rotation', () => {
+    const atZero = endpointEdgesFor(piece('s', 'switch-3way', 2, 3, 0))
+      .slice()
+      .sort();
+    for (const rotation of [90, 180, 270] as const) {
+      expect(
+        endpointEdgesFor(piece('s', 'switch-3way', 2, 3, rotation))
+          .slice()
+          .sort(),
+      ).toEqual(atZero);
+    }
+  });
+
+  it('connects a three-way switch to neighbors on all four sides like any endpoint set', () => {
+    const pieces = [
+      piece('s', 'switch-3way', 2, 3, 0),
+      piece('n', 'straight', 2, 2, 0), // meets the straight-through branch
+      piece('e', 'straight', 3, 3, 90), // meets the right diverging branch
+      piece('stem', 'straight', 2, 4, 0), // meets the stem
+      piece('w', 'straight', 1, 3, 90), // meets the left diverging branch
+    ];
+    const connections = connectionsFor(pieces).map((c) => [c.a, c.b, c.via]);
+    expect(connections).toHaveLength(4);
+    expect(connections).toContainEqual(['s', 'n', '2,2|2,3']);
+    expect(connections).toContainEqual(['s', 'e', '2,3|3,3']);
+    expect(connections).toContainEqual(['s', 'stem', '2,3|2,4']);
+    expect(connections).toContainEqual(['s', 'w', '1,3|2,3']);
   });
 });
 

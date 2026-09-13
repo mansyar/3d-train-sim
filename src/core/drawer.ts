@@ -40,6 +40,7 @@ const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
   'slope-down': 'adventure',
   switch: 'adventure',
   'switch-mirror': 'adventure',
+  'switch-3way': 'adventure',
   tree: 'nature',
   bush: 'nature',
   rock: 'nature',

@@ -539,6 +539,65 @@ describe('mirror switch snapshots — additive piece types', () => {
   });
 });
 
+describe('three-way switch snapshots — additive piece types', () => {
+  const threeWayPiece: PlacedPiece = {
+    id: 'piece-t1',
+    type: 'switch-3way',
+    cell: { x: 3, y: 5 },
+    rotation: 90,
+  };
+
+  it('round-trips a snapshot carrying a three-way switch like any other piece', () => {
+    const snapshot = serializeWorld([threeWayPiece], [], 'steam');
+
+    expect(snapshot.version).toBe(3); // additive types: no version bump
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces: [threeWayPiece],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('restores a persisted pre-three-way v3 snapshot verbatim — old worlds load untouched', () => {
+    const preThreeWay = {
+      version: 3 as const,
+      pieces: [
+        { id: 'piece-1', type: 'straight', cell: { x: 2, y: 3 }, rotation: 0 },
+        { id: 'piece-2', type: 'switch-mirror', cell: { x: 2, y: 4 }, rotation: 0 },
+      ],
+      scenery: [],
+      train: 'diesel' as const,
+    };
+
+    expect(deserializeWorld(preThreeWay)).toEqual({
+      pieces: preThreeWay.pieces,
+      scenery: [],
+      train: 'diesel',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+
+  it('round-trips three-way switches at every rotation', () => {
+    const rotated: PlacedPiece[] = [
+      { id: 'piece-t1', type: 'switch-3way', cell: { x: 1, y: 1 }, rotation: 0 },
+      { id: 'piece-t2', type: 'switch-3way', cell: { x: 2, y: 1 }, rotation: 90 },
+      { id: 'piece-t3', type: 'switch-3way', cell: { x: 3, y: 1 }, rotation: 180 },
+      { id: 'piece-t4', type: 'switch-3way', cell: { x: 4, y: 1 }, rotation: 270 },
+    ];
+
+    expect(deserializeWorld(serializeWorld(rotated, [], 'steam'))).toEqual({
+      pieces: rotated,
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+  });
+});
+
 describe('delivery snapshots — per-station crate counts', () => {
   const station: PlacedScenery = {
     id: 'scenery-1',
