@@ -94,7 +94,7 @@ const SCENERY_SCALES: Record<SceneryKind, number> = {
   windmill: 1.1,
   carousel: 1,
   balloon: 0.9,
-  'music-box': 0.8,
+  'music-box': 1.6,
   pig: 1,
   sheep: 1,
   pug: 1,
