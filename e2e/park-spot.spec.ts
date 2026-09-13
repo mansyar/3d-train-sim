@@ -27,6 +27,13 @@ function cellOf(spot: Spot): { x: number; y: number } {
   };
 }
 
+/** Distance from a spot to a cell's centre — edge midpoints sit half a cell out. */
+function distanceToCell(spot: Spot, cell: { x: number; y: number }): number {
+  const centreX = -HALF_MEADOW + (cell.x + 0.5) * CELL_SIZE;
+  const centreZ = -HALF_MEADOW + (cell.y + 0.5) * CELL_SIZE;
+  return Math.hypot(spot.x - centreX, spot.z - centreZ);
+}
+
 async function waitForParked(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const ready = (window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady;
@@ -66,6 +73,23 @@ async function startRide(page: Page): Promise<void> {
       .__tinyTracksScene;
     return handle?.ridingTrainCount() === 1;
   });
+}
+
+/** Press-and-hold the parent gate until the armed-confirm gallery opens. */
+async function openGallery(page: Page): Promise<void> {
+  const gate = page.locator('.parent-gate');
+  const tray = page.locator('.preset-tray');
+  // Shader-compile jank can delay the arm timer past our release — retry,
+  // exactly like a real finger would hold again (starter-railway spec).
+  for (let attempt = 0; attempt < 3 && !(await tray.isVisible()); attempt++) {
+    const box = await gate.boundingBox();
+    if (!box) throw new Error('parent gate missing');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(2400);
+    await page.mouse.up();
+  }
+  await expect(tray).toBeVisible();
 }
 
 test('fresh boot parks the opener on dry rails of the largest loop', async ({ page }) => {
@@ -131,6 +155,45 @@ test('an empty saved world parks the opener on dry land near the heart', async (
   // just west of the river band — the engine sits at its centre.
   expect(cellOf(spot)).toEqual({ x: 6, y: 7 });
   expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(4);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('every gallery starter parks the opener on its nearest dry rail cell', async ({ page }) => {
+  test.setTimeout(150_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await page.waitForFunction(() =>
+    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
+  );
+  await page.waitForTimeout(1500);
+
+  // The dry cell nearest the meadow heart on each starter's largest loop —
+  // the unit-locked chooser spots, confirmed here boot-to-boot.
+  const starters = [
+    { id: 'station-village', cell: { x: 4, y: 7 } },
+    { id: 'river-crossing', cell: { x: 6, y: 8 } },
+    { id: 'hilltop-junction', cell: { x: 4, y: 7 } },
+  ];
+  for (const starter of starters) {
+    // Swap through the parent gate, then reload so the opener is born from
+    // that starter (parking is boot-time only, per spec FR4).
+    await openGallery(page);
+    await page.locator(`.preset-pick[data-preset="${starter.id}"]`).click();
+    await page.waitForTimeout(2500);
+    await page.reload();
+    await waitForParked(page);
+    // A reload drops the doomed WebGL context; its fetch fallout is known
+    // noise (starter-railway boot pattern) — clear it once boot settles.
+    consoleErrors.length = 0;
+
+    const spot = await readSpot(page, 'parkedSpot');
+    // The engine waits at a rail edge midpoint — half a cell from the centre
+    // of the dry piece cell nearest the heart; never at the river's origin.
+    expect(distanceToCell(spot, starter.cell)).toBeCloseTo(CELL_SIZE / 2, 1);
+    expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(2);
+  }
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
