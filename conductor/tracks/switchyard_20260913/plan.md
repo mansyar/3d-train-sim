@@ -83,7 +83,7 @@
   - Manual: user verified in the running app — the signal lever stands planted beside both Y switches, blades still flip as before, no clipping when trains pass (the 3-way model stays on its placeholder until Phase 3).
   - Result: Phase 2 complete — 2026-09-14.
 
-## Phase 3 — Scene wiring (non-logic; smoke/manual verified)
+## Phase 3 — Scene wiring (non-logic; smoke/manual verified) [checkpoint: 85ab2d7]
 
 - [x] **Task: Renderer mounting + blade/lever tween (`track-renderer.ts`) (d730fda)**
   - Expected behavior: `switch-3way` maps to the real GLB (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`, mount `[0, -1, 2]` like its siblings); `setSwitchRoad` moves **blades and lever together in one tween** — per-type pose tables (2 poses on Y switches, 3 on the 3-way), merges keep the last road, reduced motion snaps, a missing `switch_lever` fails soft (blades animate as today); event-driven, no per-frame cost outside the tween.
@@ -106,7 +106,12 @@
   - Segment locks: through road straight; south-to-east on the SE pivot / south-to-west on the SW pivot (radius half a cell — the kit corner-small arcs); rotated 180° keeps north-to-east / north-to-west on the NE / NW corners and north-to-south straight.
   - Ride locks: the solver-test three-way layout rides 75 s with engine + wagon always on the solved cycle (both branches and every dead-end reversal), reaches beyond all four edges of the piece's cell, and rests at turnarounds; the announcement stream contains all three exits with no consecutive repeats (no chatter).
   - Gates: biome (156 files) + `tsc --noEmit` clean; 723/723 vitest (43 in the file, up from 37).
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+  Verification Report:
+  - Automated: `pnpm exec biome check .` clean (156 files); `pnpm exec tsc --noEmit` clean; `CI=true pnpm test` → 40 files / 723 tests passed; `pnpm exec playwright test e2e/switches.spec.ts e2e/switch-mirror.spec.ts --project=tablet` → 4 passed (no console errors; environmental WebGL shadow-map warnings only).
+  - Manual: in-app dev-check ride (straight + three-way + straight seeded on tablet): the piece mounts its authored GLB flush with its neighbours, the train takes all three roads with wagons following and no clipping, the lever reads planted beside the track; the parked-pose wart surfaced during the check was fixed asset-side (neutral re-export, Phase 2 addendum). User confirmed the checkpoint from the automated evidence (2026-09-14).
+  - Result: Phase 3 complete — 2026-09-14.
 
 ## Phase 4 — E2E, docs & final gates
 
