@@ -177,8 +177,8 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
     4. Zero new files under `public/audio/`; zero network requests.
   - [x] Implement synth + lifecycle (no unit tests — audio trigger code is non-logic
         per workflow; tune data already covered in Phase 1) (b48f0c9)
-  - [ ] Manual listen check + mute/suspend spot checks (rides with the Phase 4
-        wiring — a box cannot wind until the scene module lands)
+  - [ ] Manual listen check + mute/suspend spot checks (wiring landed in
+        0b373ec — awaiting a listen after refresh)
   - Notes:
     - `src/audio/music-box-audio.ts`: lazy AudioContext + master gain (0.5, well
       under the chug's 0.75). Each winding schedules every note on the audio clock
@@ -193,7 +193,7 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
 
 ## Phase 4 — Scene wiring (non-logic; smoke/manual verified)
 
-- [ ] **Task: Music-box life (`src/scene/music-box.ts`)**
+- [x] **Task: Music-box life (`src/scene/music-box.ts`) (0b373ec)**
   - Expected behavior: per-box state machine `resting → winding → resting (cooldown)`;
     while riding, any riding train within ~1.5 cells of a resting box winds it once per
     pass (cooldown = phrase duration + ~2 s); per-box rotation via `pickNextTune`
@@ -202,16 +202,38 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
     motion → no twirl, tune still plays; removal mid-phrase → gentle release; plays
     day and night; allocation-free update; `probe()` dev witness (first box: winding
     flag, melody id, figure turn).
-  - [ ] Implement module (`attach`/`forget`/`update`/`probe`/`dispose`)
-- [ ] **Task: Renderer, snow & frame-loop wiring**
+  - [x] Implement module (`attach`/`forget`/`update`/`probe`/`dispose`)
+  - Notes:
+    - `src/scene/music-box.ts` (`createMusicBoxScene(voice, random?)`): per-box record
+      (`figure`, cell spot, `state`, `timer`, `twirl`, `phrase`, `tune`); a resting box
+      winds when any riding-train spot enters 1.5 cells (squared-distance check, zero
+      allocations), winding lasts the phrase (`melodyDurationSeconds`), then cooldown
+      3 s → resting, so ⏹ mid-tune still finishes the phrase and the figure eases to
+      rest. `pickNextTune` cursor never repeats the previous tune; the figure twirl
+      eases toward 1 while winding (π rad/s), skipped under reduced motion (melody
+      plays on); `detach` mid-phrase calls `phrase.release()`; `dispose` releases every
+      phrase; `probe()` reports the first box (`{state, tune, twirl}`) for e2e.
+- [x] **Task: Renderer, snow & frame-loop wiring (0b373ec)**
   - Expected behavior: `track-renderer.ts` attaches/detaches boxes in `reconcile()`
     (music-box branch beside the delight branch), settles `musicbox_snow_cap` to the
     winter state at template load (asset-race precedent), and joins the shared snow
     gate (the `setDelightSnow` treatment — delight-motion itself untouched);
     `init-scene.ts` pumps `updateMusicBoxes(dt, fleet.crossingSpots())` from the frame
     loop; `SceneHandle` exposes the update + probe for e2e.
-  - [ ] Implement wiring + snow coverage for the new kind
-  - [ ] Verify: no per-frame allocations; dispose chain covers the module; gates green
+  - [x] Implement wiring + snow coverage for the new kind
+  - [x] Verify: no per-frame allocations; dispose chain covers the module; gates green
+  - Notes:
+    - `track-renderer.ts`: module holds `musicBoxVoice` + `musicBox`; reconcile
+      attaches boxes with their cell spot (`cellToWorld`) and detaches on removal;
+      `DELIGHT_CAPS` gains `musicbox_snow_cap`; the template settle branch seats the
+      cap at load (asset-race safety); `setDelightSnow` covers the new kind
+      (delight-motion untouched); handle exposes `updateMusicBox`, `suspendMusicBox`,
+      `resumeMusicBox`, `musicBoxProbe`; dispose chain covers both modules.
+    - `init-scene.ts`: frame loop pumps `tracks.updateMusicBox(dt, fleet.crossingSpots())`
+      (riding trains' spots only) after `updateDelight`; pause/resume suspend the voice
+      with the other audio; `SceneHandle.musicBoxProbe` for Phase 5.
+    - Fix round before commit: `noUncheckedIndexedAccess` melody bound + formatter wrap;
+      then tsc clean, biome clean (151 files), 685 unit tests green.
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 5 — E2E, gates & wrap-up
