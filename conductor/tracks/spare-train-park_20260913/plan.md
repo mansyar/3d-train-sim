@@ -11,7 +11,7 @@ can race world hydration. The fix gates creation on the world's first notify
 (boot hydration), then poses the opener from the hydrated world. No re-parking
 after creation (per spec FR4).
 
-## Phase A — Park-spot chooser (pure core, TDD)
+## Phase A — Park-spot chooser (pure core, TDD) [checkpoint: dae4480]
 
 - [x] Task: Red — lock the chooser's rules with failing tests
   - [x] Define the API in `src/core/park-spot.ts`: `findParkSpot(pieces)` →
@@ -44,7 +44,16 @@ after creation (per spec FR4).
     (6,7). Red confirmed first (`Cannot find module './park-spot'`).
     Coverage 97.29% stmts / 100% lines on the new module. `pnpm check` green:
     biome + tsc + 683/683 vitest. Commit: dae4480.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report: Scope `git diff --name-only 30ec579 HEAD` — new
+    `src/core/park-spot.ts` (logic, covered) + `src/core/park-spot.test.ts` +
+    conductor docs. Automated: `pnpm exec vitest run src/core/park-spot.test.ts`
+    → 7/7 passed; module coverage 97.29% stmts / 100% lines / 100% funcs;
+    `pnpm check` → biome + tsc + 683/683 vitest green. Manual: no user-visible
+    surface yet (pure module; rendering lands in Phase B). Reviewer command:
+    `pnpm exec vitest run src/core/park-spot.test.ts` → expected 7 passed.
+    User confirmation: 2026-09-13 — checkpoint approved.
+  - Notes: Checkpoint commit: dae4480. [checkpoint: dae4480]
 
 ## Phase B — Boot wiring: opener + crate park on the chosen spot
 
