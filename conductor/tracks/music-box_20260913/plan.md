@@ -160,7 +160,7 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
 
-- [~] **Task: Music-box audio module (`src/audio/music-box-audio.ts`)**
+- [x] **Task: Music-box audio module (`src/audio/music-box-audio.ts`) (b48f0c9)**
   - Expected behavior: schedules a tune's notes on the Web Audio clock as soft
     bell-like chimes (fundamental + gentle harmonics, fast softened attack,
     exponential decay, no clipping); master gain capped well under the chug; mute
@@ -177,8 +177,8 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
     4. Zero new files under `public/audio/`; zero network requests.
   - [x] Implement synth + lifecycle (no unit tests — audio trigger code is non-logic
         per workflow; tune data already covered in Phase 1) (b48f0c9)
-  - [ ] Manual listen check + mute/suspend spot checks (wiring landed in
-        0b373ec — awaiting a listen after refresh)
+  - [x] Manual listen check + mute/suspend spot checks (heard in the running app
+        with the wiring; owner confirmed 2026-09-13)
   - Notes:
     - `src/audio/music-box-audio.ts`: lazy AudioContext + master gain (0.5, well
       under the chug's 0.75). Each winding schedules every note on the audio clock
@@ -189,7 +189,23 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
       while muted `play()` still completes silently (the figure will keep
       twirling). Context unlock / suspend / resume / dispose mirror
       `river-babble.ts`; zero assets, zero network.
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md) (b48f0c9)**
+  - Notes:
+    - Delivered `src/audio/music-box-audio.ts` (`b48f0c9`): lazy `AudioContext`,
+      master gain 0.5, soft bell chimes (sine + octave + twelfth, 6 ms attack,
+      0.9–2.4 s decays), one winding at a time, mute/hidden-tab cut instantly
+      (τ 0.02 s, no tails), silent-but-completed windings while muted; lifecycle
+      mirrors `river-babble.ts`; zero new audio assets, zero network.
+    - The listen rode with the Phase 4 wiring (`0b373ec`): the owner heard the
+      gentle chimes and confirmed the mute/suspend spot checks.
+  - Verification Report:
+    - Automated: `tsc --noEmit` clean; `biome check .` clean (151 files); 685/685
+      unit tests (tune data was covered in Phase 1).
+    - Manual (track owner, 2026-09-13): the four melodies play as gentle
+      music-box chimes; mute mid-phrase → immediate silence, no tails; unmute →
+      next winding audible; no stranded audio after tab hide/show.
+    - Result: phase passed.
+  - [checkpoint: b48f0c9]
 
 ## Phase 4 — Scene wiring (non-logic; smoke/manual verified)
 
