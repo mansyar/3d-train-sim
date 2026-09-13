@@ -79,7 +79,17 @@
     - Automated: `verify-glb.py --max-kb 150 --require balloon_basket,balloon_snow_cap` → PASS (80.7 KB, 11 nodes, 10 meshes, 4 materials; extents 0.906 × 1.000 × 0.906). `palette.py --match` → PASS ×4 views (after the gore rebalance).
     - Manual: quarter/top/detail/fit renders reviewed — pinstripe gores crisp, pinwheel crown from above, band and crown collar clean, ropes visibly tied into basket and envelope, beveled basket with binding strip, scale vs loco ×1.6 unchanged, no artifacts. Winter render is identical to quarter by design (snow authored visible in both).
     - Result: GREEN.
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base 452ea64): `scripts/blender-windmill.py` + `public/assets/train-kit/windmill.glb` (20fb096), `scripts/blender-carousel.py` + `public/assets/train-kit/carousel.glb` (0d55dfd), `scripts/blender-balloon.py` + `public/assets/train-kit/balloon.glb` (4b7680e) (+ plan docs).
+    - No logic-bearing files touched — asset recipes and GLBs only; no new unit tests expected (per plan methodology). Existing suite stays green.
+    - Gates: full suite `38 files / 676 tests` green via `CI=true pnpm test`; `biome check .` clean; `tsc --noEmit` clean; `e2e/delight-toys.spec.ts` 4/4 green on tablet + phone (zero console errors, zero external requests).
+    - Per-asset gates: `verify-glb.py` PASS — windmill 66.9 KB / 15 nodes, carousel 114.8 KB / 17 nodes, balloon 80.7 KB / 11 nodes (budget 150 KB each); `palette.py --match` PASS ×4 views per toy; all rendered views reviewed, including close-ups of door/window, horses, and basket rigging.
+    - In-app seating: temporary Playwright check placed all three toys on the meadow and captured clipped screenshots of each (scratch copy in the session temp folder `…\delight-polish\inapp\`) — all seated on the mat, no floating/sinking/clipping; the temp spec was removed after the check. Overview also showed the known opener-train-on-river state (out of scope — sibling track) and the empty-world void beyond the meadow edge (pre-existing on main).
+  - Verification Report:
+    - Automated: full suite green, per-asset `verify-glb` + `palette` gates PASS (details above).
+    - Manual: user accepted Phase 1 at the checkpoint question (2026-09-13) after render + in-app seating review. Final in-app spin-feel/winter/reduced-motion pass remains in the Phase 2 verification task.
+  - [checkpoint: caa7390]
 
 ## Phase 2 — Spin retune, docs & wrap-up (non-logic; smoke verified)
 
