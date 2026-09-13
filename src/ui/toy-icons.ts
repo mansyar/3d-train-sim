@@ -123,6 +123,27 @@ export const SCENERY_ICONS: Record<SceneryKind, string> = {
       <line x1="28" y1="36" x2="29" y2="41" stroke="var(--toy-brown)" stroke-width="2"/>
       <rect x="17" y="41" width="14" height="5" rx="1.5" fill="var(--toy-brown)"/>
     </svg>`,
+  // The music box: a wooden chest with a side crank, a note on the front,
+  // and a tiny figure twirling on the lid.
+  'music-box': `
+    <svg viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="8" y="22" width="32" height="20" rx="3" fill="var(--toy-orange)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <rect x="6" y="16" width="36" height="8" rx="3" fill="var(--toy-cream)"
+            stroke="var(--toy-brown)" stroke-width="3"/>
+      <ellipse cx="20" cy="34" rx="3" ry="2.2" fill="var(--toy-cream)"/>
+      <line x1="23" y1="34" x2="23" y2="27" stroke="var(--toy-cream)"
+            stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="23" y1="27" x2="27" y2="29" stroke="var(--toy-cream)"
+            stroke-width="2.5" stroke-linecap="round"/>
+      <line x1="40" y1="32" x2="45" y2="27" stroke="var(--toy-steel)"
+            stroke-width="3" stroke-linecap="round"/>
+      <circle cx="45" cy="26" r="2.5" fill="var(--toy-steel)"/>
+      <circle cx="24" cy="7.5" r="4.5" fill="var(--toy-green)"
+              stroke="var(--toy-brown)" stroke-width="2.5"/>
+      <rect x="20.5" y="11" width="7" height="5" rx="2" fill="var(--toy-red)"
+            stroke="var(--toy-brown)" stroke-width="2.5"/>
+    </svg>`,
   // A round piggy: orange head, cream snout, perky ears.
   pig: `
     <svg viewBox="0 0 48 48" aria-hidden="true">

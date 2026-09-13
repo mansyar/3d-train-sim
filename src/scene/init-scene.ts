@@ -25,6 +25,7 @@ import { createGround } from './ground';
 import type { Headlight } from './headlight';
 import { createSceneLifecycle } from './lifecycle';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
+import { parkPoseFor } from './park-pose';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
@@ -63,6 +64,10 @@ export interface SceneHandle {
   steamPuffCount(): number;
   /** Debug aid: the filmed (or primary) train's live pace factor. */
   trainPace(): number;
+  /** Debug aid: the opener's resting spot before the first ride, or null. */
+  parkedSpot(): { x: number; z: number } | null;
+  /** Debug aid: the primary (largest) riding train's live spot, or null. */
+  primarySpot(): { x: number; z: number } | null;
   /** The toddler's big toot: the answering train whistles (echoing inside
    *  tunnels) and puffs steam. No-op before a train shows. */
   tootWhistle(): void;
@@ -76,6 +81,8 @@ export interface SceneHandle {
   delightBalloonDrift(): { x: number; z: number; altitude: number } | null;
   /** Debug aid: force the delight toys' winter state (e2e determinism). */
   setDelightSnow(visible: boolean): void;
+  /** Debug aid: the first music box's winding state (e2e determinism). */
+  musicBoxProbe(): { state: string; tune: string | null; twirl: number } | null;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -169,8 +176,22 @@ export function initScene(
   disposables.push(dayAmbience.dispose);
 
   const crate = createPlaceholderCrate();
+  // The loading crate waits where the opening train will appear (spec FR3):
+  // posed from the current world, then re-posed once when the loaded world
+  // arrives. Its spin and first-train retirement are untouched.
+  const poseCrate = (): void => {
+    const pose = parkPoseFor(world.pieces());
+    if (pose) crate.mesh.position.set(pose.x, crate.mesh.position.y, pose.z);
+  };
+  poseCrate();
   scene.add(crate.mesh);
   let spinTarget: Object3D | null = crate.mesh;
+  let crateParked = false;
+  const unsubscribeCrate = world.subscribe(() => {
+    if (crateParked) return; // First notify = the loaded world — park once.
+    crateParked = true;
+    if (spinTarget !== null) poseCrate();
+  });
 
   const rides = createRideController(world);
   // Motion and sound stay married: ride starts → chug starts, always.
@@ -295,6 +316,9 @@ export function initScene(
       // The delight toys keep their charm loop: sails turn, the carousel
       // spins, balloons wander their neighborhood (frozen in reduced motion).
       tracks.updateDelight(dt);
+      // Music boxes wind when a riding train passes within reach — the tune
+      // plays out while the figurine twirls (muted boxes keep twirling).
+      tracks.updateMusicBox(dt, fleet.crossingSpots());
       // The duck drifts the S-curve and wiggles for passing trains; night is
       // bedtime, and a frozen river (snow) parks it on the ice.
       duck.update(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
@@ -316,6 +340,7 @@ export function initScene(
       audio.suspend();
       ambience.suspend();
       babble.suspend();
+      tracks.suspendMusicBox();
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -324,6 +349,7 @@ export function initScene(
       audio.resume();
       ambience.resume();
       babble.resume();
+      tracks.resumeMusicBox();
       startAttractTimer();
     },
   });
@@ -343,6 +369,14 @@ export function initScene(
     // Dev/e2e witness: the filmed (or primary) train's live pace factor —
     // personality × grade, eased. Lets specs prove labor/breeze directly.
     trainPace: () => (filmCamera.filmedRig() ?? fleet.primary())?.motion.pace() ?? 1,
+    // Dev/e2e witness for boot parking: the opener rests on the loaded world
+    // (dry rails of the largest loop) and is adopted from the same point, so
+    // specs compare the parked spot against the primary spot for continuity.
+    parkedSpot: () => fleet.parkedSpot(),
+    primarySpot: () => {
+      const rig = fleet.primary();
+      return rig ? { x: rig.model.position.x, z: rig.model.position.z } : null;
+    },
     tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
       // does; before any ride, the parked opener train answers. Inside a
@@ -360,6 +394,7 @@ export function initScene(
     bellRinging: () => tracks.bellRinging(),
     delightBalloonDrift: () => tracks.delightBalloonDrift(),
     setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
+    musicBoxProbe: () => tracks.musicBoxProbe(),
     filmedAnchor: () => filmCamera.filmedAnchor(),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
@@ -380,6 +415,7 @@ export function initScene(
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeRides();
+      unsubscribeCrate();
       audio.dispose();
       tracks.dispose();
       crate.dispose();

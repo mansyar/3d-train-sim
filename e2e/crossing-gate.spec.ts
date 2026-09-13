@@ -92,6 +92,9 @@ test('the crossing places from the Rails tab and refuses water', async ({ page }
 test('the train approach closes the gates, rings the bell, and the pass lifts them', async ({
   page,
 }) => {
+  // The witnessed waits below allow ~80s, and the post-pass reload needs room
+  // to boot, so the test must outlive them.
+  test.setTimeout(120_000);
   const consoleErrors = watchConsoleErrors(page);
   const requestUrls: string[] = [];
   page.on('request', (request) => requestUrls.push(request.url()));

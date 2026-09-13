@@ -78,7 +78,9 @@ src/
     ride-controls.ts # ▶/⏹ ride toggle + pulse, undo, whistle, 🎥 cycle
     train-picker.ts  # train drawer: locomotive row + wagon workshop row
     parent-gate.ts   # hold-to-confirm gate, starter presets, mute toggle
-  audio/           # Howler wrappers + sfx registry
+  audio/           # Howler wrappers + sfx registry; synthesized Web Audio
+                   #   voices (river babble, weather ambience, music box)
+                   #   need no asset files
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original

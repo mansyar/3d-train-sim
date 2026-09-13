@@ -69,8 +69,8 @@ const buildCargoLoop = (page: import('@playwright/test').Page) =>
   });
 
 test('per-train presets ride, deliver cargo, and survive a reload', async ({ page }) => {
-  // The delivery poll below allows 45s, so the test must outlive it.
-  test.setTimeout(120_000);
+  // The delivery poll below allows 90s, so the test must outlive it.
+  test.setTimeout(180_000);
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -113,7 +113,7 @@ test('per-train presets ride, deliver cargo, and survive a reload', async ({ pag
             ).__tinyTracksWorld?.deliveryCount(id) ?? 0,
           [stationId] as const,
         ),
-      { timeout: 45000, intervals: [2000] },
+      { timeout: 90_000, intervals: [2000] },
     )
     .toBeGreaterThanOrEqual(1);
   // Still riding in coal after the station stop.

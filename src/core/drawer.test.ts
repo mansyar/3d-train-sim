@@ -54,6 +54,7 @@ describe('drawerTabs', () => {
       'windmill',
       'carousel',
       'balloon',
+      'music-box',
     ]);
     expect(byId.get('critter')?.kinds).toEqual(['pig', 'sheep', 'pug', 'frog']);
   });
@@ -105,6 +106,7 @@ describe('tabForKind', () => {
   it('maps each scenery kind to its catalog category tab', () => {
     expect(tabForKind('tree')).toBe('nature');
     expect(tabForKind('station')).toBe('town');
+    expect(tabForKind('music-box')).toBe('town');
     expect(tabForKind('pug')).toBe('critter');
   });
 });
