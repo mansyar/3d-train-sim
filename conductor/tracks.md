@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [spare-train-park_20260913](tracks/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | new |
+| [spare-train-park_20260913](tracks/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | in progress |
 | [release-v0.9.0_20260906](archive/release-v0.9.0_20260906/index.md) | Release v0.9.0 | Chore | done |
 | [scenery-delight_20260905](archive/scenery-delight_20260905/index.md) | Scenery Delight — Three Animated Toys | Feature | done |
 | [readme-onboarding-docs_20260906](archive/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | done |
