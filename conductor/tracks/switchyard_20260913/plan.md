@@ -113,7 +113,7 @@
   - Manual: in-app dev-check ride (straight + three-way + straight seeded on tablet): the piece mounts its authored GLB flush with its neighbours, the train takes all three roads with wagons following and no clipping, the lever reads planted beside the track; the parked-pose wart surfaced during the check was fixed asset-side (neutral re-export, Phase 2 addendum). User confirmed the checkpoint from the automated evidence (2026-09-14).
   - Result: Phase 3 complete — 2026-09-14.
 
-## Phase 4 — E2E, docs & final gates
+## Phase 4 — E2E, docs & final gates [checkpoint: 0444aa1]
 
 - [x] **Task: Playwright smoke (`e2e/switch-3way.spec.ts` + drawer-count ripple) (2e227bb)**
   - Expected behavior: tablet + phone — seed a three-way layout via the dev handle, ride it, witness all three roads taken across passes with blades + lever poses following; reduced-motion snap; reload restores the layout; zero console errors; zero external requests; `switches.spec.ts` / `switch-mirror.spec.ts` stay green. Adventure drawer count 7 → 8 in `e2e/ride-toybox-flow.spec.ts` (+ any other hardcoded counts the new piece touches).
@@ -131,7 +131,18 @@
   - `CHANGELOG.md` — Unreleased/Added entry in the parent voice ("A three-way junction — and a little signal lever on every switch.").
   - `conductor/product.md` — switch roadmap line: three-way + motorized levers marked ✅ shipped (switchyard_20260913, 2026-09-14); the remaining roadmap item is now double-slip pieces only.
   - `conductor/tech-stack.md` — folder tree lists the switchyard trio (`switch.glb` + `switch-mirror.glb` + `switch-3way.glb`) and `blender-switch-3way.py`; the authoring section documents the three-way recipe and the shared `switch_lever` node contract (wooden signal lever, steel arm swung 0 / ∓90° in the same tween as the blades).
-- [~] **Task: Full quality gates + manual verification (`pnpm check`, full Playwright, coverage report, tablet Toddler Test)**
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Full quality gates + manual verification (`pnpm check`, full Playwright, coverage report, tablet Toddler Test) (0444aa1)**
+
+  Notes:
+  - `pnpm check` (biome + `tsc --noEmit` + vitest): clean — biome 157 files, 40 files / 723 tests passed.
+  - Coverage (`CI=true pnpm test -- --coverage`): `switches.ts` 100%, `pieces.ts` 100%, `drawer.ts` 100%, `pathing.ts` 97.7% stmts / 90.5% branch, `track-graph.ts` 96.3%, `save.ts` 91.6% — all logic modules above the 80% bar.
+  - Full Playwright suite (tablet + phone + prod): first run 136 passed / 1 failed — the reload probe raced the async GLB import (probe read null right after `__tinyTracksReady`); hardened with `expect.poll` before asserting the parked pose (0444aa1), after which the full suite passed 137/137 (11.8 m).
+  - Manual: user played the three-way on the family tablet — lever points straight → right → left on successive passes, reload keeps the layout parked at neutral; Toddler Test accepted. Confirmed 2026-09-14.
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+  Verification Report:
+  - Automated: `pnpm check` clean (biome 157 files, tsc, 723/723 vitest); coverage report on target (switches 100%, pathing 97.7/90.5, pieces 100%, drawer 100%, track-graph 96.3%, save 91.6%); full Playwright 137/137 across tablet + phone + prod (11.8 m) after the reload-probe hardening.
+  - Manual: three-way junction + signal levers played on the family tablet — all three roads taken in turn with the lever pointing at the chosen road, no clipping, reload restores the layout parked at neutral; Toddler Test accepted.
+  - Result: Phase 4 complete — 2026-09-14.
 
 ## Notes
