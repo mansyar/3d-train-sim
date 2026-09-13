@@ -76,6 +76,8 @@ export interface SceneHandle {
   delightBalloonDrift(): { x: number; z: number; altitude: number } | null;
   /** Debug aid: force the delight toys' winter state (e2e determinism). */
   setDelightSnow(visible: boolean): void;
+  /** Debug aid: the first music box's winding state (e2e determinism). */
+  musicBoxProbe(): { state: string; tune: string | null; twirl: number } | null;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -295,6 +297,9 @@ export function initScene(
       // The delight toys keep their charm loop: sails turn, the carousel
       // spins, balloons wander their neighborhood (frozen in reduced motion).
       tracks.updateDelight(dt);
+      // Music boxes wind when a riding train passes within reach — the tune
+      // plays out while the figurine twirls (muted boxes keep twirling).
+      tracks.updateMusicBox(dt, fleet.crossingSpots());
       // The duck drifts the S-curve and wiggles for passing trains; night is
       // bedtime, and a frozen river (snow) parks it on the ice.
       duck.update(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
@@ -316,6 +321,7 @@ export function initScene(
       audio.suspend();
       ambience.suspend();
       babble.suspend();
+      tracks.suspendMusicBox();
       clearInterval(attractTimer);
       attractTimer = 0;
       attractClock.notifyActivity(); // Resets the idle timer — no drift on return.
@@ -324,6 +330,7 @@ export function initScene(
       audio.resume();
       ambience.resume();
       babble.resume();
+      tracks.resumeMusicBox();
       startAttractTimer();
     },
   });
@@ -360,6 +367,7 @@ export function initScene(
     bellRinging: () => tracks.bellRinging(),
     delightBalloonDrift: () => tracks.delightBalloonDrift(),
     setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
+    musicBoxProbe: () => tracks.musicBoxProbe(),
     filmedAnchor: () => filmCamera.filmedAnchor(),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
