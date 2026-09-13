@@ -49,6 +49,7 @@ const TAB_FOR_KIND: Record<PieceType | SceneryKind, DrawerTabId> = {
   windmill: 'town',
   carousel: 'town',
   balloon: 'town',
+  'music-box': 'town',
   pig: 'critter',
   sheep: 'critter',
   pug: 'critter',
