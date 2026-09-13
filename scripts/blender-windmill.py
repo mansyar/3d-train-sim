@@ -9,13 +9,19 @@ exactly once in the GLB — renaming any of them is a breaking change):
 - windmill_sails     empty at the hub; the scene spins it about glTF local
                      z (export flips the authored +y hub to -z)
                      (the horizontal hub axis pointing away from the tower
-                     face) ~0.5 rev/s
+                     face) ~0.25 rev/s
 - windmill_snow_cap  white roof cap; scene hides at load, shows when the
                      meadow freezes (tunnel_snow_cap precedent)
 
 Everything else is static dressing: windmill_tower, windmill_cap,
-windmill_door, windmill_window, windmill_blade_0..3 (children of the
-sails node).
+windmill_door, windmill_door_frame, windmill_window, windmill_window_frame,
+windmill_finial_post, windmill_finial_ball, windmill_blade_0..3, and
+windmill_hub (a child of the sails node like the blades).
+
+Polish pass (delight-toys-polish_20260913): smoother shells (higher segment
+counts + smooth shading), chunky lattice-slat sails, framed door/window,
+roof finial, and a per-material finish (roughness) so painted wood reads
+apart. The flat palette is unchanged.
 
 Usage headless:
 
@@ -47,14 +53,22 @@ HUB_Z = GROUND_Z + TOWER_H - 0.18  # hub sits just under the cap
 HUB_Y = -0.44  # sails ride proud of the tower's south face (-y)
 BLADE_LEN = 0.84
 BLADE_HALF_W = 0.09
-BLADE_HALF_T = 0.022
+BLADE_HALF_T = 0.02
+
+# Polish-pass constants (smoother shells, chunky lattice sails).
+TOWER_SEGMENTS = 48
+CAP_SEGMENTS = 48
+SNOW_SEGMENTS = 40
+BLADE_RAIL_HALF_Z = 0.018     # rails ride the outer edges of the old slab
+BLADE_RUNG_XS = (0.16, 0.36, 0.56, 0.74)
+BLADE_RUNG_HALF_X = 0.028
 
 MATERIALS = {
-    "windmill_cream": (0.95, 0.86, 0.68, 1.0),
-    "windmill_red": (0.78, 0.18, 0.1, 1.0),
-    "windmill_orange": (1.0, 0.62, 0.11, 1.0),
-    "windmill_brown": (0.42, 0.26, 0.15, 1.0),
-    "windmill_snow": (0.94, 0.96, 0.93, 1.0),
+    "windmill_cream": ((0.95, 0.86, 0.68, 1.0), 0.95),
+    "windmill_red": ((0.78, 0.18, 0.1, 1.0), 0.8),
+    "windmill_orange": ((1.0, 0.62, 0.11, 1.0), 0.75),
+    "windmill_brown": ((0.42, 0.26, 0.15, 1.0), 0.7),
+    "windmill_snow": ((0.94, 0.96, 0.93, 1.0), 0.9),
 }
 
 
@@ -64,8 +78,9 @@ def _material(name):
         mat = bpy.data.materials.new(name)
         mat.use_nodes = True
         bsdf = next(n for n in mat.node_tree.nodes if n.type == "BSDF_PRINCIPLED")
-        bsdf.inputs["Base Color"].default_value = MATERIALS[name]
-        bsdf.inputs["Roughness"].default_value = 0.9
+        color, roughness = MATERIALS[name]
+        bsdf.inputs["Base Color"].default_value = color
+        bsdf.inputs["Roughness"].default_value = roughness
     mat.use_backface_culling = False
     return mat
 
@@ -87,30 +102,65 @@ def _bm_to_mesh(bm, name):
     return me
 
 
-def _cone(coll, name, material, radius1, radius2, depth, location):
+def _smooth(bm):
+    for face in bm.faces:
+        face.smooth = True
+
+
+def _cone(coll, name, material, radius1, radius2, depth, location,
+          segments=24, smooth=False):
     bm = bmesh.new()
     bmesh.ops.create_cone(
-        bm, cap_ends=True, segments=24,
+        bm, cap_ends=True, segments=segments,
         radius1=radius1, radius2=radius2, depth=depth,
     )
+    if smooth:
+        _smooth(bm)
     me = _bm_to_mesh(bm, name)
     obj = _mesh_object(coll, me, name, material)
     obj.location = location
     return obj
 
 
-def _box(coll, name, material, half, location, rotation=(0.0, 0.0, 0.0)):
+def _box(coll, name, material, half, location, rotation=(0.0, 0.0, 0.0), bevel=0.0):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     for v in bm.verts:
         v.co.x *= half[0] * 2
         v.co.y *= half[1] * 2
         v.co.z *= half[2] * 2
+    if bevel > 0.0:
+        bmesh.ops.bevel(bm, geom=list(bm.edges), offset=bevel, segments=2,
+                        profile=0.5, affect="EDGES", clamp_overlap=True)
     me = _bm_to_mesh(bm, name)
     obj = _mesh_object(coll, me, name, material)
     obj.location = location
     obj.rotation_euler = rotation
     return obj
+
+
+def _sphere(coll, name, material, radius, location,
+            u_segments=24, v_segments=12):
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=u_segments, v_segments=v_segments,
+                              radius=radius)
+    _smooth(bm)
+    me = _bm_to_mesh(bm, name)
+    obj = _mesh_object(coll, me, name, material)
+    obj.location = location
+    return obj
+
+
+def _add_box(bm, center, half):
+    """Append an axis-aligned box to an existing bmesh (blade part helper)."""
+    before = set(bm.faces)
+    bmesh.ops.create_cube(bm, size=1.0)
+    verts = {v for f in bm.faces if f not in before for v in f.verts}
+    for v in verts:
+        v.co.x *= half[0] * 2
+        v.co.y *= half[1] * 2
+        v.co.z *= half[2] * 2
+    bmesh.ops.translate(bm, verts=list(verts), vec=center)
 
 
 def _windmill_collection():
@@ -127,51 +177,84 @@ def _windmill_collection():
     return coll
 
 
+def _lattice_blade(coll, name, sails, index):
+    """One chunky lattice sail: two rails + four cross rungs in a single
+    mesh, so the whole blade turns as one child of windmill_sails. Rails
+    stay parallel (chunky and aliasing-safe at toy distance)."""
+    bm = bmesh.new()
+    rail_center_x = 0.04 + BLADE_LEN / 2
+    for side in (1.0, -1.0):
+        _add_box(bm, (rail_center_x, 0.0, side * (BLADE_HALF_W - BLADE_RAIL_HALF_Z)),
+                 (BLADE_LEN / 2, BLADE_HALF_T, BLADE_RAIL_HALF_Z))
+    for rung_x in BLADE_RUNG_XS:
+        _add_box(bm, (rung_x, 0.0, 0.0),
+                 (BLADE_RUNG_HALF_X, BLADE_HALF_T, BLADE_HALF_W - 0.012))
+    me = _bm_to_mesh(bm, name)
+    me.materials.append(_material("windmill_red"))
+    blade = bpy.data.objects.new(me.name, me)
+    blade.parent = sails
+    blade.rotation_euler = (0.0, index * math.pi / 2, 0.0)
+    coll.objects.link(blade)
+
+
 def build_windmill():
     """Recreate the windmill from scratch. Safe to re-run."""
     coll = _windmill_collection()
 
-    # Cream tower, chunky and tapered, standing on the mat.
+    # Cream tower, chunky and tapered, standing on the mat. Smoother shell:
+    # more segments + smooth faces so the toy reads as turned wood.
     _cone(coll, "windmill_tower", "windmill_cream",
-          TOWER_R0, TOWER_R1, TOWER_H, (0.0, 0.0, GROUND_Z + TOWER_H / 2))
+          TOWER_R0, TOWER_R1, TOWER_H, (0.0, 0.0, GROUND_Z + TOWER_H / 2),
+          segments=TOWER_SEGMENTS, smooth=True)
 
-    # Toy-red cap cone on top.
+    # Toy-red cap cone on top, smoothed to match.
     _cone(coll, "windmill_cap", "windmill_red",
           TOWER_R1 + 0.06, 0.0, CAP_H,
-          (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H / 2))
+          (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H / 2),
+          segments=CAP_SEGMENTS, smooth=True)
 
-    # Brown door and one orange window, both proud of the south face (-y).
-    _box(coll, "windmill_door", "windmill_brown",
-         (0.1, 0.03, 0.17), (0.0, -0.49, GROUND_Z + 0.19))
+    # Roof finial: a short cream post with an orange ball at the peak.
+    _cone(coll, "windmill_finial_post", "windmill_cream",
+          0.022, 0.022, 0.06,
+          (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H + 0.02),
+          segments=16, smooth=True)
+    _sphere(coll, "windmill_finial_ball", "windmill_orange", 0.044,
+            (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H + 0.065),
+            u_segments=20, v_segments=10)
+
+    # Framed door (brown surround, cream panel) and framed window (brown
+    # surround, orange pane), both proud of the south face (-y). The panel
+    # and pane sit slightly proud of their surrounds so they stay visible:
+    # two solid slabs, not a ring with a hole. Light bevels round the edges.
+    _box(coll, "windmill_door_frame", "windmill_brown",
+         (0.115, 0.032, 0.19), (0.0, -0.485, GROUND_Z + 0.2), bevel=0.012)
+    _box(coll, "windmill_door", "windmill_cream",
+         (0.082, 0.033, 0.152), (0.0, -0.492, GROUND_Z + 0.2), bevel=0.008)
+    _box(coll, "windmill_window_frame", "windmill_brown",
+         (0.093, 0.028, 0.093), (0.0, -0.42, GROUND_Z + 1.2), bevel=0.01)
     _box(coll, "windmill_window", "windmill_orange",
-         (0.08, 0.03, 0.08), (0.0, -0.43, GROUND_Z + 1.2))
+         (0.062, 0.03, 0.062), (0.0, -0.428, GROUND_Z + 1.2), bevel=0.006)
 
-    # The sails: a named empty at the hub carrying four chunky blades.
+    # The sails: a named empty at the hub carrying four lattice blades and
+    # an orange hub ball.
     sails = bpy.data.objects.new("windmill_sails", None)
     sails.empty_display_size = 0.15
     sails.location = (0.0, HUB_Y, HUB_Z)
     coll.objects.link(sails)
+    _sphere(coll, "windmill_hub", "windmill_orange", 0.06, (0.02, 0.0, 0.0),
+            u_segments=20, v_segments=10).parent = sails
     for i in range(4):
-        bm = bmesh.new()
-        bmesh.ops.create_cube(bm, size=1.0)
-        for v in bm.verts:
-            v.co.x = v.co.x * BLADE_LEN + BLADE_LEN / 2 + 0.04
-            v.co.y = v.co.y * BLADE_HALF_T * 2
-            v.co.z = v.co.z * BLADE_HALF_W * 2
-        me = _bm_to_mesh(bm, f"windmill_blade_{i}")
-        me.materials.append(_material("windmill_red"))
-        blade = bpy.data.objects.new(me.name, me)
-        blade.parent = sails
-        blade.rotation_euler = (0.0, i * math.pi / 2, 0.0)
-        coll.objects.link(blade)
+        _lattice_blade(coll, f"windmill_blade_{i}", sails, i)
 
     # Winter tell: a snow cap blanket over the roof cone (scene hides it at load).
     _cone(coll, "windmill_snow_cap", "windmill_snow",
           TOWER_R1 + 0.12, 0.04, CAP_H + 0.04,
-          (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H / 2))
+          (0.0, 0.0, GROUND_Z + TOWER_H + CAP_H / 2),
+          segments=SNOW_SEGMENTS, smooth=True)
 
-    print("built: windmill_tower, windmill_cap, windmill_door, windmill_window, "
-          "windmill_sails (+ 4 blades), windmill_snow_cap")
+    print("built: windmill_tower, windmill_cap, windmill_door(+frame), "
+          "windmill_window(+frame), finial post+ball, windmill_sails "
+          "(4 lattice blades + hub), windmill_snow_cap")
 
 
 def _setup_check_env():
@@ -291,9 +374,11 @@ def _export_selected(filepath, names):
 def export_windmill():
     _export_selected(
         f"{KIT_DIR}/windmill.glb",
-        {"windmill_tower", "windmill_cap", "windmill_door", "windmill_window",
-         "windmill_sails", "windmill_blade_0", "windmill_blade_1",
-         "windmill_blade_2", "windmill_blade_3", "windmill_snow_cap"},
+        {"windmill_tower", "windmill_cap", "windmill_door", "windmill_door_frame",
+         "windmill_window", "windmill_window_frame", "windmill_finial_post",
+         "windmill_finial_ball", "windmill_sails", "windmill_blade_0",
+         "windmill_blade_1", "windmill_blade_2", "windmill_blade_3",
+         "windmill_hub", "windmill_snow_cap"},
     )
 
 
