@@ -25,6 +25,7 @@ import { createGround } from './ground';
 import type { Headlight } from './headlight';
 import { createSceneLifecycle } from './lifecycle';
 import { createLights, SHADOW_MAP_SIZE } from './lights';
+import { parkPoseFor } from './park-pose';
 import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
@@ -169,8 +170,22 @@ export function initScene(
   disposables.push(dayAmbience.dispose);
 
   const crate = createPlaceholderCrate();
+  // The loading crate waits where the opening train will appear (spec FR3):
+  // posed from the current world, then re-posed once when the loaded world
+  // arrives. Its spin and first-train retirement are untouched.
+  const poseCrate = (): void => {
+    const pose = parkPoseFor(world.pieces());
+    if (pose) crate.mesh.position.set(pose.x, crate.mesh.position.y, pose.z);
+  };
+  poseCrate();
   scene.add(crate.mesh);
   let spinTarget: Object3D | null = crate.mesh;
+  let crateParked = false;
+  const unsubscribeCrate = world.subscribe(() => {
+    if (crateParked) return; // First notify = the loaded world — park once.
+    crateParked = true;
+    if (spinTarget !== null) poseCrate();
+  });
 
   const rides = createRideController(world);
   // Motion and sound stay married: ride starts → chug starts, always.
@@ -380,6 +395,7 @@ export function initScene(
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeRides();
+      unsubscribeCrate();
       audio.dispose();
       tracks.dispose();
       crate.dispose();
