@@ -2,7 +2,7 @@
   "track_id": "e2e-ci-budgets_20260913",
   "title": "E2E CI Time Budgets — Crossing Gate & Wagon Workshop",
   "type": "bug",
-  "status": "in progress",
+  "status": "done",
   "branch": "track/e2e-ci-budgets_20260913",
   "created": "2026-09-13",
   "updated": "2026-09-13"
