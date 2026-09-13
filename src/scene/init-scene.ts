@@ -83,6 +83,8 @@ export interface SceneHandle {
   setDelightSnow(visible: boolean): void;
   /** Debug aid: the first music box's winding state (e2e determinism). */
   musicBoxProbe(): { state: string; tune: string | null; twirl: number } | null;
+  /** Debug aid: a switch piece's live point-blade + signal-lever angles. */
+  switchPose(pieceId: string): { blade: number; lever: number | null } | null;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
   /** Begin riding the current layout. Refuses an empty meadow. */
@@ -395,6 +397,7 @@ export function initScene(
     delightBalloonDrift: () => tracks.delightBalloonDrift(),
     setDelightSnow: (visible: boolean) => tracks.setDelightSnow(visible),
     musicBoxProbe: () => tracks.musicBoxProbe(),
+    switchPose: (pieceId: string) => tracks.switchPose(pieceId),
     filmedAnchor: () => filmCamera.filmedAnchor(),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);

@@ -338,6 +338,9 @@ export interface TrackRenderer {
   crossingPhases(): string[];
   /** Debug aid: whether the crossing bell edge is ringing right now. */
   bellRinging(): boolean;
+  /** Dev/e2e witness: a switch piece's live point-blade + signal-lever
+   *  angles (null when the piece is missing or has no blades rendered). */
+  switchPose(pieceId: string): { blade: number; lever: number | null } | null;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -1216,6 +1219,15 @@ export function startTrackRenderer(
         .filter((item) => isPiece(item) && item.type === 'crossing-gate')
         .map((item) => crossingMotions.get(item.id)?.phase ?? 'idle'),
     bellRinging: () => crossingBell,
+    // Dev/e2e witness: the rendered switch's live pose — the blades always
+    // exist on an authored switch; a lever-less GLB fails soft to null.
+    switchPose: (pieceId: string) => {
+      const model = rendered.get(pieceId);
+      const blades = model?.getObjectByName('switch_blades');
+      if (!model || !blades) return null;
+      const lever = model.getObjectByName('switch_lever');
+      return { blade: blades.rotation.y, lever: lever ? lever.rotation.y : null };
+    },
     dispose(): void {
       disposed = true;
       unsubscribe();
