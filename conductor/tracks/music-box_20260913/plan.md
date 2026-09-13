@@ -101,18 +101,35 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
 (0.78, 0.18, 0.10), gold (0.85, 0.65, 0.20), snow (0.94, 0.96, 0.93). Render env:
 `view_transform = "Standard"`, sun 2.0 (accepted on delight toys).
 
-- [ ] **Task: Music box recipe (`scripts/blender-music-box.py` →
-      `public/assets/train-kit/music-box.glb`)**
+- [x] **Task: Music box recipe (`scripts/blender-music-box.py` →
+      `public/assets/train-kit/music-box.glb`) (cedd8a5)**
   - Expected behavior: a chunky wooden music box — box body with lid, a little side
     crank, and a figurine on a named spin empty; snow-cap blanket authored visible;
     deterministic re-runnable recipe matching the accepted structure.
-  - [ ] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up,
+  - [x] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up,
         `export_yup=True`, named double-sided Principled materials, REPO from `__file__`
-  - [ ] Headless renders viewed as PNGs: top, quarter, fit-with-loco-at-×1.6, winter —
-        style check vs accepted pieces (user style acceptance)
-  - [ ] `verify-glb.py --require musicbox_figure --require musicbox_snow_cap` passes;
+  - [x] Headless renders viewed as PNGs: top, quarter, fit-with-loco-at-×1.6, winter —
+        style check vs accepted pieces (user style acceptance in phase verification)
+  - [x] `verify-glb.py --require musicbox_figure --require musicbox_snow_cap` passes;
         GLB ≤ ~150 KB; exported to `public/assets/train-kit/`
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+  - Notes:
+    - `scripts/blender-music-box.py` builds: chest body (wood), overhanging cream lid,
+      gold clasp, three-part gold crank, figurine (red dress + cream head + gold hat)
+      parented to the `musicbox_figure` empty at the lid's top centre, and the snow
+      blanket `musicbox_snow_cap` (authored visible; scene hides it outside winter).
+    - Renders (temp PNGs) reviewed over three iterations; fixes learned and applied:
+      (1) imported occupant floated: kit GLBs sit at z=0 while the mat is z=−1.0 —
+      park with z −0.9; (2) multi-root GLBs (carousel has 5 parentless roots) scatter
+      when only the first root is shifted — move every parentless root; (3) crank
+      thickened for the chunky house style; fit/close/top/winter/lineup shots verified.
+    - Gates: `verify-glb.py --max-kb 150 --require …` → PASS (58.1 KB / 11 nodes /
+      10 meshes / 5 materials); style palette check PASS (accepted palette extracted
+      from the music-box-free lineup render, tolerance 48); rubric — chunky silhouette ✓,
+      warm flat palette matching neighbors ✓, toy scale vs balloon/carousel ✓, reads as
+      a boxed music box ✓ (summer figure shot shows the figurine + crank clearly).
+    - Why: deterministic regenerable recipe; node contract is load-bearing for the
+      scene (`getObjectByName('musicbox_figure')` twirl; snow cap joins the winter gate).
+- [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
 
