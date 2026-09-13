@@ -59,14 +59,26 @@
     - Automated: `verify-glb.py --max-kb 150 --require carousel_spin,carousel_snow_cap` → PASS (114.8 KB, 17 nodes, 16 meshes, 5 materials; extents 1.500 × 1.355 × 1.500). `palette.py --match` → PASS ×4 views.
     - Manual: vision review of the quarter render — three figures, "read as toy horses", no malformations, scalloped white trim present; close-up renders confirm head/ears/saddle/tail and a clean platform rim; fit render vs loco ×1.6 unchanged, no clipping.
     - Result: GREEN.
-- [ ] Task: Balloon polish — classic gores, crisper basket and ropes
+- [x] Task: Balloon polish — classic gores, crisper basket and ropes (4b7680e)
   - Expected behavior: envelope shows classic alternating orange/cream gores (~16 panels, same `balloon_envelope` node); finer sphere; neater equator band + crown ring; crisper basket (rounded edges + rim) and ropes; contracts intact; ≤ 150 KB.
-  - [ ] Baseline: run current recipe once; capture renders; `palette.py --extract`
-  - [ ] Edit `scripts/blender-balloon.py`: per-face gore materials on the envelope, finer sphere, band/crown, basket rim + rounded edges, tidy ropes, material distinction; keep contracts; update export list
-  - [ ] Re-run headless → `public/assets/train-kit/balloon.glb`
-  - [ ] `verify-glb.py --max-kb 150 --require balloon_basket --require balloon_snow_cap` → PASS (record size)
-  - [ ] Render review vs baseline: gores read; smoothness/details; `palette.py --match`; rubric notes
-  - [ ] Commit (recipe + GLB)
+  - [x] Baseline: run current recipe once; capture renders; `palette.py --extract`
+  - [x] Edit `scripts/blender-balloon.py`: per-face gore materials on the envelope, finer sphere, band/crown, basket rim + rounded edges, tidy ropes, material distinction; keep contracts; update export list
+  - [x] Re-run headless → `public/assets/train-kit/balloon.glb`
+  - [x] `verify-glb.py --max-kb 150 --require balloon_basket --require balloon_snow_cap` → PASS (record size)
+  - [x] Render review vs baseline: gores read; smoothness/details; `palette.py --match`; rubric notes
+  - [x] Commit (recipe + GLB)
+  - Notes:
+    - Envelope: 48×20 smooth sphere (z-scale baked into the mesh), cream accent stripes assigned per face by longitude — 16 cream stripes with two orange segments between each (2:1 pattern).
+    - First pass used equal alternating stripes; the palette gate failed because the stripes scattered the orange tones until the extractor's top-8 palette lost the accepted bright orange — the render no longer showed the toy's orange identity. Rebalanced to 2:1 orange:cream; all four views then passed and the toy reads orange-dominant like before. Design tune, not a gate bypass.
+    - Crown: small cream collar (r 0.06, h 0.03) on the apex; sits under the snow cap in winter.
+    - Band: r +0.018, h 0.12, 32-seg smooth. Ropes: 4 angled ropes (r 0.016) from the basket rim (0.13) into the envelope underside (0.19 at local z 0.47), embedded at both ends. Basket: beveled box + cream binding strip across the top edge.
+    - Materials gain the same light roughness distinction as the siblings (cream 0.95, orange 0.75, brown 0.7, snow 0.9).
+    - Learned fix: detail renders via `--python-expr` must exec the recipe into an explicit namespace (`{"__name__": "detail", "__file__": …}`) — a bare `exec(compile(...))` runs the recipe's `__main__` block and dies in the loco import step.
+    - Size 57.2 KB → 80.7 KB (budget 150 KB).
+  - Verification Report:
+    - Automated: `verify-glb.py --max-kb 150 --require balloon_basket,balloon_snow_cap` → PASS (80.7 KB, 11 nodes, 10 meshes, 4 materials; extents 0.906 × 1.000 × 0.906). `palette.py --match` → PASS ×4 views (after the gore rebalance).
+    - Manual: quarter/top/detail/fit renders reviewed — pinstripe gores crisp, pinwheel crown from above, band and crown collar clean, ropes visibly tied into basket and envelope, beveled basket with binding strip, scale vs loco ×1.6 unchanged, no artifacts. Winter render is identical to quarter by design (snow authored visible in both).
+    - Result: GREEN.
 - [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
 
 ## Phase 2 — Spin retune, docs & wrap-up (non-logic; smoke verified)
