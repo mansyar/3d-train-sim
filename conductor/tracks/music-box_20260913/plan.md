@@ -141,7 +141,22 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
       judged half-buried; 1.1 matches the approved lineup proportions). Gates
       re-run: 685 unit tests, biome + tsc clean, 48 e2e (delight-toys/river-life/
       smoke) green.
-- [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md) (0d29f0d)**
+  - Notes:
+    - Recipe + GLB committed `cedd8a5` (58.1 KB; node-contract + palette gates
+      PASS). The in-app peek caught the scenery seating bug (loader never seated
+      kit-convention models; fixed `efb4e3b`) and the box scale settled at 1.1
+      (`e712b9f` → `0d29f0d`).
+    - Full suite: 39 files / 685 tests pass; biome + tsc clean; 48/48 e2e
+      (delight-toys / river-life / smoke) green after the seating fix.
+  - Verification Report:
+    - Automated: `vitest` green; `tsc --noEmit` clean; `biome check .` clean;
+      `verify-glb.py --max-kb 150 --require …` PASS; palette check PASS.
+    - Manual (track owner): music box placed on the meadow in the running app —
+      it now stands (as do balloon, carousel, windmill), and the size reads
+      "looks good now" at scale 1.1. Confirmed 2026-09-13.
+    - Result: phase passed.
+  - [checkpoint: 0d29f0d]
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
 
