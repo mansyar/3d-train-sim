@@ -68,6 +68,17 @@ console assertions:
 3. Repeated trips of the *same* environmental signature across runs is a
    stability bug: extend or tighten the allowlist with evidence.
 
+## Time budgets for real-time choreography
+
+Specs that ride live choreography (gates, cargo deliveries) must set an
+explicit `test.setTimeout(...)` that outlives their own allowed waits —
+Playwright's 30 s default is smaller than the sums those specs permit on a
+busy shared runner. Precedents: `crossing-gate` 120 s (≈80 s of witnessed
+waits plus the reload boot), `wagon-workshop` 180 s with a 90 s delivery
+poll, `delight-toys` 90 s, `music-box` 180 s. Flakes of this class are budget
+bugs, not product bugs — fix the budget, never weaken the assertion.
+(Track `e2e-ci-budgets_20260913`.)
+
 ## Release authority
 
 The **ubuntu e2e run in the release pipeline is the release authority**.
