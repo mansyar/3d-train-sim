@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [e2e-ci-budgets_20260913](tracks/e2e-ci-budgets_20260913/index.md) | E2E CI Time Budgets — Crossing Gate & Wagon Workshop | Bug | new |
 | [spare-train-park_20260913](archive/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | done |
 | [music-box_20260913](archive/music-box_20260913/index.md) | Music Box — Singing Town Toy | Feature | done |
 | [release-v0.9.0_20260906](archive/release-v0.9.0_20260906/index.md) | Release v0.9.0 | Chore | done |
