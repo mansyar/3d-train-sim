@@ -402,6 +402,8 @@ export function startTrackRenderer(
       bladeTweens.delete(item.id);
       crossingParts.delete(item.id);
       crossingMotions.delete(item.id);
+      delight.detach(item.id);
+      musicBox.detach(item.id);
       model = undefined;
     }
     if (!model) {
