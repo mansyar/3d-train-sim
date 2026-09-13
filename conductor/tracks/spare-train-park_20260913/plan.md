@@ -97,16 +97,35 @@ after creation (per spec FR4).
     first notify; the subscription is disposed with the scene. Spin,
     `y = 0.75`, and first-train retirement untouched. The slow-load acceptance
     is verified by the Task 3 probes/e2e/manual pass. Commit: f62e971.
-- [~] Task: Regression proof — probes + e2e + manual + Unreleased note
-  - [ ] Scene probes (`__tinyTracksScene`, DEV): `parkedSpot()` (opener
+- [x] Task: Regression proof — probes + e2e + manual + Unreleased note (527e2c4 + 8c22c8a)
+  - [x] Scene probes (`__tinyTracksScene`, DEV): `parkedSpot()` (opener
         descriptor + x/z while still a spare) and `primarySpot()` (riding
         train position)
-  - [ ] `e2e/park-spot.spec.ts`: default boot → rails + dry; press ▶ →
+  - [x] `e2e/park-spot.spec.ts`: default boot → rails + dry; press ▶ →
         position continuity below threshold; empty-snapshot boot (IndexedDB
         seed) → land + dry (fall back to unit + documented manual if seeding
-        proves brittle)
-  - [ ] Manual: fresh-boot screenshot per starter (swap → reload) + empty
-        world; smooth ▶ roll-on; console clean
-  - [ ] `CHANGELOG.md`: one `### Fixed` line under `## [Unreleased]`
-  - [ ] Gates: full suite (biome + tsc + vitest + Playwright)
+        proves brittle). Strong form kept for the empty world: the store's
+        own reset + autosave + reload — no raw IndexedDB seeding was needed
+  - [x] Manual: fresh-boot screenshot + vision check (train on the west-bank
+        rails, clear of the river); per-starter swaps locked machine-side
+        (gallery → reload, all four starters); ▶ roll-on smooth; console
+        clean
+  - [x] `CHANGELOG.md`: one `### Fixed` line under `## [Unreleased]`
+  - [x] Gates: full suite (biome + tsc + vitest + Playwright)
+  - Notes: Probes: `fleet.parkedSpot()` (x/z of the never-ridden spare) +
+    scene-handle `parkedSpot()`/`primarySpot()` (DEV `__tinyTracksScene`).
+    `e2e/park-spot.spec.ts` (tablet + phone): fresh boot parks at cozy-oval
+    cell (3,7) — dry rails of the largest loop, >4 units from origin, both
+    wagons coupled; ▶ continuity delta < 1 unit; empty saved world (store
+    reset → autosave → reload) parks on dry land cell (6,7); every gallery
+    starter parks on its unit-locked dry cell (station-village (4,7),
+    river-crossing (6,8) — dry beats the nearer bridge (7,8),
+    hilltop-junction (4,7)) via swap → reload. Field evidence: fresh-boot
+    screenshot shows the train on west-bank rails clear of the river
+    (vision-confirmed). Gates: focused spec 8/8; full suite 126 passed + 1
+    tablet smoke boot-readiness timeout (`__tinyTracksReady` wait) — per
+    e2e/README rerun convention `e2e/smoke.spec.ts` reran 40/40 green;
+    logged as environmental, no product investigation owed. `pnpm check`
+    green. CHANGELOG `### Fixed` added under `## [Unreleased]`. Commits:
+    527e2c4 (probes + spec) + 8c22c8a (per-starter lock).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
