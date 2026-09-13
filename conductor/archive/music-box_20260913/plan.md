@@ -325,3 +325,16 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
   - [checkpoint: 7a3d970]
 
 ## Notes
+
+## Phase: Review Fixes
+
+- [x] **Task: Apply review suggestions (365495d)**
+  - Applied: `track-renderer.ts` kind-swap branch now detaches scene appliers
+    (`delight.detach`, `musicBox.detach`) when a whole-world swap reuses an id
+    with a different kind — no stale winding records or phantom tunes (review
+    finding, medium).
+  - Gates after fix: `biome check .` clean (152 files); `tsc --noEmit` clean;
+    685/685 unit tests; `music-box.spec.ts` + `delight-toys.spec.ts` 6/6 e2e
+    (tablet + phone).
+  - Cooldown wording variance noted in review accepted as-is (phrase + 3 s vs
+    "~2 s" doc wording; same behavior class).
