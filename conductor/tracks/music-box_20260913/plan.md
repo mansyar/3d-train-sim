@@ -66,7 +66,20 @@
     - Why: additive catalog growth only — autosave, save validation
       (`isSceneryKind`), one-toy-per-cell, and placement rules all derive from the
       catalogs, so no persistence or world-store code changed.
-- [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md) (1c49a7e)**
+  - Notes:
+    - Changed logic files coverage: `melodies.ts` 100% stmts/branches/funcs/lines,
+      `scenery.ts` 100%, `drawer.ts` 100% stmts (its 50% branch is the pre-existing
+      `?? []` fallback at line 86, untouched here).
+    - Full suite: 39 files / 685 tests pass (`pnpm test`, single-run by design).
+  - Verification Report:
+    - Automated: `vitest` green; `tsc --noEmit` clean; `biome check` clean.
+    - Manual (track owner): dev server run locally; the Town drawer shows the new
+      music-box toy with its chest-crank-figure icon, and it places on a dry cell
+      without errors (the 3D model arrives in Phase 2; until then the cell is
+      simply reserved). Confirmed 2026-09-13.
+    - Result: phase passed.
+  - [checkpoint: 1c49a7e]
 
 ## Phase 2 — Blender authoring (non-logic; render/verify gated)
 
