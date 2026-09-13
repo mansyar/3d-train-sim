@@ -136,9 +136,11 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
       windmill, music box) sank by 1 unit × scale. Kenney/Quaternius kits stand on
       their origin, so they were unaffected — pre-existing bug, not a regression.
       Fixed in-stream: `track-renderer.ts` now measure-seats each scenery template
-      (`Box3.min.y` → `sceneryLift`, `efb4e3b`); music-box scale tuned 0.8 → 1.6
-      after the same peek (`e712b9f`). Gates re-run: 685 unit tests, biome + tsc
-      clean, 48 e2e (delight-toys/river-life/smoke) green.
+      (`Box3.min.y` → `sceneryLift`, `efb4e3b`); music-box scale tuned across the
+      in-app peeks 0.8 → 1.6 → 1.1 (`e712b9f`, `0d29f0d` — 0.8 was only ever
+      judged half-buried; 1.1 matches the approved lineup proportions). Gates
+      re-run: 685 unit tests, biome + tsc clean, 48 e2e (delight-toys/river-life/
+      smoke) green.
 - [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
