@@ -338,3 +338,6 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
     (tablet + phone).
   - Cooldown wording variance noted in review accepted as-is (phrase + 3 s vs
     "~2 s" doc wording; same behavior class).
+  - CI (PR #58) caught a stale hardcoded town-drawer slot count in
+    `e2e/ride-toybox-flow.spec.ts` (6 → 7 with the music box): updated
+    (`593e456`), spec re-run 6/6 locally (tablet + phone).
