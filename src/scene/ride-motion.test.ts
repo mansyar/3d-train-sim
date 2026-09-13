@@ -569,6 +569,54 @@ describe('segmentForStep — the mirror switch rides its chosen road', () => {
   });
 });
 
+describe('segmentForStep — the three-way switch rides its chosen road', () => {
+  it('rides the through-road (south to north) as a straight line', () => {
+    const segment = segmentForStep(piece('switch-3way', 8, 8), step('south', 'north'));
+
+    expect(segment.kind).toBe('line');
+    expect(segment.length).toBe(CELL_SIZE);
+  });
+
+  it('rides the east branch (south to east) on the SE-pivot quarter-arc', () => {
+    const segment = segmentForStep(piece('switch-3way', 8, 8), step('south', 'east'));
+
+    // The east road is the same kit corner-small arc the right Y switch's
+    // diverge uses: pivot on the cell's south-east corner, radius half a cell.
+    expect(segment.kind).toBe('arc');
+    expect(segment.r).toBeCloseTo(CELL_SIZE / 2);
+    expect(segment.cx).toBeCloseTo(CENTER.x + CELL_SIZE / 2);
+    expect(segment.cz).toBeCloseTo(CENTER.z + CELL_SIZE / 2);
+  });
+
+  it('rides the west branch (south to west) on the SW-pivot quarter-arc', () => {
+    const segment = segmentForStep(piece('switch-3way', 8, 8), step('south', 'west'));
+
+    // The west road mirrors the east: pivot on the south-west corner.
+    expect(segment.kind).toBe('arc');
+    expect(segment.r).toBeCloseTo(CELL_SIZE / 2);
+    expect(segment.cx).toBeCloseTo(CENTER.x - CELL_SIZE / 2);
+    expect(segment.cz).toBeCloseTo(CENTER.z + CELL_SIZE / 2);
+  });
+
+  it('keeps the rotated roads on their own pivots (stem north at rotation 180)', () => {
+    // Rotated 180°, the stem faces north: north-to-east and north-to-west
+    // stay arcs (on the NE and NW corners), north-to-south stays straight.
+    const east = segmentForStep(piece('switch-3way', 8, 8, 180), step('north', 'east'));
+    expect(east.kind).toBe('arc');
+    expect(east.cx).toBeCloseTo(CENTER.x + CELL_SIZE / 2);
+    expect(east.cz).toBeCloseTo(CENTER.z - CELL_SIZE / 2);
+
+    const west = segmentForStep(piece('switch-3way', 8, 8, 180), step('north', 'west'));
+    expect(west.kind).toBe('arc');
+    expect(west.cx).toBeCloseTo(CENTER.x - CELL_SIZE / 2);
+    expect(west.cz).toBeCloseTo(CENTER.z - CELL_SIZE / 2);
+
+    expect(segmentForStep(piece('switch-3way', 8, 8, 180), step('north', 'south')).kind).toBe(
+      'line',
+    );
+  });
+});
+
 describe('createRideMotion — riding the Y layout alternates through the switch', () => {
   /**
    * The solver-test Y: a dead-end line north of the switch, a dead-end line
@@ -735,6 +783,100 @@ describe('createRideMotion — riding the mirrored Y alternates through the mirr
     // never repeating an announcement back to back (no per-frame chatter).
     const exits = roads.map((r) => r.exit);
     expect(exits).toContain('north');
+    expect(exits).toContain('west');
+    for (let i = 1; i < roads.length; i += 1) {
+      const prev = roads[i - 1];
+      const cur = roads[i];
+      if (prev && cur) {
+        expect(cur.exit).not.toBe(prev.exit);
+      }
+    }
+    motion.dispose();
+  });
+});
+
+describe('createRideMotion — riding the three-way layout takes all three roads', () => {
+  /**
+   * The solver-test three-way: a dead-end line north of the piece and a
+   * dead-end line south of its stem. The solver cycles the stem entries
+   * straight -> east -> west, so one ride covers all three roads, with the
+   * east and west branches curving out and dead-ending in the grass.
+   */
+  function threeWayWorld(): { world: WorldStore; state: RideState } {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 1 }, 0)).toBe('placed');
+    expect(world.place('switch-3way', { x: 2, y: 2 }, 0)).toBe('placed');
+    expect(world.place('straight', { x: 2, y: 3 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the three-way layout must solve to one ride component');
+    expect(component.path.closed).toBe(true);
+    return { world, state: { ...component, direction: 1 } };
+  }
+
+  /** The cell-centre of the three-way at (2, 2) — dry land, off the river. */
+  const SW = {
+    x: -GROUND_SIZE / 2 + 2.5 * CELL_SIZE,
+    z: -GROUND_SIZE / 2 + 2.5 * CELL_SIZE,
+  };
+
+  it('stays on the rails through all three roads, reversals included', () => {
+    const { world, state } = threeWayWorld();
+    const run = startRide(world, state, 1);
+    const segments = segmentsFor(world, state);
+    const wagon = run.followers[0];
+    if (!wagon) throw new Error('missing follower wagon');
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minZ = Infinity;
+    let maxZ = -Infinity;
+    let pausedAtRest = false;
+    for (let i = 0; i < 150; i += 1) {
+      run.motion.update(0.5);
+      // Every pose — engine and wagon — sits on the solved cycle, including
+      // across the in-place dead-end reversals.
+      expect(distanceToPath(segments, run.engine.position.x, run.engine.position.z)).toBeLessThan(
+        0.02,
+      );
+      expect(distanceToPath(segments, wagon.position.x, wagon.position.z)).toBeLessThan(0.03);
+      minX = Math.min(minX, run.engine.position.x);
+      maxX = Math.max(maxX, run.engine.position.x);
+      minZ = Math.min(minZ, run.engine.position.z);
+      maxZ = Math.max(maxZ, run.engine.position.z);
+      pausedAtRest = pausedAtRest || run.paused.includes(true);
+    }
+    // The straight rode north of the piece, the stem line south, and both
+    // branches curved out to the east and west edges across the passes.
+    expect(minZ).toBeLessThan(SW.z - CELL_SIZE / 2 + 0.1);
+    expect(maxZ).toBeGreaterThan(SW.z + CELL_SIZE / 2 - 0.1);
+    expect(maxX).toBeGreaterThan(SW.x + CELL_SIZE / 2 - 0.1);
+    expect(minX).toBeLessThan(SW.x - CELL_SIZE / 2 + 0.1);
+    expect(pausedAtRest).toBe(true); // turnarounds rest the train, like dead ends
+    run.motion.dispose();
+  });
+
+  it('announces each chosen road, cycling all three exits without chatter', () => {
+    const { world, state } = threeWayWorld();
+    const engine = new Object3D();
+    const roads: { pieceId: string; exit: Edge }[] = [];
+    const motion = createRideMotion(
+      engine,
+      world,
+      () => state,
+      undefined,
+      undefined,
+      [],
+      undefined,
+      undefined,
+      (pieceId, exit) => roads.push({ pieceId, exit }),
+    );
+    motion.begin(state);
+    for (let i = 0; i < 150; i += 1) motion.update(0.5);
+    // Every road gets announced across the cycle — the stem entry order is
+    // straight -> east -> west — and consecutive announcements never repeat
+    // (no per-frame chatter).
+    const exits = roads.map((r) => r.exit);
+    expect(exits).toContain('north');
+    expect(exits).toContain('east');
     expect(exits).toContain('west');
     for (let i = 1; i < roads.length; i += 1) {
       const prev = roads[i - 1];
