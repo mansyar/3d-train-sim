@@ -93,18 +93,45 @@
 
 ## Phase 2 — Spin retune, docs & wrap-up (non-logic; smoke verified)
 
-- [ ] Task: Halve the windmill and carousel spin rates
+- [x] Task: Halve the windmill and carousel spin rates (df95725)
   - Expected behavior: sails ≈ 0.25 rev/s (≈ 4.0 s/turn), carousel ≈ 0.125 rev/s (≈ 8.0 s/turn); balloon yaw/wander and reduced-motion freeze untouched; comments match reality.
-  - [ ] `src/scene/delight-motion.ts`: `Math.PI` → `Math.PI / 2` (windmill), `Math.PI / 2` → `Math.PI / 4` (carousel); update charm-rate comment; update rev/s references in the three recipe headers
-  - [ ] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` + `CI=true pnpm test`
-  - [ ] Commit
-- [ ] Task: Changelog + full verification
-  - [ ] `CHANGELOG.md` `[Unreleased]`: parent-facing note (smoother toys, calmer spins)
-  - [ ] Full Playwright (tablet + phone), incl. `e2e/delight-toys.spec.ts`; zero console errors; zero external requests
-  - [ ] Manual: place all three toys in `pnpm dev` — seating/ground contact, spin feel (~4 s / ~8 s per turn), winter toggle, reduced-motion freeze; tablet pass if available
-  - [ ] Commit
-- [ ] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - [x] `src/scene/delight-motion.ts`: `Math.PI` → `Math.PI / 2` (windmill), `Math.PI / 2` → `Math.PI / 4` (carousel); update charm-rate comment; update rev/s references in the three recipe headers
+  - [x] `pnpm exec biome check .` + `pnpm exec tsc --noEmit` + `CI=true pnpm test`
+  - [x] Commit
+  - Notes:
+    - Constants: `WINDMILL_SPIN` = `Math.PI / 2` (0.25 rev/s ≈ 4 s/turn), `CAROUSEL_SPIN` = `Math.PI / 4` (0.125 rev/s ≈ 8 s/turn); the charm-rate comment updated to match. Balloon yaw/wander and the reduced-motion early return untouched.
+    - Recipe headers already carried the new rates (`blender-windmill.py` line 12 "~0.25 rev/s", `blender-carousel.py` line 10 "~0.125 rev/s") — written during the Phase 1 polish pass, so no further recipe edits; the balloon header has no rev/s reference (yaw unchanged).
+    - Gates rerun after the change: biome clean, `tsc --noEmit` clean, `CI=true pnpm test` → 38 files / 676 tests green.
+  - Verification Report:
+    - Automated: gates above (spin change is scene glue — no unit tests expected). In-app feel confirmed in the Phase 2 full-Playwright + manual pass.
+    - Result: GREEN.
+- [x] Task: Changelog + full verification (0141f69)
+  - [x] `CHANGELOG.md` `[Unreleased]`: parent-facing note (smoother toys, calmer spins)
+  - [x] Full Playwright (tablet + phone), incl. `e2e/delight-toys.spec.ts`; zero console errors; zero external requests
+  - [x] Manual: place all three toys in `pnpm dev` — seating/ground contact, spin feel (~4 s / ~8 s per turn), winter toggle, reduced-motion freeze; tablet pass if available
+  - [x] Commit
+  - Notes:
+    - `CHANGELOG.md` `[Unreleased]` "Changed" note written parent-facing: smoother toys + calmer spins.
+    - Full Playwright tablet + phone: 120 passed (9.9 min), zero failures; `e2e/delight-toys.spec.ts` 4/4 within it.
+    - Manual: seating/ground contact confirmed in the Phase 1 in-app check; winter toggle covered by e2e; reduced-motion freeze is existing behavior untouched by this track; spin feel confirmed by the user at the checkpoint (2026-09-13) — rates are exact halves (0.25 / 0.125 rev/s).
+    - Changelog commit: 0141f69.
+  - Verification Report:
+    - Automated: full Playwright tablet + phone green (120 tests); existing unit suite green (676).
+    - Manual: user verified the new spin feel at the Phase 2 checkpoint question, 2026-09-13.
+    - Result: GREEN.
+- [x] Task: Phase Verification & Checkpoint (refer to workflow.md)
+  - Notes:
+    - Files changed since previous checkpoint (base caa7390): `src/scene/delight-motion.ts` (df95725), `CHANGELOG.md` (0141f69) (+ plan docs).
+    - No logic-bearing files changed — scene constants + docs only; no new unit tests expected (per plan methodology).
+    - Gates: `CI=true pnpm test` 38 files / 676 tests green; `biome check .` clean; `tsc --noEmit` clean; full Playwright tablet + phone 120 passed (9.9 min) including `e2e/delight-toys.spec.ts`.
+    - Spin retune verified: constants halved (windmill 0.25 rev/s ≈ 4.0 s/turn, carousel 0.125 rev/s ≈ 8.0 s/turn); charm comment + recipe headers consistent.
+  - Verification Report:
+    - Automated: gates above.
+    - Manual: user accepted at the Phase 2 checkpoint (2026-09-13) — renders, in-app seating, and new spin feel reviewed.
+  - [checkpoint: 0141f69]
 
 ## Notes
 
-(empty — filled during implementation)
+- Polish pass shipped: smoother shells for all three toys, lattice-sail windmill, horse-shaped carousel horses with scalloped valance, striped balloon with crisper basket/rigging; spin rates halved (windmill 0.25 rev/s ≈ 4.0 s/turn, carousel 0.125 rev/s ≈ 8.0 s/turn). GLB sizes: windmill 66.9 KB, carousel 114.8 KB, balloon 80.7 KB (budget 150 KB each).
+- Iteration lessons: solid-slab framing hides recessed panels (panels must sit slightly proud); z-fighting comes from exactly coplanar caps (sink one surface); the palette gate needs the toy's dominant color preserved (2:1 orange:cream stripes kept orange extractable); detail renders via `--python-expr` need an explicit namespace so the recipe's `__main__` block does not run; carousel horses collapsed to one node each (dressing names are free; contracts untouched).
+- Track branch: `track/delight-toys-polish_20260913`.
