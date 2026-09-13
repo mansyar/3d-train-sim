@@ -40,14 +40,25 @@
     - Automated: `verify-glb.py --max-kb 150 --require windmill_sails,windmill_snow_cap` → PASS (66.9 KB, 15 nodes, 5 materials; extents 1.38 × 1.90 × 1.00). `palette.py --match` → PASS ×4 views vs accepted baselines (distance 0). GLB 20.5 KB → 66.9 KB (budget 150 KB).
     - Manual: renders reviewed vs baseline — turned-wood tower, trellis sail shadows, framed door/window, finial; fit render (loco ×1.6) unchanged in scale and clipping; no artifacts.
     - Result: GREEN.
-- [ ] Task: Carousel polish — horses that read as horses, scalloped valance, smoother body
+- [x] Task: Carousel polish — horses that read as horses, scalloped valance, smoother body (0d55dfd)
   - Expected behavior: three horses unmistakably read as horses (rounded body, legs, snout + ears, mane, tail — still chunky); scalloped cream valance under the red canopy; smoother platform/rim/column/canopy; poles/knob neatened; contracts intact; ≤ 150 KB (watch — closest to budget).
-  - [ ] Baseline: run current recipe once; capture renders; `palette.py --extract`
-  - [ ] Edit `scripts/blender-carousel.py`: horse rebuild (parts parented to `carousel_spin`), valance parented to spin, surface smoothing, refined saddles, material distinction; keep contracts; update export list
-  - [ ] Re-run headless → `public/assets/train-kit/carousel.glb`
-  - [ ] `verify-glb.py --max-kb 150 --require carousel_spin --require carousel_snow_cap` → PASS (record size)
-  - [ ] Render review vs baseline: horses read; smoothness/details; `palette.py --match`; rubric notes
-  - [ ] Commit (recipe + GLB)
+  - [x] Baseline: run current recipe once; capture renders; `palette.py --extract`
+  - [x] Edit `scripts/blender-carousel.py`: horse rebuild (parts parented to `carousel_spin`), valance parented to spin, surface smoothing, refined saddles, material distinction; keep contracts; update export list
+  - [x] Re-run headless → `public/assets/train-kit/carousel.glb`
+  - [x] `verify-glb.py --max-kb 150 --require carousel_spin --require carousel_snow_cap` → PASS (record size)
+  - [x] Render review vs baseline: horses read; smoothness/details; `palette.py --match`; rubric notes
+  - [x] Commit (recipe + GLB)
+  - Notes:
+    - Horse rebuild: each horse is now ONE mesh (cream + orange slots) — rounded body, four grounded legs, neck, head with muzzle + two ears, orange mane strip, hanging orange tail, rounded orange saddle pad; chunky primitives throughout. The old horse+head+saddle node trio collapsed to one node per horse (dressing names are free; `carousel_spin`/`carousel_snow_cap` contracts untouched).
+    - Valance: one mesh — flared cream band (r 0.64→0.70 at local z 0.72–0.83) plus 12 scallop beads (r 0.045) along the lower edge, parented to the spin group.
+    - Smoothing: base/canopy/snow 40-seg smooth, column/poles/knob smoothed; per-material roughness (steel 0.5, red 0.8, orange 0.75, cream 0.95, snow 0.9).
+    - Z-fighting fix (flagged by the vision review of the quarter render, confirmed in close-up): the base top was exactly coplanar with the rim top — white patches at the platform edge. Base top now 5 mm under the rim top, rim lip 4 mm proud of the base side, column sunk 20 mm, pole + horse feet sunk 5 mm: no coplanar faces left.
+    - Bounded iteration: v1 saddle read as a blocky crate and the tail floated; v2 = rounded pad + tucked tail; v3 = rim z-fight fix. Each round re-rendered and reviewed.
+    - Deviation: horse node structure changed (single mesh per horse). Size went DOWN: 133.4 KB → 114.8 KB despite the added detail (smooth normals share vertices).
+  - Verification Report:
+    - Automated: `verify-glb.py --max-kb 150 --require carousel_spin,carousel_snow_cap` → PASS (114.8 KB, 17 nodes, 16 meshes, 5 materials; extents 1.500 × 1.355 × 1.500). `palette.py --match` → PASS ×4 views.
+    - Manual: vision review of the quarter render — three figures, "read as toy horses", no malformations, scalloped white trim present; close-up renders confirm head/ears/saddle/tail and a clean platform rim; fit render vs loco ×1.6 unchanged, no clipping.
+    - Result: GREEN.
 - [ ] Task: Balloon polish — classic gores, crisper basket and ropes
   - Expected behavior: envelope shows classic alternating orange/cream gores (~16 panels, same `balloon_envelope` node); finer sphere; neater equator band + crown ring; crisper basket (rounded edges + rim) and ropes; contracts intact; ≤ 150 KB.
   - [ ] Baseline: run current recipe once; capture renders; `palette.py --extract`
