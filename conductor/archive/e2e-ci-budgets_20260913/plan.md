@@ -37,9 +37,10 @@
       unit suite unaffected (no `src/` change).
     - CI (this track's acceptance gate): the branch's PR e2e run and the
       post-merge `main` run — the shared runner is the environment that
-      flaked, so the runner is the judge; results recorded in the completion
-      report.
-    - Result: phase passed, pending CI green.
+      flaked, so the runner is the judge.
+      Confirmed 2026-09-13: PR #59 run 34752571607 all three gates green
+      (e2e 15 m 59 s); post-merge `main` run 34753246107 **success**.
+    - Result: phase passed — the flake class is closed on the shared runner.
   - [checkpoint: b2d235f]
 
 ## Notes
