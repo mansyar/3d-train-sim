@@ -1,0 +1,137 @@
+# Plan — Music Box: Singing Town Toy
+
+> Methodology per `conductor/workflow.md`. Logic-bearing tasks (Phase 1) are TDD.
+> Non-logic tasks (asset authoring, audio synth, scene wiring) are verified via
+> render/verify gates, Playwright smoke, and manual verification. Track branch:
+> `track/music-box_20260913`.
+
+## Phase 1 — Pure logic (TDD, `src/core`)
+
+- [ ] **Task: Melody repertoire & rotation (`src/core/melodies.ts`)**
+  - Expected behavior: four public-domain tunes (ABC/Twinkle, Mary Had a Little Lamb,
+    London Bridge, Row Row Row Your Boat) as note tables (`{ midi, beats }`); each
+    signature phrase plays ~8–12 s at a gentle music-box tempo (~100 BPM);
+    `pickNextTune(previous, random)` never returns the immediately previous index and
+    is deterministic with an injected RNG; an exported duration helper feeds the
+    scene cooldown.
+  - [ ] Write failing unit tests in `src/core/melodies.test.ts` first: all four tunes
+        present with incipit note locks (e.g. ABC: 60-60-67-67-69-69-67), phrase
+        durations within 8–12 s, MIDI pitches in a gentle register (C4–C6),
+        `pickNextTune` never repeats the previous index across many seeded draws
+        (mulberry32, the `balloon-wander.test.ts` precedent), seed-deterministic
+  - [ ] Implement `src/core/melodies.ts` (pure — no DOM, no Web Audio)
+  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage >80% on `melodies.ts`
+- [ ] **Task: Catalog & drawer registration**
+  - Expected behavior: kind `music-box` joins `SCENERY_KINDS`, category `town`, URL
+    `/assets/train-kit/music-box.glb`, toy scale/lift, aria label "Music box", dry-land
+    only (river-invalid, like other land toys); the drawer's town tab gains a chunky
+    inline SVG icon; placement persists via the existing scenery autosave (no new
+    persistence code); old saves without the kind load unchanged.
+  - [ ] Write failing unit tests first in `src/core/scenery.test.ts` /
+        `src/core/drawer.test.ts` (kind present, town grouping, URL, land-only rule,
+        no critter voice)
+  - [ ] Implement catalog entries + `src/ui/toy-icons.ts` icon (icon itself is UI glue
+        — verified by a manual drawer peek)
+  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage maintained
+- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+## Phase 2 — Blender authoring (non-logic; render/verify gated)
+
+**Gate 2.1 — Measurement table (mount: meadow mat, scenery cells are track-free;
+occupant = locomotive standing beside, ride ×1.6):**
+
+| Quantity | Value | Source |
+|---|---|---|
+| Authored unit | 1 unit ≈ 1 meadow cell | skill convention; `SCENERY_SCALES` multipliers |
+| Mat top (authored) | z = −1.0; the box rests on it | kit convention (`GROUND_Z`) |
+| Box footprint | 1 cell; base ≤ ~0.85 wide | spec F1 |
+| Box height (to lid) | ~0.75–0.9; figurine ~0.35 above | keeps the figure readable at tablet distance |
+| Occupant bounding box | locomotive ≈ 2.3 wide × 2.7 tall at ride ×1.6 | skill rule (measure the mount) |
+| Clearance rationale | scenery never carries rail; fit check = locomotive parked beside at ×1.6, reading scale + no visual clipping | delight-toys precedent |
+
+**Node-name contract (greppable, exactly once each):** `musicbox_figure` (the twirling
+figurine assembly), `musicbox_snow_cap` (authored visible; settled to the winter state
+at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy red
+(0.78, 0.18, 0.10), gold (0.85, 0.65, 0.20), snow (0.94, 0.96, 0.93). Render env:
+`view_transform = "Standard"`, sun 2.0 (accepted on delight toys).
+
+- [ ] **Task: Music box recipe (`scripts/blender-music-box.py` →
+      `public/assets/train-kit/music-box.glb`)**
+  - Expected behavior: a chunky wooden music box — box body with lid, a little side
+    crank, and a figurine on a named spin empty; snow-cap blanket authored visible;
+    deterministic re-runnable recipe matching the accepted structure.
+  - [ ] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up,
+        `export_yup=True`, named double-sided Principled materials, REPO from `__file__`
+  - [ ] Headless renders viewed as PNGs: top, quarter, fit-with-loco-at-×1.6, winter —
+        style check vs accepted pieces (user style acceptance)
+  - [ ] `verify-glb.py --require musicbox_figure --require musicbox_snow_cap` passes;
+        GLB ≤ ~150 KB; exported to `public/assets/train-kit/`
+- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
+
+- [ ] **Task: Music-box audio module (`src/audio/music-box-audio.ts`)**
+  - Expected behavior: schedules a tune's notes on the Web Audio clock as soft
+    bell-like chimes (fundamental + gentle harmonics, fast softened attack,
+    exponential decay, no clipping); master gain capped well under the chug; mute
+    instant and total via `audio.subscribe`; context created lazily on first
+    pointerdown (autoplay unlock — the `river-babble.ts` lifecycle:
+    `suspend()`/`resume()`/`dispose()`, silent-but-playable fallback); `release()`
+    gently silences an in-flight phrase when a box is removed.
+  - Acceptance criteria (observable):
+    1. Each of the four melodies plays as recognizable, gentle music-box chimes — no
+       clicks, no clipping (manual listen on desktop + tablet).
+    2. Mute mid-phrase → silence immediately, no lingering tails; unmute → next
+       winding audible.
+    3. Hide the tab mid-phrase → silence; return → no stranded audio; ride continues.
+    4. Zero new files under `public/audio/`; zero network requests.
+  - [ ] Implement synth + lifecycle (no unit tests — audio trigger code is non-logic
+        per workflow; tune data already covered in Phase 1)
+  - [ ] Manual listen check + mute/suspend spot checks
+- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+## Phase 4 — Scene wiring (non-logic; smoke/manual verified)
+
+- [ ] **Task: Music-box life (`src/scene/music-box.ts`)**
+  - Expected behavior: per-box state machine `resting → winding → resting (cooldown)`;
+    while riding, any riding train within ~1.5 cells of a resting box winds it once per
+    pass (cooldown = phrase duration + ~2 s); per-box rotation via `pickNextTune`
+    (never immediate repeat); `musicbox_figure` twirls while winding with ease-in/out;
+    ⏹ mid-tune → phrase finishes, figure eases to rest; muted → still twirls; reduced
+    motion → no twirl, tune still plays; removal mid-phrase → gentle release; plays
+    day and night; allocation-free update; `probe()` dev witness (first box: winding
+    flag, melody id, figure turn).
+  - [ ] Implement module (`attach`/`forget`/`update`/`probe`/`dispose`)
+- [ ] **Task: Renderer, snow & frame-loop wiring**
+  - Expected behavior: `track-renderer.ts` attaches/detaches boxes in `reconcile()`
+    (music-box branch beside the delight branch), settles `musicbox_snow_cap` to the
+    winter state at template load (asset-race precedent), and joins the shared snow
+    gate (the `setDelightSnow` treatment — delight-motion itself untouched);
+    `init-scene.ts` pumps `updateMusicBoxes(dt, fleet.crossingSpots())` from the frame
+    loop; `SceneHandle` exposes the update + probe for e2e.
+  - [ ] Implement wiring + snow coverage for the new kind
+  - [ ] Verify: no per-frame allocations; dispose chain covers the module; gates green
+- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+## Phase 5 — E2E, gates & wrap-up
+
+- [ ] **Task: Playwright smoke (`e2e/music-box.spec.ts`)**
+  - Expected behavior: on the seeded starter loop (the `starter-railway.spec.ts`
+    flow), place a music box on a dry cell adjacent to the track; start a ride; poll
+    the dev probe until a winding is witnessed (winding = true, melody id present,
+    figure turning), then until it returns to rest; toggle the snow gate both ways;
+    assert zero console errors and zero external requests. Generous timeouts
+    (delight-toys precedent).
+  - [ ] Write spec; run tablet + phone profiles
+- [ ] **Task: Full quality gates + manual verification**
+  - [ ] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test`;
+        coverage >80% on `melodies.ts`
+  - [ ] Manual tablet verification: place, ride, listen (all four tunes across
+        windings), ⏹ wind-down, mute, reduced motion, night, winter, reload
+        persistence
+- [ ] **Task: Docs — product.md shipped-list entry (melodies ✅), tech-stack.md audio
+      note (synthesized music-box voice, zero new assets), CHANGELOG.md
+      `[Unreleased]`, README living-meadow line**
+- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+## Notes
