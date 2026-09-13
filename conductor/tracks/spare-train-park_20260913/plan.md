@@ -2,7 +2,8 @@
 
 Source of truth: `spec.md`. Phase A is logic-bearing (`src/core/`): TDD with
 >80% coverage. Phase B is scene wiring: observable acceptance criteria verified
-by the gates + Playwright + manual verification, no unit tests. Every task ends
+by the gates + Playwright + manual verification (no unit tests, except the seam
+equivalence tests added in Task 1). Every task ends
 with gates + a plan note + a commit (workflow steps 8–11).
 
 Key constraint: the opener is created lazily by `syncRigs` (no rides + no rigs
@@ -57,27 +58,46 @@ after creation (per spec FR4).
 
 ## Phase B — Boot wiring: opener + crate park on the chosen spot
 
-- [ ] Task: World-ready gate + opener pose
-  - [ ] Add the minimal ride-math seam in `ride-motion.ts` (e.g., export
+- [x] Task: World-ready gate + opener pose (4d8263c)
+  - [x] Add the minimal ride-math seam in `ride-motion.ts` (e.g., export
         `stepEntryPose(piece, step)` → `{ x, z, yaw }`, built on
         `segmentForStep` + the internal `segmentPoint` and `MODEL_YAW_OFFSET` —
         no divergent pose math)
-  - [ ] `train-fleet.ts`: pose the opener at creation from
+  - [x] `train-fleet.ts`: pose the opener at creation from
         `findParkSpot(world.pieces())` + the seam, then `parkFollowersBehind`
         (wagons) — same as every resting spare
-  - [ ] World-ready gate: the fleet's `world.subscribe` flips a flag on the
+  - [x] World-ready gate: the fleet's `world.subscribe` flips a flag on the
         first notify and runs one `syncRigs(rides.rides())`, so the opener is
         born from the hydrated world; never re-parked afterwards
-  - [ ] Acceptance: fresh boot → opener on dry rails of the largest loop,
+  - [x] Acceptance: fresh boot → opener on dry rails of the largest loop,
         nearest the heart; ▶ roll-on has no visible pop; empty saved world →
         dry land near the heart
-- [ ] Task: Placeholder crate follows the spot
-  - [ ] `init-scene.ts`: spawn the crate at the park spot from the current
+  - Notes: Seam `stepEntryPose(piece, step)` added to `ride-motion.ts` — the
+    entry-edge point and forward-travel yaw at path fraction 0, computed from
+    the same `segmentForStep` geometry the ride poses from. New
+    `src/scene/park-pose.ts`: `parkPoseFor(pieces)` maps `findParkSpot` to a
+    world pose (`{x, y, z, yaw}`; land spot = nearest dry cell centre, yaw 0;
+    null only if a rails spot cannot be resolved). `train-fleet.ts`:
+    `worldReady` flips on the world's first notify → one
+    `syncRigs(rides.rides())`; the opener branch requires `worldReady` and
+    poses the fresh rig via `parkPoseFor` + `parkFollowersBehind` — born from
+    the loaded world, never re-parked (FR4). Deviation from the plan's
+    "no unit tests": added 2 seam equivalence tests in
+    `ride-motion.test.ts` (parked pose ≡ ride pose at distance 0, straight +
+    corner arc) — the seam is deterministic math and AC3 rests on it.
+    `pnpm check` green: biome + tsc + 685/685 vitest. Commit: 4d8263c.
+- [x] Task: Placeholder crate follows the spot (f62e971)
+  - [x] `init-scene.ts`: spawn the crate at the park spot from the current
         world; re-pose once on the first world notify (keeps `y = 0.75`, spin,
         first-train retirement unchanged)
-  - [ ] Acceptance: slow-load visual shows the crate where the train will
+  - [x] Acceptance: slow-load visual shows the crate where the train will
         appear — never in the river
-- [ ] Task: Regression proof — probes + e2e + manual + Unreleased note
+  - Notes: `init-scene.ts` spawns the crate at `parkPoseFor(world.pieces())`
+    (pre-hydration = nearest dry land) and re-poses it once on the world's
+    first notify; the subscription is disposed with the scene. Spin,
+    `y = 0.75`, and first-train retirement untouched. The slow-load acceptance
+    is verified by the Task 3 probes/e2e/manual pass. Commit: f62e971.
+- [~] Task: Regression proof — probes + e2e + manual + Unreleased note
   - [ ] Scene probes (`__tinyTracksScene`, DEV): `parkedSpot()` (opener
         descriptor + x/z while still a spare) and `primarySpot()` (riding
         train position)
