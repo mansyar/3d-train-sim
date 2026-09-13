@@ -9,6 +9,17 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- **A singing music box for the meadow.** A new town-toy treasure: place the
+  little wooden music box beside the track, and every time the train rolls
+  past, its figurine spins and it chimes a gentle music-box tune. Four
+  familiar nursery melodies take turns — ABC (Twinkle), Mary Had a Little
+  Lamb, London Bridge, and Row Row Row Your Boat — never the same two
+  passes in a row, and the song always finishes gently. It plays softly
+  day and night, wears a snow cap when the meadow freezes over, and goes
+  quiet the moment sound is muted (the figurine keeps twirling). No new
+  downloads — every note plays right in the browser.
+
 ## [0.9.0] - 2026-09-06
 
 ### Added
