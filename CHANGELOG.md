@@ -20,6 +20,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   quiet the moment sound is muted (the figurine keeps twirling). No new
   downloads — every note plays right in the browser.
 
+### Changed
+
+- The windmill, carousel, and hot-air balloon have been polished: rounder, smoother shapes, chunky lattice sails on the windmill, carousel horses that really read as horses, and a striped balloon with neatly tied rigging.
+- The windmill now turns at half its old speed and the carousel spins half as fast - a calmer, easier-to-follow pace for little eyes.
+
 ### Fixed
 - The parked opening train now waits on dry rails near the meadow's heart
   instead of resting in the river, and the loading crate appears in the same
