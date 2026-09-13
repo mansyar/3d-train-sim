@@ -9,6 +9,7 @@ import { disposeObject } from './dispose-object';
 import { attachHeadlight, type Headlight } from './headlight';
 import { loadLocomotive } from './load-locomotive';
 import { loadCrate, loadWagon } from './load-wagons';
+import { parkPoseFor } from './park-pose';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import type { RigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
@@ -100,6 +101,8 @@ export function createTrainFleet({
   // Wagon templates by preset, each pair in slot (pulling) order — clones per rig.
   const wagonTemplates = new Map<WagonPreset, (Object3D | null)[]>();
   let disposed = false;
+  /** Flips on the world's first notify — the loaded world, not the empty store. */
+  let worldReady = false;
   let loadedTrain: TrainKind | null = null;
   let loadedPreset: WagonPreset | null = null;
 
@@ -312,11 +315,22 @@ export function createTrainFleet({
         rig.startNear = null;
       }
     }
-    // Before the first ▶, keep one train parked at the meadow's heart — the
-    // toy the toddler meets on opening (the old single train's resting spot).
-    if (ridesList.length === 0 && rigs.size === 0 && spares.length === 0) {
+    // Before the first ▶, keep one train parked on the largest loop — dry
+    // rails nearest the meadow heart — the toy the toddler meets on opening
+    // (the old single train's resting spot). Gated on `worldReady` so the
+    // opener is born from the loaded world, and posed exactly once: resting
+    // spares are never re-parked (spec FR4).
+    if (worldReady && ridesList.length === 0 && rigs.size === 0 && spares.length === 0) {
       const parked = createRig();
-      if (parked) spares.push(parked);
+      if (parked) {
+        const pose = parkPoseFor(world.pieces());
+        if (pose) {
+          parked.model.position.set(pose.x, pose.y, pose.z);
+          parked.model.rotation.y = pose.yaw;
+          parkFollowersBehind(parked.model, parked.wagons);
+        }
+        spares.push(parked);
+      }
     }
   };
 
@@ -406,6 +420,13 @@ export function createTrainFleet({
   }
 
   const unsubscribeTrain = world.subscribe(() => {
+    // The first notify carries the loaded world (boot hydration or the very
+    // first edit): unlock the opener and sync once so it parks from that
+    // world, never from the empty pre-load store.
+    if (!worldReady) {
+      worldReady = true;
+      syncRigs(rides.rides());
+    }
     const kind = world.train();
     const preset = world.consistFor(kind);
     if (kind === loadedTrain && preset === loadedPreset) return;

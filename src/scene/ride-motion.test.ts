@@ -8,7 +8,7 @@ import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { createWorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
-import { createRideMotion, segmentForStep } from './ride-motion';
+import { createRideMotion, segmentForStep, stepEntryPose } from './ride-motion';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 
@@ -898,6 +898,51 @@ describe('createRideMotion — the bump run pops a soft crest ding, once per vis
     const run = startCrestRide(world, { ...component, direction: 1 });
     ridePauses(run, 1);
     expect(run.crests).toHaveLength(0);
+    run.motion.dispose();
+  });
+});
+
+describe('stepEntryPose — the parked opener starts exactly on the ride path', () => {
+  /** Angular difference wrapped to (-π, π]. */
+  const angleDelta = (a: number, b: number): number => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+
+  it('matches the ride pose at path distance zero for a straight run', () => {
+    const world = createWorldStore();
+    expect(world.place('straight', { x: 2, y: 2 }, 0)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone straight must solve to one ride component');
+    const state: RideState = { ...component, direction: 1 };
+    const run = startRide(world, state, 0);
+    run.motion.update(1e-4); // Poses the engine at (almost exactly) path distance 0.
+    const step = state.path.steps[0];
+    const piece = world.pieces()[0];
+    if (!step || !piece) throw new Error('the lone straight must walk one step');
+    const pose = stepEntryPose(piece, step);
+
+    expect(pose.x).toBeCloseTo(run.engine.position.x, 3);
+    expect(pose.y).toBeCloseTo(run.engine.position.y, 3);
+    expect(pose.z).toBeCloseTo(run.engine.position.z, 3);
+    expect(angleDelta(pose.yaw, run.engine.rotation.y)).toBeCloseTo(0, 2);
+    run.motion.dispose();
+  });
+
+  it('matches the ride pose at path distance zero for a corner arc', () => {
+    const world = createWorldStore();
+    expect(world.place('corner', { x: 2, y: 2 }, 90)).toBe('placed');
+    const component = rideComponentsOf(world.pieces())[0];
+    if (!component) throw new Error('the lone corner must solve to one ride component');
+    const state: RideState = { ...component, direction: 1 };
+    const run = startRide(world, state, 0);
+    run.motion.update(1e-4);
+    const step = state.path.steps[0];
+    const piece = world.pieces()[0];
+    if (!step || !piece) throw new Error('the lone corner must walk one step');
+    const pose = stepEntryPose(piece, step);
+
+    expect(pose.x).toBeCloseTo(run.engine.position.x, 3);
+    expect(pose.y).toBeCloseTo(run.engine.position.y, 3);
+    expect(pose.z).toBeCloseTo(run.engine.position.z, 3);
+    expect(angleDelta(pose.yaw, run.engine.rotation.y)).toBeCloseTo(0, 2);
     run.motion.dispose();
   });
 });
