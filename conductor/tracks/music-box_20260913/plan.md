@@ -250,7 +250,25 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
       with the other audio; `SceneHandle.musicBoxProbe` for Phase 5.
     - Fix round before commit: `noUncheckedIndexedAccess` melody bound + formatter wrap;
       then tsc clean, biome clean (151 files), 685 unit tests green.
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md) (0b373ec)**
+  - Notes:
+    - Delivered `src/scene/music-box.ts` + renderer/init-scene wiring (`0b373ec`):
+      per-box state machine (wind on any riding train within 1.5 cells, phrase-long
+      winding, 3 s cooldown), tune rotation (`pickNextTune`, no immediate repeat),
+      figurine twirl ease (skipped under reduced motion), gentle `release()` on
+      removal, dev probe; snow cap in the shared winter gate; pause/resume audio
+      lifecycle; dispose chain covers both modules.
+    - Manual: the owner rode past boxes in the running app — winding, alternating
+      tunes, twirl, and ⏹ wind-down all behave as specified.
+  - Verification Report:
+    - Automated: `tsc --noEmit` clean; `biome check .` clean (151 files); 685/685
+      unit tests; the fix round is recorded in the task notes (bounds check +
+      formatter).
+    - Manual (track owner, 2026-09-13): boxes wind once per pass with cooldown;
+      tunes never repeat back-to-back; the figure twirls while winding and settles;
+      mute keeps the twirl silent-but-visible; confirmed in-app.
+    - Result: phase passed.
+  - [checkpoint: 0b373ec]
 
 ## Phase 5 — E2E, gates & wrap-up
 
