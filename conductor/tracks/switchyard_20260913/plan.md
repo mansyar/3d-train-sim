@@ -5,7 +5,7 @@
 > render/verify gates, Playwright smoke, and manual verification. Track branch:
 > `track/switchyard_20260913`.
 
-## Phase 1 — Pure logic (TDD, `src/core`)
+## Phase 1 — Pure logic (TDD, `src/core`) [checkpoint: 2673072]
 
 - [x] **Task: `switch-3way` catalog entry (tests first in `pieces.test.ts`, `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`) (304907e)**
   - Expected behavior: `PIECE_TYPES` gains `switch-3way`; `BASE_ENDPOINTS` joins all four edges (stem south, exits north/east/west at yaw 0); endpoints rotate correctly through all four yaws; dry land only (ghost red over water); save round-trip restores it and pre-track snapshots load unchanged (no version bump); drawer maps it to the Adventure tab; `toy-icons.ts` gains its hand-drawn three-road SVG (+ any icon-completeness tests); renderer placeholder maps (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` → straight GLB until Phase 2, the mirror precedent).
@@ -39,7 +39,12 @@
   - Locks: lone three-way exact 6-step cycle (W→S / S→N / N→S / S→E / E→S / S→W — all three roads per lap); stem + straight dead-end topology exact 14-step lap covering straight → right → left; 3-way + Y chain periodic across every branch; determinism under reversed input order.
   - Slice note: the returned walk starts at the first repeated full state (piece|entry|counters), so the chain fixture yields a two-rotation cycle — its test locks the straight/right/left chunk pattern rather than a single rotation.
   - Gates: biome + `tsc --noEmit` clean; 717/717 vitest; coverage — `pathing.ts` 97.7% statements / 90.5% branches, `switches.ts` 100%.
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+  Verification Report:
+  - Automated: `CI=true pnpm test` → 40 files / 717 tests passed; `pnpm exec biome check .` clean (156 files); `pnpm exec tsc --noEmit` clean; coverage — `switches.ts` 100%, `pathing.ts` 97.7% stmts / 90.5% branch, `pieces.ts` / `drawer.ts` 100%, `track-graph.ts` 96.3%, `save.ts` 91.6%.
+  - Manual: not run separately — the user accepted the automated evidence to record the checkpoint (the piece surfaces in the Adventure drawer; scene visuals remain placeholders until Phases 2–3).
+  - Result: Phase 1 complete — 2026-09-14.
 
 ## Phase 2 — Blender assets (non-logic; render/verify gated)
 
@@ -49,7 +54,7 @@
 - Node contract: `switch_blades` on all three GLBs (right −0.21 / mirror +0.21 unchanged; 3-way 0 straight / −0.21 east / +0.21 west); new `switch_lever` exactly once per GLB; its swing authored about Blender +z (arrives as glTF +y — the blades precedent) so the renderer tweens `rotation.y`.
 - Gates: deterministic re-runs; `verify-glb.py` (skill-bundled) + palette check; ≤ ~150 KB per GLB; renders inspected.
 
-- [ ] **Task: Three-way recipe (`scripts/blender-switch-3way.py` → `public/assets/train-kit/switch-3way.glb`)**
+- [~] **Task: Three-way recipe (`scripts/blender-switch-3way.py` → `public/assets/train-kit/switch-3way.glb`)**
   - Expected behavior: kit straight unmoved (through road) + one corner-small arc flipped into each quarter-arc (east like `blender-switch.py`, west like `blender-switch-mirror.py`), plus blades and lever to the contract above.
   - [ ] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up, `export_yup=True`, named double-sided Principled materials, REPO from `__file__`
   - [ ] Renders viewed: top, quarter, fit-with-loco-at-×1.6 (blades at 0 / −0.21 / +0.21; lever poses), style check vs accepted switches
