@@ -98,9 +98,11 @@ const BASE_YAW: Record<PieceType, number> = {
   // straight north, diverge east at yaw 0 (pieces.ts) — the Y reads
   // correctly with no extra base yaw (verified in the render checks).
   // The mirror shares the yaw frame with diverge west; its mirrored GLB
-  // rides the same mount.
+  // rides the same mount. The three-way joins every edge and rides the
+  // straight's frame too — placeholder until its authored GLB lands.
   switch: 0,
   'switch-mirror': 0,
+  'switch-3way': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -163,8 +165,11 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // lands both roads' ends on their edge midpoints flush with neighbours.
   // The mirror shares the mount — its GLB (blender-switch-mirror.py) is
   // authored on the same straight mount with the diverge x-mirrored.
+  // The three-way shares the family's mount too (one corner-small arc per
+  // branch); placeholder until its GLB lands in Phase 2.
   switch: [0, -1, 2],
   'switch-mirror': [0, -1, 2],
+  'switch-3way': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -201,6 +206,9 @@ const PIECE_URLS: Record<PieceType, string> = {
   // same mount, same blades contract, branch peeling west).
   switch: '/assets/train-kit/switch.glb',
   'switch-mirror': '/assets/train-kit/switch-mirror.glb',
+  // Placeholder until the three-way GLB lands (Phase 2 — same straight
+  // module + one corner arc per branch, blades + lever contract).
+  'switch-3way': '/assets/train-kit/railroad-straight.glb',
 };
 
 /**

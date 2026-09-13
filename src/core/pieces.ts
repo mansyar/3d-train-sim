@@ -17,6 +17,7 @@ export const PIECE_TYPES = [
   'corner-down',
   'switch',
   'switch-mirror',
+  'switch-3way',
 ] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
@@ -103,6 +104,11 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   // The mirror Y: stem south, straight north, diverging branch west (left of
   // the through-road). Same alternation as the right switch, mirrored.
   'switch-mirror': ['north', 'west', 'south'],
+  // The three-way junction: one stem south, three roads — straight north and
+  // a diverging branch to each side (east and west at yaw 0). Connectivity
+  // just sees four open ends; routing (the fair straight → right → left
+  // rotation) is the switches module's job.
+  'switch-3way': ['north', 'east', 'south', 'west'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */
