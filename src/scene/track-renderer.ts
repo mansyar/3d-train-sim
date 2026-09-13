@@ -527,6 +527,11 @@ export function startTrackRenderer(
   const BLADE_DIVERGE_Y: Record<SwitchPieceType, number> = {
     switch: -0.21,
     'switch-mirror': 0.21,
+    // Interim east pose until the authored three-way GLB lands (Phase 3
+    // replaces this with the three-pose table: 0 straight / −0.21 east /
+    // +0.21 west). Inert for now: the placeholder piece loads the straight
+    // GLB, which carries no `switch_blades` node, so setSwitchRoad fails soft.
+    'switch-3way': -0.21,
   };
   const BLADE_TWEEN_MS = 180;
   const bladeTweens = new Map<
