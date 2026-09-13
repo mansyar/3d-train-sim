@@ -129,6 +129,16 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
       a boxed music box ✓ (summer figure shot shows the figurine + crank clearly).
     - Why: deterministic regenerable recipe; node contract is load-bearing for the
       scene (`getObjectByName('musicbox_figure')` twirl; snow cap joins the winter gate).
+    - In-app peek (2026-09-13, mid phase verification): the box rendered sunk — only
+      the figurine's hat peeked above the grass. Root cause: the scenery loader
+      scaled/lifted kit-convention models (mat at z=−1) without seating, while track
+      pieces are anchored per type; every Blender-authored toy (balloon, carousel,
+      windmill, music box) sank by 1 unit × scale. Kenney/Quaternius kits stand on
+      their origin, so they were unaffected — pre-existing bug, not a regression.
+      Fixed in-stream: `track-renderer.ts` now measure-seats each scenery template
+      (`Box3.min.y` → `sceneryLift`, `efb4e3b`); music-box scale tuned 0.8 → 1.6
+      after the same peek (`e712b9f`). Gates re-run: 685 unit tests, biome + tsc
+      clean, 48 e2e (delight-toys/river-life/smoke) green.
 - [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
