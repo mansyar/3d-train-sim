@@ -146,3 +146,6 @@
   - Result: Phase 4 complete — 2026-09-14.
 
 ## Notes
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions bc065a9
