@@ -46,7 +46,7 @@
   - Manual: not run separately — the user accepted the automated evidence to record the checkpoint (the piece surfaces in the Adventure drawer; scene visuals remain placeholders until Phases 2–3).
   - Result: Phase 1 complete — 2026-09-14.
 
-## Phase 2 — Blender assets (non-logic; render/verify gated)
+## Phase 2 — Blender assets (non-logic; render/verify gated) [checkpoint: 03022aa]
 
 **Gate 2.1 — authoring contract (mount = the kit straight module; occupant = loco at ride ×1.6):**
 
@@ -74,11 +74,16 @@
   - Both recipes gained the shared `_lever` build (same constants — pad + post + arm, north-west pivot) and their export sets grew to the lever trio; blade geometry, transforms, and the ±0.21 poses are untouched.
   - Gate evidence: `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS both (switch.glb 64,660 B ≈ 63.1 KB; switch-mirror.glb 67,180 B ≈ 65.6 KB; 8 nodes / 4 materials each with `lever_wood` present); palette `--match` vs the pre-lever accepted baselines → PASS at distance 0 on every view (top + quarter each; the lever's wood/steel tones sit inside the accepted palette); double re-runs exported byte-identical sizes for both recipes (deterministic); renders reviewed — the lever stands planted in the north-west grass clear of both roads, loco fit views clean.
   - Pre-lever baselines for the palette gate were captured by re-running both recipes unmodified first (byte-identical re-exports — `git status` proved the shipped GLBs untouched before the re-cut).
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+
+  Verification Report:
+  - Automated: `CI=true pnpm test` → 40 files / 717 tests passed; `pnpm exec biome check .` clean (156 files); `pnpm exec tsc --noEmit` clean; `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS on all three GLBs (3-way 86.5 KB / switch 63.1 KB / mirror 65.6 KB); palette `--match` vs the accepted switch-family baselines → distance 0 on every view; every recipe re-ran byte-identical (deterministic).
+  - Manual: user verified in the running app — the signal lever stands planted beside both Y switches, blades still flip as before, no clipping when trains pass (the 3-way model stays on its placeholder until Phase 3).
+  - Result: Phase 2 complete — 2026-09-14.
 
 ## Phase 3 — Scene wiring (non-logic; smoke/manual verified)
 
-- [ ] **Task: Renderer mounting + blade/lever tween (`track-renderer.ts`)**
+- [~] **Task: Renderer mounting + blade/lever tween (`track-renderer.ts`)**
   - Expected behavior: `switch-3way` maps to the real GLB (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`, mount `[0, -1, 2]` like its siblings); `setSwitchRoad` moves **blades and lever together in one tween** — per-type pose tables (2 poses on Y switches, 3 on the 3-way), merges keep the last road, reduced motion snaps, a missing `switch_lever` fails soft (blades animate as today); event-driven, no per-frame cost outside the tween.
   - [ ] Implement; dev-check each piece's poses in the running app
   - [ ] Verify: no per-frame allocations; dispose chain covers the tween maps
