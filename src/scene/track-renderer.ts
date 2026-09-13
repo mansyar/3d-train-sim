@@ -1084,9 +1084,14 @@ export function startTrackRenderer(
           return;
         }
         gltf.scene.scale.setScalar(CELL_SIZE * sceneryScale(kind));
-        gltf.scene.position.set(0, sceneryLift(kind), 0);
         const model = new Group();
         model.add(gltf.scene);
+        // Kit-authored scenery hangs below its origin (the track kit's mat
+        // sits at z = -1) while the Kenney/Quaternius kits stand on theirs:
+        // measure the model and rest its lowest point at the ground lift, so
+        // every toy stands on the meadow exactly as its recipe intended.
+        const measured = new Box3().setFromObject(gltf.scene);
+        gltf.scene.position.y = sceneryLift(kind) - measured.min.y;
         // Templates cast; every placed clone inherits the flag (shadows.ts).
         enableCastShadows(model);
         if (kind === 'station') {
