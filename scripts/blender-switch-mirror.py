@@ -376,6 +376,14 @@ def _export_selected(filepath, names):
 
 
 def export_switch():
+    # Park the control nodes at their authored neutral before export: the
+    # last render shot leaves its pose on them, and the shipped GLB must
+    # rest at 0 (blades closed, arm pointing north).
+    coll = bpy.data.collections["SwitchMirror"]
+    for name in ("switch_blades", "switch_lever"):
+        node = coll.objects.get(name)
+        if node is not None:
+            node.rotation_euler = (0.0, 0.0, 0.0)
     _export_selected(
         f"{KIT_DIR}/switch-mirror.glb",
         {
