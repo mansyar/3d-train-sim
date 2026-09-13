@@ -115,9 +115,16 @@
 
 ## Phase 4 — E2E, docs & final gates
 
-- [ ] **Task: Playwright smoke (`e2e/switch-3way.spec.ts` + drawer-count ripple)**
+- [x] **Task: Playwright smoke (`e2e/switch-3way.spec.ts` + drawer-count ripple) (2e227bb)**
   - Expected behavior: tablet + phone — seed a three-way layout via the dev handle, ride it, witness all three roads taken across passes with blades + lever poses following; reduced-motion snap; reload restores the layout; zero console errors; zero external requests; `switches.spec.ts` / `switch-mirror.spec.ts` stay green. Adventure drawer count 7 → 8 in `e2e/ride-toybox-flow.spec.ts` (+ any other hardcoded counts the new piece touches).
-  - [ ] Write spec; run tablet + phone profiles; update rippled counts
+  - [x] Write spec; run tablet + phone profiles; update rippled counts
+
+  Notes:
+  - Probe: added `switchPose(pieceId)` to the scene handle (`track-renderer` + `init-scene`, exposed through the dev-only window handle) returning the live point-blade + signal-lever angles. The ride test samples it across passes to witness all three roads (blade 0 / −0.21 / +0.21) with paired lever angles (0 / −90° / +90°) — both nodes always settle in the same frame.
+  - Reduce-motion deviation: `src/scene/spin-loop.ts` intentionally renders a single static frame under `prefers-reduced-motion` (no frame loop at all), so under reduce a ride can never move and the blade/lever snap path cannot be exercised end to end. The spec instead witnesses the real contract: the piece loads, the ride toggle still flips state, and the points stay exactly parked at neutral (no partial angles, no motion), console clean. The snap branch stays in `track-renderer` as the defensive path. (Observation for a future track: reduce users currently get a fully static scene.)
+  - Reload test doubles as the export-side park-fix witness: after a reload the three-way re-imports with blades closed and the lever pointing north (exactly 0/0), then rides again.
+  - Drawer ripple: adventure 7 → 8 in `e2e/ride-toybox-flow.spec.ts` (count + swipe comment); no other spec enumerates the piece.
+  - Gates: biome (157 files) + `tsc --noEmit` clean; `pnpm exec playwright test e2e/switch-3way.spec.ts` tablet + phone → 6 passed (1.2 m, zero console errors, zero external requests).
 - [ ] **Task: Docs — CHANGELOG (parent voice), `product.md` roadmap (levers ✅ + 3-way ✅; double-slip remains), `tech-stack.md` recipe list + `switch_lever` contract**
 - [ ] **Task: Full quality gates + manual verification (`pnpm check`, full Playwright, coverage report, tablet Toddler Test)**
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
