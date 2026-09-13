@@ -9,6 +9,7 @@ import { disposeObject } from './dispose-object';
 import { attachHeadlight, type Headlight } from './headlight';
 import { loadLocomotive } from './load-locomotive';
 import { loadCrate, loadWagon } from './load-wagons';
+import { parkPoseFor } from './park-pose';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
 import type { RigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
@@ -65,6 +66,8 @@ export interface TrainFleet {
   /** The riding rig nearest the meadow's heart, else the nearest spare —
    *  the whistle answerer when the camera is on the overview. */
   nearest(): TrainRig | null;
+  /** Dev/e2e witness: the never-ridden opener's resting spot, or null. */
+  parkedSpot(): { x: number; z: number } | null;
   /** Whether a rig is inside a tunnel run (the toot trails an echo). */
   inTunnel(rig: TrainRig): boolean;
   dispose(): void;
@@ -100,6 +103,8 @@ export function createTrainFleet({
   // Wagon templates by preset, each pair in slot (pulling) order — clones per rig.
   const wagonTemplates = new Map<WagonPreset, (Object3D | null)[]>();
   let disposed = false;
+  /** Flips on the world's first notify — the loaded world, not the empty store. */
+  let worldReady = false;
   let loadedTrain: TrainKind | null = null;
   let loadedPreset: WagonPreset | null = null;
 
@@ -312,11 +317,22 @@ export function createTrainFleet({
         rig.startNear = null;
       }
     }
-    // Before the first ▶, keep one train parked at the meadow's heart — the
-    // toy the toddler meets on opening (the old single train's resting spot).
-    if (ridesList.length === 0 && rigs.size === 0 && spares.length === 0) {
+    // Before the first ▶, keep one train parked on the largest loop — dry
+    // rails nearest the meadow heart — the toy the toddler meets on opening
+    // (the old single train's resting spot). Gated on `worldReady` so the
+    // opener is born from the loaded world, and posed exactly once: resting
+    // spares are never re-parked (spec FR4).
+    if (worldReady && ridesList.length === 0 && rigs.size === 0 && spares.length === 0) {
       const parked = createRig();
-      if (parked) spares.push(parked);
+      if (parked) {
+        const pose = parkPoseFor(world.pieces());
+        if (pose) {
+          parked.model.position.set(pose.x, pose.y, pose.z);
+          parked.model.rotation.y = pose.yaw;
+          parkFollowersBehind(parked.model, parked.wagons);
+        }
+        spares.push(parked);
+      }
     }
   };
 
@@ -406,6 +422,13 @@ export function createTrainFleet({
   }
 
   const unsubscribeTrain = world.subscribe(() => {
+    // The first notify carries the loaded world (boot hydration or the very
+    // first edit): unlock the opener and sync once so it parks from that
+    // world, never from the empty pre-load store.
+    if (!worldReady) {
+      worldReady = true;
+      syncRigs(rides.rides());
+    }
     const kind = world.train();
     const preset = world.consistFor(kind);
     if (kind === loadedTrain && preset === loadedPreset) return;
@@ -436,6 +459,15 @@ export function createTrainFleet({
     return nearest;
   };
 
+  /**
+   * The opener's resting spot while it has never ridden — the boot-parking
+   * witness for e2e. A spare with no `begunWith` is exactly the pre-▶ train.
+   */
+  const parkedSpot = (): { x: number; z: number } | null => {
+    const parked = spares.find((rig) => rig.begunWith === null);
+    return parked ? { x: parked.model.position.x, z: parked.model.position.z } : null;
+  };
+
   // Crossing gates track each riding train's spot. The pool is preallocated
   // (up to the ride cap) and refilled per frame — no loop allocations.
   const crossingTrainPool: Array<{ x: number; z: number }> = [
@@ -448,6 +480,7 @@ export function createTrainFleet({
 
   return {
     sync: syncRigs,
+    parkedSpot,
     setEmitting(riding) {
       for (const rig of rigs.values()) rig.puffs.setEmitting(riding);
     },
