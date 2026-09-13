@@ -203,14 +203,20 @@ test('a three-way layout survives a reload and re-parks at neutral', async ({ pa
 
   // Fresh GLBs re-import parked at neutral (the export-side park fix): the
   // reloaded piece must rest with blades closed and the lever pointing
-  // north until the first pass flips it.
-  await page.waitForTimeout(400);
+  // north until the first pass flips it. The renderer re-attaches the piece
+  // asynchronously (fresh GLB import), so poll until the probe sees it.
   const id = await page.evaluate(() => {
     const world = (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld;
     const piece = world?.pieces().find((p) => p.type === 'switch-3way');
     if (!piece) throw new Error('reloaded three-way piece missing');
     return piece.id;
   });
+  await expect
+    .poll(async () => (await poseOf(page, id)) !== null, {
+      message: 'the reloaded three-way should re-enter the scene',
+      timeout: 15_000,
+    })
+    .toBe(true);
   const pose = await poseOf(page, id);
   expect(pose).not.toBeNull();
   expect(Math.abs(pose?.blade ?? 1)).toBeLessThan(1e-6);
