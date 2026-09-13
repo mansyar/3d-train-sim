@@ -54,15 +54,26 @@
 - Node contract: `switch_blades` on all three GLBs (right −0.21 / mirror +0.21 unchanged; 3-way 0 straight / −0.21 east / +0.21 west); new `switch_lever` exactly once per GLB; its swing authored about Blender +z (arrives as glTF +y — the blades precedent) so the renderer tweens `rotation.y`.
 - Gates: deterministic re-runs; `verify-glb.py` (skill-bundled) + palette check; ≤ ~150 KB per GLB; renders inspected.
 
-- [~] **Task: Three-way recipe (`scripts/blender-switch-3way.py` → `public/assets/train-kit/switch-3way.glb`)**
+- [x] **Task: Three-way recipe (`scripts/blender-switch-3way.py` → `public/assets/train-kit/switch-3way.glb`) (40677a9)**
   - Expected behavior: kit straight unmoved (through road) + one corner-small arc flipped into each quarter-arc (east like `blender-switch.py`, west like `blender-switch-mirror.py`), plus blades and lever to the contract above.
-  - [ ] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up, `export_yup=True`, named double-sided Principled materials, REPO from `__file__`
-  - [ ] Renders viewed: top, quarter, fit-with-loco-at-×1.6 (blades at 0 / −0.21 / +0.21; lever poses), style check vs accepted switches
-  - [ ] `verify-glb.py --max-kb 150 --require switch_blades --require switch_lever` passes; exported to `public/assets/train-kit/`
-- [ ] **Task: Lever re-cuts for the Y recipes (`blender-switch.py`, `blender-switch-mirror.py`)**
+  - [x] Recipe with `build_*`/`render_checks`/`export_*`/`verify_glb` structure, z-up, `export_yup=True`, named double-sided Principled materials, REPO from `__file__`
+  - [x] Renders viewed: top, quarter, fit-with-loco-at-×1.6 (blades at 0 / −0.21 / +0.21; lever poses), style check vs accepted switches
+  - [x] `verify-glb.py --max-kb 150 --require switch_blades --require switch_lever` passes; exported to `public/assets/train-kit/`
+
+  Notes:
+  - Built exactly as planned: through = kit straight unmoved; east/west arcs = corner-small flipped per the two Y recipes' own transforms; blades verbatim from the shared contract; the new `switch_lever` = ground pad + post + pointer arm in the north-west corner (clear of the rail bed and of the loco envelope at every pose), authored about Blender +z so the renderer tweens `rotation.y`.
+  - One polish iteration: the first renders read the lever as thin/floating, so it was re-cut with a ground pad and chunkier post/arm/knob (pivot to −1.78) and a dedicated lever close-up shot was added to `render_checks`.
+  - Gate evidence: `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS (88,544 B ≈ 86.5 KB, 9 nodes, 5 materials); palette `--match` vs the accepted right-switch baselines → PASS at distance 0 (top + quarter); a re-run exported byte-identical (88,544 B) proving determinism; renders reviewed — top, quarter, lever close-up, both loco fit views at ×1.6 (wheels on the kit rails, nothing clipping; the odd NW shape in the top view was zoom-cropped and confirmed to be the lever's own shadow).
+  - The 3-way GLB stays unreferenced until Phase 3 wiring (the renderer still maps the placeholder straight GLB).
+- [x] **Task: Lever re-cuts for the Y recipes (`blender-switch.py`, `blender-switch-mirror.py`) (03022aa)**
   - Expected behavior: both GLBs gain the same `switch_lever` node; blades/through geometry unchanged; re-rendered and re-verified.
-  - [ ] Add lever geometry + node to both recipes; deterministic re-export
-  - [ ] Verify both: node contracts + sizes + renders; existing blade angles intact
+  - [x] Add lever geometry + node to both recipes; deterministic re-export
+  - [x] Verify both: node contracts + sizes + renders; existing blade angles intact
+
+  Notes:
+  - Both recipes gained the shared `_lever` build (same constants — pad + post + arm, north-west pivot) and their export sets grew to the lever trio; blade geometry, transforms, and the ±0.21 poses are untouched.
+  - Gate evidence: `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS both (switch.glb 64,660 B ≈ 63.1 KB; switch-mirror.glb 67,180 B ≈ 65.6 KB; 8 nodes / 4 materials each with `lever_wood` present); palette `--match` vs the pre-lever accepted baselines → PASS at distance 0 on every view (top + quarter each; the lever's wood/steel tones sit inside the accepted palette); double re-runs exported byte-identical sizes for both recipes (deterministic); renders reviewed — the lever stands planted in the north-west grass clear of both roads, loco fit views clean.
+  - Pre-lever baselines for the palette gate were captured by re-running both recipes unmodified first (byte-identical re-exports — `git status` proved the shipped GLBs untouched before the re-cut).
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 3 — Scene wiring (non-logic; smoke/manual verified)
