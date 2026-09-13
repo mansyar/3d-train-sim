@@ -7,33 +7,66 @@
 
 ## Phase 1 — Pure logic (TDD, `src/core`)
 
-- [ ] **Task: Melody repertoire & rotation (`src/core/melodies.ts`)**
+- [x] **Task: Melody repertoire & rotation (`src/core/melodies.ts`) (02a5eb1)**
   - Expected behavior: four public-domain tunes (ABC/Twinkle, Mary Had a Little Lamb,
     London Bridge, Row Row Row Your Boat) as note tables (`{ midi, beats }`); each
     signature phrase plays ~8–12 s at a gentle music-box tempo (~100 BPM);
     `pickNextTune(previous, random)` never returns the immediately previous index and
     is deterministic with an injected RNG; an exported duration helper feeds the
     scene cooldown.
-  - [ ] Write failing unit tests in `src/core/melodies.test.ts` first: all four tunes
+  - [x] Write failing unit tests in `src/core/melodies.test.ts` first: all four tunes
         present with incipit note locks (e.g. ABC: 60-60-67-67-69-69-67), phrase
         durations within 8–12 s, MIDI pitches in a gentle register (C4–C6),
         `pickNextTune` never repeats the previous index across many seeded draws
         (mulberry32, the `balloon-wander.test.ts` precedent), seed-deterministic
-  - [ ] Implement `src/core/melodies.ts` (pure — no DOM, no Web Audio)
-  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage >80% on `melodies.ts`
-- [ ] **Task: Catalog & drawer registration**
+  - [x] Implement `src/core/melodies.ts` (pure — no DOM, no Web Audio)
+  - [x] Verify: tests green, coverage 100% on `melodies.ts`, `tsc --noEmit` clean
+  - Notes:
+    - Created `src/core/melodies.ts` — four public-domain tunes (ABC/Twinkle, Mary
+      Had a Little Lamb, London Bridge, Row Row Row Your Boat) as `{ midi, beats }`
+      note tables; `MUSIC_BOX_BPM = 100`; `melodyDurationSeconds()`; `pickNextTune()`
+      that never returns the just-played index (injected RNG, seed-deterministic).
+    - Created `src/core/melodies.test.ts` — 8 tests: stable order, incipit note
+      locks, gentle register (55–86 MIDI) with positive beats, 8–12 s phrases,
+      beat-derived duration (ABC = 16 beats = 9.6 s), no immediate repeat across 200
+      seeded draws, every tune reachable, seed determinism.
+    - Red: `vitest run src/core/melodies.test.ts` failed with "Cannot find module
+      './melodies'"; Green: 8/8 pass; coverage 100% stmts/branches/funcs/lines.
+    - Gates: `tsc --noEmit` clean; `biome check` clean.
+    - Why: single source of truth for tunes shared by the scene rotation and the
+      synthesized voice; `pickNextTune` guarantees "never the immediately previous
+      tune"; injected RNG keeps app and tests deterministic.
+- [x] **Task: Catalog & drawer registration (bffe404)**
   - Expected behavior: kind `music-box` joins `SCENERY_KINDS`, category `town`, URL
     `/assets/train-kit/music-box.glb`, toy scale/lift, aria label "Music box", dry-land
     only (river-invalid, like other land toys); the drawer's town tab gains a chunky
     inline SVG icon; placement persists via the existing scenery autosave (no new
     persistence code); old saves without the kind load unchanged.
-  - [ ] Write failing unit tests first in `src/core/scenery.test.ts` /
+  - [x] Write failing unit tests first in `src/core/scenery.test.ts` /
         `src/core/drawer.test.ts` (kind present, town grouping, URL, land-only rule,
         no critter voice)
-  - [ ] Implement catalog entries + `src/ui/toy-icons.ts` icon (icon itself is UI glue
-        — verified by a manual drawer peek)
-  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage maintained
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+  - [x] Implement catalog entries + `src/ui/toy-icons.ts` icon (icon itself is UI glue
+        — manual drawer peek happens in the phase's manual verification)
+  - [x] Verify: tests green, `tsc --noEmit` clean, coverage maintained
+  - Notes:
+    - `src/core/scenery.ts`: `music-box` joined `SCENERY_KINDS`; URL
+      `/assets/train-kit/music-box.glb`; category `town`; scale 0.8; lift 0.02;
+      aria "Music box". `sceneryVoice` stays null and `sceneryFloats` stays false
+      (land-only) by catalog construction — water placement is already rejected by
+      the existing `sceneryFloats` checks in `world.ts` / `toy-drag.ts`.
+    - `src/core/drawer.ts`: `TAB_FOR_KIND` maps it to the town tab (listed after
+      the balloon, in catalog order).
+    - `src/ui/toy-icons.ts`: chunky chest-with-crank-and-figure SVG using the
+      existing `--toy-*` vars; drawer markup updates itself from the catalogs.
+    - Red evidence: with the catalog changes stashed, `scenery.test.ts` failed 3
+      and `drawer.test.ts` failed 2 on the new expectations (kind list, town
+      grouping, URL, `tabForKind`); changes restored via `git stash pop`.
+    - Green: full suite 39 files / 685 tests pass; `tsc --noEmit` clean;
+      `biome check` clean.
+    - Why: additive catalog growth only — autosave, save validation
+      (`isSceneryKind`), one-toy-per-cell, and placement rules all derive from the
+      catalogs, so no persistence or world-store code changed.
+- [~] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 2 — Blender authoring (non-logic; render/verify gated)
 
