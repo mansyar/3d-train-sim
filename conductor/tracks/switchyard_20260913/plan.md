@@ -65,6 +65,7 @@
   - One polish iteration: the first renders read the lever as thin/floating, so it was re-cut with a ground pad and chunkier post/arm/knob (pivot to −1.78) and a dedicated lever close-up shot was added to `render_checks`.
   - Gate evidence: `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS (88,544 B ≈ 86.5 KB, 9 nodes, 5 materials); palette `--match` vs the accepted right-switch baselines → PASS at distance 0 (top + quarter); a re-run exported byte-identical (88,544 B) proving determinism; renders reviewed — top, quarter, lever close-up, both loco fit views at ×1.6 (wheels on the kit rails, nothing clipping; the odd NW shape in the top view was zoom-cropped and confirmed to be the lever's own shadow).
   - The 3-way GLB stays unreferenced until Phase 3 wiring (the renderer still maps the placeholder straight GLB).
+  - Post-checkpoint hygiene fix (found during the Phase 3 dev-check): the export left the last render shot's angles baked on `switch_blades` / `switch_lever`; the recipe now parks both at neutral before exporting — GLB re-exported at 88,432 B, node rotations verified identity, byte-determinism re-proven, `verify-glb` PASS, palette distance 0.
 - [x] **Task: Lever re-cuts for the Y recipes (`blender-switch.py`, `blender-switch-mirror.py`) (03022aa)**
   - Expected behavior: both GLBs gain the same `switch_lever` node; blades/through geometry unchanged; re-rendered and re-verified.
   - [x] Add lever geometry + node to both recipes; deterministic re-export
@@ -74,6 +75,7 @@
   - Both recipes gained the shared `_lever` build (same constants — pad + post + arm, north-west pivot) and their export sets grew to the lever trio; blade geometry, transforms, and the ±0.21 poses are untouched.
   - Gate evidence: `verify-glb.py --max-kb 150 --require switch_blades,switch_lever` → PASS both (switch.glb 64,660 B ≈ 63.1 KB; switch-mirror.glb 67,180 B ≈ 65.6 KB; 8 nodes / 4 materials each with `lever_wood` present); palette `--match` vs the pre-lever accepted baselines → PASS at distance 0 on every view (top + quarter each; the lever's wood/steel tones sit inside the accepted palette); double re-runs exported byte-identical sizes for both recipes (deterministic); renders reviewed — the lever stands planted in the north-west grass clear of both roads, loco fit views clean.
   - Pre-lever baselines for the palette gate were captured by re-running both recipes unmodified first (byte-identical re-exports — `git status` proved the shipped GLBs untouched before the re-cut).
+  - Post-checkpoint hygiene fix (shared with the three-way recipe): both exports previously carried the last shot's blade angle baked on `switch_blades` (−0.21 / +0.21); the recipes now park `switch_blades` / `switch_lever` at neutral first — re-exported switch.glb 64,604 B / switch-mirror.glb 67,124 B, node rotations identity, byte-determinism re-proven, `verify-glb` PASS, palette distance 0.
 - [x] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
   Verification Report:
@@ -83,13 +85,27 @@
 
 ## Phase 3 — Scene wiring (non-logic; smoke/manual verified)
 
-- [~] **Task: Renderer mounting + blade/lever tween (`track-renderer.ts`)**
+- [x] **Task: Renderer mounting + blade/lever tween (`track-renderer.ts`) (d730fda)**
   - Expected behavior: `switch-3way` maps to the real GLB (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`, mount `[0, -1, 2]` like its siblings); `setSwitchRoad` moves **blades and lever together in one tween** — per-type pose tables (2 poses on Y switches, 3 on the 3-way), merges keep the last road, reduced motion snaps, a missing `switch_lever` fails soft (blades animate as today); event-driven, no per-frame cost outside the tween.
-  - [ ] Implement; dev-check each piece's poses in the running app
-  - [ ] Verify: no per-frame allocations; dispose chain covers the tween maps
-- [ ] **Task: Ride geometry + road announcements for the 3-way (extend `ride-motion.test.ts` where logic-bearing)**
+  - [x] Implement; dev-check each piece's poses in the running app
+  - [x] Verify: no per-frame allocations; dispose chain covers the tween maps
+
+  Notes:
+  - Mounted the authored GLB: `PIECE_URLS` → `/assets/train-kit/switch-3way.glb`, `BASE_YAW` 0, `KIT_ANCHORS` `[0, -1, 2]` — placeholder comments replaced with the authored-file notes.
+  - `setSwitchRoad` now resolves a `SWITCH_POSES` table (model edge → blade + lever angles; 2 poses per Y, 3 for the three-way) and tweens `switch_blades` and `switch_lever` together as one tween (a `targets` array on the existing single rAF loop); a missing `switch_lever` fails soft; merges keep the last road; reduced-motion / disposed snap; the dispose chain is unchanged — the same `bladeRaf` / `bladeTweens` names are still cancelled/cleared on teardown and deleted per-piece on removal.
+  - Dev-check: a throwaway tablet Playwright run seeded straight + three-way + straight and rode 26 s — zero console errors, the piece mounts flush with all three roads (arcs diverge correctly around the through road), trains ride the arcs with wagons following, and the lever is planted on the grass. Screenshots reviewed, then the temp spec was deleted (the real `e2e/switch-3way.spec.ts` lands in Phase 4).
+  - The dev-check surfaced the parked-pose export wart (fixed asset-side — see the Phase 2 note addenda): the fresh piece sat with the lever swung west because the last render shot's +90° was baked into the GLB.
+  - Verify: no per-frame allocations added — the only per-frame work remains the existing spread over `bladeTweens` while a 180 ms tween is live (pre-existing pattern), and the `targets` arrays are built event-driven. Dispose chain confirmed by inspection above.
+  - Gates: biome (156 files) + `tsc --noEmit` clean; 717/717 vitest; the two existing switch e2e specs stay green (tablet, 4 passed).
+- [x] **Task: Ride geometry + road announcements for the 3-way (extend `ride-motion.test.ts` where logic-bearing) (85ab2d7)**
   - Expected behavior: the straight road rides straight; east/west roads ride the corner-small quarter arcs (the arcs the Y switches share); `onSwitchRoad` announces the chosen exit; wagons follow; alternation reachable on rails.
-  - [ ] Red/verify tests: segment lookups for through + both arcs (rotated), alternation ride covering all three roads
+  - [x] Red/verify tests: segment lookups for through + both arcs (rotated), alternation ride covering all three roads
+
+  Notes:
+  - No `ride-motion.ts` changes needed — the switch machinery is generic (`isSwitchPiece` drives both the chosen-road segment pivot and the per-segment road announcements), so the three-way joined automatically (the mirror precedent); the tests lock it.
+  - Segment locks: through road straight; south-to-east on the SE pivot / south-to-west on the SW pivot (radius half a cell — the kit corner-small arcs); rotated 180° keeps north-to-east / north-to-west on the NE / NW corners and north-to-south straight.
+  - Ride locks: the solver-test three-way layout rides 75 s with engine + wagon always on the solved cycle (both branches and every dead-end reversal), reaches beyond all four edges of the piece's cell, and rests at turnarounds; the announcement stream contains all three exits with no consecutive repeats (no chatter).
+  - Gates: biome (156 files) + `tsc --noEmit` clean; 723/723 vitest (43 in the file, up from 37).
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 4 — E2E, docs & final gates
