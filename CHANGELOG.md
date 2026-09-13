@@ -19,6 +19,13 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   day and night, wears a snow cap when the meadow freezes over, and goes
   quiet the moment sound is muted (the figurine keeps twirling). No new
   downloads — every note plays right in the browser.
+- **A three-way junction — and a little signal lever on every switch.**
+  Place the new junction piece where three roads meet, and each train
+  takes a different road every pass: straight through, then the right
+  branch, then the left, and around again. Every switch in the meadow —
+  both Y-shapes and the new three-way — now has a wooden lever whose
+  steel arm points at the road the train will take next, swinging over
+  smoothly as the points flip. Old layouts open exactly as they were.
 
 ### Changed
 

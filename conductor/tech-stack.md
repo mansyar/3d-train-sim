@@ -86,13 +86,15 @@ public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
                      # pieces (tunnel.glb, station.glb, crate.glb, the
                      # hill run hill-slope-up/hill-hill/hill-slope-down.glb +
-                     # their hill-snow-*.glb crowns, and the Y-junctions
-                     # switch.glb + switch-mirror.glb) authored in Blender
+                     # their hill-snow-*.glb crowns, and the switchyard
+                     # switch.glb + switch-mirror.glb + switch-3way.glb)
+                     # authored in Blender
 scripts/             # Blender build recipes for original assets — deterministic
                      # and re-runnable in any Blender session (e.g.
                      # blender-tunnel.py, blender-station.py,
                      # blender-hill-snow.py, blender-switch.py,
-                     # blender-switch-mirror.py, blender-barge.py)
+                     # blender-switch-mirror.py, blender-switch-3way.py,
+                     # blender-barge.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
@@ -110,7 +112,12 @@ crowns, whose named `hill_snow_*` nodes toggle like the tunnel's snow cap),
 and the Y-switch (`scripts/blender-switch.py` → `switch.glb`, whose named
 `switch_blades` node the scene eases 0 ↔ −0.21 to flip the points) and its
 left-hand twin (`scripts/blender-switch-mirror.py` → `switch-mirror.glb`,
-same node contract, eased 0 ↔ +0.21 toward the west branch)
+same node contract, eased 0 ↔ +0.21 toward the west branch), plus the
+three-way (`scripts/blender-switch-3way.py` → `switch-3way.glb`,
+`switch_blades` 0 ↔ −0.21 east / +0.21 west) — every switch GLB now also
+carries a named `switch_lever` node: a wooden signal lever whose steel arm
+the scene swings 0 / ∓90° in the same tween as the blades, so it always
+points at the road the train will take
 are the reference implementations. The full workflow is codified in the
 `threejs-blender-asset` skill (user-level skills dir) — phases, hard
 gates, a stdlib `verify-glb.py` GLB gate checker, and a
