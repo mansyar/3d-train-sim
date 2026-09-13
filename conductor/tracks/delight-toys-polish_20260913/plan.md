@@ -22,14 +22,24 @@
 
 **Tooling notes:** `blender` is not on PATH → `& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --background --python scripts/blender-<toy>.py`. Gates live in the `threejs-blender-asset` skill (`C:\Users\Ansyar\.agents\skills\threejs-blender-asset\scripts\{verify-glb,palette}.py`).
 
-- [ ] Task: Windmill polish — slatted sails, smoother finish, crisp details
+- [x] Task: Windmill polish — slatted sails, smoother finish, crisp details (20fb096)
   - Expected behavior: sails show chunky lattice slats; tower/cap smooth-shaded with rounded edges; door/window frames and roof finial read; snow cap follows the new cap; same footprint; contracts intact; ≤ 150 KB.
-  - [ ] Baseline: run the current recipe once; capture top/quarter/fit/winter renders; `palette.py --extract` the accepted palette
-  - [ ] Edit `scripts/blender-windmill.py`: smoother tower/cap (segments + smooth shading), door + window frames, roof finial, chunky lattice-slat sails (no shimmer), subtle material distinction; keep contracts; update export list
-  - [ ] Re-run headless → `public/assets/train-kit/windmill.glb`
-  - [ ] `verify-glb.py --max-kb 150 --require windmill_sails --require windmill_snow_cap` → PASS (record size)
-  - [ ] Render review vs baseline: smoothness + details read; `palette.py --match` pass; rubric notes (one sentence per line)
-  - [ ] Commit (recipe + GLB)
+  - [x] Baseline: run the current recipe once; capture top/quarter/fit/winter renders; `palette.py --extract` the accepted palette
+  - [x] Edit `scripts/blender-windmill.py`: smoother tower/cap (segments + smooth shading), door + window frames, roof finial, chunky lattice-slat sails (no shimmer), subtle material distinction; keep contracts; update export list
+  - [x] Re-run headless → `public/assets/train-kit/windmill.glb`
+  - [x] `verify-glb.py --max-kb 150 --require windmill_sails --require windmill_snow_cap` → PASS (record size)
+  - [x] Render review vs baseline: smoothness + details read; `palette.py --match` pass; rubric notes (one sentence per line)
+  - [x] Commit (recipe + GLB)
+  - Notes:
+    - Baseline re-run was byte-identical (deterministic on Blender 5.2) — the committed GLB stayed untouched; baseline renders + per-view palettes archived in the session scratch dir (`…/opencode/delight-polish/{baseline,palette,polished}`).
+    - Polish: tower 48-seg + smooth, cap 48-seg smooth, snow cap 40-seg smooth; lattice sails (2 rails + 4 rungs per blade, one mesh per blade, rails parallel — keeps slats chunky and aliasing-safe); door = brown surround + cream panel; window = brown surround + orange pane; roof finial (cream post + orange ball); orange hub ball; per-material roughness (cream 0.95 / red 0.8 / orange 0.75 / brown 0.7 / snow 0.9).
+    - Learned fix: with solid-slab framing the panel/pane must sit slightly proud of its surround, or it is invisible inside the surround's volume — the first pass was fully embedded and was caught by a close-up render, not by the four standard views.
+    - The standard renders freeze the sails at spin 0, so the down blade covers the centered window in all four; a spun detail render proves the window reads (and it is visible in-app whenever the sails turn).
+    - Deviations: parallel rails instead of tapered; two added accents within the accepted palette (orange hub/finial balls, brown window frame).
+  - Verification Report:
+    - Automated: `verify-glb.py --max-kb 150 --require windmill_sails,windmill_snow_cap` → PASS (66.9 KB, 15 nodes, 5 materials; extents 1.38 × 1.90 × 1.00). `palette.py --match` → PASS ×4 views vs accepted baselines (distance 0). GLB 20.5 KB → 66.9 KB (budget 150 KB).
+    - Manual: renders reviewed vs baseline — turned-wood tower, trellis sail shadows, framed door/window, finial; fit render (loco ×1.6) unchanged in scale and clipping; no artifacts.
+    - Result: GREEN.
 - [ ] Task: Carousel polish — horses that read as horses, scalloped valance, smoother body
   - Expected behavior: three horses unmistakably read as horses (rounded body, legs, snout + ears, mane, tail — still chunky); scalloped cream valance under the red canopy; smoother platform/rim/column/canopy; poles/knob neatened; contracts intact; ≤ 150 KB (watch — closest to budget).
   - [ ] Baseline: run current recipe once; capture renders; `palette.py --extract`
