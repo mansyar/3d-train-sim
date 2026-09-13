@@ -9,6 +9,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Changed
+
+- The windmill, carousel, and hot-air balloon have been polished: rounder, smoother shapes, chunky lattice sails on the windmill, carousel horses that really read as horses, and a striped balloon with neatly tied rigging.
+- The windmill now turns at half its old speed and the carousel spins half as fast - a calmer, easier-to-follow pace for little eyes.
+
 ## [0.9.0] - 2026-09-06
 
 ### Added
