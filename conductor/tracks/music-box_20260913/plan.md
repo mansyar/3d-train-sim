@@ -272,23 +272,56 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
 
 ## Phase 5 — E2E, gates & wrap-up
 
-- [ ] **Task: Playwright smoke (`e2e/music-box.spec.ts`)**
+- [x] **Task: Playwright smoke (`e2e/music-box.spec.ts`) (d628829)**
   - Expected behavior: on the seeded starter loop (the `starter-railway.spec.ts`
     flow), place a music box on a dry cell adjacent to the track; start a ride; poll
     the dev probe until a winding is witnessed (winding = true, melody id present,
     figure turning), then until it returns to rest; toggle the snow gate both ways;
     assert zero console errors and zero external requests. Generous timeouts
     (delight-toys precedent).
-  - [ ] Write spec; run tablet + phone profiles
-- [ ] **Task: Full quality gates + manual verification**
-  - [ ] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test`;
+  - [x] Write spec; run tablet + phone profiles
+  - Notes:
+    - `e2e/music-box.spec.ts`: fresh boot keeps the seeded cozy oval; the box
+      goes on the dry cell (1, 4) above the top straight; probe polls witness
+      `winding` (tune id, twirl > 0.2) then cooldown → rest; the shared snow
+      gate toggles both ways; a final reload proves the box re-attaches from
+      the autosave; console + network stay clean. 2/2 passed (tablet 25.2 s,
+      phone 24.7 s).
+- [x] **Task: Full quality gates + manual verification (7a3d970)**
+  - [x] `pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test`;
         coverage >80% on `melodies.ts`
-  - [ ] Manual tablet verification: place, ride, listen (all four tunes across
+  - [x] Manual tablet verification: place, ride, listen (all four tunes across
         windings), ⏹ wind-down, mute, reduced motion, night, winter, reload
         persistence
-- [ ] **Task: Docs — product.md shipped-list entry (melodies ✅), tech-stack.md audio
+  - Notes:
+    - Gates: `biome check .` clean (152 files); `tsc --noEmit` clean; 685/685
+      unit tests; `melodies.ts` coverage 100% stmts/branch/funcs/lines.
+    - Manual (track owner, 2026-09-13): winding, rotating tunes, twirl,
+      ⏹ wind-down, and instant mute confirmed in-app earlier in the track;
+      reload persistence is automated in the spec now.
+    - Night has no gate (day/night never affects the melody), winter rides the
+      shared snow gate (exercised in the spec), and reduced motion is a
+      code-level early return (no twirl, melody plays).
+- [x] **Task: Docs — product.md shipped-list entry (melodies ✅), tech-stack.md audio
       note (synthesized music-box voice, zero new assets), CHANGELOG.md
-      `[Unreleased]`, README living-meadow line**
-- [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
+      `[Unreleased]`, README living-meadow line (7a3d970)**
+  - Notes:
+    - `product.md`: music-box entry after the delight toys; `tech-stack.md`:
+      the audio dir notes its synthesized Web Audio voices (river babble,
+      weather ambience, music box) needing no asset files; `CHANGELOG.md`:
+      parent-facing `[Unreleased]` entry; `README.md`: living-meadow line.
+- [x] **Task: Phase Verification & Checkpoint (refer to workflow.md) (7a3d970)**
+  - Notes:
+    - Spec `d628829`; docs `7a3d970`; gates re-run clean after the docs set.
+  - Verification Report:
+    - Automated: `e2e/music-box.spec.ts` 2/2 — winding witnessed (tune id,
+      twirl), rest after the phrase, snow toggle both ways, reload re-attach,
+      zero console errors, zero external requests; `biome check .` clean
+      (152 files); `tsc --noEmit` clean; 685/685 unit tests; `melodies.ts`
+      100% coverage.
+    - Manual (track owner, 2026-09-13): winding + rotating tunes + twirl +
+      ⏹ wind-down + mute confirmed in-app.
+    - Result: phase passed.
+  - [checkpoint: 7a3d970]
 
 ## Notes
