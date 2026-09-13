@@ -64,6 +64,10 @@ export interface SceneHandle {
   steamPuffCount(): number;
   /** Debug aid: the filmed (or primary) train's live pace factor. */
   trainPace(): number;
+  /** Debug aid: the opener's resting spot before the first ride, or null. */
+  parkedSpot(): { x: number; z: number } | null;
+  /** Debug aid: the primary (largest) riding train's live spot, or null. */
+  primarySpot(): { x: number; z: number } | null;
   /** The toddler's big toot: the answering train whistles (echoing inside
    *  tunnels) and puffs steam. No-op before a train shows. */
   tootWhistle(): void;
@@ -358,6 +362,14 @@ export function initScene(
     // Dev/e2e witness: the filmed (or primary) train's live pace factor —
     // personality × grade, eased. Lets specs prove labor/breeze directly.
     trainPace: () => (filmCamera.filmedRig() ?? fleet.primary())?.motion.pace() ?? 1,
+    // Dev/e2e witness for boot parking: the opener rests on the loaded world
+    // (dry rails of the largest loop) and is adopted from the same point, so
+    // specs compare the parked spot against the primary spot for continuity.
+    parkedSpot: () => fleet.parkedSpot(),
+    primarySpot: () => {
+      const rig = fleet.primary();
+      return rig ? { x: rig.model.position.x, z: rig.model.position.z } : null;
+    },
     tootWhistle: () => {
       // The filmed train answers; from the overview the nearest riding train
       // does; before any ride, the parked opener train answers. Inside a

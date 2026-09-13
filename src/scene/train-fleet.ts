@@ -66,6 +66,8 @@ export interface TrainFleet {
   /** The riding rig nearest the meadow's heart, else the nearest spare —
    *  the whistle answerer when the camera is on the overview. */
   nearest(): TrainRig | null;
+  /** Dev/e2e witness: the never-ridden opener's resting spot, or null. */
+  parkedSpot(): { x: number; z: number } | null;
   /** Whether a rig is inside a tunnel run (the toot trails an echo). */
   inTunnel(rig: TrainRig): boolean;
   dispose(): void;
@@ -457,6 +459,15 @@ export function createTrainFleet({
     return nearest;
   };
 
+  /**
+   * The opener's resting spot while it has never ridden — the boot-parking
+   * witness for e2e. A spare with no `begunWith` is exactly the pre-▶ train.
+   */
+  const parkedSpot = (): { x: number; z: number } | null => {
+    const parked = spares.find((rig) => rig.begunWith === null);
+    return parked ? { x: parked.model.position.x, z: parked.model.position.z } : null;
+  };
+
   // Crossing gates track each riding train's spot. The pool is preallocated
   // (up to the ride cap) and refilled per frame — no loop allocations.
   const crossingTrainPool: Array<{ x: number; z: number }> = [
@@ -469,6 +480,7 @@ export function createTrainFleet({
 
   return {
     sync: syncRigs,
+    parkedSpot,
     setEmitting(riding) {
       for (const rig of rigs.values()) rig.puffs.setEmitting(riding);
     },

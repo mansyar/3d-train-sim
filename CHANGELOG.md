@@ -9,6 +9,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Fixed
+- The parked opening train now waits on dry rails near the meadow's heart
+  instead of resting in the river, and the loading crate appears in the same
+  spot on slower loads.
+
 ## [0.9.0] - 2026-09-06
 
 ### Added
