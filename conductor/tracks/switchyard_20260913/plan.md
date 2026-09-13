@@ -125,8 +125,13 @@
   - Reload test doubles as the export-side park-fix witness: after a reload the three-way re-imports with blades closed and the lever pointing north (exactly 0/0), then rides again.
   - Drawer ripple: adventure 7 → 8 in `e2e/ride-toybox-flow.spec.ts` (count + swipe comment); no other spec enumerates the piece.
   - Gates: biome (157 files) + `tsc --noEmit` clean; `pnpm exec playwright test e2e/switch-3way.spec.ts` tablet + phone → 6 passed (1.2 m, zero console errors, zero external requests).
-- [ ] **Task: Docs — CHANGELOG (parent voice), `product.md` roadmap (levers ✅ + 3-way ✅; double-slip remains), `tech-stack.md` recipe list + `switch_lever` contract**
-- [ ] **Task: Full quality gates + manual verification (`pnpm check`, full Playwright, coverage report, tablet Toddler Test)**
+- [x] **Task: Docs — CHANGELOG (parent voice), `product.md` roadmap (levers ✅ + 3-way ✅; double-slip remains), `tech-stack.md` recipe list + `switch_lever` contract (5a38b3d)**
+
+  Notes:
+  - `CHANGELOG.md` — Unreleased/Added entry in the parent voice ("A three-way junction — and a little signal lever on every switch.").
+  - `conductor/product.md` — switch roadmap line: three-way + motorized levers marked ✅ shipped (switchyard_20260913, 2026-09-14); the remaining roadmap item is now double-slip pieces only.
+  - `conductor/tech-stack.md` — folder tree lists the switchyard trio (`switch.glb` + `switch-mirror.glb` + `switch-3way.glb`) and `blender-switch-3way.py`; the authoring section documents the three-way recipe and the shared `switch_lever` node contract (wooden signal lever, steel arm swung 0 / ∓90° in the same tween as the blades).
+- [~] **Task: Full quality gates + manual verification (`pnpm check`, full Playwright, coverage report, tablet Toddler Test)**
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Notes
