@@ -56,7 +56,7 @@ after creation (per spec FR4).
     User confirmation: 2026-09-13 — checkpoint approved.
   - Notes: Checkpoint commit: dae4480. [checkpoint: dae4480]
 
-## Phase B — Boot wiring: opener + crate park on the chosen spot
+## Phase B — Boot wiring: opener + crate park on the chosen spot [checkpoint: 8c22c8a]
 
 - [x] Task: World-ready gate + opener pose (4d8263c)
   - [x] Add the minimal ride-math seam in `ride-motion.ts` (e.g., export
@@ -128,4 +128,18 @@ after creation (per spec FR4).
     logged as environmental, no product investigation owed. `pnpm check`
     green. CHANGELOG `### Fixed` added under `## [Unreleased]`. Commits:
     527e2c4 (probes + spec) + 8c22c8a (per-starter lock).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+  - Verification Report: Scope `git diff --name-only dae4480 HEAD` — scene
+    wiring (`ride-motion.ts` seam + 2 equivalence tests, `park-pose.ts`,
+    `train-fleet.ts`, `init-scene.ts`), `e2e/park-spot.spec.ts`, CHANGELOG,
+    conductor docs. Coverage: no new logic-bearing files in scope (src/core /
+    src/state — none touched; the seam is covered by its equivalence tests,
+    the wiring by the spec). Automated: focused spec 8/8 (tablet + phone);
+    `pnpm check` green (685/685 vitest); full suite 126 passed + 1 tablet
+    smoke boot-readiness timeout — reran `e2e/smoke.spec.ts` 40/40 green
+    (environmental, per e2e/README rerun convention). Manual: fresh-boot
+    screenshot vision-confirmed (train on west-bank rails, clear of the
+    river); user checkpoint walkthrough. Reviewer command:
+    `pnpm exec playwright test e2e/park-spot.spec.ts` → expected 8 passed.
+    User confirmation: 2026-09-13 — checkpoint approved.
+  - Notes: Checkpoint commit: 8c22c8a. [checkpoint: 8c22c8a]
