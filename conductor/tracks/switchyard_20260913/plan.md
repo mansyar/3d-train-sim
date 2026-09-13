@@ -7,21 +7,38 @@
 
 ## Phase 1 — Pure logic (TDD, `src/core`)
 
-- [ ] **Task: `switch-3way` catalog entry (tests first in `pieces.test.ts`, `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`)**
+- [x] **Task: `switch-3way` catalog entry (tests first in `pieces.test.ts`, `track-graph.test.ts`, `save.test.ts`, `drawer.test.ts`) (304907e)**
   - Expected behavior: `PIECE_TYPES` gains `switch-3way`; `BASE_ENDPOINTS` joins all four edges (stem south, exits north/east/west at yaw 0); endpoints rotate correctly through all four yaws; dry land only (ghost red over water); save round-trip restores it and pre-track snapshots load unchanged (no version bump); drawer maps it to the Adventure tab; `toy-icons.ts` gains its hand-drawn three-road SVG (+ any icon-completeness tests); renderer placeholder maps (`PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` → straight GLB until Phase 2, the mirror precedent).
-  - [ ] Red: failing tests — endpoints at all rotations, dry-land rule, save round-trip, drawer mapping
-  - [ ] Green: catalog + `drawer.ts` + `toy-icons.ts` + renderer placeholder maps (icon look seen in the phase's manual verification)
-  - [ ] Verify: tests green, `tsc --noEmit` clean, coverage maintained
-- [ ] **Task: Three-road routing in pure `switches.ts` (TDD: `switches.test.ts`)**
+  - [x] Red: failing tests — endpoints at all rotations, dry-land rule, save round-trip, drawer mapping
+  - [x] Green: catalog + `drawer.ts` + `toy-icons.ts` + renderer placeholder maps (icon look seen in the phase's manual verification)
+  - [x] Verify: tests green, `tsc --noEmit` clean, coverage maintained
+
+  Notes:
+  - Red confirmed with exactly 12 failing tests across the four files (693 passing), each failing for the missing piece — no unrelated failures.
+  - Green: `PIECE_TYPES` + `BASE_ENDPOINTS` (`['north','east','south','west']`) in `pieces.ts`; `TAB_FOR_KIND` entry in `drawer.ts`; straight-GLB placeholder maps in `track-renderer.ts`; `PIECE_LABELS` + a two-branch three-road SVG in `toy-icons.ts`.
+  - Gates: biome (156 files) + `tsc --noEmit` clean; 705/705 vitest; coverage — `pieces.ts` 100%, `track-graph.ts` 96.3%, `drawer.ts` 100%, `save.ts` 91.6%.
+- [x] **Task: Three-road routing in pure `switches.ts` (TDD: `switches.test.ts`) (7b045d6)**
   - Expected behavior: stem entry cycles straight → right (east) → left (west) on a 0|1|2 counter, first pass straight; any branch entry merges to the stem without moving the counter; reverse shuttling follows the same entry-based rules; the two Y switches stay byte-for-byte unchanged; the counter is session-only (never serialized).
-  - [ ] Red: truth tables across all four rotations, counter folds, branch merges, Y-switch regression locks
-  - [ ] Green: extend `SwitchPieceType` / `isSwitchPiece` / routing to the third piece
-  - [ ] Verify: `switches.ts` coverage, gates clean
-- [ ] **Task: Solver coverage for three-road topologies (TDD: extend `pathing.test.ts`)**
+  - [x] Red: truth tables across all four rotations, counter folds, branch merges, Y-switch regression locks
+  - [x] Green: extend `SwitchPieceType` / `isSwitchPiece` / routing to the third piece
+  - [x] Verify: `switches.ts` coverage, gates clean
+
+  Notes:
+  - Red confirmed with exactly 8 failing tests (14 passing) in `switches.test.ts`; every failure came from the missing routing arm (`DIVERGE_EDGE['switch-3way']` undefined → wrong exits), no unrelated failures.
+  - Green: `SwitchPieceType` widened to the three pieces; `isSwitchPiece` covers all three; `nextThreeWayBranch` cycles straight → right → left on `counter % 3`; `routeSwitch` gained a four-end arm (stem cycles 0|1|2, every branch entry merges to the stem with the counter unchanged); `DIVERGE_EDGE` narrowed to the two Y pieces plus a new `THREE_WAY_EDGES` map.
+  - Ripple: widening the union forced `BLADE_DIVERGE_Y` record completeness in `track-renderer.ts` — added an interim `'switch-3way': -0.21` pose, inert until the authored GLB (the placeholder loads the straight GLB, which has no `switch_blades` node, so `setSwitchRoad` fails soft). Phase 3 replaces it with the three-pose table.
+  - Gates: biome + `tsc --noEmit` clean; 714/714 vitest; `switches.ts` coverage 100%.
+- [x] **Task: Solver coverage for three-road topologies (TDD: extend `pathing.test.ts`) (2673072)**
   - Expected behavior: three-road cycles ride as one periodic walk covering all roads; dead-end spurs shuttle; 3-way + Y chains compose; deterministic under any input order; frozen fallback unchanged.
-  - [ ] Red: three-road topology fixtures + expected periodic walks
-  - [ ] Green: extend the live-counter walk to the new type (mirror precedent — likely via `isSwitchPiece`; tests lock it)
-  - [ ] Verify: full suite green, no regressions
+  - [x] Red: three-road topology fixtures + expected periodic walks
+  - [x] Green: extend the live-counter walk to the new type (mirror precedent — likely via `isSwitchPiece`; tests lock it)
+  - [x] Verify: full suite green, no regressions
+
+  Notes:
+  - No `pathing.ts` changes needed — the walk already routes any `isSwitchPiece` through live counters, so the three-way joined automatically (the mirror precedent); the new tests lock the behavior.
+  - Locks: lone three-way exact 6-step cycle (W→S / S→N / N→S / S→E / E→S / S→W — all three roads per lap); stem + straight dead-end topology exact 14-step lap covering straight → right → left; 3-way + Y chain periodic across every branch; determinism under reversed input order.
+  - Slice note: the returned walk starts at the first repeated full state (piece|entry|counters), so the chain fixture yields a two-rotation cycle — its test locks the straight/right/left chunk pattern rather than a single rotation.
+  - Gates: biome + `tsc --noEmit` clean; 717/717 vitest; coverage — `pathing.ts` 97.7% statements / 90.5% branches, `switches.ts` 100%.
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 2 — Blender assets (non-logic; render/verify gated)
