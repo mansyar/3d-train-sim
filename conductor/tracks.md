@@ -4,7 +4,6 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [delight-toys-polish_20260913](tracks/delight-toys-polish_20260913/index.md) | Delight Toys Polish — Windmill, Carousel & Balloon | Feature | done |
 | [release-v0.9.0_20260906](archive/release-v0.9.0_20260906/index.md) | Release v0.9.0 | Chore | done |
 | [scenery-delight_20260905](archive/scenery-delight_20260905/index.md) | Scenery Delight — Three Animated Toys | Feature | done |
 | [readme-onboarding-docs_20260906](archive/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | done |
