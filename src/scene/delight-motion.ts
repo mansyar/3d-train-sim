@@ -20,9 +20,9 @@ import { MEADOW_CELLS } from '../core/track-graph';
 import { GROUND_SIZE } from './ground';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
-/** Spec'd charm rates: windmill ~0.5 rev/s, carousel ~0.25 rev/s. */
-const WINDMILL_SPIN = Math.PI;
-const CAROUSEL_SPIN = Math.PI / 2;
+/** Spec'd charm rates: windmill ~0.25 rev/s, carousel ~0.125 rev/s. */
+const WINDMILL_SPIN = Math.PI / 2;
+const CAROUSEL_SPIN = Math.PI / 4;
 /** Balloon drift eases in cells; a slow pirouette sells the sway. */
 const BALLOON_YAW = 0.35;
 
