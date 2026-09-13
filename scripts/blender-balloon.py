@@ -16,8 +16,18 @@ finds them with getObjectByName):
                    and shows it when winter is active.
 
 
-Static dressing: balloon_basket_box, balloon_rope_0..3, balloon_envelope,
-balloon_band. Materials are flat Principled, double-sided.
+Static dressing: balloon_basket_box, balloon_basket_rim, balloon_rope_0..3,
+balloon_envelope (16 cream accent stripes over an orange field),
+balloon_band, balloon_crown.
+
+Polish pass (2026-09-13): the envelope is a smoother 48x20 sphere with
+classic gore stripes assigned per face (two orange segments per cream
+accent stripe, so the balloon keeps its warm orange dominance), kept on
+the same balloon_envelope node; a small cream crown collar sits on the
+apex; ropes now run angled from the basket rim up into the envelope; the
+basket is beveled with a cream binding strip; all surfaces are
+smooth-shaded, and materials gain a light roughness distinction.
+Footprints and proportions are unchanged.
 
 Export target: public/assets/train-kit/balloon.glb, <= 150 KB.
 """
@@ -40,22 +50,28 @@ BASKET_HALF = (0.15, 0.15, 0.11)
 ENVELOPE_R = 0.435
 ENVELOPE_Z_SCALE = 1.15
 ENVELOPE_CENTER_Z = 0.85  # local (relative to balloon_basket at GROUND_Z)
+GORE_STRIPES = 16  # cream accent stripes around the envelope
+GORE_PERIOD = 3  # two orange segments per one cream accent segment
+ENVELOPE_U = GORE_STRIPES * GORE_PERIOD
+ENVELOPE_V = 20
 
 MATERIALS = {
-    "balloon_cream": (0.95, 0.86, 0.68, 1.0),
-    "balloon_orange": (0.95, 0.42, 0.06, 1.0),
-    "balloon_brown": (0.42, 0.26, 0.15, 1.0),
-    "balloon_snow": (0.94, 0.96, 0.93, 1.0),
+    "balloon_cream": ((0.95, 0.86, 0.68, 1.0), 0.95),
+    "balloon_orange": ((0.95, 0.42, 0.06, 1.0), 0.75),
+    "balloon_brown": ((0.42, 0.26, 0.15, 1.0), 0.7),
+    "balloon_snow": ((0.94, 0.96, 0.93, 1.0), 0.9),
 }
 
 ASSEMBLY = (
     "balloon_basket_box",
+    "balloon_basket_rim",
     "balloon_rope_0",
     "balloon_rope_1",
     "balloon_rope_2",
     "balloon_rope_3",
     "balloon_envelope",
     "balloon_band",
+    "balloon_crown",
     "balloon_snow_cap",
     "balloon_basket",
 )
@@ -64,11 +80,12 @@ ASSEMBLY = (
 def _material(name):
     mat = bpy.data.materials.get(name)
     if mat is None:
+        color, roughness = MATERIALS[name]
         mat = bpy.data.materials.new(name)
         mat.use_nodes = True
         bsdf = mat.node_tree.nodes.get("Principled BSDF")
-        bsdf.inputs["Base Color"].default_value = MATERIALS[name]
-        bsdf.inputs["Roughness"].default_value = 0.9
+        bsdf.inputs["Base Color"].default_value = color
+        bsdf.inputs["Roughness"].default_value = roughness
         mat.use_backface_culling = False
     return mat
 
@@ -90,9 +107,15 @@ def _bm_to_mesh(bm, name):
     return me
 
 
+def _smooth(bm):
+    for f in bm.faces:
+        f.smooth = True
+
+
 def _sphere(coll, name, material, radius, location, scale=None, parent=None):
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=12, radius=radius)
+    bmesh.ops.create_uvsphere(bm, u_segments=20, v_segments=14, radius=radius)
+    _smooth(bm)
     me = _bm_to_mesh(bm, name)
     obj = _mesh_object(coll, me, name, material, parent=parent)
     obj.location = location
@@ -101,32 +124,82 @@ def _sphere(coll, name, material, radius, location, scale=None, parent=None):
     return obj
 
 
-def _cylinder(coll, name, material, r0, r1, depth, location, parent=None):
+def _cylinder(coll, name, material, r0, r1, depth, location, segments=32,
+              parent=None):
     bm = bmesh.new()
     bmesh.ops.create_cone(
         bm,
         cap_ends=True,
-        segments=16,
+        segments=segments,
         radius1=r0,
         radius2=r1,
         depth=depth,
     )
+    _smooth(bm)
     me = _bm_to_mesh(bm, name)
     obj = _mesh_object(coll, me, name, material, parent=parent)
     obj.location = location
     return obj
 
 
-def _box(coll, name, material, half, location, parent=None):
+def _angled_cylinder(coll, name, material, radius, length, location, direction,
+                     segments=10, parent=None):
+    obj = _cylinder(coll, name, material, radius, radius, length, location,
+                    segments=segments, parent=parent)
+    obj.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+    return obj
+
+
+def _box(coll, name, material, half, location, bevel=0.0, parent=None):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
     for v in bm.verts:
         v.co.x *= half[0] * 2
         v.co.y *= half[1] * 2
         v.co.z *= half[2] * 2
+    if bevel > 0.0:
+        bmesh.ops.bevel(
+            bm,
+            geom=list(bm.verts) + list(bm.edges) + list(bm.faces),
+            offset=bevel,
+            segments=2,
+            profile=0.5,
+            affect="EDGES",
+            clamp_overlap=True,
+        )
     me = _bm_to_mesh(bm, name)
     obj = _mesh_object(coll, me, name, material, parent=parent)
     obj.location = location
+    return obj
+
+
+def _envelope(coll, parent):
+    """Smooth teardrop with 16 cream accent stripes over an orange field.
+
+    Stripe assignment is per face by longitude: each cream stripe spans
+    exactly one sphere segment with two orange segments between, so the
+    columns stay crisp while the shading is smooth.
+    """
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=ENVELOPE_U, v_segments=ENVELOPE_V,
+                              radius=ENVELOPE_R)
+    for v in bm.verts:
+        v.co.z *= ENVELOPE_Z_SCALE
+    _smooth(bm)
+    stride = 2.0 * math.pi / ENVELOPE_U
+    for f in bm.faces:
+        center = f.calc_center_median()
+        angle = math.atan2(center.y, center.x)
+        segment = int((angle + math.pi) / stride) % ENVELOPE_U
+        f.material_index = 1 if segment % GORE_PERIOD == GORE_PERIOD - 1 else 0
+    me = _bm_to_mesh(bm, "balloon_envelope")
+    obj = bpy.data.objects.new("balloon_envelope", me)
+    obj.data.materials.append(_material("balloon_orange"))
+    obj.data.materials.append(_material("balloon_cream"))
+    coll.objects.link(obj)
+    obj.location = (0.0, 0.0, ENVELOPE_CENTER_Z)
+    if parent is not None:
+        obj.parent = parent
     return obj
 
 
@@ -149,30 +222,35 @@ def build_balloon():
     root.location = (0.0, 0.0, GROUND_Z)
     coll.objects.link(root)
 
-    # Wicker basket resting on the mat.
+    # Wicker basket resting on the mat, with a cream binding strip.
     _box(coll, "balloon_basket_box", "balloon_brown", BASKET_HALF,
-         (0.0, 0.0, BASKET_HALF[2]), parent=root)
+         (0.0, 0.0, BASKET_HALF[2]), bevel=0.012, parent=root)
+    _box(coll, "balloon_basket_rim", "balloon_cream", (0.155, 0.155, 0.011),
+         (0.0, 0.0, 0.211), bevel=0.004, parent=root)
 
-    # Four ropes from the basket rim up into the envelope.
-    rim = 0.12
-    rope_h = 0.2
+    # Four ropes running angled from the basket rim up into the envelope.
     for i, (sx, sy) in enumerate(((1, 1), (1, -1), (-1, 1), (-1, -1))):
-        _cylinder(coll, f"balloon_rope_{i}", "balloon_brown",
-                  0.012, 0.012, rope_h,
-                  (sx * rim, sy * rim, BASKET_HALF[2] + rope_h / 2),
-                  parent=root)
+        start = Vector((sx * 0.13, sy * 0.13, 0.20))
+        end = Vector((sx * 0.19, sy * 0.19, 0.47))
+        _angled_cylinder(coll, f"balloon_rope_{i}", "balloon_brown", 0.016,
+                         0.30, (start + end) / 2, end - start, parent=root)
 
-    # Envelope: a plump teardrop with a cream band at its equator.
-    _sphere(coll, "balloon_envelope", "balloon_orange", ENVELOPE_R,
-            (0.0, 0.0, ENVELOPE_CENTER_Z),
-            scale=(1.0, 1.0, ENVELOPE_Z_SCALE), parent=root)
+    # Envelope: smooth teardrop, 16 alternating orange/cream gores.
+    _envelope(coll, root)
+
+    # Cream band around the equator.
     _cylinder(coll, "balloon_band", "balloon_cream",
-              ENVELOPE_R + 0.015, ENVELOPE_R + 0.015, 0.11,
+              ENVELOPE_R + 0.018, ENVELOPE_R + 0.018, 0.12,
               (0.0, 0.0, ENVELOPE_CENTER_Z), parent=root)
+
+    # Crown collar on the apex (covered by the snow cap in winter).
+    apex_z = ENVELOPE_CENTER_Z + ENVELOPE_R * ENVELOPE_Z_SCALE
+    _cylinder(coll, "balloon_crown", "balloon_cream", 0.06, 0.06, 0.03,
+              (0.0, 0.0, apex_z), segments=20, parent=root)
 
     # Snow cap parked on the envelope's crown.
     _sphere(coll, "balloon_snow_cap", "balloon_snow", 0.13,
-            (0.0, 0.0, ENVELOPE_CENTER_Z + ENVELOPE_R * ENVELOPE_Z_SCALE - 0.03),
+            (0.0, 0.0, apex_z - 0.03),
             scale=(1.0, 1.0, 0.6), parent=root)
 
     print("built:", ", ".join(obj.name for obj in coll.objects))
