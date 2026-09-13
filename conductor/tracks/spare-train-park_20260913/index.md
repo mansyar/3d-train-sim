@@ -1,7 +1,7 @@
 # Track — Spare Train Park Spot Fix (`spare-train-park_20260913`)
 
 - Type: Bug (scene boot)
-- Status: new
+- Status: complete
 - Branch: `track/spare-train-park_20260913`
 
 The pre-ride "opening train" currently rests at world origin — the middle of
