@@ -149,3 +149,4 @@
 
 ## Phase: Review Fixes
 - [x] Task: Apply review suggestions bc065a9
+- [x] Task: Harden the three-way ride sampling for slow CI runners — wait for all three roads instead of a fixed 44 s window 2d86dfa
