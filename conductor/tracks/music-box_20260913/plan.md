@@ -160,7 +160,7 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
 
 ## Phase 3 — Synthesized voice (non-logic; listen + lifecycle verified)
 
-- [ ] **Task: Music-box audio module (`src/audio/music-box-audio.ts`)**
+- [~] **Task: Music-box audio module (`src/audio/music-box-audio.ts`)**
   - Expected behavior: schedules a tune's notes on the Web Audio clock as soft
     bell-like chimes (fundamental + gentle harmonics, fast softened attack,
     exponential decay, no clipping); master gain capped well under the chug; mute
@@ -175,9 +175,20 @@ at load). Palette: warm wood (0.42, 0.26, 0.15), cream (0.95, 0.86, 0.68), toy r
        winding audible.
     3. Hide the tab mid-phrase → silence; return → no stranded audio; ride continues.
     4. Zero new files under `public/audio/`; zero network requests.
-  - [ ] Implement synth + lifecycle (no unit tests — audio trigger code is non-logic
-        per workflow; tune data already covered in Phase 1)
-  - [ ] Manual listen check + mute/suspend spot checks
+  - [x] Implement synth + lifecycle (no unit tests — audio trigger code is non-logic
+        per workflow; tune data already covered in Phase 1) (b48f0c9)
+  - [ ] Manual listen check + mute/suspend spot checks (rides with the Phase 4
+        wiring — a box cannot wind until the scene module lands)
+  - Notes:
+    - `src/audio/music-box-audio.ts`: lazy AudioContext + master gain (0.5, well
+      under the chug's 0.75). Each winding schedules every note on the audio clock
+      (0.06 s lead) as a soft chime — sine fundamental + quiet octave/twelfth,
+      6 ms softened attack, exponential decay (ring 0.9–2.4 s scaled from the
+      note's beats). One winding at a time: a new tune gently ends the previous
+      (release τ 0.15 s); mute and hidden-tab cut instantly (τ 0.02 s, no tails);
+      while muted `play()` still completes silently (the figure will keep
+      twirling). Context unlock / suspend / resume / dispose mirror
+      `river-babble.ts`; zero assets, zero network.
 - [ ] **Task: Phase Verification & Checkpoint (refer to workflow.md)**
 
 ## Phase 4 — Scene wiring (non-logic; smoke/manual verified)
