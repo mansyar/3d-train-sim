@@ -99,7 +99,7 @@ const BASE_YAW: Record<PieceType, number> = {
   // correctly with no extra base yaw (verified in the render checks).
   // The mirror shares the yaw frame with diverge west; its mirrored GLB
   // rides the same mount. The three-way joins every edge and rides the
-  // straight's frame too — placeholder until its authored GLB lands.
+  // straight's frame too (its authored GLB keeps the same mount).
   switch: 0,
   'switch-mirror': 0,
   'switch-3way': 0,
@@ -166,7 +166,8 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   // The mirror shares the mount — its GLB (blender-switch-mirror.py) is
   // authored on the same straight mount with the diverge x-mirrored.
   // The three-way shares the family's mount too (one corner-small arc per
-  // branch); placeholder until its GLB lands in Phase 2.
+  // branch — blender-switch-3way.py), so the same anchor lands all three
+  // roads' ends on their edge midpoints flush with neighbours.
   switch: [0, -1, 2],
   'switch-mirror': [0, -1, 2],
   'switch-3way': [0, -1, 2],
@@ -206,9 +207,11 @@ const PIECE_URLS: Record<PieceType, string> = {
   // same mount, same blades contract, branch peeling west).
   switch: '/assets/train-kit/switch.glb',
   'switch-mirror': '/assets/train-kit/switch-mirror.glb',
-  // Placeholder until the three-way GLB lands (Phase 2 — same straight
-  // module + one corner arc per branch, blades + lever contract).
-  'switch-3way': '/assets/train-kit/railroad-straight.glb',
+  // Blender-authored three-way junction (blender-switch-3way.py): the kit
+  // straight through-road + one corner-small arc per branch on the same
+  // mount, with a named `switch_blades` node and a `switch_lever` the
+  // renderer moves with the points (blades 0/±0.21, lever 0/±90°).
+  'switch-3way': '/assets/train-kit/switch-3way.glb',
 };
 
 /**
@@ -512,31 +515,46 @@ export function startTrackRenderer(
   }
 
   /**
-   * Point blades flip to the road the train will take: 0 (through) or
-   * ±0.21 rad (diverge — negative tips east on the right switch, positive
-   * tips west on the mirror) about the blades node's local Y — the Blender
-   * +z angle from blender-switch.py arrives as glTF +y via export_yup
-   * (verified: -0.21 in the render checks reads as diverge). Stem merges
-   * (world exit = stem) keep the last branch — only stem entries
-   * alternate, so only north/diverge-model exits move the blades.
-   * Event-driven (ride-motion onSwitchRoad): a short ease-out tween,
-   * instant snap under prefers-reduced-motion, no per-frame cost outside
-   * the tween.
+   * The switch points flip to the road the train will take — the point
+   * blades (0 = through, ±0.21 rad toward the diverge) and the signal
+   * lever (0 = arm north, ±90° swung to the diverge side) move together
+   * in one tween. Angles are about each node's local Y — the Blender +z
+   * angles from the recipes arrive as glTF +y via export_yup (verified:
+   * -0.21 blades and -90° lever read as the east diverge in the render
+   * checks). Stem merges (world exit = stem) keep the last road — only
+   * stem entries alternate, so only model north/diverge exits move the
+   * points. Pose tables: two roads per Y switch, three for the
+   * three-way. Event-driven (ride-motion onSwitchRoad): a short ease-out
+   * tween, instant snap under prefers-reduced-motion, no per-frame cost
+   * outside the tween, and a missing `switch_lever` fails soft (the
+   * blades still animate as before).
    */
-  const BLADE_THROUGH_Y = 0;
-  const BLADE_DIVERGE_Y: Record<SwitchPieceType, number> = {
-    switch: -0.21,
-    'switch-mirror': 0.21,
-    // Interim east pose until the authored three-way GLB lands (Phase 3
-    // replaces this with the three-pose table: 0 straight / −0.21 east /
-    // +0.21 west). Inert for now: the placeholder piece loads the straight
-    // GLB, which carries no `switch_blades` node, so setSwitchRoad fails soft.
-    'switch-3way': -0.21,
+  const LEVER_FORWARD_Y = 0; // arm north, along the through road
+  const LEVER_EAST_Y = -Math.PI / 2;
+  const LEVER_WEST_Y = Math.PI / 2;
+  /** Model-frame road edge -> point blades + lever angles per piece type. */
+  const SWITCH_POSES: Record<
+    SwitchPieceType,
+    Partial<Record<Edge, { blade: number; lever: number }>>
+  > = {
+    switch: {
+      north: { blade: 0, lever: LEVER_FORWARD_Y },
+      east: { blade: -0.21, lever: LEVER_EAST_Y },
+    },
+    'switch-mirror': {
+      north: { blade: 0, lever: LEVER_FORWARD_Y },
+      west: { blade: 0.21, lever: LEVER_WEST_Y },
+    },
+    'switch-3way': {
+      north: { blade: 0, lever: LEVER_FORWARD_Y },
+      east: { blade: -0.21, lever: LEVER_EAST_Y },
+      west: { blade: 0.21, lever: LEVER_WEST_Y },
+    },
   };
   const BLADE_TWEEN_MS = 180;
   const bladeTweens = new Map<
     string,
-    { node: Object3D; from: number; to: number; start: number }
+    { targets: { node: Object3D; from: number; to: number }[]; start: number }
   >();
   let bladeRaf: number | null = null;
 
@@ -544,11 +562,13 @@ export function startTrackRenderer(
     for (const [id, tween] of [...bladeTweens]) {
       const t = (now - tween.start) / BLADE_TWEEN_MS;
       if (t >= 1) {
-        tween.node.rotation.y = tween.to;
+        for (const target of tween.targets) target.node.rotation.y = target.to;
         bladeTweens.delete(id);
       } else {
         const eased = 1 - (1 - t) * (1 - t) * (1 - t);
-        tween.node.rotation.y = tween.from + (tween.to - tween.from) * eased;
+        for (const target of tween.targets) {
+          target.node.rotation.y = target.from + (target.to - target.from) * eased;
+        }
       }
     }
     bladeRaf = bladeTweens.size > 0 ? requestAnimationFrame(runBladeTweens) : null;
@@ -562,30 +582,23 @@ export function startTrackRenderer(
     const blades = model.getObjectByName('switch_blades');
     if (!blades) return;
     // World exit -> model exit (yaw 0 frame): model north = through,
-    // model east = diverge on the right switch, model west = diverge on
-    // the mirror. Invert the yaw advance applied at mount.
+    // model east/west = the diverge sides per the pose table. Invert the
+    // yaw advance applied at mount.
     const steps = item.rotation / 90;
     const modelExit = advancedEdge(exit, (4 - steps) % 4);
-    const divergeEdge = item.type === 'switch' ? 'east' : 'west';
-    const target =
-      modelExit === 'north'
-        ? BLADE_THROUGH_Y
-        : modelExit === divergeEdge
-          ? BLADE_DIVERGE_Y[item.type]
-          : null;
-    if (target === null) return; // a branch→stem merge keeps the last branch
-    if (Math.abs(blades.rotation.y - target) < 1e-4 && !bladeTweens.has(pieceId)) return;
+    const pose = SWITCH_POSES[item.type][modelExit];
+    if (!pose) return; // a branch→stem merge keeps the last road
+    const targets = [{ node: blades, from: blades.rotation.y, to: pose.blade }];
+    const lever = model.getObjectByName('switch_lever');
+    if (lever) targets.push({ node: lever, from: lever.rotation.y, to: pose.lever });
+    const settled = targets.every((t) => Math.abs(t.from - t.to) < 1e-4);
+    if (settled && !bladeTweens.has(pieceId)) return;
     if (reducedMotion || disposed) {
-      blades.rotation.y = target;
+      for (const target of targets) target.node.rotation.y = target.to;
       bladeTweens.delete(pieceId);
       return;
     }
-    bladeTweens.set(pieceId, {
-      node: blades,
-      from: blades.rotation.y,
-      to: target,
-      start: performance.now(),
-    });
+    bladeTweens.set(pieceId, { targets, start: performance.now() });
     if (bladeRaf === null) bladeRaf = requestAnimationFrame(runBladeTweens);
   }
 
