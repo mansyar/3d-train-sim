@@ -4,7 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [switchyard_20260913](tracks/switchyard_20260913/index.md) | Switchyard — Three-Way Junction & Motorized Levers | Feature | done |
+| [switchyard_20260913](archive/switchyard_20260913/index.md) | Switchyard — Three-Way Junction & Motorized Levers | Feature | done |
 | [e2e-ci-budgets_20260913](archive/e2e-ci-budgets_20260913/index.md) | E2E CI Time Budgets — Crossing Gate & Wagon Workshop | Bug | done |
 | [spare-train-park_20260913](archive/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | done |
 | [music-box_20260913](archive/music-box_20260913/index.md) | Music Box — Singing Town Toy | Feature | done |
