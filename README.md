@@ -17,7 +17,8 @@ of cause and effect.
 - **A growing toybox** — straights, curves, switches, hills, tunnels,
   bridges, and a railway crossing gate that really warns the trains
 - **A living meadow** — a winding river with a barge and a frog,
-  windmills, carousels, and a hot-air balloon that wanders the sky
+  windmills, carousels, a hot-air balloon that wanders the sky, and a
+  music box that chimes as the train rolls past
 - **Real work** — wagons load crates at the first station and deliver
   them at the next, with a confetti burst and a growing platform pile
 - **Day, night, and weather** — sunny mornings, golden sunsets, starry

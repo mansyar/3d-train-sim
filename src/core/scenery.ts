@@ -25,6 +25,7 @@ export const SCENERY_KINDS = [
   'sheep',
   'pug',
   'frog',
+  'music-box',
 ] as const;
 
 export type SceneryKind = (typeof SCENERY_KINDS)[number];
@@ -38,10 +39,12 @@ export interface PlacedScenery {
 }
 
 /** The meadow model for each kind (Kenney kits, CC0, vendored in the repo);
- *  the station, the river frog, and the delight toys (windmill, carousel,
- *  balloon) are original Blender-authored pieces (scripts/blender-*.py); the
- *  station carries named crate slots for the cargo deliveries, the frog sits
- *  on its pad, and the delight toys carry named motion and snow-cap nodes. */
+ *  the station, the river frog, the delight toys (windmill, carousel,
+ *  balloon), and the music box are original Blender-authored pieces
+ *  (scripts/blender-*.py); the station carries named crate slots for the
+ *  cargo deliveries, the frog sits on its pad, the delight toys carry named
+ *  motion and snow-cap nodes, and the music box carries a named figure node
+ *  and a snow cap. */
 const SCENERY_URLS: Record<SceneryKind, string> = {
   tree: '/assets/nature-kit/tree_default.glb',
   bush: '/assets/nature-kit/plant_bushDetailed.glb',
@@ -52,6 +55,7 @@ const SCENERY_URLS: Record<SceneryKind, string> = {
   windmill: '/assets/train-kit/windmill.glb',
   carousel: '/assets/train-kit/carousel.glb',
   balloon: '/assets/train-kit/balloon.glb',
+  'music-box': '/assets/train-kit/music-box.glb',
   pig: '/assets/quaternius-farm/pig.glb',
   sheep: '/assets/quaternius-farm/sheep.glb',
   pug: '/assets/quaternius-farm/pug.glb',
@@ -69,6 +73,7 @@ const SCENERY_CATEGORIES_BY_KIND: Record<SceneryKind, SceneryCategory> = {
   windmill: 'town',
   carousel: 'town',
   balloon: 'town',
+  'music-box': 'town',
   pig: 'critter',
   sheep: 'critter',
   pug: 'critter',
@@ -89,6 +94,7 @@ const SCENERY_SCALES: Record<SceneryKind, number> = {
   windmill: 1.1,
   carousel: 1,
   balloon: 0.9,
+  'music-box': 1.1,
   pig: 1,
   sheep: 1,
   pug: 1,
@@ -106,6 +112,7 @@ const SCENERY_LIFTS: Record<SceneryKind, number> = {
   windmill: 0.02,
   carousel: 0.02,
   balloon: 0.02,
+  'music-box': 0.02,
   pig: 0.01,
   sheep: 0.01,
   pug: 0.01,
@@ -123,6 +130,7 @@ const SCENERY_ARIA: Record<SceneryKind, string> = {
   windmill: 'Windmill',
   carousel: 'Carousel',
   balloon: 'Hot-air balloon',
+  'music-box': 'Music box',
   pig: 'Pig',
   sheep: 'Sheep',
   pug: 'Pug',

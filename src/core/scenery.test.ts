@@ -19,11 +19,12 @@ const TOWN_KINDS: readonly SceneryKind[] = [
   'windmill',
   'carousel',
   'balloon',
+  'music-box',
 ];
 const CRITTER_KINDS: readonly SceneryKind[] = ['pig', 'sheep', 'pug', 'frog'];
 
 describe('scenery catalog', () => {
-  it('offers exactly thirteen toys: nature, town, and critters', () => {
+  it('offers exactly fourteen toys: nature, town, and critters', () => {
     expect([...SCENERY_KINDS].sort()).toEqual(
       [
         'balloon',
@@ -32,6 +33,7 @@ describe('scenery catalog', () => {
         'cottage',
         'frog',
         'house',
+        'music-box',
         'pig',
         'pug',
         'rock',
@@ -77,6 +79,10 @@ describe('sceneryUrl', () => {
     expect(sceneryUrl('windmill')).toBe('/assets/train-kit/windmill.glb');
     expect(sceneryUrl('carousel')).toBe('/assets/train-kit/carousel.glb');
     expect(sceneryUrl('balloon')).toBe('/assets/train-kit/balloon.glb');
+  });
+
+  it('serves the music box from the Blender-authored train kit pieces', () => {
+    expect(sceneryUrl('music-box')).toBe('/assets/train-kit/music-box.glb');
   });
 
   it('serves critters from the vendored Quaternius farm pack', () => {
