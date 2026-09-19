@@ -64,15 +64,18 @@
 
 ## Phase 3: Tag, Ship & Production Verification
 
-- [ ] **3.1 PR & CI**
+- [x] **3.1 PR & CI**
   - Push branch; open PR; wait for CI (gates + e2e job) green.
   - *Verify:* PR checks all green; note run IDs.
-- [ ] **3.2 Merge & tag**
+  - *Notes:* PR [#62](https://github.com/mansyar/3d-train-sim/pull/62) opened; CI run `35423830987` all green — Gate · biome + typecheck pass (14s), Gate · vitest pass (18s), Gate · e2e (tablet · phone · prod) pass (19m1s).
+- [~] **3.2 Merge & tag**
   - Squash-merge to `main` (resolve `tracks.md` conflicts if racing PRs land first — re-apply our row); tag `v0.10.0` on the merge commit; push the tag.
   - *Verify:* tag points at the merge commit on `main`.
-- [ ] **3.3 Release workflow watch**
+  - *Notes:* Squash-merge landed as `efabbf4 Release v0.10.0 (#62)`. Incident (resolved): the first tag push landed on the stale local track tip `f3870df` because uncommitted plan edits blocked gh's local branch cleanup; the Release run it triggered (`35424716298`) was cancelled, the tag deleted and re-pushed at `efabbf4` — identical tree, correct provenance. Main CI run `35424712979` runs on `efabbf4`.
+- [~] **3.3 Release workflow watch**
   - Confirm `release.yml` runs gates → Docker build → GHCR push (`:0.10.0` + `:latest`) → Coolify deploy.
   - *Verify:* run green; image tags present; deploy fired.
+  - *Status:* Watching the Release run triggered by the corrected `v0.10.0` tag push (started 2026-09-19).
 - [ ] **3.4 Family-device verification**
   - Cold load production; build a loop; press ▶; whistle; tray shows **0.10.0**; music box chimes; three-way routes; levers swing.
   - *Verify:* notes captured; any friction recorded for a follow-up.
