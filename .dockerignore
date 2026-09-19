@@ -3,6 +3,8 @@ dist
 coverage
 test-results
 playwright-report
+.freebuff
+.playwright-cli
 .github
 conductor
 e2e
