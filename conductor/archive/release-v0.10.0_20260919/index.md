@@ -1,7 +1,7 @@
 # Track — Release v0.10.0 (`release-v0.10.0_20260919`)
 
 - Type: Chore
-- Status: new
+- Status: done
 - Branch: `track/release-v0.10.0_20260919`
 
 Cut and ship v0.10.0 — the music box, the three-way junction with signal
