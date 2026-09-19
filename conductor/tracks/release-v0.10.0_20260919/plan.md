@@ -5,36 +5,42 @@
 
 ## Phase 1: Changelog, Version Bump & Housekeeping
 
-- [ ] **1.1 Changelog curation**
+- [x] **1.1 Changelog curation**
   - Move the whole `[Unreleased]` pile under `## [0.10.0] - 2026-09-19` verbatim (parent voice).
   - Add an empty `[Unreleased]` header; refresh compare links (`[Unreleased]` → `v0.10.0...HEAD`, add `[0.10.0]` link).
   - *Verify:* every bullet preserved; link targets exist (`git tag` check for v0.10.0 noted as pending-tag).
-  - Commit: `docs(changelog): cut v0.10.0`.
+  - *Notes:* Promoted `[Unreleased]` → `## [0.10.0] - 2026-09-19` verbatim (music box / three-way + levers / delight polish / park fix); empty `[Unreleased]` retained; compare links refreshed (`v0.10.0...HEAD`, `v0.9.0...v0.10.0`).
+  - *Commit:* `6f295f3`
 
-- [ ] **1.2 Version bump**
+- [x] **1.2 Version bump**
   - `package.json` `0.9.0 → 0.10.0`; grep repo (excluding archives/history) for stale `0.9.0` strings.
   - *Verify:* `grep 0.9.0` returns only CHANGELOG history + archived tracks.
-  - Commit: `chore(release): bump version to 0.10.0`.
+  - *Notes:* `package.json` now `0.10.0`; tracked-file grep confirms no other `0.9.0` references outside changelog history, `conductor/archive/`, and this track's own spec/plan prose.
+  - *Commit:* `b6bda0e`
 
-- [ ] **1.3 Registry reconciliation (`conductor/tracks.md`)**
+- [x] **1.3 Registry reconciliation (`conductor/tracks.md`)**
   - Add done rows for `delight-toys-polish_20260913`, `scene-ui-decomposition_20260906`, `starter-refresh_20260905`, `pwa-self-update_20260905` with archive links.
   - Fix header wording ("active development tracks" → reflects archived completed tracks).
   - *Verify:* scripted link check — every `archive/...` link in `tracks.md` resolves; all 56 archive folders mentioned.
-  - Commit: `docs(conductor): reconcile tracks registry`.
+  - *Notes:* Four done rows added; header now "Registry of development tracks."; scripted check: 0 broken links, 56/56 archive dirs mentioned.
+  - *Commit:* `232482d`
 
-- [ ] **1.4 Asset documentation refresh (`conductor/tech-stack.md`)**
+- [x] **1.4 Asset documentation refresh (`conductor/tech-stack.md`)**
   - Add missing recipes to the scripts tree: `blender-windmill.py`, `blender-carousel.py`, `blender-balloon.py`, `blender-frog.py`, `blender-crossing-gate.py`, `blender-music-box.py`, `blender-hills-phase2.py`.
   - Extend the authoring reference with newest assets + node contracts (read each recipe to confirm names: `musicbox_figure`/`musicbox_snow_cap`, crossing-gate gates/lantern, delight-toy motion nodes).
   - *Verify:* recipe names match `scripts/` dir listing exactly; node names match recipe source.
-  - Commit: `docs(tech-stack): document latest asset recipes`.
+  - *Notes:* Scripts tree lists all 14 recipes; authoring reference extended with crossing gate (`crossing_gates`/`crossing_lantern`/`crossing_snow_cap`), music box (`musicbox_figure`/`musicbox_snow_cap`), bump/banked-corner run (`hill_snow_*`), and frog (`frog_body`/`frog_pad`) contracts; train-kit asset comment refreshed; scripted check: 0 recipes missing from the doc.
+  - *Commit:* `86702ec`
 
-- [ ] **1.5 README accuracy**
+- [x] **1.5 README accuracy**
   - Add three-way junction + signal levers to the toybox feature list; audit remaining "What's on the table" claims.
   - *Verify:* each claim traceable to a shipped track.
-  - Commit: `docs(readme): add three-way junction to toybox`.
+  - *Notes:* Toybox bullet now names switches with signal levers + the three-way junction; remaining claims (six locomotives, living meadow, cargo, weather) audited against shipped tracks — all current.
+  - *Commit:* `5b20c7d`
 
-- [ ] **1.6 Phase Verification & Checkpoint (Refer to workflow.md)**
+- [~] **1.6 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Run `pnpm check`; present full docs diff + link-check output; await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Changelog, Version Bump & Housekeeping' as complete`.
+  - *Verification so far:* `pnpm check` green (biome 157 files clean / tsc clean / vitest 723/723 in 2.6s); diff since `main` is docs-only (`CHANGELOG.md`, `package.json`, `conductor/**`, `README.md`). Awaiting user confirmation of the manual review before the checkpoint.
 
 ## Phase 2: Local Pre-Tag Verification
 
