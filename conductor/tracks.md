@@ -4,6 +4,7 @@ Registry of active development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [release-v0.10.0_20260919](tracks/release-v0.10.0_20260919/index.md) | Release v0.10.0 | Chore | new |
 | [switchyard_20260913](archive/switchyard_20260913/index.md) | Switchyard — Three-Way Junction & Motorized Levers | Feature | done |
 | [e2e-ci-budgets_20260913](archive/e2e-ci-budgets_20260913/index.md) | E2E CI Time Budgets — Crossing Gate & Wagon Workshop | Bug | done |
 | [spare-train-park_20260913](archive/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | done |
