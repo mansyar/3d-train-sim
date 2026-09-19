@@ -72,12 +72,13 @@
   - Squash-merge to `main` (resolve `tracks.md` conflicts if racing PRs land first — re-apply our row); tag `v0.10.0` on the merge commit; push the tag.
   - *Verify:* tag points at the merge commit on `main`.
   - *Notes:* Squash-merge landed as `efabbf4 Release v0.10.0 (#62)`. Incident (resolved): the first tag push landed on the stale local track tip `f3870df` because uncommitted plan edits blocked gh's local branch cleanup; the Release run it triggered (`35424716298`) was cancelled, the tag deleted and re-pushed at `efabbf4` — identical tree, correct provenance. Main CI run `35424712979` runs on `efabbf4`.
-- [~] **3.3 Release workflow watch**
+- [x] **3.3 Release workflow watch**
   - Confirm `release.yml` runs gates → Docker build → GHCR push (`:0.10.0` + `:latest`) → Coolify deploy.
   - *Verify:* run green; image tags present; deploy fired.
-  - *Status:* Watching the Release run triggered by the corrected `v0.10.0` tag push (started 2026-09-19).
-- [ ] **3.4 Family-device verification**
+  - *Notes:* Release run `35424747989` (tag `v0.10.0` @ `efabbf4`) **green** — Gate · biome + typecheck 17s; Gate · vitest 20s; Gate · e2e (tablet · phone · prod) 14m49s; publish 57s (resolve image tags → buildx → GHCR login → build & push → **Coolify webhook fired**). GHCR: `:0.10.0` and `:latest` both resolve to index digest `sha256:864499ed…c998cd266` (identical image). Earlier run `35424716298` on the stale ref: cancelled. Post-merge main CI `35424712979` was in progress at check time.
+- [~] **3.4 Family-device verification**
   - Cold load production; build a loop; press ▶; whistle; tray shows **0.10.0**; music box chimes; three-way routes; levers swing.
   - *Verify:* notes captured; any friction recorded for a follow-up.
+  - *Status:* Production updated (Coolify webhook fired, release run `35424747989`); awaiting the family-device check.
 - [ ] **3.5 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Present release evidence (run IDs, image, device notes); await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Tag, Ship & Production Verification' as complete`.
