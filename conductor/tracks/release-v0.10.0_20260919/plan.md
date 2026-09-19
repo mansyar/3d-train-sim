@@ -80,5 +80,6 @@
   - Cold load production; build a loop; press ▶; whistle; tray shows **0.10.0**; music box chimes; three-way routes; levers swing.
   - *Verify:* notes captured; any friction recorded for a follow-up.
   - *Notes:* User verified on the family device (2026-09-19): cold load, tray **0.10.0**, ride + whistle, music-box chime, three-way routing, lever swing — all good, no friction reported.
-- [ ] **3.5 Phase Verification & Checkpoint (Refer to workflow.md)**
+- [x] **3.5 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Present release evidence (run IDs, image, device notes); await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Tag, Ship & Production Verification' as complete`.
+  - *Verification Report:* PR #62 CI green (run `35423830987` — gates 14s/18s, e2e 19m1s); squash-merge `efabbf4`; tag `v0.10.0` → `efabbf4` (stale-tag incident resolved by delete + re-push of the identical tree); Release run `35424747989` green (gates, e2e 14m49s, publish 57s → GHCR `:0.10.0` + `:latest`, index `sha256:864499ed…`, Coolify deploy fired); post-merge main CI `35424712979` success; family-device check passed (user-confirmed, 2026-09-19). User confirmed the checkpoint 2026-09-19. `[checkpoint: efabbf4]`
