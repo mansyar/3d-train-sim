@@ -14,8 +14,9 @@ of cause and effect.
 
 - **Six locomotives** — Steam, Diesel, Tram, Express, Freight, and
   Bullet — each with its own pace, whistle voice, and wagon outfits
-- **A growing toybox** — straights, curves, switches, hills, tunnels,
-  bridges, and a railway crossing gate that really warns the trains
+- **A growing toybox** — straights, curves, switches with swinging signal
+  levers, a three-way junction, hills, tunnels, bridges, and a railway
+  crossing gate that really warns the trains
 - **A living meadow** — a winding river with a barge and a frog,
   windmills, carousels, a hot-air balloon that wanders the sky, and a
   music box that chimes as the train rolls past
