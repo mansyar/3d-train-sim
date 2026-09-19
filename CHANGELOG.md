@@ -9,6 +9,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-19
+
 ### Added
 - **A singing music box for the meadow.** A new town-toy treasure: place the
   little wooden music box beside the track, and every time the train rolls
@@ -288,7 +290,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/mansyar/3d-train-sim/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/mansyar/3d-train-sim/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/mansyar/3d-train-sim/compare/v0.6.0...v0.7.0
