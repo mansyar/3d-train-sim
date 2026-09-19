@@ -84,17 +84,24 @@ src/
   state/           # world piece store, ride controller (idle ⇄ riding)
 public/
   assets/train-kit/  # extracted Kenney Train Kit .glb + textures, plus original
-                     # pieces (tunnel.glb, station.glb, crate.glb, the
-                     # hill run hill-slope-up/hill-hill/hill-slope-down.glb +
-                     # their hill-snow-*.glb crowns, and the switchyard
-                     # switch.glb + switch-mirror.glb + switch-3way.glb)
-                     # authored in Blender
+                     # pieces authored in Blender: tunnel.glb, station.glb,
+                     # crate.glb, the hill run hill-slope-up/hill-hill/
+                     # hill-slope-down.glb and the bump/corner family
+                     # (hill-bump-up/-down, hill-hill-half, hill-corner-up/
+                     # -down, hill-hill-corner) with their hill-snow-*.glb
+                     # crowns, the switchyard switch.glb + switch-mirror.glb
+                     # + switch-3way.glb, crossing-gate.glb, music-box.glb,
+                     # windmill.glb, carousel.glb, balloon.glb, barge.glb;
+                     # nature-kit/frog.glb is the frog-on-lily-pad
 scripts/             # Blender build recipes for original assets — deterministic
                      # and re-runnable in any Blender session (e.g.
                      # blender-tunnel.py, blender-station.py,
-                     # blender-hill-snow.py, blender-switch.py,
+                     # blender-hill-snow.py, blender-hills-phase2.py,
+                     # blender-crossing-gate.py, blender-switch.py,
                      # blender-switch-mirror.py, blender-switch-3way.py,
-                     # blender-barge.py)
+                     # blender-music-box.py, blender-windmill.py,
+                     # blender-carousel.py, blender-balloon.py,
+                     # blender-barge.py, blender-frog.py)
 e2e/                # Playwright specs
 conductor/          # project management source of truth
 ```
@@ -117,7 +124,19 @@ three-way (`scripts/blender-switch-3way.py` → `switch-3way.glb`,
 `switch_blades` 0 ↔ −0.21 east / +0.21 west) — every switch GLB now also
 carries a named `switch_lever` node: a wooden signal lever whose steel arm
 the scene swings 0 / ∓90° in the same tween as the blades, so it always
-points at the road the train will take
+points at the road the train will take — and the newer originals: the
+crossing gate (`scripts/blender-crossing-gate.py` → `crossing-gate.glb`;
+the `crossing_gates` root hinges `crossing_gate_east`/`crossing_gate_west`
+between "gates down" and lifted, `crossing_lantern` carries the blinking
+`crossing_lamp_0/1`, plus `crossing_snow_cap`), the singing music box
+(`scripts/blender-music-box.py` → `music-box.glb`; the `musicbox_figure`
+twirls on the lid, `musicbox_snow_cap` toggles in winter), the bump and
+banked-corner run (`scripts/blender-hills-phase2.py` →
+`hill-bump-up`/`hill-hill-half`/`hill-bump-down` and
+`hill-corner-up`/`hill-hill-corner`/`hill-corner-down` + their
+`hill_snow_*` crowns), and the frog-on-lily-pad (`scripts/blender-frog.py`
+→ `frog.glb` in `nature-kit/`; `frog_body` squashes and hops while
+`frog_pad` stays put)
 are the reference implementations. The full workflow is codified in the
 `threejs-blender-asset` skill (user-level skills dir) — phases, hard
 gates, a stdlib `verify-glb.py` GLB gate checker, and a
@@ -169,6 +188,12 @@ Rules of the house (learned the hard way on the tunnel):
      toggled by the shared frozen gate. Lesson: the exporter converts node
      positions but leaves node rotations identity — check the exported axis
      before wiring motion (src/scene/delight-motion.ts).
+   - Crossing gate, music box, and frog-on-lily-pad: `crossing_gates`
+     (hinging `crossing_gate_east`/`crossing_gate_west`) and
+     `crossing_lantern` (the blinking `crossing_lamp_0/1`) plus
+     `crossing_snow_cap`; `musicbox_figure` (twirls on the lid) and
+     `musicbox_snow_cap`; `frog_body` (squashes and hops) over the static
+     `frog_pad`.
 5. **Materials are named, Principled, and double-sided.** `tunnel_*` palette
    (grass, cream bed, steel rails, dirt interior, snow); leave backface
    culling off so the exporter writes `doubleSided: true` — the dark bore
