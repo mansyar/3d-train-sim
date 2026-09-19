@@ -38,9 +38,9 @@
   - *Notes:* Toybox bullet now names switches with signal levers + the three-way junction; remaining claims (six locomotives, living meadow, cargo, weather) audited against shipped tracks — all current.
   - *Commit:* `5b20c7d`
 
-- [~] **1.6 Phase Verification & Checkpoint (Refer to workflow.md)**
+- [x] **1.6 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Run `pnpm check`; present full docs diff + link-check output; await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Changelog, Version Bump & Housekeeping' as complete`.
-  - *Verification so far:* `pnpm check` green (biome 157 files clean / tsc clean / vitest 723/723 in 2.6s); diff since `main` is docs-only (`CHANGELOG.md`, `package.json`, `conductor/**`, `README.md`). Awaiting user confirmation of the manual review before the checkpoint.
+  - *Verification Report:* `pnpm check` green — biome 157 files clean, `tsc --noEmit` clean, vitest 723/723 (40 files, 2.6s). Registry link check: 0 broken links, 56/56 archive dirs mentioned. Recipe check: 0 of 14 `blender-*.py` recipes missing from `tech-stack.md`. Diff vs `main` is docs-only (`CHANGELOG.md`, `README.md`, `conductor/tech-stack.md`, `conductor/tracks.md`, `package.json`, track docs). Manual docs review confirmed by user 2026-09-19. `[checkpoint: 5b20c7d]`
 
 ## Phase 2: Local Pre-Tag Verification
 
