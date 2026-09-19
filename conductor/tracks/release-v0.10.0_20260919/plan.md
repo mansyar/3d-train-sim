@@ -76,9 +76,9 @@
   - Confirm `release.yml` runs gates → Docker build → GHCR push (`:0.10.0` + `:latest`) → Coolify deploy.
   - *Verify:* run green; image tags present; deploy fired.
   - *Notes:* Release run `35424747989` (tag `v0.10.0` @ `efabbf4`) **green** — Gate · biome + typecheck 17s; Gate · vitest 20s; Gate · e2e (tablet · phone · prod) 14m49s; publish 57s (resolve image tags → buildx → GHCR login → build & push → **Coolify webhook fired**). GHCR: `:0.10.0` and `:latest` both resolve to index digest `sha256:864499ed…c998cd266` (identical image). Earlier run `35424716298` on the stale ref: cancelled. Post-merge main CI `35424712979` was in progress at check time.
-- [~] **3.4 Family-device verification**
+- [x] **3.4 Family-device verification**
   - Cold load production; build a loop; press ▶; whistle; tray shows **0.10.0**; music box chimes; three-way routes; levers swing.
   - *Verify:* notes captured; any friction recorded for a follow-up.
-  - *Status:* Production updated (Coolify webhook fired, release run `35424747989`); awaiting the family-device check.
+  - *Notes:* User verified on the family device (2026-09-19): cold load, tray **0.10.0**, ride + whistle, music-box chime, three-way routing, lever swing — all good, no friction reported.
 - [ ] **3.5 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Present release evidence (run IDs, image, device notes); await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Tag, Ship & Production Verification' as complete`.
