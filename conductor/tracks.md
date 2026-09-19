@@ -1,16 +1,21 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of active development tracks.
+Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [release-v0.10.0_20260919](tracks/release-v0.10.0_20260919/index.md) | Release v0.10.0 | Chore | in progress |
 | [switchyard_20260913](archive/switchyard_20260913/index.md) | Switchyard — Three-Way Junction & Motorized Levers | Feature | done |
 | [e2e-ci-budgets_20260913](archive/e2e-ci-budgets_20260913/index.md) | E2E CI Time Budgets — Crossing Gate & Wagon Workshop | Bug | done |
 | [spare-train-park_20260913](archive/spare-train-park_20260913/index.md) | Spare Train Park Spot Fix | Bug | done |
 | [music-box_20260913](archive/music-box_20260913/index.md) | Music Box — Singing Town Toy | Feature | done |
+| [delight-toys-polish_20260913](archive/delight-toys-polish_20260913/index.md) | Delight Toys Polish — Windmill, Carousel & Balloon | Feature | done |
 | [release-v0.9.0_20260906](archive/release-v0.9.0_20260906/index.md) | Release v0.9.0 | Chore | done |
 | [scenery-delight_20260905](archive/scenery-delight_20260905/index.md) | Scenery Delight — Three Animated Toys | Feature | done |
+| [starter-refresh_20260905](archive/starter-refresh_20260905/index.md) | Starter Refresh | Feature | done |
+| [pwa-self-update_20260905](archive/pwa-self-update_20260905/index.md) | PWA Self-Update Flow | Chore | done |
 | [readme-onboarding-docs_20260906](archive/readme-onboarding-docs_20260906/index.md) | README & Contributor Onboarding Docs | Chore | done |
+| [scene-ui-decomposition_20260906](archive/scene-ui-decomposition_20260906/index.md) | Scene/UI Decomposition | Chore | done |
 | [loco-fleet_20260905](archive/loco-fleet_20260905/index.md) | Locomotive Fleet Expansion | Feature | done |
 | [railway-crossing-gate_20260905](archive/railway-crossing-gate_20260905/index.md) | Railway Crossing Gate | Feature | done |
 | [e2e-stability_20260904](archive/e2e-stability_20260904/index.md) | E2E Stability & CI Efficiency | Chore | done |
