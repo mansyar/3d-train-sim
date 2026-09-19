@@ -44,19 +44,23 @@
 
 ## Phase 2: Local Pre-Tag Verification
 
-- [ ] **2.1 Full local gates**
+- [x] **2.1 Full local gates**
   - `pnpm exec biome check .` + `pnpm exec tsc --noEmit` + `CI=true pnpm test` + full `pnpm exec playwright test`.
   - *Constraint:* never run `docker build` concurrently with e2e (recorded v0.9.0 lesson).
   - *Verify:* record file/test counts (biome files, vitest passed, playwright passed + duration).
   - Commit: none (verification only) — results recorded in plan notes.
+  - *Notes:* biome 157 files clean; `tsc --noEmit` clean; vitest 723/723 (40 files, 2.6s); full Playwright **137 passed (10.9m)** across tablet · phone · prod (2 workers). Console noise only: known `THREE.WebGLShadowMap: PCFSoftShadowMap has been deprecated` warning (pre-existing, not a failure).
 
-- [ ] **2.2 Local container smoke**
+- [x] **2.2 Local container smoke**
   - `docker build tiny-tracks:0.10.0`; run container; curl `/` (200, text/html, no-cache), `/sw.js` + manifest (no-cache), a hashed asset (immutable), SPA fallback (200); sanity-check precache entry count/size vs 6 MB cap; tear down container.
   - *Verify:* captured header + precache output recorded in plan notes.
   - Commit: none.
+  - *Notes:* First build attempt failed during context load — `.dockerignore` missed the gitignored local dirs `.freebuff/` (worktrees with `node_modules`; `invalid file request … jsonpointer`) and `.playwright-cli/`; added both to `.dockerignore` (local-build hygiene, not app code — deviation documented). Image `tiny-tracks:0.10.0` built (69.8 MB). Smoke: `/` 200 `text/html` no-cache; `/sw.js` 200 `application/javascript` no-cache; manifest 200 no-cache (`application/octet-stream` — pre-existing nginx mime behavior, not a blocker); SPA fallback 200 `text/html`; entry JS `/assets/index-DpBtFUsF.js` 200 immutable (789,525 bytes; hash differs from local `dist`, as expected); `/assets/train-kit/tunnel.glb` 200 (7-day cache); **precache 173 entries** (v0.9.0: 171); `dist` 9.36 MB total (v0.9.0: ~10.2 MB); container removed cleanly.
+  - Commit: `789df2d chore(docker): ignore local tooling dirs in build context`.
 
-- [ ] **2.3 Phase Verification & Checkpoint (Refer to workflow.md)**
+- [x] **2.3 Phase Verification & Checkpoint (Refer to workflow.md)**
   - Present gate + smoke results; await explicit confirmation; write Verification Report + `[checkpoint: <sha>]`; commit `conductor(plan): Mark phase 'Local Pre-Tag Verification' as complete`.
+  - *Verification Report:* Gates — biome 157 files clean; `tsc --noEmit` clean; vitest 723/723; full Playwright **137 passed (10.9m)** across tablet · phone · prod. Container smoke — `tiny-tracks:0.10.0` built (69.8 MB) and served: root/sw/manifest no-cache, SPA fallback 200, hashed entry JS immutable, **173 precache entries** (v0.9.0: 171), `dist` 9.36 MB, container removed. Documented deviation (user-approved): `.dockerignore` gained `.freebuff/` + `.playwright-cli/` (commit `789df2d`) so local builds ignore gitignored tooling dirs; no app code touched, CI unaffected. User confirmed 2026-09-19. `[checkpoint: 789df2d]`
 
 ## Phase 3: Tag, Ship & Production Verification
 
