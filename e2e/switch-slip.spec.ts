@@ -18,7 +18,7 @@ import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /** Mirrors the renderer's slip pose tables (spec copy, kept in sync). */
 type EdgeName = 'north' | 'east' | 'south' | 'west';
-const SLIP_BLADES: Record<EdgeName, Record<string, number>> = {
+const SLIP_BLADES: Record<EdgeName, Partial<Record<EdgeName, number>>> = {
   south: { north: 0, east: -0.21, west: 0.21 },
   north: { south: 0, west: -0.21, east: 0.21 },
   east: { west: 0, north: -0.21, south: 0.21 },
@@ -147,16 +147,20 @@ test('a placed double slip rides all three roads with its entry blades and lever
       const pose = await poseOf(page, id, entry);
       if (!pose || pose.lever === null) continue;
       const lever = pose.lever;
-      const bladeRoads = (Object.entries(SLIP_BLADES[entry]) as [EdgeName, number][])
-        .filter(([, blade]) => Math.abs(blade - pose.blade) < 1e-3)
-        .map(([road]) => road);
-      const road = bladeRoads.find((candidate) => Math.abs(SLIP_LEVERS[candidate] - lever) < 0.02);
       // Only settled, road-paired sightings count: mid-tween blades would
       // otherwise fake a third key and end the loop early.
-      if (road === undefined) continue;
+      const road = (Object.entries(SLIP_BLADES[entry]) as [EdgeName, number][]).find(
+        ([road, blade]) =>
+          Math.abs(blade - pose.blade) < 1e-3 && Math.abs(SLIP_LEVERS[road] - lever) < 0.02,
+      );
+      if (!road) continue;
+      const [roadName, canonicalBlade] = road;
       samples += 1;
-      bladeKeys.add(pose.blade.toFixed(3));
-      pairedRoads.add(SLIP_LEVERS[road].toFixed(3));
+      // Record the road's canonical blade value: the last witnessed tween
+      // frame can land one RAF step short (-0.209), and a raw toFixed would
+      // then never match the exact '-0.210' key below.
+      bladeKeys.add(canonicalBlade.toFixed(3));
+      pairedRoads.add(SLIP_LEVERS[roadName].toFixed(3));
     }
     await page.waitForTimeout(400);
   }
