@@ -173,17 +173,22 @@ def _arc_meshes(coll):
         obj.rotation_euler = (0.0, 0.0, rot_z)
 
 
-def _blade_bars(coll, root, prefix):
-    """The 3-way's bar pair in the group's LOCAL frame (shared by every
-    group): two thin steel bars straddling the group's straight road,
-    toes toward local -y. Parented to the group's empty so the renderer's
-    rotation about the node's vertical flips them."""
+def _blade_bars(coll, root, prefix, orient_z=0.0):
+    """The 3-way's bar pair, rotated by `orient_z` about the vertical so the
+    bars straddle the GROUP's own straight road (toes toward the group's
+    edge, tops into the cell). Parented to the group's empty at rest
+    rotation 0, so the renderer's pose writes act on the baked alignment:
+    local -y (toe side) rotated by orient_z points at the group's edge."""
+    cos_o = math.cos(orient_z)
+    sin_o = math.sin(orient_z)
     for side in (-1, 1):
         bm = bmesh.new()
         bmesh.ops.create_cube(bm, size=1.0)
         for v in bm.verts:
-            v.co.x = v.co.x * BLADE_HALF_W * 2 + side * BLADE_OFFSET_X
-            v.co.y = v.co.y * BLADE_HALF_LEN * 2 + BLADE_Y_OFFSET
+            lx = v.co.x * BLADE_HALF_W * 2 + side * BLADE_OFFSET_X
+            ly = v.co.y * BLADE_HALF_LEN * 2 + BLADE_Y_OFFSET
+            v.co.x = lx * cos_o - ly * sin_o
+            v.co.y = lx * sin_o + ly * cos_o
             v.co.z = v.co.z * BLADE_HALF_H * 2 + BLADE_HALF_H + BLADE_RISE
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         me = bpy.data.meshes.new(f"{prefix}_{side}")
@@ -197,16 +202,19 @@ def _blade_bars(coll, root, prefix):
 
 def _blade_group(coll, name, heel, orient_z):
     """One entry's point-blade group: a named empty at the heel carrying
-    the shared bar pair. The group's `orient_z` rotates the local bars so
-    the toes reach the group's own edge:
+    the bar pair. The bars are BAKED at `orient_z` (rotated into world
+    alignment in _blade_bars), so every group node rests at rotation 0 and
+    the renderer can simply set the node's angle — a rest rotation on the
+    node would be destroyed by the renderer's pose writes:
       south (0, -3.62) orient 0     — the legacy `switch_blades` contract
       north (0, -0.38) orient pi
       east (1.62, -2)  orient +pi/2
       west (-1.62, -2) orient -pi/2
     Pose contract per group (renderer rotates the node about its vertical;
-    angles arrive as glTF +y): 0 = bars aligned with the group's
-    straight-through road; then, following the 3-way's south convention
-    (-0.21 east / +0.21 west) rotated into each group's frame:
+    angles arrive as glTF +y; the bar TOPS lean toward the chosen road's
+    tangent — verified by a ±0.6 top-view A/B on the shipped 3-way, which
+    matches the 3-way's -0.21 east / +0.21 west): 0 = bars aligned with
+    the group's straight-through road; then:
       south: -0.21 -> SE arc, +0.21 -> SW arc
       north: -0.21 -> NW arc, +0.21 -> NE arc
       east:  -0.21 -> NE arc, +0.21 -> SE arc
@@ -215,9 +223,9 @@ def _blade_group(coll, name, heel, orient_z):
     root = bpy.data.objects.new(name, None)
     root.empty_display_size = 0.2
     root.location = (heel[0], heel[1], BLADE_HEEL_Z)
-    root.rotation_euler = (0.0, 0.0, orient_z)
+    root.rotation_euler = (0.0, 0.0, 0.0)
     coll.objects.link(root)
-    _blade_bars(coll, root, f"{name}_blade")
+    _blade_bars(coll, root, f"{name}_blade", orient_z)
     return root
 
 
