@@ -2,14 +2,21 @@
 
 ## Phase 1 — Core Logic: Phase Stepping & Preference Persistence (TDD)
 
-- [ ] Task: Day clock `advancePhase()` (write failing tests first)
-  - [ ] Test: jumping from each of the 5 phases lands on the correct next
+- [x] Task: Day clock `advancePhase()` (write failing tests first) — b8e4574
+  - [x] Test: jumping from each of the 5 phases lands on the correct next
         phase (night wraps to dawn)
-  - [ ] Test: jump fires the phase-change subscription event exactly once
-  - [ ] Test: after a jump, `tick()` continues drifting forward from the new
+  - [x] Test: jump fires the phase-change subscription event exactly once
+  - [x] Test: after a jump, `tick()` continues drifting forward from the new
         position (fraction advances over time)
-  - [ ] Implement `advancePhase()` in `src/core/day-clock.ts` by
+  - [x] Implement `advancePhase()` in `src/core/day-clock.ts` by
         re-anchoring the clock's start time (no scene API changes)
+
+  Notes: Added `DAY_PHASES`, `nextPhase()`, and `setPhase()`/`advancePhase()`
+  on the clock. A jump lands on the *first* moment of the target phase (read
+  off the shared `PHASE_BOUNDS` table) so the tapped phase reads at full
+  mood, and the clock keeps a mutable `anchor` fraction instead of a fixed
+  `START_FRACTION` — re-anchoring by time offset moved the day backwards,
+  which two tests caught.
 - [ ] Task: Persisted day-phase preference (write failing tests first)
   - [ ] Test: `serializeWorld` round-trips an optional `dayPhase` in
         `preferences`
