@@ -139,10 +139,35 @@
   now", and the reload witness parks on `night` (the longest phase) so drift
   cannot outrun it. Cycle *order* is left to the unit tests, which already pin
   it exhaustively. 60 s budgets per `e2e/README.md`.
-- [ ] Task: Docs
-  - [ ] CHANGELOG `[Unreleased]` entry (parent-friendly wording)
-  - [ ] `product.md` roadmap note + `tech-stack.md` touch-ups if wiring
+- [x] Task: Docs — 175e9ba
+  - [x] CHANGELOG `[Unreleased]` entry (parent-friendly wording)
+  - [x] `product.md` roadmap note + `tech-stack.md` touch-ups if wiring
         shifted
-- [ ] Task: Full gate run — `pnpm exec biome check . && pnpm exec tsc
-      --noEmit && pnpm test` + e2e suite
+
+  Notes: CHANGELOG entry written for parents, not implementers. `product.md`
+  extends the existing "Time of day and weather" bullet with an
+  `✅ extended (sun-moon_20260930)` clause rather than adding a new roadmap
+  line — this shipped an extension of that feature, not a new one.
+  `tech-stack.md` gained two inline notes: `save.ts` now says what
+  `preferences` carries, and `day-ambience.ts` records that it owns the
+  child-facing day-phase bridge. No `product-guidelines.md` change: no new
+  rule, gesture, or visual language was introduced (the emoji matched the
+  existing mute button rather than adding one).
+- [x] Task: Full gate run — `pnpm exec biome check . && pnpm exec tsc
+      --noEmit && pnpm test` + e2e suite — 175e9ba
+
+  Notes: Gate green — biome clean over 159 files, `tsc --noEmit` clean, 753
+  unit tests passing (40 files), and the **full** Playwright suite green at
+  147 passed on tablet + phone. Coverage on the changed logic, after
+  removing two dead branches: `day-clock.ts` 95.65% stmts / **100% branch** /
+  97.56% lines, `save.ts` 91.91% / 92.43% / 98.64%, `persistence.ts` 87.8% /
+  68.75% / 91.89% (its uncovered branches are the pre-existing default-param
+  and IndexedDB-upgrade paths). The two removed branches were `nextPhase`'s
+  unreachable `?? 'dawn'` (mine — replaced with a total `NEXT_PHASE` lookup in
+  the file's existing `PHASE_CENTERS` style, guarded against drift by the
+  existing `DAY_PHASES.map(nextPhase)` test) and `phaseAtFraction`'s
+  unreachable `?.`/`??`. Worth flagging: my Phase 1 report quoted only
+  statements and lines for `day-clock.ts`, which read as 95%+ while branch
+  coverage was actually 70%. It is now 100%, but the earlier report understated
+  the gap.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
