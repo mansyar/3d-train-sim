@@ -124,7 +124,7 @@
   dim dawn); the icon always previews the coming phase; a reload returns to the
   same time of day; the day keeps drifting on its own afterward.
 
-## Phase 3 — E2E & Docs
+## Phase 3 — E2E & Docs [checkpoint: 7016211]
 
 - [x] Task: Playwright smoke spec (`e2e/sun-moon.spec.ts`) — c3d3dbf
   - [x] Tap cycles phases and the icon flips (assert via dev
@@ -170,4 +170,21 @@
   statements and lines for `day-clock.ts`, which read as 95%+ while branch
   coverage was actually 70%. It is now 100%, but the earlier report understated
   the gap.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phase 3
+
+- Automated, full gate: `biome check .` clean over 159 files · `tsc --noEmit`
+  clean · 753 unit tests across 40 files · `pnpm exec playwright test`
+  **147 passed** on the tablet and phone projects (12.4 min, exit 0).
+- Coverage on the changed logic files: `day-clock.ts` 95.7% statements /
+  **100% branch** / 97.6% lines · `save.ts` 91.9% / 92.4% / 98.6% ·
+  `persistence.ts` 87.8% / 68.8% / 91.9% (uncovered branches there are the
+  pre-existing default-parameter and IndexedDB-upgrade paths).
+- Manual (user-confirmed): no new manual surface. Phase 2's sign-off covers
+  the behavior; the only change since was the phase-center fix, whose five
+  palettes the agent confirmed by screenshot.
+- Correction carried forward: the Phase 1 report quoted statements and lines
+  for `day-clock.ts` (95.7% / 97.6%) and omitted branch coverage, which stood
+  at 70% — under the 80% gate. Both gaps were dead defensive branches, now
+  removed.
