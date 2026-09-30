@@ -188,9 +188,9 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   requests), in-app ground-contact screenshot verified. One red e2e cycle
   (two contract corrections, documented above) — no product-code fixes
   were needed. Checkpoint SHA: 6b378c3.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-## Phase 4: E2E & Docs
+## Phase 4: E2E & Docs [checkpoint: 492ee2bc1f45aac1891403102977c8e2c31fea2b]
 
 - [x] Task: `e2e/switch-slip.spec.ts` — place the slip, ride ≥3 passes
       asserting all three roads via witnesses, reload persistence, clean
@@ -225,4 +225,6 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   fix along the way: the spec's pose tables are typed against the
   entry-name union so noUncheckedIndexedAccess can't see undefined
   entries (commit 8683ebf).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  ### Phase 4 Verification Report (2026-09-30)
