@@ -47,15 +47,19 @@ export function nextPhase(phase: DayPhase): DayPhase {
   return DAY_PHASES[(index + 1) % DAY_PHASES.length] ?? 'dawn';
 }
 
-/** The first moment of `phase` — where a jump lands so its mood reads clean. */
-function startOf(phase: DayPhase): number {
+/**
+ * Where each phase begins, derived from the same bounds — a jump lands here
+ * so the tapped mood reads at its clearest, with no second source of truth.
+ */
+const PHASE_STARTS: Record<DayPhase, number> = (() => {
+  const starts = {} as Record<DayPhase, number>;
   let from = 0;
   for (const bound of PHASE_BOUNDS) {
-    if (bound.phase === phase) return from;
+    starts[bound.phase] = from;
     from = bound.until;
   }
-  return 0;
-}
+  return starts;
+})();
 
 /** Map a (possibly out-of-range, will wrap) day fraction to its phase. */
 export function phaseAtFraction(fraction: number): DayPhase {
@@ -95,7 +99,7 @@ export function createDayClock(options: { now: () => number }): DayClock {
 
   /** Re-anchor the day at the start of `next`; the jump reads immediately. */
   function anchorTo(next: DayPhase): void {
-    anchor = startOf(next);
+    anchor = PHASE_STARTS[next];
     startedAt = options.now();
   }
 
