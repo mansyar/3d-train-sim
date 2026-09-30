@@ -192,10 +192,20 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
 
 ## Phase 4: E2E & Docs
 
-- [ ] Task: `e2e/switch-slip.spec.ts` — place the slip, ride ≥3 passes
+- [x] Task: `e2e/switch-slip.spec.ts` — place the slip, ride ≥3 passes
       asserting all three roads via witnesses, reload persistence, clean
       console
-- [ ] Task: Docs — retire the roadmap item in `conductor/product.md`,
+
+  Notes: pulled forward into Phase 3 (documented there) — the e2e run was
+  the in-app verification harness. Commit d390239; 6/6 across tablet and
+  phone.
+
+- [x] Task: Docs — retire the roadmap item in `conductor/product.md`,
       CHANGELOG `[Unreleased]` entry
+
+  Notes: product.md's switch roadmap bullet now records the double slip
+  as shipped (track id + date) and notes the named roadmap is exhausted;
+  CHANGELOG gains a parent-facing `[Unreleased]` Added entry (what it
+  does, where to find it, saves stay compatible).
 - [ ] Task: Full gate run (`biome` + `tsc` + Vitest + Playwright)
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
