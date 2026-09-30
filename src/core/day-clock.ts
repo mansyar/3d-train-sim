@@ -25,6 +25,9 @@ export const DAY_PHASES = [
 /** Where each session starts: a pleasant mid-morning (a quarter into the day). */
 const START_FRACTION = 0.25;
 
+/** The phase a fresh day (and any save without a preference) begins in. */
+export const DEFAULT_DAY_PHASE: DayPhase = 'morning';
+
 /**
  * Phase slices of the day fraction. Dawn and dusk are short — transitions
  * should feel like moments, not hours — while night gets the largest share
@@ -82,7 +85,7 @@ export interface DayClock {
 export function createDayClock(options: { now: () => number }): DayClock {
   let startedAt = options.now();
   let anchor: number = START_FRACTION;
-  let phase: DayPhase = phaseAtFraction(START_FRACTION);
+  let phase: DayPhase = DEFAULT_DAY_PHASE;
   const listeners = new Set<(event: { kind: 'phase'; phase: DayPhase }) => void>();
 
   function fraction(): number {

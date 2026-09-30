@@ -1,4 +1,5 @@
 import { MAX_DELIVERED_CRATES } from './cargo';
+import { DAY_PHASES, type DayPhase, DEFAULT_DAY_PHASE } from './day-clock';
 import { PIECE_TYPES } from './pieces';
 import { isWater } from './river';
 import { type PlacedScenery, SCENERY_KINDS, type SceneryKind } from './scenery';
@@ -25,6 +26,11 @@ const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
 
 export interface DevicePreferences {
   muted: boolean;
+  /**
+   * The day phase the child last chose with the sun/moon button. Absent for
+   * older snapshots, which simply start at the default mid-morning.
+   */
+  dayPhase?: DayPhase;
 }
 
 export interface WorldSnapshot {
@@ -55,6 +61,7 @@ export function serializeWorld(
   muted = false,
   deliveries: Record<string, number> = {},
   consist: TrainConsist = defaultConsist(),
+  dayPhase?: DayPhase,
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -72,8 +79,12 @@ export function serializeWorld(
     })),
     train,
   };
-  // Sound-on is the default, so it is omitted to keep snapshots minimal.
-  if (muted) snapshot.preferences = { muted: true };
+  // Sound-on is the default and mid-morning is where every day starts, so
+  // both are omitted to keep snapshots minimal.
+  const chosen = dayPhase && dayPhase !== DEFAULT_DAY_PHASE ? dayPhase : undefined;
+  if (muted || chosen) {
+    snapshot.preferences = { muted, ...(chosen ? { dayPhase: chosen } : {}) };
+  }
   // Same for an empty delivery ledger.
   if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
   // Same for an all-classic consist — the default needs no storage.
@@ -163,7 +174,17 @@ export function deserializePreferences(value: unknown): DevicePreferences {
   if (!isRecord(value)) return { muted: false };
   const preferences = value.preferences;
   if (!isRecord(preferences)) return { muted: false };
-  return typeof preferences.muted === 'boolean' ? { muted: preferences.muted } : { muted: false };
+  const muted = typeof preferences.muted === 'boolean' ? preferences.muted : false;
+  // A phase the child never chose, or one this build does not know, is simply
+  // dropped — the day then starts at its default mid-morning.
+  const dayPhase = parseDayPhase(preferences.dayPhase);
+  return dayPhase ? { muted, dayPhase } : { muted };
+}
+
+function parseDayPhase(value: unknown): DayPhase | undefined {
+  return typeof value === 'string' && (DAY_PHASES as readonly string[]).includes(value)
+    ? (value as DayPhase)
+    : undefined;
 }
 
 /**
