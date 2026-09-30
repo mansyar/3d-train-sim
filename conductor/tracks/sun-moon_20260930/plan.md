@@ -17,12 +17,19 @@
   mood, and the clock keeps a mutable `anchor` fraction instead of a fixed
   `START_FRACTION` — re-anchoring by time offset moved the day backwards,
   which two tests caught.
-- [ ] Task: Persisted day-phase preference (write failing tests first)
-  - [ ] Test: `serializeWorld` round-trips an optional `dayPhase` in
+- [x] Task: Persisted day-phase preference (write failing tests first) — b622dc8
+  - [x] Test: `serializeWorld` round-trips an optional `dayPhase` in
         `preferences`
-  - [ ] Test: `deserializePreferences` forgives missing/invalid `dayPhase`
+  - [x] Test: `deserializePreferences` forgives missing/invalid `dayPhase`
         (defaults to mid-morning start, no throw)
-  - [ ] Extend `src/core/save.ts` `DevicePreferences`
+  - [x] Extend `src/core/save.ts` `DevicePreferences`
+
+  Notes: `DevicePreferences` gained an optional `dayPhase`; `serializeWorld`
+  takes it as a trailing optional arg, so the snapshot version stays 3 and
+  every existing caller is untouched. Mid-morning is exported as
+  `DEFAULT_DAY_PHASE` and is omitted from storage (it is what a save without
+  the field restores to), matching the existing "omit the default" pattern
+  for mute. An unknown phase string is dropped without losing mute state.
 - [ ] Task: Persistence wiring in `src/state/persistence.ts` (TDD)
   - [ ] Test: day-phase changes re-save the snapshot without clobbering
         world/mute (change-gated watcher pattern)
