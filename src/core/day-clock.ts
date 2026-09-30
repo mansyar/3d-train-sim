@@ -13,7 +13,10 @@ export const DAY_LENGTH_MS = 150_000;
 
 export type DayPhase = 'dawn' | 'morning' | 'noon' | 'dusk' | 'night';
 
-/** The five moods of the day, in the order the day runs through them. */
+/**
+ * The five moods of the day, in the order the day runs through them. Paired
+ * with `NEXT_PHASE` below — `DAY_PHASES.map(nextPhase)` must stay one step on.
+ */
 export const DAY_PHASES = [
   'dawn',
   'morning',
@@ -41,10 +44,21 @@ const PHASE_BOUNDS: readonly { until: number; phase: DayPhase }[] = [
   { until: 1, phase: 'night' },
 ];
 
+/**
+ * What follows each phase — night turns the page back to dawn. Total by
+ * construction, so advancing can never fall off the end of the day.
+ */
+const NEXT_PHASE: Record<DayPhase, DayPhase> = {
+  dawn: 'morning',
+  morning: 'noon',
+  noon: 'dusk',
+  dusk: 'night',
+  night: 'dawn',
+};
+
 /** The phase that follows `phase` — night turns the page back to dawn. */
 export function nextPhase(phase: DayPhase): DayPhase {
-  const index = DAY_PHASES.indexOf(phase);
-  return DAY_PHASES[(index + 1) % DAY_PHASES.length] ?? 'dawn';
+  return NEXT_PHASE[phase];
 }
 
 /**
@@ -71,9 +85,10 @@ export function phaseAtFraction(fraction: number): DayPhase {
   for (const bound of PHASE_BOUNDS) {
     if (t < bound.until) return bound.phase;
   }
-  // Unreachable — the last bound matches any t < 1 — but
-  // noUncheckedIndexedAccess cannot prove the index non-undefined.
-  return PHASE_BOUNDS[PHASE_BOUNDS.length - 1]?.phase ?? 'night';
+  // Unreachable: the last bound runs to 1 and `t` is always below 1, so the
+  // loop always returns. Kept as the answer rather than a throw, because the
+  // caller is a frame-loop repaint that must never be the thing that crashes.
+  return 'night';
 }
 
 export interface DayClock {

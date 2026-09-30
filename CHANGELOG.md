@@ -10,6 +10,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 ## [Unreleased]
 
 ### Added
+- **A sun and moon button, so little ones can turn the day themselves.** Tap
+  it and the meadow walks through its moods one page at a time: a peach dawn,
+  a bright morning, noon, an orange dusk, then a deep blue night where the
+  fireflies come out and the windows glow warm. The button always shows the
+  mood the next tap will bring — a moon while it is daylight, a sun once the
+  sun has gone down. There is no gate and no waiting; the day keeps drifting on
+  its own afterwards, and the time of day you leave it in is the time of day
+  you come back to. Works offline, nothing new to download.
 - A double-slip switch: a four-way crossing where every entry cycles
   straight → east diagonal → west diagonal on successive passes, with the
   entry's point blades and the signal lever following the chosen road.
