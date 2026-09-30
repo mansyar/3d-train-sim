@@ -316,8 +316,9 @@ export interface TrackRenderer {
   setGridVisible(visible: boolean): void;
   /** Winter tell: show/hide the tunnel domes' snow caps (event-driven). */
   setTunnelSnow(visible: boolean): void;
-  /** Flip a switch's point blades to the chosen road (event-driven). */
-  setSwitchRoad(pieceId: string, exit: Edge): void;
+  /** Flip a switch's point blades to the chosen road (event-driven). The
+   *  double slip also needs the entry edge — its blades live per entry. */
+  setSwitchRoad(pieceId: string, exit: Edge, entry?: Edge): void;
   /** Advance every crossing gate toward the trains; poses the arms, lantern,
    *  and bell ask. `trains` are riding trains' world-space spots, `night` the
    *  0..1 night factor (idle lanterns glow softly after dusk). */
@@ -344,8 +345,10 @@ export interface TrackRenderer {
   /** Debug aid: whether the crossing bell edge is ringing right now. */
   bellRinging(): boolean;
   /** Dev/e2e witness: a switch piece's live point-blade + signal-lever
-   *  angles (null when the piece is missing or has no blades rendered). */
-  switchPose(pieceId: string): { blade: number; lever: number | null } | null;
+   *  angles (null when the piece is missing or has no blades rendered).
+   *  The double slip keeps one blade group per entry edge — pass the
+   *  model entry to read that group (south group = the default node). */
+  switchPose(pieceId: string, entry?: Edge): { blade: number; lever: number | null } | null;
 }
 
 /** Renders one cloned model per placed piece, kept in sync with the store. */
@@ -531,15 +534,20 @@ export function startTrackRenderer(
    * -0.21 blades and -90° lever read as the east diverge in the render
    * checks). Stem merges (world exit = stem) keep the last road — only
    * stem entries alternate, so only model north/diverge exits move the
-   * points. Pose tables: two roads per Y switch, three for the
-   * three-way. Event-driven (ride-motion onSwitchRoad): a short ease-out
-   * tween, instant snap under prefers-reduced-motion, no per-frame cost
-   * outside the tween, and a missing `switch_lever` fails soft (the
-   * blades still animate as before).
+   * points. Pose tables: two roads per Y switch, three for the three-way.
+   * The double slip has no stem: its blade groups live on the ENTRY edge
+   * (the entry's blades set for the road being taken — 0 = straight
+   * through, ±0.21 toward the diagonals per the recipe's pose contract,
+   * bar tops leaning toward the chosen road's tangent), while the lever
+   * follows the exit. Event-driven (ride-motion onSwitchRoad): a short
+   * ease-out tween, instant snap under prefers-reduced-motion, no
+   * per-frame cost outside the tween, and a missing `switch_lever` fails
+   * soft (the blades still animate as before).
    */
   const LEVER_FORWARD_Y = 0; // arm north, along the through road
   const LEVER_EAST_Y = -Math.PI / 2;
   const LEVER_WEST_Y = Math.PI / 2;
+  const LEVER_BACK_Y = Math.PI; // arm south — the slip's fourth road
   /** Model-frame road edge -> point blades + lever angles per piece type. */
   const SWITCH_POSES: Record<
     SwitchPieceType,
@@ -558,11 +566,29 @@ export function startTrackRenderer(
       east: { blade: -0.21, lever: LEVER_EAST_Y },
       west: { blade: 0.21, lever: LEVER_WEST_Y },
     },
-    // The double slip has no stem: one exit edge can be reached by two
-    // different roads (the straight and a diagonal), so exit-edge poses are
-    // ambiguous. Phase 3 of the slip track resolves this (entry-aware
-    // poses); until then the empty table fails soft — blades stay put.
+    // The double slip is entry-aware: poses come from SLIP_BLADES +
+    // SLIP_LEVERS below, keyed by the entry the engine arrived by.
     'switch-slip': {},
+  };
+  /**
+   * Slip blades, model frame: per ENTRY edge, the blade angle for each
+   * road the engine may take (0 = straight through; ±0.21 toward the
+   * diagonals — the 3-way convention rotated into each group's frame per
+   * the recipe's pose contract). The south group keeps the legacy
+   * `switch_blades` node name; its siblings are `switch_blades_<edge>`.
+   */
+  const SLIP_BLADES: Record<Edge, Partial<Record<Edge, number>>> = {
+    south: { north: 0, east: -0.21, west: 0.21 },
+    north: { south: 0, west: -0.21, east: 0.21 },
+    east: { west: 0, north: -0.21, south: 0.21 },
+    west: { east: 0, south: -0.21, north: 0.21 },
+  };
+  /** Slip lever, model frame: the arm points along the chosen exit. */
+  const SLIP_LEVERS: Record<Edge, number> = {
+    north: LEVER_FORWARD_Y,
+    east: LEVER_EAST_Y,
+    south: LEVER_BACK_Y,
+    west: LEVER_WEST_Y,
   };
   const BLADE_TWEEN_MS = 180;
   const bladeTweens = new Map<
@@ -587,23 +613,41 @@ export function startTrackRenderer(
     bladeRaf = bladeTweens.size > 0 ? requestAnimationFrame(runBladeTweens) : null;
   };
 
-  function setSwitchRoad(pieceId: string, exit: Edge): void {
+  function setSwitchRoad(pieceId: string, exit: Edge, entry?: Edge): void {
     const item = tracked.get(pieceId);
     if (!item || !isPiece(item) || !isSwitchPiece(item.type)) return;
     const model = rendered.get(pieceId);
     if (!model) return;
-    const blades = model.getObjectByName('switch_blades');
-    if (!blades) return;
-    // World exit -> model exit (yaw 0 frame): model north = through,
+    // World exit/entry -> model frame (yaw 0): model north = through,
     // model east/west = the diverge sides per the pose table. Invert the
     // yaw advance applied at mount.
     const steps = item.rotation / 90;
     const modelExit = advancedEdge(exit, (4 - steps) % 4);
-    const pose = SWITCH_POSES[item.type][modelExit];
-    if (!pose) return; // a branch→stem merge keeps the last road
-    const targets = [{ node: blades, from: blades.rotation.y, to: pose.blade }];
+    let bladeNode: Object3D;
+    let bladeAngle: number;
+    let leverAngle: number;
+    if (item.type === 'switch-slip') {
+      if (!entry) return; // the slip's poses are entry-aware by contract
+      const modelEntry = advancedEdge(entry, (4 - steps) % 4);
+      const group = modelEntry === 'south' ? 'switch_blades' : `switch_blades_${modelEntry}`;
+      const groupNode = model.getObjectByName(group);
+      const angle = SLIP_BLADES[modelEntry]?.[modelExit];
+      if (!groupNode || angle === undefined) return;
+      bladeNode = groupNode;
+      bladeAngle = angle;
+      leverAngle = SLIP_LEVERS[modelExit];
+    } else {
+      const blades = model.getObjectByName('switch_blades');
+      if (!blades) return;
+      const pose = SWITCH_POSES[item.type][modelExit];
+      if (!pose) return; // a branch→stem merge keeps the last road
+      bladeNode = blades;
+      bladeAngle = pose.blade;
+      leverAngle = pose.lever;
+    }
+    const targets = [{ node: bladeNode, from: bladeNode.rotation.y, to: bladeAngle }];
     const lever = model.getObjectByName('switch_lever');
-    if (lever) targets.push({ node: lever, from: lever.rotation.y, to: pose.lever });
+    if (lever) targets.push({ node: lever, from: lever.rotation.y, to: leverAngle });
     const settled = targets.every((t) => Math.abs(t.from - t.to) < 1e-4);
     if (settled && !bladeTweens.has(pieceId)) return;
     if (reducedMotion || disposed) {
@@ -1231,9 +1275,11 @@ export function startTrackRenderer(
     bellRinging: () => crossingBell,
     // Dev/e2e witness: the rendered switch's live pose — the blades always
     // exist on an authored switch; a lever-less GLB fails soft to null.
-    switchPose: (pieceId: string) => {
+    // The slip's per-entry groups: pass the entry to read that group.
+    switchPose: (pieceId: string, entry?: Edge) => {
       const model = rendered.get(pieceId);
-      const blades = model?.getObjectByName('switch_blades');
+      const group = entry && entry !== 'south' ? `switch_blades_${entry}` : 'switch_blades';
+      const blades = model?.getObjectByName(group);
       if (!model || !blades) return null;
       const lever = model.getObjectByName('switch_lever');
       return { blade: blades.rotation.y, lever: lever ? lever.rotation.y : null };
