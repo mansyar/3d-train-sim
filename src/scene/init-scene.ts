@@ -11,6 +11,7 @@ import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
+import type { DayPhase } from '../core/day-clock';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
 import type { Edge } from '../core/pieces';
 import type { SceneryKind } from '../core/scenery';
@@ -97,6 +98,14 @@ export interface SceneHandle {
   notifyActivity(): void;
   /** Each tap cycles the chase camera: filmed train → next train → overview. */
   cycleFilmTarget(): void;
+  /** The meadow's current time of day (the sun/moon button's next-phase icon). */
+  dayPhase(): DayPhase;
+  /** The sun/moon button: turn the page to the next phase of the day. */
+  advanceDay(): void;
+  /** Restore the persisted time of day on boot. */
+  setDayPhase(phase: DayPhase): void;
+  /** Fire on every time-of-day change, the child's tap or the drift's own. */
+  subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
   /** The number of riding trains, pushed on every ride change (🎥 visibility). */
   subscribeFilmCount(listener: (count: number) => void): () => void;
   /** Whether any train is riding, pushed on every ride change (▶/⏹ face). */
@@ -393,6 +402,10 @@ export function initScene(
     stopRide: () => rides.stop(),
     notifyActivity: () => attractClock.notifyActivity(),
     cycleFilmTarget: () => filmCamera.cycle(),
+    dayPhase: () => dayAmbience.dayPhase(),
+    advanceDay: () => dayAmbience.advanceDay(),
+    setDayPhase: (phase) => dayAmbience.setDayPhase(phase),
+    subscribeDayPhase: (listener) => dayAmbience.subscribeDayPhase(listener),
     ridingTrainCount: () => fleet.ridingCount(),
     crossingPhases: () => tracks.crossingPhases(),
     bellRinging: () => tracks.bellRinging(),

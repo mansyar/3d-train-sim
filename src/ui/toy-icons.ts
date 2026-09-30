@@ -1,3 +1,4 @@
+import { type DayPhase, nextPhase } from '../core/day-clock';
 import { SCENERY_KINDS, type SceneryKind, sceneryAria } from '../core/scenery';
 import type { PieceType } from '../core/track-graph';
 
@@ -479,6 +480,22 @@ export const PIECE_ICONS: Record<PieceType, string> = {
             stroke="var(--toy-steel)" stroke-width="3.5" stroke-linecap="round"/>
     </svg>`,
 };
+
+/**
+ * The sun/moon rail button. It shows the phase a tap *brings* — a moon while
+ * the day is out, a sun once night has fallen — so the icon and the tap
+ * always agree. Dusk counts as night: the sun is on its way down.
+ */
+export const DAY_ICONS: Record<DayPhase, string> = {
+  dawn: '☀️',
+  morning: '🌙',
+  noon: '🌙',
+  dusk: '☀️',
+  night: '☀️',
+};
+
+/** The icon for the phase a tap from `phase` lands on. */
+export const nextDayIcon = (phase: DayPhase): string => DAY_ICONS[nextPhase(phase)];
 
 /** One drawer button per catalog kind on a tab, in tab order. */
 export const toySlot = (kind: PieceType | SceneryKind): string =>

@@ -4,6 +4,7 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
+import { type DayPhase, DEFAULT_DAY_PHASE } from './core/day-clock';
 import { deserializeWorld, serializeWorld } from './core/save';
 import { cozyOval } from './core/starters';
 import {
@@ -15,8 +16,10 @@ import {
 import { initScene, type SceneHandle } from './scene/init-scene';
 import {
   loadWorldSnapshot,
+  restoreDayPhasePreference,
   restoreMutePreference,
   saveWorldSnapshot,
+  watchDayPhasePersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './state/persistence';
@@ -44,7 +47,17 @@ if (root) {
     // persistence watchers attach so boot hydration never rewrites storage.
     restoreMutePreference(snapshot, audio);
     restoring = false;
-    watchWorldPersistence(world, () => audio.isMuted());
+    // The chosen time of day rides in the snapshot too, and the scene is
+    // already bound by the time storage answers — so restore it here, before
+    // the watchers attach, or boot hydration could rewrite the phase.
+    restoreDayPhasePreference(snapshot, dayClock);
+    watchDayPhasePersistence(dayClock, world, () => audio.isMuted());
+    watchWorldPersistence(
+      world,
+      () => audio.isMuted(),
+      saveWorldSnapshot,
+      () => dayClock.phase,
+    );
     watchMutePersistence(audio, world);
     if (!snapshot) {
       // The watchers only save on change — persist the seeded starter once.
@@ -61,10 +74,26 @@ if (root) {
     }
   });
   let scene: SceneHandle | null = null;
+  /**
+   * The scene owns the day clock, but storage wants a clock-shaped view of it.
+   * Every read goes through `scene`, so the restore and the watcher see the
+   * meadow that actually exists (the no-op stand-in covers the pre-bind gap).
+   */
+  const dayClock = {
+    get phase(): DayPhase {
+      return scene?.dayPhase() ?? DEFAULT_DAY_PHASE;
+    },
+    setPhase: (phase: DayPhase): void => {
+      scene?.setDayPhase(phase);
+    },
+    subscribe: (listener: (event: { phase: DayPhase }) => void): (() => void) =>
+      scene ? scene.subscribeDayPhase((phase) => listener({ phase })) : () => {},
+  };
   // The scene binds after the app mounts — queue subscription listeners until
   // then, so the UI hears every ride change from the very first one.
   const filmCountListeners: ((count: number) => void)[] = [];
   const rideModeListeners: ((riding: boolean) => void)[] = [];
+  const dayPhaseListeners: ((phase: DayPhase) => void)[] = [];
 
   // ---- PWA self-update: probe quietly, adopt when the table is quiet -----
   // Deployments install a new service worker, but the running page keeps its
@@ -166,6 +195,20 @@ if (root) {
     notifyActivity: () => scene?.notifyActivity(),
     tootWhistle: () => scene?.tootWhistle(),
     cycleFilmTarget: () => scene?.cycleFilmTarget(),
+    dayPhase: () => scene?.dayPhase() ?? DEFAULT_DAY_PHASE,
+    advanceDay: () => scene?.advanceDay(),
+    // Queued like the film listeners: the scene binds after the app mounts, and
+    // an unsubscribe that misses the bind would replay into it and live on.
+    subscribeDayPhase: (listener) => {
+      dayPhaseListeners.push(listener);
+      if (!scene) {
+        return () => {
+          const index = dayPhaseListeners.indexOf(listener);
+          if (index !== -1) dayPhaseListeners.splice(index, 1);
+        };
+      }
+      return scene.subscribeDayPhase(listener);
+    },
     subscribeFilmCount: (listener) => {
       filmCountListeners.push(listener);
       if (!scene) {
@@ -193,6 +236,7 @@ if (root) {
   // Replay the queued listeners into the freshly bound scene.
   for (const listener of filmCountListeners) scene.subscribeFilmCount(listener);
   for (const listener of rideModeListeners) scene.subscribeRideMode(listener);
+  for (const listener of dayPhaseListeners) scene.subscribeDayPhase(listener);
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly and
   // probe the live scene (e.g. the cargo wagon count).
