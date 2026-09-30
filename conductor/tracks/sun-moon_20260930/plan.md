@@ -58,7 +58,7 @@
   built world, the day still starts at mid-morning (no `dayPhase` written
   yet, as expected), console clean.
 
-## Phase 2 — Rail Slot UI (non-logic; acceptance criteria)
+## Phase 2 — Rail Slot UI (non-logic; acceptance criteria) [checkpoint: 2ffffc4]
 
 - [x] Task: Sun/moon icon + rail slot — 96f45d0
   - [x] Add sun/moon SVG to `toy-icons.ts` (high-contrast, chunky)
@@ -103,9 +103,9 @@
   own expectations was arithmetically wrong — noon ends at 0.6, so drifting 0.1
   of a day from its 0.525 center leaves noon — and was corrected to 0.05.
   After: 753 passing, and all five phases repaint to their true palettes.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
-### Verification Report — Phase 2 (pending manual sign-off)
+### Verification Report — Phase 2
 
 - Automated: `biome check .` clean · `tsc --noEmit` clean · 753 tests passing
   (40 files) · `e2e/sun-moon.spec.ts` 4/4 green on the tablet and phone
@@ -118,6 +118,11 @@
   drifted home legitimately writes no preferences.
 - Screenshots of all five phases confirmed sky, meadow, window glow, headlight
   and fireflies all follow — and caught the phase-center bug above.
+- Manual (user-confirmed on a tablet-sized viewport): the rail button sits
+  between play and mute; repeated taps walk all five moods (deep-blue starry
+  night with fireflies and lit windows, orange dusk, bright morning/noon, peachy
+  dim dawn); the icon always previews the coming phase; a reload returns to the
+  same time of day; the day keeps drifting on its own afterward.
 
 ## Phase 3 — E2E & Docs
 
