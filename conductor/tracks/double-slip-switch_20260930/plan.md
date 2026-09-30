@@ -62,15 +62,69 @@ Implementation follows `conductor/workflow.md`. Logic-bearing tasks
   check belongs to Phase 3's manual pass, as planned). User approved the
   checkpoint via the question tool.
 
-## Phase 2: Blender Asset (`switch-slip.glb`)
+## Phase 2: Blender Asset (`switch-slip.glb`) [checkpoint: 29c7bf5b9d6180942dc583276b0d48e9fcbecc32]
 
-- [ ] Task: Author `scripts/blender-switch-slip.py` via the
+Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
++ kit GLB sizes, recorded before authoring):
+
+| Item | Value | Source |
+|---|---|---|
+| Module | 4 units; bed Blender y −4..0, x ±2; cell centre (0,−2) | 3-way recipe / tech-stack |
+| Mat / ride plane | ground z = −1, ride plane 0.1 above; KIT_ANCHORS [0,−1,2] | recipe + renderer |
+| Edge midpoints | N (0,0), E (2,−2), S (0,−4), W (−2,−2) | 3-way recipe |
+| Through roads | kit `railroad-crossing.glb` mesh (N–S + E–W, proper diamond), same straight mount | renderer BASE_YAW/KIT_ANCHORS |
+| Quarter arcs (r=2) | NE centre (2,0), NW (−2,0), SE (2,−4), SW (−2,−4) | derived from corner-flip algebra |
+| Arc transforms | NW = native corner as-imported; NE = native rot −90° about cell centre; SE = rot 180°; SW = native y-mirrored (baked copy) — 3 rotations share one mesh, 1 baked mirror | derived & verified against 3-way diverge transforms |
+| Blades | 4 groups (one per entry edge), heels 0.38 inside each edge midpoint (S (0,−3.62), N (0,−0.38), E (1.62,−2), W (−1.62,−2)), bar geometry identical to 3-way (±0.16 offset, rise 0.06, z −0.95); δ=0 = straight-aligned | 3-way BLADE_* constants |
+| Blade pose signs | south: δ −0.21 → SE, +0.21 → SW; north: −0.21 → NW, +0.21 → NE; east: −0.21 → NE, +0.21 → SE; west: −0.21 → SW, +0.21 → NW (frame-rotation symmetry of the 3-way convention) | derived |
+| Lever | `switch_lever` pivot (−1.78,−0.5), 3-way geometry verbatim; clearance to nearest curve (NW arc) 1.45 > 1.23 loco envelope; arm swing tip stays clear | 3-way LEVER_* constants + distance check |
+| Occupant | kit locomotive ×1.6 ≈ 2.3-wide envelope; fit renders on the NE (rotation-instanced) and SW (mirrored) arcs | 3-way fit-check pattern |
+| Budget | unique meshes ≈ crossing + 2 corner copies + 8 bars + lever parts; kit sizes (3-way 88 KB w/ 3 meshes) → estimate ~100–120 KB ≤ 150 KB | kit GLB sizes |
+
+- [x] Task: Author `scripts/blender-switch-slip.py` via the
       `threejs-blender-asset` skill — 4-unit module mount, crossing bed +
       two diagonal crossings, `switch_blades` (3 poses) + `switch_lever`
       node contract
-- [ ] Task: Export `public/assets/train-kit/switch-slip.glb` (≤ ~150 KB) +
+
+  Notes: recipe mirrors blender-switch-3way.py; through roads = the kit
+  railroad-crossing mesh (`switch_cross`) on the straight mount; four
+  quarter-arcs from the kit corner mesh — NW as-imported, NE rot −90° and
+  SE rot 180° share the centred native mesh (linked duplicates), SW gets a
+  baked y-mirrored copy. FOUR blade groups (south keeps the legacy
+  `switch_blades` contract node; north/east/west siblings), each
+  straight-aligned at export with the 3-way's bar geometry; per-group pose
+  signs documented in the recipe. Lever = 3-way verbatim at (−1.78,−0.5),
+  re-measured clear of the new NW arc (1.45 > 1.23 loco envelope). Two
+  recipe bugs found and fixed while shooting fit renders: the NE shot
+  hardcoded the 3-way's tangent (now derived from ARC_CHECKPOINTS), and
+  glTF-imported roots ignore euler rotation (quaternion rotation_mode) so
+  fit shots compose the yaw against the captured import quaternion.
+
+- [x] Task: Export `public/assets/train-kit/switch-slip.glb` (≤ ~150 KB) +
       `verify_glb()` gate + real render fit check with the kit train
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Notes: exported 120,808 bytes (≤ 150 KB); skill verify-glb.py RESULT:
+  PASS (20 named nodes, 13 meshes, 4 materials, contract nodes
+  `switch_blades` + `switch_lever` present; the reported extents
+  x=4/z=6/y=1.84 are the tool's documented raw-accessor caveat — node
+  translations are not composed — true world bounds proven by renders).
+  Renders viewed: top (all four arcs flush at the edge midpoints, blades
+  at all four edges), quarter, lever close-up (arm clear of all curves),
+  and loco fits on the NE (rotation-instanced) and SW (mirrored) arcs —
+  seated on the sleeper line, no clipping. Palette Layer 1: PASS vs the
+  shipped 3-way rendered in the same check env (5/5 colors, dist 0).
+  Vision Layer 2: PASS — 5/5 on all rubric lines; reads as a 4-way
+  intersection switch. Layer 3: user accepted the asset via the question
+  tool.
+
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 2): verify-glb.py exit 0 (size, node
+  contract, hygiene); palette match exit 0; vision rubric PASS; fit
+  renders viewed and accepted; no code gates needed (recipe/asset only).
+  One fix attempt each on the NE fit shot (tangent) and the loco rotation
+  (quaternion) — both resolved in the recipe, no stop-and-ask needed.
+  User approved the checkpoint via the question tool.
 
 ## Phase 3: Renderer & UI Wiring
 
