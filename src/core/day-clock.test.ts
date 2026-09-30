@@ -127,11 +127,31 @@ describe('phase jumps', () => {
     expect(clock.phase).toBe('morning');
   });
 
-  it('lands at the first moment of the target phase so the mood reads clearly', () => {
+  it('lands mid-phase, where the mood reads at its clearest', () => {
+    // The sky palette's keyframes sit at phase centers, so a jump must land
+    // there too — landing on a boundary would show the *outgoing* mood's
+    // colors (night used to repaint a maroon ember sky).
     const { clock } = makeClock();
     clock.advancePhase();
     expect(clock.phase).toBe('noon');
-    expect(clock.fraction).toBeCloseTo(0.45, 6);
+    expect(clock.fraction).toBeCloseTo(0.525, 6);
+  });
+
+  it('lands every phase on its own center', () => {
+    // Noon [0.45,0.6) → 0.525, dusk [0.6,0.72) → 0.66, night [0.72,1) → 0.86.
+    const { clock } = makeClock();
+    const centers: [string, number][] = [];
+    for (let jump = 0; jump < 5; jump += 1) {
+      clock.advancePhase();
+      centers.push([clock.phase, clock.fraction]);
+    }
+    expect(centers).toEqual([
+      ['noon', expect.closeTo(0.525, 6)],
+      ['dusk', expect.closeTo(0.66, 6)],
+      ['night', expect.closeTo(0.86, 6)],
+      ['dawn', expect.closeTo(0.06, 6)],
+      ['morning', expect.closeTo(0.285, 6)],
+    ]);
   });
 
   it('emits exactly one phase event per jump', () => {
@@ -146,10 +166,10 @@ describe('phase jumps', () => {
 
   it('keeps drifting forward from the new position after a jump', () => {
     const { clock, advance } = makeClock();
-    clock.advancePhase(); // noon, fraction 0.45
-    advance(DAY_LENGTH_MS * 0.1);
+    clock.advancePhase(); // noon, fraction 0.525 — noon ends at 0.6
+    advance(DAY_LENGTH_MS * 0.05);
     expect(clock.phase).toBe('noon');
-    expect(clock.fraction).toBeCloseTo(0.55, 6);
+    expect(clock.fraction).toBeCloseTo(0.575, 6);
   });
 
   it('restores a phase directly, and stays quiet when it is already there', () => {

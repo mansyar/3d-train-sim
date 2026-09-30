@@ -48,17 +48,21 @@ export function nextPhase(phase: DayPhase): DayPhase {
 }
 
 /**
- * Where each phase begins, derived from the same bounds — a jump lands here
+ * The middle of each phase, derived from the same bounds — a jump lands here
  * so the tapped mood reads at its clearest, with no second source of truth.
+ *
+ * Centers, not starts: the sky palette keys its colors to phase midpoints, so
+ * landing on a boundary would paint the *outgoing* mood's palette (jumping to
+ * night showed the dusk ember horizon, maroon instead of blue).
  */
-const PHASE_STARTS: Record<DayPhase, number> = (() => {
-  const starts = {} as Record<DayPhase, number>;
+const PHASE_CENTERS: Record<DayPhase, number> = (() => {
+  const centers = {} as Record<DayPhase, number>;
   let from = 0;
   for (const bound of PHASE_BOUNDS) {
-    starts[bound.phase] = from;
+    centers[bound.phase] = (from + bound.until) / 2;
     from = bound.until;
   }
-  return starts;
+  return centers;
 })();
 
 /** Map a (possibly out-of-range, will wrap) day fraction to its phase. */
@@ -97,9 +101,9 @@ export function createDayClock(options: { now: () => number }): DayClock {
     return (anchor + elapsed / DAY_LENGTH_MS) % 1;
   }
 
-  /** Re-anchor the day at the start of `next`; the jump reads immediately. */
+  /** Re-anchor the day at the middle of `next`; the jump reads immediately. */
   function anchorTo(next: DayPhase): void {
-    anchor = PHASE_STARTS[next];
+    anchor = PHASE_CENTERS[next];
     startedAt = options.now();
   }
 
