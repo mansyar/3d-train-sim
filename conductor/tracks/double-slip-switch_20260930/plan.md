@@ -158,8 +158,30 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   track piece"; icon SVG shows the crossing plus the steel diagonal X;
   drawer tests updated (kinds list, catalog count 19, tabForKind).
   Covered by the Phase 1 test run.
-- [ ] Task: Manual/verification pass — place from drawer, rotate, ride
+- [x] Task: Manual/verification pass — place from drawer, rotate, ride
       through all three roads, reduced-motion freeze
+
+  Notes: Deviation (documented): the e2e harness IS the practical
+  in-app browser verification, so `e2e/switch-slip.spec.ts` was authored
+  now (Phase 4 Task 1 pulled forward) and its green run plus an in-app
+  screenshot form this pass; commit d390239. Six tests across the tablet
+  and phone projects: the placed slip loads its own GLB, all four entry
+  blade groups witness, the ride cycles all three roads with settled
+  blade+lever pairings witnessed per road, reduced motion shows only
+  exact road poses (never partial angles), and a reload restores the
+  piece parked at neutral — with zero console errors and zero external
+  requests. Two test-contract corrections came out of red runs: (1) the
+  lone-slip layout is required — a through-line locks each entry's
+  counter phase so single-entry sampling can never see all three roads;
+  sampling spans all four entry groups with settled-pairing semantics
+  (the lever is one global node, so only the just-announced entry's
+  snapshot pairs); (2) rides still announce under reduced motion and
+  poses snap, so the freeze contract is exact road poses, not a
+  parked-neutral pose. In-app ground-contact check (skill Gate 5.1): a
+  dev-server screenshot with the slip placed on dry land shows the piece
+  seated flush on the grass — no float, no sink — lever proud at the NW
+  corner, rail ends meeting the cell edges. Placement correctly refused
+  river cells.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: E2E & Docs
