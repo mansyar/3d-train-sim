@@ -17,20 +17,21 @@ import { clearMeadow, watchConsoleErrors } from './helpers';
  */
 
 /** Mirrors the renderer's slip pose tables (spec copy, kept in sync). */
-const SLIP_BLADES: Record<string, Record<string, number>> = {
+type EdgeName = 'north' | 'east' | 'south' | 'west';
+const SLIP_BLADES: Record<EdgeName, Record<string, number>> = {
   south: { north: 0, east: -0.21, west: 0.21 },
   north: { south: 0, west: -0.21, east: 0.21 },
   east: { west: 0, north: -0.21, south: 0.21 },
   west: { east: 0, south: -0.21, north: 0.21 },
 };
-const SLIP_LEVERS: Record<string, number> = {
+const SLIP_LEVERS: Record<EdgeName, number> = {
   north: 0,
   east: -Math.PI / 2,
   south: Math.PI,
   west: Math.PI / 2,
 };
 
-const ENTRIES = ['north', 'east', 'south', 'west'] as const;
+const ENTRIES: EdgeName[] = ['north', 'east', 'south', 'west'];
 
 type WorldHandle = {
   place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
@@ -44,9 +45,7 @@ type SceneHandle = {
   ) => { blade: number; lever: number | null } | null;
 };
 
-const PLACE_LAYOUT: [string, { x: number; y: number }][] = [
-  ['switch-slip', { x: 2, y: 2 }],
-];
+const PLACE_LAYOUT: [string, { x: number; y: number }][] = [['switch-slip', { x: 2, y: 2 }]];
 
 async function boot(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/');
@@ -147,14 +146,13 @@ test('a placed double slip rides all three roads with its entry blades and lever
     for (const entry of ENTRIES) {
       const pose = await poseOf(page, id, entry);
       if (!pose || pose.lever === null) continue;
+      const lever = pose.lever;
       samples += 1;
       bladeKeys.add(pose.blade.toFixed(3));
-      const bladeRoads = Object.entries(SLIP_BLADES[entry])
+      const bladeRoads = (Object.entries(SLIP_BLADES[entry]) as [EdgeName, number][])
         .filter(([, blade]) => Math.abs(blade - pose.blade) < 1e-3)
         .map(([road]) => road);
-      const road = bladeRoads.find(
-        (candidate) => Math.abs(SLIP_LEVERS[candidate] - pose.lever) < 0.02,
-      );
+      const road = bladeRoads.find((candidate) => Math.abs(SLIP_LEVERS[candidate] - lever) < 0.02);
       if (road !== undefined) pairedRoads.add(SLIP_LEVERS[road].toFixed(3));
     }
     await page.waitForTimeout(400);
