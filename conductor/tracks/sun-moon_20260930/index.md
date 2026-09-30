@@ -2,7 +2,7 @@
 
 - **ID:** `sun-moon_20260930`
 - **Type:** Feature
-- **Status:** new
+- **Status:** done
 - **Branch:** `track/sun-moon_20260930`
 
 ## Documents
