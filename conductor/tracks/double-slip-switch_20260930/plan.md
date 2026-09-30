@@ -3,7 +3,7 @@
 Implementation follows `conductor/workflow.md`. Logic-bearing tasks
 (`src/core/*`) are TDD: failing tests first, then minimum implementation.
 
-## Phase 1: Core Routing Logic (TDD)
+## Phase 1: Core Routing Logic (TDD) [checkpoint: 0ce1614e4953083df36ba9e2ab78aa0316b1c0f0]
 
 - [x] Task: Write failing unit tests for `switch-slip` routing
   - [x] `src/core/switches.test.ts`: `routeSwitch` mod-3 cycle (straight →
@@ -52,7 +52,15 @@ Implementation follows `conductor/workflow.md`. Logic-bearing tasks
   edge is reachable by two roads, so exit-keyed poses are ambiguous). The
   drawer-tab and renderer tasks in Phase 3 now cover the remaining polish
   (icon was drafted with the catalog entry; visual pass still pending).
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+  Verification Report (Phase 1): gates all green on the first run — 736/736
+  tests across 40 files (incl. 13 new), coverage switches.ts/pieces.ts 100%
+  and pathing.ts 97.67% stmts (>80% gate), `tsc --noEmit` clean, Biome
+  clean. No fix attempts needed. Manual verification deferred by design:
+  nothing user-visible yet (the GLB arrives in Phase 2, the hands-on ride
+  check belongs to Phase 3's manual pass, as planned). User approved the
+  checkpoint via the question tool.
 
 ## Phase 2: Blender Asset (`switch-slip.glb`)
 
