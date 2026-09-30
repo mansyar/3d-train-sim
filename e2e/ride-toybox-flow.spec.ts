@@ -103,7 +103,7 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
 
   const counts: Record<string, number> = {
     rails: 10,
-    adventure: 8,
+    adventure: 9,
     nature: 3,
     town: 7,
     critter: 4,
@@ -119,16 +119,16 @@ test('five tabs hold their toys; the adventure row swipes on phones', async ({ p
     await expect(panel.locator('.piece-slot, .scenery-slot')).toHaveCount(count);
   }
 
-  // The 8-toy Adventure row overflows narrow phones and swipes instead of
-  // wrapping; roomy viewports fit it whole.
+  // Toy rows are single scrollable rows by design (Rails already holds 10
+  // toys), so the 9-toy Adventure row swipes on phones and tablets alike
+  // instead of wrapping over the meadow.
   await page.locator('.drawer-tab[data-tab="adventure"]').click();
   const adventure = page.locator('.drawer-panel[data-panel="adventure"]');
   await expect(adventure).toBeVisible();
-  const narrow = (page.viewportSize()?.width ?? 999) < 500;
   const overflow = await page
     .locator('.drawer-panel[data-panel="adventure"]')
     .evaluate((panel) => panel.scrollWidth > panel.clientWidth + 1);
-  expect(overflow).toBe(narrow);
+  expect(overflow).toBe(true);
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });

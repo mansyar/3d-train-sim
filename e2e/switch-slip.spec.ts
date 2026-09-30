@@ -147,13 +147,16 @@ test('a placed double slip rides all three roads with its entry blades and lever
       const pose = await poseOf(page, id, entry);
       if (!pose || pose.lever === null) continue;
       const lever = pose.lever;
-      samples += 1;
-      bladeKeys.add(pose.blade.toFixed(3));
       const bladeRoads = (Object.entries(SLIP_BLADES[entry]) as [EdgeName, number][])
         .filter(([, blade]) => Math.abs(blade - pose.blade) < 1e-3)
         .map(([road]) => road);
       const road = bladeRoads.find((candidate) => Math.abs(SLIP_LEVERS[candidate] - lever) < 0.02);
-      if (road !== undefined) pairedRoads.add(SLIP_LEVERS[road].toFixed(3));
+      // Only settled, road-paired sightings count: mid-tween blades would
+      // otherwise fake a third key and end the loop early.
+      if (road === undefined) continue;
+      samples += 1;
+      bladeKeys.add(pose.blade.toFixed(3));
+      pairedRoads.add(SLIP_LEVERS[road].toFixed(3));
     }
     await page.waitForTimeout(400);
   }
