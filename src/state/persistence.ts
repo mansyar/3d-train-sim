@@ -106,7 +106,8 @@ export function restoreMutePreference(
 /**
  * Keeps the chosen day phase in storage: every phase change re-saves the full
  * snapshot, so a tap can never clobber the world and a world edit can never
- * drop the phase. Drift on its own is not a change, so it never persists.
+ * drop the phase. A phase the day drifts into is saved too, so reopening
+ * resumes the day the child left rather than snapping back to mid-morning.
  */
 export function watchDayPhasePersistence(
   clock: {

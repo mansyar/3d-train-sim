@@ -482,16 +482,17 @@ export const PIECE_ICONS: Record<PieceType, string> = {
 };
 
 /**
- * The sun/moon rail button. It shows the phase a tap *brings* — a moon while
- * the day is out, a sun once night has fallen — so the icon and the tap
- * always agree. Dusk counts as night: the sun is on its way down.
+ * The sun/moon rail button, keyed by the phase a tap *brings* — so each value
+ * is that destination's own look, and `nextDayIcon` is a straight lookup. A
+ * tap that lands in night shows the moon; one that lands in daylight shows the
+ * sun. Dusk counts as night: the sun is already on its way down.
  */
 export const DAY_ICONS: Record<DayPhase, string> = {
   dawn: '☀️',
-  morning: '🌙',
-  noon: '🌙',
-  dusk: '☀️',
-  night: '☀️',
+  morning: '☀️',
+  noon: '☀️',
+  dusk: '🌙',
+  night: '🌙',
 };
 
 /** The icon for the phase a tap from `phase` lands on. */

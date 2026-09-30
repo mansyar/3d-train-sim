@@ -275,14 +275,28 @@ describe('day-phase preference', () => {
     });
   });
 
-  it('does not persist the day drifting on its own', () => {
+  it('persists a phase the day drifts into, so reopening resumes it', () => {
     const store = createWorldStore();
     let now = 0;
     const clock = createDayClock({ now: () => now });
     const save = vi.fn<(snapshot: WorldSnapshot) => void>();
     watchDayPhasePersistence(clock, store, () => false, save);
 
-    now += DAY_LENGTH_MS * 0.1; // 0.25 -> 0.35, still morning, no tap involved
+    // Time passing alone, no tap: the drift crosses morning's 0.45 bound.
+    now += DAY_LENGTH_MS * 0.3; // 0.25 -> 0.55
+    clock.tick();
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ preferences: { dayPhase: 'noon' } });
+  });
+
+  it('does not save while the day drifts inside one phase', () => {
+    const store = createWorldStore();
+    let now = 0;
+    const clock = createDayClock({ now: () => now });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchDayPhasePersistence(clock, store, () => false, save);
+
+    now += DAY_LENGTH_MS * 0.1; // 0.25 -> 0.35, still morning
     clock.tick();
     expect(save).not.toHaveBeenCalled();
   });

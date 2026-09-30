@@ -21,8 +21,13 @@ import { watchConsoleErrors } from './helpers';
 
 type SceneHandle = { dayPhase: () => string };
 
-/** Phases after which the next tap brings dusk or night — the icon previews a sun. */
-const SUN_AHEAD = ['noon', 'dusk', 'night'];
+/**
+ * The only phases a tap leads out of daylight: from noon into dusk, from dusk
+ * into night. Both destinations are night, so both preview the moon. Every
+ * other tap lands in daylight and previews the sun — including from night,
+ * whose tap brings the dawn.
+ */
+const MOON_AHEAD = ['noon', 'dusk'];
 
 const ready = (page: import('@playwright/test').Page) =>
   page.waitForFunction(() =>
@@ -86,7 +91,7 @@ test('the sun/moon button turns the day, and its icon previews the phase a tap b
 
   // The icon and the phase agree, right now, on the button's first showing.
   await expect(dayToggle).toHaveText(
-    SUN_AHEAD.includes((await phase(page)) as string) ? '☀️' : '🌙',
+    MOON_AHEAD.includes((await phase(page)) as string) ? '🌙' : '☀️',
   );
 
   // Every tap turns the page, and the icon keeps previewing the next phase —
@@ -94,7 +99,9 @@ test('the sun/moon button turns the day, and its icon previews the phase a tap b
   for (let turn = 0; turn < 4; turn++) {
     const landed = await turnDay(page);
     const icon = await dayToggle.textContent();
-    expect(icon, `icon after turning into ${landed}`).toBe(SUN_AHEAD.includes(landed) ? '☀️' : '🌙');
+    expect(icon, `icon after turning into ${landed}`).toBe(
+      MOON_AHEAD.includes(landed) ? '🌙' : '☀️',
+    );
   }
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
@@ -149,8 +156,8 @@ test('the chosen time of day survives a reload, and a legacy save still boots to
   await page.reload();
   await ready(page);
   expect(await phase(page), 'a legacy save falls back to mid-morning').toBe('morning');
-  // Morning previews the moon — noon is what a tap brings.
-  await expect(page.locator('.day-toggle')).toHaveText('🌙');
+  // Morning previews the sun — noon, the middle of the day, is what a tap brings.
+  await expect(page.locator('.day-toggle')).toHaveText('☀️');
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
