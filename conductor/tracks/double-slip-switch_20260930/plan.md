@@ -225,6 +225,21 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   fix along the way: the spec's pose tables are typed against the
   entry-name union so noUncheckedIndexedAccess can't see undefined
   entries (commit 8683ebf).
+
+## Phase: Review Fixes
+- [x] Task: Apply review suggestions f895a1d
+
+  Notes: The review's final `git status` sweep caught a commit gap: the
+  Phase-3 baked-bars fix (blade-group empties rest at rotation 0 with
+  bar vertices pre-rotated, so the renderer's rotation.y overwrites
+  can't destroy group orientations) and its re-exported GLB (121,208 B)
+  had never been committed — the committed GLB predated the fix and
+  would mis-pose the east/north/west blade groups under the
+  entry-aware posing. Committed f895a1d
+  `fix(assets): bake the slip's blade-bar orientations into the
+  vertices`. The two Low review findings (witness frame convention,
+  duplicated pose tables) were accepted as-is, matching existing
+  conventions; no code changes required.
 - [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
   ### Phase 4 Verification Report (2026-09-30)
