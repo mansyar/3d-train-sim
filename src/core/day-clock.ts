@@ -3,8 +3,9 @@
  *
  * Pure logic (no DOM, no timers, no three.js): the caller feeds time via
  * `tick()` (usually once per animation frame) and reads `phase`/`fraction`;
- * the scene layer lerps sky, lights and glows from those. The cycle is
- * ephemeral — every session restarts at mid-morning, nothing is persisted.
+ * the scene layer lerps sky, lights and glows from those. The child can also
+ * jump the day to any phase (the sun/moon button), and the phase they land on
+ * is the one the app persists.
  */
 
 /** One full in-game day, ~2.5 real minutes so a toddler sees every mood. */
@@ -12,8 +13,23 @@ export const DAY_LENGTH_MS = 150_000;
 
 export type DayPhase = 'dawn' | 'morning' | 'noon' | 'dusk' | 'night';
 
+/**
+ * The five moods of the day, in the order the day runs through them. Paired
+ * with `NEXT_PHASE` below — `DAY_PHASES.map(nextPhase)` must stay one step on.
+ */
+export const DAY_PHASES = [
+  'dawn',
+  'morning',
+  'noon',
+  'dusk',
+  'night',
+] as const satisfies readonly DayPhase[];
+
 /** Where each session starts: a pleasant mid-morning (a quarter into the day). */
 const START_FRACTION = 0.25;
+
+/** The phase a fresh day (and any save without a preference) begins in. */
+export const DEFAULT_DAY_PHASE: DayPhase = 'morning';
 
 /**
  * Phase slices of the day fraction. Dawn and dusk are short — transitions
@@ -28,15 +44,51 @@ const PHASE_BOUNDS: readonly { until: number; phase: DayPhase }[] = [
   { until: 1, phase: 'night' },
 ];
 
+/**
+ * What follows each phase — night turns the page back to dawn. Total by
+ * construction, so advancing can never fall off the end of the day.
+ */
+const NEXT_PHASE: Record<DayPhase, DayPhase> = {
+  dawn: 'morning',
+  morning: 'noon',
+  noon: 'dusk',
+  dusk: 'night',
+  night: 'dawn',
+};
+
+/** The phase that follows `phase` — night turns the page back to dawn. */
+export function nextPhase(phase: DayPhase): DayPhase {
+  return NEXT_PHASE[phase];
+}
+
+/**
+ * The middle of each phase, derived from the same bounds — a jump lands here
+ * so the tapped mood reads at its clearest, with no second source of truth.
+ *
+ * Centers, not starts: the sky palette keys its colors to phase midpoints, so
+ * landing on a boundary would paint the *outgoing* mood's palette (jumping to
+ * night showed the dusk ember horizon, maroon instead of blue).
+ */
+const PHASE_CENTERS: Record<DayPhase, number> = (() => {
+  const centers = {} as Record<DayPhase, number>;
+  let from = 0;
+  for (const bound of PHASE_BOUNDS) {
+    centers[bound.phase] = (from + bound.until) / 2;
+    from = bound.until;
+  }
+  return centers;
+})();
+
 /** Map a (possibly out-of-range, will wrap) day fraction to its phase. */
 export function phaseAtFraction(fraction: number): DayPhase {
   const t = fraction - Math.floor(fraction);
   for (const bound of PHASE_BOUNDS) {
     if (t < bound.until) return bound.phase;
   }
-  // Unreachable — the last bound matches any t < 1 — but
-  // noUncheckedIndexedAccess cannot prove the index non-undefined.
-  return PHASE_BOUNDS[PHASE_BOUNDS.length - 1]?.phase ?? 'night';
+  // Unreachable: the last bound runs to 1 and `t` is always below 1, so the
+  // loop always returns. Kept as the answer rather than a throw, because the
+  // caller is a frame-loop repaint that must never be the thing that crashes.
+  return 'night';
 }
 
 export interface DayClock {
@@ -45,18 +97,34 @@ export interface DayClock {
   readonly fraction: number;
   /** Advance the clock — call once per animation frame. */
   tick(): void;
+  /** Jump straight to a phase; no-op when the day is already there. */
+  setPhase(phase: DayPhase): void;
+  /** Jump to the next phase — the sun/moon button's turn-the-page tap. */
+  advancePhase(): void;
   /** Subscribe to phase changes; returns an unsubscribe function. */
   subscribe(listener: (event: { kind: 'phase'; phase: DayPhase }) => void): () => void;
 }
 
 export function createDayClock(options: { now: () => number }): DayClock {
-  const startedAt = options.now();
-  let phase: DayPhase = phaseAtFraction(START_FRACTION);
+  let startedAt = options.now();
+  let anchor: number = START_FRACTION;
+  let phase: DayPhase = DEFAULT_DAY_PHASE;
   const listeners = new Set<(event: { kind: 'phase'; phase: DayPhase }) => void>();
 
   function fraction(): number {
     const elapsed = options.now() - startedAt;
-    return (START_FRACTION + elapsed / DAY_LENGTH_MS) % 1;
+    return (anchor + elapsed / DAY_LENGTH_MS) % 1;
+  }
+
+  /** Re-anchor the day at the middle of `next`; the jump reads immediately. */
+  function anchorTo(next: DayPhase): void {
+    anchor = PHASE_CENTERS[next];
+    startedAt = options.now();
+  }
+
+  function announce(next: DayPhase): void {
+    phase = next;
+    for (const listener of listeners) listener({ kind: 'phase', phase: next });
   }
 
   return {
@@ -68,10 +136,17 @@ export function createDayClock(options: { now: () => number }): DayClock {
     },
     tick() {
       const next = phaseAtFraction(fraction());
-      if (next !== phase) {
-        phase = next;
-        for (const listener of listeners) listener({ kind: 'phase', phase: next });
-      }
+      if (next !== phase) announce(next);
+    },
+    setPhase(next) {
+      if (next === phase) return;
+      anchorTo(next);
+      announce(next);
+    },
+    advancePhase() {
+      const next = nextPhase(phase);
+      anchorTo(next);
+      announce(next);
     },
     subscribe(listener) {
       listeners.add(listener);

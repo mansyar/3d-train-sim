@@ -1,4 +1,5 @@
 import type { AudioController } from '../audio/audio-controller';
+import type { DayPhase } from '../core/day-clock';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import type { PickedItem } from '../scene/track-renderer';
@@ -7,7 +8,7 @@ import { createParentGate } from './parent-gate';
 import { createRideControls, RIDE_ICONS } from './ride-controls';
 import { type CellFromPoint, createToyDrag } from './toy-drag';
 import { createToyDrawer, toyTabPanels, toyTabStrip } from './toy-drawer';
-import { PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
+import { nextDayIcon, PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 import { createTrainPicker } from './train-picker';
 
 export type { CellFromPoint };
@@ -43,6 +44,12 @@ export interface AppOptions {
   tootWhistle(): void;
   /** Each tap cycles the chase camera: filmed train → next train → overview. */
   cycleFilmTarget(): void;
+  /** The meadow's current time of day, for the sun/moon button's icon. */
+  dayPhase(): DayPhase;
+  /** The sun/moon button: turn the page to the next phase of the day. */
+  advanceDay(): void;
+  /** Fire on every time-of-day change, the child's tap or the drift's own. */
+  subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
   /** The number of riding trains, pushed on every ride change (🎥 visibility). */
   subscribeFilmCount(listener: (count: number) => void): () => void;
   /** Whether any train is riding, pushed on every ride change (▶/⏹ face). */
@@ -81,6 +88,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
       <button class="film-toggle" type="button" aria-label="Switch the camera between trains" hidden>🎥</button>
       <button class="ride-toggle" type="button"
               aria-label="Ride the train">${RIDE_ICONS.play}</button>
+      <button class="day-toggle" type="button"
+              aria-label="Turn the day to the next time of day">🌙</button>
       <button class="mute-toggle" type="button" aria-pressed="false"
               aria-label="Mute the sounds">🔊</button>
       <button class="trash-slot" type="button"
@@ -213,6 +222,21 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     audio: options.audio,
     isReady: options.isReady,
   });
+
+  // ---- The sun/moon: the toddler turns the page on the day, not the clock --
+  // A plain tap, no parent gate: the meadow just gets darker or lighter, and
+  // the drift carries on from wherever the tap landed.
+  const dayToggle = root.querySelector<HTMLButtonElement>('.day-toggle');
+  if (!dayToggle) {
+    throw new Error('day toggle missing from app frame');
+  }
+  const refreshDay = (phase: DayPhase) => {
+    dayToggle.textContent = nextDayIcon(phase);
+  };
+  dayToggle.addEventListener('click', () => options.advanceDay());
+  // The drift turns the pages too, so the icon follows the day on its own.
+  options.subscribeDayPhase(refreshDay);
+  refreshDay(options.dayPhase());
 
   // Any press anywhere is toddler activity: it dismisses the attract drift
   // instantly and keeps the idle clock at arm's length.

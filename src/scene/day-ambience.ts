@@ -1,6 +1,6 @@
 import type { AmbienceAudio } from '../audio/ambience-audio';
 import type { RiverBabble } from '../audio/river-babble';
-import { createDayClock } from '../core/day-clock';
+import { createDayClock, type DayPhase } from '../core/day-clock';
 import { riverProximity } from '../core/river';
 import {
   type Celestial,
@@ -48,6 +48,14 @@ export interface DayAmbience {
   weather(): WeatherIntensity;
   /** Recompute + repaint the primary train's portal glow (night-aware). */
   updatePortalGlow(star: { x: number; z: number } | null): void;
+  /** The current time of day — the sun/moon button shows what a tap brings. */
+  dayPhase(): DayPhase;
+  /** The child's tap: turn the page to the next phase, then repaint at once. */
+  advanceDay(): void;
+  /** Restore a persisted phase on boot (a no-op at the current phase). */
+  setDayPhase(phase: DayPhase): void;
+  /** Fire on every phase change, the child's tap or the drift's own hand. */
+  subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
   dispose(): void;
 }
 
@@ -161,6 +169,21 @@ export function createDayAmbience({
         ? lerpIntensity(intensityOf(blend.from), intensityOf(blend.to), blend.t, intensity)
         : intensityOf(weatherClock.weather);
     },
+    dayPhase: () => dayClock.phase,
+    advanceDay(): void {
+      dayClock.advancePhase();
+      // Repaint right away: the next frame is a frame away, but the toy should
+      // answer the tap on the spot, and the frame loop may be suspended.
+      paint();
+    },
+    setDayPhase: (phase) => {
+      dayClock.setPhase(phase);
+      paint();
+    },
+    subscribeDayPhase: (listener) =>
+      dayClock.subscribe((event) => {
+        if (event.kind === 'phase') listener(event.phase);
+      }),
     updatePortalGlow(star) {
       const night = nightFactorAt(dayClock.fraction);
       // The headlight catches the portals at night: a warm glow at the open

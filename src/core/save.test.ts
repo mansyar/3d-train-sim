@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DAY_PHASES } from './day-clock';
 import { isWater } from './river';
 import {
   deserializePreferences,
@@ -749,6 +750,53 @@ describe('device preferences', () => {
       expect(deserializePreferences({ version: 1, pieces, scenery, preferences })).toEqual({
         muted: false,
       });
+    }
+  });
+});
+
+describe('day-phase preference', () => {
+  it('serializes the day phase alongside the mute preference', () => {
+    const snapshot = serializeWorld(pieces, [], 'steam', false, {}, defaultConsist(), 'dusk');
+
+    expect(snapshot.preferences).toEqual({ muted: false, dayPhase: 'dusk' });
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+  });
+
+  it('omits the default mid-morning phase so snapshots stay minimal', () => {
+    expect(
+      serializeWorld(pieces, [], 'steam', false, {}, defaultConsist(), 'morning').preferences,
+    ).toBeUndefined();
+  });
+
+  it('round-trips every day phase; mid-morning comes back as the default', () => {
+    for (const dayPhase of DAY_PHASES) {
+      const restored = deserializePreferences(
+        serializeWorld(pieces, [], 'steam', true, {}, defaultConsist(), dayPhase),
+      );
+      expect(restored.muted).toBe(true);
+      expect(restored.dayPhase ?? 'morning').toBe(dayPhase);
+    }
+  });
+
+  it('leaves the phase out for legacy snapshots that predate it', () => {
+    expect(deserializePreferences({ version: 1, pieces, scenery })).toEqual({ muted: false });
+    expect(deserializePreferences(serializeWorld(pieces, scenery, 'steam', true))).toEqual({
+      muted: true,
+    });
+  });
+
+  it('drops an unrecognized day phase without losing the mute state', () => {
+    const invalid: unknown[] = ['evening', '', 3, null, {}, 'Night'];
+
+    for (const dayPhase of invalid) {
+      expect(
+        deserializePreferences({
+          version: 3,
+          pieces,
+          scenery,
+          preferences: { muted: true, dayPhase },
+        }),
+      ).toEqual({ muted: true });
     }
   });
 });

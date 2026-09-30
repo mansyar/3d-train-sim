@@ -187,6 +187,24 @@ body {
   transform: translateY(3px);
 }
 
+/* The sun/moon: the toddler's page-turn on the day. Same chunky toy slot as
+   its rail siblings — no gate, no text, just what the next tap brings. */
+.day-toggle {
+  background: var(--toy-cream);
+  border: 4px solid var(--toy-brown);
+  border-radius: 20px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  font-size: 30px;
+  min-height: 72px;
+  min-width: 72px;
+}
+
+.day-toggle:active {
+  box-shadow: 0 1px 0 var(--toy-brown);
+  transform: translateY(3px);
+}
+
 .mute-toggle {
   background: var(--toy-cream);
   border: 4px solid var(--toy-brown);

@@ -51,7 +51,8 @@ src/
     track-graph.ts #   nodes/edges, piece connectivity
     snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
     pathing.ts     #   train path along track, speed, looping
-    save.ts        #   serialize/deserialize world
+    save.ts        #   serialize/deserialize world (v3; `preferences` carries the
+                   #   device mute + optional chosen dayPhase, defaults omitted)
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring; init-scene.ts is the thin assembler that
                    #   builds one SceneContext (scene-context.ts) and hands it to
@@ -60,7 +61,9 @@ src/
                      #   tracks/lights/quality/render-scale/reduced-motion);
                      #   built once, passed explicitly, no singletons
     day-ambience.ts  # day/weather clocks + repaint (sky, water, snow, fireflies,
-                     #   window glow, portal glow)
+                     #   window glow, portal glow); also the child-facing
+                     #   dayPhase()/advanceDay()/setDayPhase()/subscribeDayPhase()
+                     #   bridge the sun/moon rail button drives
     train-fleet.ts   # locomotive rigs: templates, loading, ride motion wiring
     rig-cargo.ts     # crate attach/cycle on wagons (train-fleet's cargo half)
     film-camera.ts   # chase-camera follow + attract drift + filmed-target cycle
