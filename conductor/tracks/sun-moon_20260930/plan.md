@@ -30,11 +30,19 @@
   `DEFAULT_DAY_PHASE` and is omitted from storage (it is what a save without
   the field restores to), matching the existing "omit the default" pattern
   for mute. An unknown phase string is dropped without losing mute state.
-- [ ] Task: Persistence wiring in `src/state/persistence.ts` (TDD)
-  - [ ] Test: day-phase changes re-save the snapshot without clobbering
+- [x] Task: Persistence wiring in `src/state/persistence.ts` (TDD) — 7bd77ae
+  - [x] Test: day-phase changes re-save the snapshot without clobbering
         world/mute (change-gated watcher pattern)
-  - [ ] Test: `restoreDayPhasePreference` applies a stored phase on boot
-  - [ ] Implement watcher + restore alongside the existing mute pair
+  - [x] Test: `restoreDayPhasePreference` applies a stored phase on boot
+  - [x] Implement watcher + restore alongside the existing mute pair
+
+  Notes: `watchDayPhasePersistence` + `restoreDayPhasePreference` mirror the
+  mute pair. `watchWorldPersistence` gained a 4th `readDayPhase` arg (default
+  `() => DEFAULT_DAY_PHASE`) so a later track edit keeps the child's chosen
+  phase instead of dropping it. Drifting the clock emits no save — only a
+  real phase change persists. Two of my own test expectations were wrong
+  (0.25 + 0.3 of a day is already noon, and one jump from morning is noon,
+  not dusk); the implementation was right. Full suite: 752 passing.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2 — Rail Slot UI (non-logic; acceptance criteria)
