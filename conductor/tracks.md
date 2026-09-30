@@ -4,7 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [sun-moon_20260930](tracks/sun-moon_20260930/index.md) | Sun & Moon — Child-Controlled Time of Day | Feature | complete |
+| [sun-moon_20260930](archive/sun-moon_20260930/index.md) | Sun & Moon — Child-Controlled Time of Day | Feature | archived |
 | [double-slip-switch_20260930](archive/double-slip-switch_20260930/index.md) | Double-Slip Switch | Feature | archived |
 | [release-v0.10.0_20260919](archive/release-v0.10.0_20260919/index.md) | Release v0.10.0 | Chore | done |
 | [switchyard_20260913](archive/switchyard_20260913/index.md) | Switchyard — Three-Way Junction & Motorized Levers | Feature | done |
