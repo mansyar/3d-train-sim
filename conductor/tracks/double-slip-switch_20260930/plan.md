@@ -126,7 +126,7 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   (quaternion) — both resolved in the recipe, no stop-and-ask needed.
   User approved the checkpoint via the question tool.
 
-## Phase 3: Renderer & UI Wiring
+## Phase 3: Renderer & UI Wiring [checkpoint: 6b378c37149975e8ab4df4057d965dfa36db8f00]
 
 - [x] Task: `track-renderer.ts` — `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`
       entries, blade flip + lever swing tweens, `switchPose` witness
@@ -181,7 +181,13 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   dev-server screenshot with the slip placed on dry land shows the piece
   seated flush on the grass — no float, no sink — lever proud at the NW
   corner, rail ends meeting the cell edges. Placement correctly refused
-  river cells.
+  river cells. User approved the checkpoint via the question tool.
+
+  Verification Report (Phase 3): biome clean, tsc clean, 736/736 unit
+  tests, e2e 6/6 across tablet+phone (zero console errors, zero external
+  requests), in-app ground-contact screenshot verified. One red e2e cycle
+  (two contract corrections, documented above) — no product-code fixes
+  were needed. Checkpoint SHA: 6b378c3.
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 4: E2E & Docs
