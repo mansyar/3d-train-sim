@@ -216,10 +216,11 @@ function walkSimple(ids: readonly string[], graph: TrackGraph): TrainPath {
       ends.find((end) => end.edge === curEntry),
       `piece ${curId} has no ${curEntry} end`,
     );
-    // Two-end pieces exit through their only other end; a crossing (four
-    // ends) routes straight through to the edge opposite the entry; a switch
-    // rides its frozen straight-through routing (cap fallback only — live
-    // components take the alternating walk below).
+    // Two-end pieces exit through their only other end; a crossing or a
+    // double slip (four ends, counter 0) routes straight through to the edge
+    // opposite the entry; a stem switch rides its frozen straight-through
+    // routing (cap fallback only — live components take the alternating
+    // walk below).
     const placed = pieceOf(curId);
     // A local for the guard: narrowing `placed.type` directly would not
     // survive into the `find` closure below, so the handedness rides along.
@@ -305,10 +306,12 @@ const SWITCH_WALK_STEP_CAP = 4096;
  * in place at dead ends like the shuttle — and the walk stops when a full
  * state (piece, entry edge, every switch counter) repeats. The steps between
  * the two sightings are the periodic ride: one continuous, closed cycle that
- * covers both branches of every switch (two loops ride as alternating laps;
+ * covers every road of every switch (two loops ride as alternating laps;
  * dead-end spurs ride out and shuttle back inside the cycle).
  *
- * Termination: the state space (pieces × 4 edges × 2^switches) is finite and
+ * Termination: the state space (pieces × 4 edges × 2 or 3 counters per
+ * junction — two roads on the Ys, three on the three-way and the slip) is
+ * finite and
  * the transition deterministic, so a cycle always exists; the step cap keeps
  * even absurd layouts total, falling back to frozen straight-through routing.
  */

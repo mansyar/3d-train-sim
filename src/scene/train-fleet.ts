@@ -207,7 +207,7 @@ export function createTrainFleet({
       wagons,
       (inside) => setRigInTunnel(rig, inside),
       (stationId) => cargo.handleStation(rig, stationId),
-      (pieceId: string, exit: Edge) => tracks.setSwitchRoad(pieceId, exit),
+      (pieceId: string, exit: Edge, entry: Edge) => tracks.setSwitchRoad(pieceId, exit, entry),
       onBumpCrest,
     );
     return rig;

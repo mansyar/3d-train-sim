@@ -20,7 +20,7 @@ function canonical(edges: Edge[]): Edge[] {
 }
 
 describe('piece catalog', () => {
-  it('offers exactly the piece set: straight, corner, crossing, crossing gate, bridge, tunnel, the hill run, all three switches, the bump half-run, and the elevated corner run', () => {
+  it('offers exactly the piece set: straight, corner, crossing, crossing gate, bridge, tunnel, the hill run, all four switches, the bump half-run, and the elevated corner run', () => {
     expect([...PIECE_TYPES].sort()).toEqual([
       'bridge',
       'bump-down',
@@ -39,6 +39,7 @@ describe('piece catalog', () => {
       'switch',
       'switch-3way',
       'switch-mirror',
+      'switch-slip',
       'tunnel',
     ]);
   });
@@ -64,6 +65,7 @@ describe('piece catalog', () => {
       'switch',
       'switch-3way',
       'switch-mirror',
+      'switch-slip',
     ];
     for (const type of others) expect(isCornerPiece(type)).toBe(false);
   });
@@ -86,6 +88,7 @@ describe('piece catalog', () => {
       'switch',
       'switch-3way',
       'switch-mirror',
+      'switch-slip',
     ];
     for (const type of others) expect(isBumpPiece(type)).toBe(false);
   });
@@ -242,6 +245,24 @@ describe('switch-3way piece geometry', () => {
   it('gives the three-way switch exactly four endpoints at every rotation', () => {
     for (const rotation of ALL_ROTATIONS) {
       expect(endpointsFor('switch-3way', rotation)).toHaveLength(4);
+    }
+  });
+});
+
+describe('switch-slip piece geometry', () => {
+  it('joins all four edges at yaw 0: two roads crossing, plus the two diagonals', () => {
+    expect(endpointsFor('switch-slip', 0)).toEqual(['north', 'east', 'south', 'west']);
+  });
+
+  it('keeps the same four edges at every rotation, canonical order kept', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch-slip', rotation)).toEqual(CANONICAL);
+    }
+  });
+
+  it('gives the double slip exactly four endpoints at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      expect(endpointsFor('switch-slip', rotation)).toHaveLength(4);
     }
   });
 });

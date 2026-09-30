@@ -42,6 +42,7 @@ describe('drawerTabs', () => {
       'switch',
       'switch-mirror',
       'switch-3way',
+      'switch-slip',
     ]);
   });
 
@@ -62,7 +63,7 @@ describe('drawerTabs', () => {
 
   it('covers every catalog kind exactly once across all tabs', () => {
     const all = drawerTabs().flatMap((tab) => tab.kinds);
-    expect(all).toHaveLength(SCENERY_KINDS.length + 18); // + 18 track pieces
+    expect(all).toHaveLength(SCENERY_KINDS.length + 19); // + 19 track pieces
     expect(new Set(all).size).toBe(all.length);
   });
 
@@ -103,6 +104,7 @@ describe('tabForKind', () => {
     expect(tabForKind('switch')).toBe('adventure');
     expect(tabForKind('switch-mirror')).toBe('adventure');
     expect(tabForKind('switch-3way')).toBe('adventure');
+    expect(tabForKind('switch-slip')).toBe('adventure');
   });
 
   it('maps each scenery kind to its catalog category tab', () => {

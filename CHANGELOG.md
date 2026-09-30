@@ -9,6 +9,12 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- A double-slip switch: a four-way crossing where every entry cycles
+  straight → east diagonal → west diagonal on successive passes, with the
+  entry's point blades and the signal lever following the chosen road.
+  Find it in the Adventure tab. Saves stay compatible — no reset needed.
+
 ## [0.10.0] - 2026-09-19
 
 ### Added

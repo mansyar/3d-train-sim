@@ -240,8 +240,9 @@ export function createRideMotion(
   onTunnelChange?: (inside: boolean) => void,
   /** Announces the station cargo duty at each stop (load ⇄ deliver). */
   onStationCargo?: (stationId: string) => void,
-  /** Announces which road a switch just set as the engine reaches its cell. */
-  onSwitchRoad?: (pieceId: string, exit: Edge) => void,
+  /** Announces which road a switch just set, and the edge the engine
+   *  entered by (the double slip needs both to pose its entry's blades). */
+  onSwitchRoad?: (pieceId: string, exit: Edge, entry: Edge) => void,
   /** Announces the engine cresting a bump-run hump (one soft pop per visit). */
   onBumpCrest?: () => void,
 ): RideMotion {
@@ -320,7 +321,7 @@ export function createRideMotion(
    * dead-end reversals park the train for a beat — the turnaround pauses.
    * A switch cycle is always closed, so the seam itself may be a turnaround.
    */
-  let switchRoads: ({ pieceId: string; exit: Edge } | null)[] = [];
+  let switchRoads: ({ pieceId: string; exit: Edge; entry: Edge } | null)[] = [];
   let turnarounds: number[] = [];
   let turnaroundIndex = 0;
   let wrapTurnaround = false;
@@ -402,7 +403,9 @@ export function createRideMotion(
       const cur = kept[i];
       if (!cur) continue;
       switchRoads.push(
-        isSwitchPiece(cur.piece.type) ? { pieceId: cur.piece.id, exit: cur.step.to } : null,
+        isSwitchPiece(cur.piece.type)
+          ? { pieceId: cur.piece.id, exit: cur.step.to, entry: cur.step.from }
+          : null,
       );
       const prev = kept[i - 1];
       if (
@@ -689,10 +692,10 @@ export function createRideMotion(
     // The road the engine just reached a switch by — announced once per
     // change, never per frame (the blade-flip listener is scene-side).
     const road = segmentIndex >= 0 ? (switchRoads[segmentIndex] ?? null) : null;
-    const roadKey = road ? `${road.pieceId}|${road.exit}` : '';
+    const roadKey = road ? `${road.pieceId}|${road.entry}>${road.exit}` : '';
     if (roadKey !== lastRoadKey) {
       lastRoadKey = roadKey;
-      if (road) onSwitchRoad?.(road.pieceId, road.exit);
+      if (road) onSwitchRoad?.(road.pieceId, road.exit, road.entry);
     }
     poseFollowers();
   }
