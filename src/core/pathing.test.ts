@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type RideComponent, selectRideComponents, solvePath, solveRidePaths } from './pathing';
-import { endpointsFor } from './pieces';
+import { type Edge, endpointsFor } from './pieces';
 import type { PieceType, PlacedPiece, Rotation } from './track-graph';
 
 function piece(id: string, type: PieceType, x: number, y: number, rotation: Rotation): PlacedPiece {
@@ -684,6 +684,16 @@ describe('solvePath — switch pieces (Y and three-way topologies)', () => {
     }
   }
 
+  const SLIP_EDGES = ['north', 'east', 'south', 'west'] as const;
+
+  /** Which slip road a step rode: straight across, or the driver's right/left diagonal. */
+  function slipRoad(step: { from: Edge; to: Edge }): 'straight' | 'right' | 'left' {
+    const heading = (SLIP_EDGES.indexOf(step.from) + 2) % 4;
+    if (step.to === SLIP_EDGES[heading]) return 'straight';
+    if (step.to === SLIP_EDGES[(heading + 1) % 4]) return 'right';
+    return 'left';
+  }
+
   it('rides a lone switch as a closed out-and-back cycle over both branches', () => {
     const pieces = [piece('sw', 'switch', 2, 2, 0)];
 
@@ -1010,6 +1020,73 @@ describe('solvePath — switch pieces (Y and three-way topologies)', () => {
     expectAlternating(stemExits(path, 'swY', 'north'));
     expect(solvePath(pieces)).toEqual(path);
     expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('rides a lone double slip as a closed cycle taking all three roads in turn', () => {
+    const pieces = [piece('slip', 'switch-slip', 2, 2, 0)];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    // The deterministic start enters through the west end (lowest boundary
+    // key); every pass advances the counter — no stem, every entry chooses.
+    expect(path.steps).toEqual([
+      { pieceId: 'slip', from: 'west', to: 'east', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'slip', from: 'east', to: 'north', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'slip', from: 'north', to: 'east', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'slip', from: 'east', to: 'west', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'slip', from: 'west', to: 'south', entryHeight: 0, exitHeight: 0 },
+      { pieceId: 'slip', from: 'south', to: 'west', entryHeight: 0, exitHeight: 0 },
+    ]);
+    expect(solvePath(pieces)).toEqual(path);
+  });
+
+  it('covers all three roads from every entry of a slip whose arms dead-end', () => {
+    // Every arm of the slip runs out to a dead end; the periodic ride still
+    // shuttles through each line and takes every road from every side.
+    const pieces = [
+      piece('west-line', 'straight', 1, 2, 90),
+      piece('slip', 'switch-slip', 2, 2, 0),
+      piece('east-line', 'straight', 3, 2, 90),
+      piece('north-line', 'straight', 2, 1, 0),
+      piece('south-line', 'straight', 2, 3, 0),
+    ];
+
+    const path = solvePath(pieces);
+
+    expectCycleRides(pieces, path);
+    expect(new Set(path.steps.map((s) => s.pieceId))).toEqual(new Set(pieces.map((p) => p.id)));
+    // Every pass advances the counter, so the slip's roads — named from the
+    // driver rolling in — cycle straight → right → left forever, whichever
+    // side the train enters from.
+    const roads = path.steps.filter((s) => s.pieceId === 'slip').map(slipRoad);
+    expect(roads.length).toBeGreaterThanOrEqual(3);
+    expect(roads.length % 3).toBe(0);
+    for (let i = 0; i < roads.length; i += 3) {
+      expect(roads.slice(i, i + 3)).toEqual(['straight', 'right', 'left']);
+    }
+    expect(solvePath(pieces)).toEqual(path);
+    expect(solvePath([...pieces].reverse())).toEqual(path);
+  });
+
+  it('gives a slip component its own ride next to plain tracks', () => {
+    const pieces = [
+      piece('slip', 'switch-slip', 2, 2, 0),
+      piece('nw', 'corner', 0, 0, 90),
+      piece('ne', 'corner', 1, 0, 180),
+      piece('se', 'corner', 1, 1, 270),
+      piece('sw', 'corner', 0, 1, 0),
+    ];
+
+    const paths = solveRidePaths(pieces);
+
+    expect(paths).toHaveLength(2);
+    // Ranked by most pieces first: the four-corner loop rides first, the
+    // lone slip's closed out-and-back cycle second.
+    expect(paths[0]?.closed).toBe(true);
+    expect(paths[0]?.steps.every((s) => s.pieceId !== 'slip')).toBe(true);
+    expect(paths[1]?.closed).toBe(true);
+    expect(paths[1]?.steps.every((s) => s.pieceId === 'slip')).toBe(true);
   });
 });
 

@@ -14,6 +14,12 @@
  * every branch entry (either side road or the straight) merges through the
  * stem unchanged.
  *
+ * The double slip drops the stem entirely: two roads cross with two
+ * diagonal shortcuts, so every entry has a choice. Each pass — from any of
+ * the four sides — cycles straight → right → left on the same 0|1|2
+ * counter, with right and left named from the driver rolling in. Every
+ * pass advances the counter; there is no merge-without-choice entry.
+ *
  * Counters are session-only runtime state — never serialized (spec FR8);
  * each placed switch starts fresh, on the straight branch.
  */
@@ -26,12 +32,17 @@ export type SwitchBranch = 'straight' | 'diverge';
 /** The three roads through the three-way, named from the stem-driver's view. */
 export type ThreeWayBranch = 'straight' | 'right' | 'left';
 
-/** A piece type that routes like a junction (right Y, mirror Y, or three-way). */
-export type SwitchPieceType = 'switch' | 'switch-mirror' | 'switch-3way';
+/** A piece type that routes like a junction (right Y, mirror Y, three-way, or double slip). */
+export type SwitchPieceType = 'switch' | 'switch-mirror' | 'switch-3way' | 'switch-slip';
 
 /** True for any of the junction pieces. */
 export function isSwitchPiece(type: PieceType): type is SwitchPieceType {
-  return type === 'switch' || type === 'switch-mirror' || type === 'switch-3way';
+  return (
+    type === 'switch' ||
+    type === 'switch-mirror' ||
+    type === 'switch-3way' ||
+    type === 'switch-slip'
+  );
 }
 
 /** Base-frame legs at yaw 0 (edges advance one compass step per 90° yaw). */
@@ -77,15 +88,29 @@ export function nextThreeWayBranch(counter: number): ThreeWayBranch {
 }
 
 /**
+ * The slip's exit edge in the base frame: straight across (the edge opposite
+ * the entry, which is also the inward heading), or a quarter-turn to the
+ * driver's right or left of that heading. Pure and total.
+ */
+function slipExitBase(fromBase: Edge, branch: ThreeWayBranch): Edge {
+  const heading = (CANONICAL_EDGES.indexOf(fromBase) + 2) % 4;
+  const turn = branch === 'straight' ? 0 : branch === 'right' ? 1 : 3;
+  return CANONICAL_EDGES[(heading + turn) % 4] as Edge;
+}
+
+/**
  * Route one pass through the switch: `from` is the world-oriented entry
  * edge at the piece's rotation, `counter` its alternation state (0 = next
  * stem entry takes the straight branch). `type` selects the handedness —
  * the mirror diverges west where the right switch diverges east, with the
- * same stem→alternating / branch→stem rule. Returns the world-oriented exit
- * edge and the counter after the pass — advanced only when the entry came
- * from the stem: folded back to 0|1 on the Y switches and to 0|1|2 on the
- * three-way. Pure and total. Defaults to the right switch so older callers
- * keep their routing byte for byte.
+ * same stem→alternating / branch→stem rule. The double slip has no stem:
+ * every pass from any side cycles straight → right → left and advances the
+ * counter. Returns the world-oriented exit edge and the counter after the
+ * pass — advanced only when the entry came from the stem on the stem
+ * pieces, and on every pass for the slip: folded back to 0|1 on the Y
+ * switches and to 0|1|2 on the three-way and the slip. Pure and total.
+ * Defaults to the right switch so older callers keep their routing byte
+ * for byte.
  */
 export function routeSwitch(
   counter: number,
@@ -94,6 +119,10 @@ export function routeSwitch(
   type: SwitchPieceType = 'switch',
 ): { exit: Edge; counter: number } {
   const fromBase = unrotateEdge(from, rotation);
+  if (type === 'switch-slip') {
+    const exitBase = slipExitBase(fromBase, nextThreeWayBranch(counter));
+    return { exit: rotateEdge(exitBase, rotation), counter: (counter + 1) % 3 };
+  }
   if (type === 'switch-3way') {
     if (fromBase === STEM_EDGE) {
       const exitBase = THREE_WAY_EDGES[nextThreeWayBranch(counter)];

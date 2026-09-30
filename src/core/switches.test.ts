@@ -201,3 +201,66 @@ describe('routeSwitch — three-way junction', () => {
     expect(routeSwitch(1, 180, 'north', 'switch-mirror')).toEqual({ exit: 'east', counter: 0 });
   });
 });
+
+describe('routeSwitch — double slip', () => {
+  it('identifies the double slip as a switch piece', () => {
+    expect(isSwitchPiece('switch-slip')).toBe(true);
+  });
+
+  it('routes the first pass straight through from any entry — no stem, every entry chooses', () => {
+    expect(routeSwitch(0, 0, 'south', 'switch-slip')).toEqual({ exit: 'north', counter: 1 });
+    expect(routeSwitch(0, 0, 'north', 'switch-slip')).toEqual({ exit: 'south', counter: 1 });
+    expect(routeSwitch(0, 0, 'east', 'switch-slip')).toEqual({ exit: 'west', counter: 1 });
+    expect(routeSwitch(0, 0, 'west', 'switch-slip')).toEqual({ exit: 'east', counter: 1 });
+  });
+
+  it('takes the right-hand diagonal on the second pass and the left-hand one on the third', () => {
+    // Right and left are the driver's, seen from the entry heading inward.
+    expect(routeSwitch(1, 0, 'south', 'switch-slip')).toEqual({ exit: 'east', counter: 2 });
+    expect(routeSwitch(2, 0, 'south', 'switch-slip')).toEqual({ exit: 'west', counter: 0 });
+    expect(routeSwitch(1, 0, 'north', 'switch-slip')).toEqual({ exit: 'west', counter: 2 });
+    expect(routeSwitch(2, 0, 'north', 'switch-slip')).toEqual({ exit: 'east', counter: 0 });
+  });
+
+  it('advances the counter on every pass — unlike the stem switches, branch entries choose too', () => {
+    const first = routeSwitch(0, 0, 'east', 'switch-slip'); // straight through to the west
+    const second = routeSwitch(first.counter, 0, 'east', 'switch-slip'); // right-hand diagonal
+    expect(first).toEqual({ exit: 'west', counter: 1 });
+    expect(second).toEqual({ exit: 'north', counter: 2 });
+  });
+
+  it('rotates the slip with the piece — straight, right, and left follow', () => {
+    // 90°: entering world west unrotates to base south.
+    expect(routeSwitch(0, 90, 'west', 'switch-slip')).toEqual({ exit: 'east', counter: 1 });
+    expect(routeSwitch(1, 90, 'west', 'switch-slip')).toEqual({ exit: 'south', counter: 2 });
+    expect(routeSwitch(2, 90, 'west', 'switch-slip')).toEqual({ exit: 'north', counter: 0 });
+    // 180°: entering world north unrotates to base south.
+    expect(routeSwitch(0, 180, 'north', 'switch-slip')).toEqual({ exit: 'south', counter: 1 });
+    expect(routeSwitch(1, 180, 'north', 'switch-slip')).toEqual({ exit: 'west', counter: 2 });
+    expect(routeSwitch(2, 180, 'north', 'switch-slip')).toEqual({ exit: 'east', counter: 0 });
+    // 270°: entering world east unrotates to base south.
+    expect(routeSwitch(0, 270, 'east', 'switch-slip')).toEqual({ exit: 'west', counter: 1 });
+    expect(routeSwitch(1, 270, 'east', 'switch-slip')).toEqual({ exit: 'north', counter: 2 });
+    expect(routeSwitch(2, 270, 'east', 'switch-slip')).toEqual({ exit: 'south', counter: 0 });
+  });
+
+  it('stays total and self-consistent at every rotation', () => {
+    for (const rotation of ALL_ROTATIONS) {
+      const ends = endpointsFor('switch-slip', rotation);
+      for (const from of ends) {
+        for (const counter of [0, 1, 2]) {
+          const routed = routeSwitch(counter, rotation, from, 'switch-slip');
+          expect(ends).toContain(routed.exit);
+          expect(routed.exit).not.toBe(from);
+          expect([0, 1, 2]).toContain(routed.counter);
+        }
+      }
+    }
+  });
+
+  it('leaves the stem switches byte-for-byte unchanged', () => {
+    expect(routeSwitch(0, 0, 'south')).toEqual({ exit: 'north', counter: 1 });
+    expect(routeSwitch(1, 0, 'south', 'switch')).toEqual({ exit: 'east', counter: 0 });
+    expect(routeSwitch(0, 0, 'north', 'switch-3way')).toEqual({ exit: 'south', counter: 0 });
+  });
+});

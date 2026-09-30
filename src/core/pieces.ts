@@ -18,6 +18,7 @@ export const PIECE_TYPES = [
   'switch',
   'switch-mirror',
   'switch-3way',
+  'switch-slip',
 ] as const;
 
 export type PieceType = (typeof PIECE_TYPES)[number];
@@ -109,6 +110,11 @@ const BASE_ENDPOINTS: Record<PieceType, readonly Edge[]> = {
   // just sees four open ends; routing (the fair straight → right → left
   // rotation) is the switches module's job.
   'switch-3way': ['north', 'east', 'south', 'west'],
+  // The double slip: two roads crossing with two diagonal shortcuts in one
+  // tile. Connectivity just sees four open ends — like the crossing — but
+  // every entry has a choice; routing (the fair straight → right → left
+  // rotation from any side) is the switches module's job.
+  'switch-slip': ['north', 'east', 'south', 'west'],
 };
 
 /** Rotate one edge clockwise by a 90° step count. */

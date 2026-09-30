@@ -99,10 +99,12 @@ const BASE_YAW: Record<PieceType, number> = {
   // correctly with no extra base yaw (verified in the render checks).
   // The mirror shares the yaw frame with diverge west; its mirrored GLB
   // rides the same mount. The three-way joins every edge and rides the
-  // straight's frame too (its authored GLB keeps the same mount).
+  // straight's frame too (its authored GLB keeps the same mount). The
+  // double slip joins every edge as well and rides the straight's frame.
   switch: 0,
   'switch-mirror': 0,
   'switch-3way': 0,
+  'switch-slip': 0,
 };
 
 const baseYawOf = (kind: PieceType | SceneryKind): number =>
@@ -171,6 +173,8 @@ const KIT_ANCHORS: Record<PieceType, [number, number, number]> = {
   switch: [0, -1, 2],
   'switch-mirror': [0, -1, 2],
   'switch-3way': [0, -1, 2],
+  // The double slip shares the family's straight mount (blender-switch-slip.py).
+  'switch-slip': [0, -1, 2],
 };
 
 const PIECE_URLS: Record<PieceType, string> = {
@@ -212,6 +216,7 @@ const PIECE_URLS: Record<PieceType, string> = {
   // mount, with a named `switch_blades` node and a `switch_lever` the
   // renderer moves with the points (blades 0/±0.21, lever 0/±90°).
   'switch-3way': '/assets/train-kit/switch-3way.glb',
+  'switch-slip': '/assets/train-kit/switch-slip.glb',
 };
 
 /**
@@ -553,6 +558,11 @@ export function startTrackRenderer(
       east: { blade: -0.21, lever: LEVER_EAST_Y },
       west: { blade: 0.21, lever: LEVER_WEST_Y },
     },
+    // The double slip has no stem: one exit edge can be reached by two
+    // different roads (the straight and a diagonal), so exit-edge poses are
+    // ambiguous. Phase 3 of the slip track resolves this (entry-aware
+    // poses); until then the empty table fails soft — blades stay put.
+    'switch-slip': {},
   };
   const BLADE_TWEEN_MS = 180;
   const bladeTweens = new Map<
