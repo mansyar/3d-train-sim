@@ -1,11 +1,14 @@
 import { openDB } from 'idb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createDayClock, DAY_LENGTH_MS } from '../core/day-clock';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
 import { defaultConsist } from '../core/wagons';
 import {
   loadWorldSnapshot,
+  restoreDayPhasePreference,
   restoreMutePreference,
   saveWorldSnapshot,
+  watchDayPhasePersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './persistence';
@@ -87,27 +90,27 @@ describe('autosave subscription', () => {
   });
 });
 
-describe('mute preference', () => {
-  const makeAudio = () => {
-    let muted = false;
-    let notify: (() => void) | null = null;
-    return {
-      setMuted: vi.fn((value: boolean) => {
-        muted = value;
-      }),
-      isMuted: () => muted,
-      subscribe: (listener: () => void) => {
-        notify = listener;
-        return () => {
-          notify = null;
-        };
-      },
-      emit: () => {
-        notify?.();
-      },
-    };
+const makeAudio = () => {
+  let muted = false;
+  let notify: (() => void) | null = null;
+  return {
+    setMuted: vi.fn((value: boolean) => {
+      muted = value;
+    }),
+    isMuted: () => muted,
+    subscribe: (listener: () => void) => {
+      notify = listener;
+      return () => {
+        notify = null;
+      };
+    },
+    emit: () => {
+      notify?.();
+    },
   };
+};
 
+describe('mute preference', () => {
   it('applies the persisted mute state exactly once on boot', () => {
     const audio = makeAudio();
 
@@ -212,6 +215,108 @@ describe('mute preference', () => {
     store.place('corner', NEXT_CELL, 0);
     expect(save).toHaveBeenCalledTimes(2);
     expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({ muted: false });
+  });
+});
+
+describe('day-phase preference', () => {
+  const makeClock = () => {
+    const now = 0;
+    const clock = createDayClock({ now: () => now });
+    return {
+      clock,
+      jump: () => {
+        clock.advancePhase();
+        clock.tick();
+      },
+    };
+  };
+
+  it('applies the persisted phase on boot, and leaves the default otherwise', () => {
+    const first = makeClock();
+    restoreDayPhasePreference(
+      { version: 3, pieces: [], scenery: [], preferences: { muted: false, dayPhase: 'dusk' } },
+      first.clock,
+    );
+    expect(first.clock.phase).toBe('dusk');
+
+    // A snapshot with no phase, or one this build does not know, is ignored.
+    const legacy = makeClock();
+    restoreDayPhasePreference({ version: 3, pieces: [], scenery: [] }, legacy.clock);
+    expect(legacy.clock.phase).toBe('morning');
+    restoreDayPhasePreference(
+      { version: 3, pieces: [], scenery: [], preferences: { muted: false, dayPhase: 'evening' } },
+      legacy.clock,
+    );
+    expect(legacy.clock.phase).toBe('morning');
+  });
+
+  it('saves exactly once per phase change with the current world and mute', () => {
+    const audio = makeAudio();
+    audio.setMuted(true);
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const { clock, jump } = makeClock();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchDayPhasePersistence(clock, store, () => audio.isMuted(), save);
+
+    jump(); // morning -> noon
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      version: 3,
+      pieces: [{ type: 'straight', cell: ORIGIN }],
+      preferences: { muted: true, dayPhase: 'noon' },
+    });
+
+    jump(); // noon -> dusk
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({
+      muted: true,
+      dayPhase: 'dusk',
+    });
+  });
+
+  it('does not persist the day drifting on its own', () => {
+    const store = createWorldStore();
+    let now = 0;
+    const clock = createDayClock({ now: () => now });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchDayPhasePersistence(clock, store, () => false, save);
+
+    now += DAY_LENGTH_MS * 0.1; // 0.25 -> 0.35, still morning, no tap involved
+    clock.tick();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('treats storage failures as non-fatal', () => {
+    const store = createWorldStore();
+    const { clock, jump } = makeClock();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>(() => {
+      throw new Error('storage unavailable');
+    });
+    watchDayPhasePersistence(clock, store, () => false, save);
+
+    expect(() => jump()).not.toThrow();
+  });
+
+  it('carries the current phase into world-mutation saves, so a tap never clobbers tracks', () => {
+    const store = createWorldStore();
+    const { clock, jump } = makeClock();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(
+      store,
+      () => false,
+      save,
+      () => clock.phase,
+    );
+
+    jump(); // the child taps twice, landing on dusk
+    jump();
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(deserializePreferences(save.mock.calls[0]?.[0])).toEqual({
+      muted: false,
+      dayPhase: 'dusk',
+    });
   });
 });
 

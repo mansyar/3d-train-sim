@@ -1,4 +1,5 @@
 import { type DBSchema, openDB } from 'idb';
+import { type DayPhase, DEFAULT_DAY_PHASE } from '../core/day-clock';
 import { deserializePreferences, serializeWorld, type WorldSnapshot } from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
 import type { PlacedPiece } from '../core/track-graph';
@@ -44,7 +45,7 @@ interface WorldReader {
   subscribe(listener: () => void): () => void;
 }
 
-function snapshotOf(world: WorldReader, muted: boolean): WorldSnapshot {
+function snapshotOf(world: WorldReader, muted: boolean, dayPhase?: DayPhase): WorldSnapshot {
   return serializeWorld(
     world.pieces(),
     world.scenery(),
@@ -52,6 +53,7 @@ function snapshotOf(world: WorldReader, muted: boolean): WorldSnapshot {
     muted,
     world.deliveries(),
     world.consist(),
+    dayPhase,
   );
 }
 
@@ -59,9 +61,10 @@ export function watchWorldPersistence(
   world: WorldReader,
   readMuted: () => boolean = () => false,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+  readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
 ): () => void {
   return world.subscribe(() => {
-    void save(snapshotOf(world, readMuted()));
+    void save(snapshotOf(world, readMuted(), readDayPhase()));
   });
 }
 
@@ -98,6 +101,44 @@ export function restoreMutePreference(
   audio: { setMuted(muted: boolean): void },
 ): void {
   audio.setMuted(deserializePreferences(snapshot).muted);
+}
+
+/**
+ * Keeps the chosen day phase in storage: every phase change re-saves the full
+ * snapshot, so a tap can never clobber the world and a world edit can never
+ * drop the phase. Drift on its own is not a change, so it never persists.
+ */
+export function watchDayPhasePersistence(
+  clock: {
+    readonly phase: DayPhase;
+    subscribe(listener: (event: { phase: DayPhase }) => void): () => void;
+  },
+  world: WorldReader,
+  readMuted: () => boolean = () => false,
+  save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+): () => void {
+  let lastPersisted = clock.phase;
+  return clock.subscribe((event) => {
+    if (event.phase === lastPersisted) return;
+    lastPersisted = event.phase;
+    try {
+      void save(snapshotOf(world, readMuted(), event.phase));
+    } catch {
+      // Storage is an enhancement; never make the toy world unusable.
+    }
+  });
+}
+
+/**
+ * Applies a snapshot's persisted day phase on boot. A snapshot without one
+ * (or with an unknown phase) leaves the clock at its default mid-morning.
+ */
+export function restoreDayPhasePreference(
+  snapshot: unknown,
+  clock: { setPhase(phase: DayPhase): void },
+): void {
+  const { dayPhase } = deserializePreferences(snapshot);
+  if (dayPhase) clock.setPhase(dayPhase);
 }
 
 export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> {
