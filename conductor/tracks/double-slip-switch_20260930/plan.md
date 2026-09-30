@@ -5,19 +5,53 @@ Implementation follows `conductor/workflow.md`. Logic-bearing tasks
 
 ## Phase 1: Core Routing Logic (TDD)
 
-- [ ] Task: Write failing unit tests for `switch-slip` routing
-  - [ ] `src/core/switches.test.ts`: `routeSwitch` mod-3 cycle (straight →
+- [x] Task: Write failing unit tests for `switch-slip` routing
+  - [x] `src/core/switches.test.ts`: `routeSwitch` mod-3 cycle (straight →
         right → left) for `switch-slip`, all four entry directions, rotation
         variants, counter wrap, cap fallback contract
-  - [ ] `src/core/pathing.test.ts`: `walkAlternating` rides a 4-way slip loop
+  - [x] `src/core/pathing.test.ts`: `walkAlternating` rides a 4-way slip loop
         taking all three roads in order; step-cap fallback; multi-train
         components containing a slip
-  - [ ] `src/core/pieces.test.ts`: catalog entry with 4 crossing-style
+  - [x] `src/core/pieces.test.ts`: catalog entry with 4 crossing-style
         endpoints, rotations
-- [ ] Task: Implement `switch-slip` in core (`pieces.ts`, `switches.ts`,
+
+  Notes: 13 new tests across the three suites (8 in switches.test.ts incl. a
+  total/self-consistent rotation table, 3 geometry tests in pieces.test.ts,
+  3 in pathing.test.ts). Red confirmed first: all 13 failed on the missing
+  `switch-slip` type, zero existing failures. The pathing dead-end test
+  asserts the invariant the layout actually guarantees — the exit sequence
+  cycles straight → right → left on every pass (each entry's counter phase
+  is fixed by the cycle, so per-entry road sets are not the right
+  assertion). Commit f8d76f5.
+- [x] Task: Implement `switch-slip` in core (`pieces.ts`, `switches.ts`,
       `pathing.ts`)
-- [ ] Task: Refactor pass + verify coverage (`CI=true pnpm test --
+
+  Notes: pieces.ts catalog entry (four edges, like the crossing); switches.ts
+  widens `SwitchPieceType` + `isSwitchPiece` and adds `slipExitBase` + the
+  slip branch in `routeSwitch` — no stem, every pass advances the counter
+  (mod 3), straight = opposite edge, right/left = driver's quarter turns of
+  the inward heading. pathing.ts needed no code change: the frozen
+  straight-through fallback already routes the slip straight at counter 0;
+  only doc comments updated (state space now "2 or 3 counters per
+  junction"). Commit f8d76f5.
+- [x] Task: Refactor pass + verify coverage (`CI=true pnpm test --
       --coverage` >80% on new core code)
+
+  Notes: no refactor needed — the slip branch reuses `nextThreeWayBranch`
+  (same mod-3 vocabulary). Coverage: switches.ts and pieces.ts 100% (v8
+  reporter omits fully-covered files), pathing.ts 97.67% stmts (line 233 is
+  the pre-existing step-cap fallback). Also ran the full gates: 736/736
+  tests, tsc clean, Biome clean. Commit f8d76f5.
+
+  Deviation note: the new `PieceType` broke exhaustive `Record<PieceType, …>`
+  maps outside core (drawer.ts, track-renderer.ts, toy-icons.ts), so the
+  minimal wiring landed early to keep the repo compiling at commit time:
+  drawer Adventure-tab entry (+ test updates, catalog count 18 → 19),
+  renderer yaw/anchor/URL entries, and an empty `SWITCH_POSES['switch-slip']`
+  that fails soft until Phase 3 adds entry-aware blade/lever poses (one exit
+  edge is reachable by two roads, so exit-keyed poses are ambiguous). The
+  drawer-tab and renderer tasks in Phase 3 now cover the remaining polish
+  (icon was drafted with the catalog entry; visual pass still pending).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
 
 ## Phase 2: Blender Asset (`switch-slip.glb`)
