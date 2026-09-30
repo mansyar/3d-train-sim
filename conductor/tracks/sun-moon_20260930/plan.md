@@ -1,6 +1,6 @@
 # Implementation Plan: Sun & Moon — Child-Controlled Time of Day
 
-## Phase 1 — Core Logic: Phase Stepping & Preference Persistence (TDD)
+## Phase 1 — Core Logic: Phase Stepping & Preference Persistence (TDD) [checkpoint: bd2df8a]
 
 - [x] Task: Day clock `advancePhase()` (write failing tests first) — b8e4574
   - [x] Test: jumping from each of the 5 phases lands on the correct next
@@ -43,7 +43,19 @@
   real phase change persists. Two of my own test expectations were wrong
   (0.25 + 0.3 of a day is already noon, and one jump from morning is noon,
   not dusk); the implementation was right. Full suite: 752 passing.
-- [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+- [x] Task: Phase Verification & Checkpoint (Refer to workflow.md)
+
+### Verification Report — Phase 1
+
+- Automated: `biome check .` clean · `tsc --noEmit` clean · 752 tests
+  passing (40 files) · coverage on changed logic all >80% —
+  `day-clock.ts` 95.7% stmts / 97.6% lines, `save.ts` 91.9% / 98.6%,
+  `persistence.ts` 87.8% / 91.9% (uncovered lines are pre-existing
+  unreachable guards).
+- Manual (user-confirmed): `pnpm dev` at tablet size — place/remove track
+  and scenery behaves normally, autosave fires, a page reload restores the
+  built world, the day still starts at mid-morning (no `dayPhase` written
+  yet, as expected), console clean.
 
 ## Phase 2 — Rail Slot UI (non-logic; acceptance criteria)
 
