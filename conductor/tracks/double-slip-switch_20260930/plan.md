@@ -128,11 +128,36 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
 
 ## Phase 3: Renderer & UI Wiring
 
-- [ ] Task: `track-renderer.ts` — `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`
+- [x] Task: `track-renderer.ts` — `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS`
       entries, blade flip + lever swing tweens, `switchPose` witness
       extension (acceptance criteria recorded in plan)
-- [ ] Task: `drawer.ts` Adventure tab entry + `toy-icons.ts` SVG icon
+
+  Notes: PIECE_URLS/BASE_YAW/KIT_ANCHORS landed with the Phase 1
+  compile-fix pass. Entry-aware posing: ride-motion's `onSwitchRoad` now
+  carries the entry edge (`switchRoads` entries gain `entry`; the
+  once-per-change road key includes it so a different entry re-announces),
+  the fleet passes it through, and `setSwitchRoad(pieceId, exit, entry?)`
+  poses the slip's ENTRY blade group from SLIP_BLADES (per-entry blade
+  angles, 0 = straight) while SLIP_LEVERS points the lever along the exit
+  (north 0 / east −90° / south 180° / west +90°). The `switchPose`
+  witness takes an optional entry to read that group. The slip asset was
+  re-exported (121,208 bytes) with each group's bars BAKED at its
+  orientation so all group nodes rest at 0 — the renderer's pose writes
+  would otherwise destroy the rest rotations; the pose signs were settled
+  empirically with a ±0.6 top-view A/B on the shipped 3-way (bar TOPS
+  lean toward the chosen road's tangent), confirming the recipe's
+  documented contract. Gates: biome clean, tsc clean, 736/736 tests.
+  Commit 4e8df87.
+
+- [x] Task: `drawer.ts` Adventure tab entry + `toy-icons.ts` SVG icon
       (acceptance criteria recorded in plan)
+
+  Notes: completed during Phase 1's compile-fix pass so the repo kept
+  compiling against the exhaustive Record maps — 'switch-slip' maps to
+  the Adventure tab after the other switches; label "Double-slip switch
+  track piece"; icon SVG shows the crossing plus the steel diagonal X;
+  drawer tests updated (kinds list, catalog count 19, tabForKind).
+  Covered by the Phase 1 test run.
 - [ ] Task: Manual/verification pass — place from drawer, rotate, ride
       through all three roads, reduced-motion freeze
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
