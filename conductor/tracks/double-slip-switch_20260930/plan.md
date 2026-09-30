@@ -207,5 +207,22 @@ Mount measurement table (Gate 1.1, from tech-stack + blender-switch-3way.py
   as shipped (track id + date) and notes the named roadmap is exhausted;
   CHANGELOG gains a parent-facing `[Unreleased]` Added entry (what it
   does, where to find it, saves stay compatible).
-- [ ] Task: Full gate run (`biome` + `tsc` + Vitest + Playwright)
+- [x] Task: Full gate run (`biome` + `tsc` + Vitest + Playwright)
+
+  Notes: Two red cycles on the full e2e suite before green (workflow
+  fix budget respected). Cycle 1 (3 failed / 140 passed): (a) the
+  toybox spec hardcoded the Adventure row at 8 toys and expected
+  tablets to fit it whole — with 9 toys the single-scrollable-row
+  design (Rails already holds 10 and swipes everywhere) now swipes on
+  tablets too, so the assertion was updated to expect the overflow on
+  both projects; (b) the slip ride test's exit condition was defeated
+  by mid-tween blade sightings faking a third key (-0.140 seen while
+  -0.210 never settled) — sightings now count only when they pair with
+  a road via the pose tables. Cycle 2 confirmed both fixes in
+  isolation (12/12); final full run: 143 passed across all specs,
+  tablet and phone, in 12.2 min. Static gates green: biome check clean
+  (158 files), tsc --noEmit clean, vitest 736/736 (40 files). One tsc
+  fix along the way: the spec's pose tables are typed against the
+  entry-name union so noUncheckedIndexedAccess can't see undefined
+  entries (commit 8683ebf).
 - [ ] Task: Phase Verification & Checkpoint (Refer to workflow.md)
