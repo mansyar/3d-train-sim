@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-07T06:43:50+11:00",
-  "updated_at": "2026-11-07T06:43:50+11:00",
+  "updated_at": "2026-11-07T06:57:00+11:00",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/world-portability_20261107",
@@ -14,11 +14,11 @@
   "base_sha": "53d9a937ebaca7ca58b3fb48ed6778b4ebb99272",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 0,
+    "phases_verified": 1,
     "tasks_total": 8,
-    "tasks_done": 0
+    "tasks_done": 3
   },
-  "last_checkpoint": null,
+  "last_checkpoint": "9f0df15",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

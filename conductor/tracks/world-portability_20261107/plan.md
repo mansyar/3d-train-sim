@@ -17,33 +17,37 @@
   AC-4, AC-5, AC-9
 - **Touches:** `src/core/portable.ts`, `src/core/portable.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Build the export payload and file name** — covers: FR-2, FR-3
-  - [ ] **P1.T1.1:** Export `MAX_IMPORT_BYTES` (1 MB) and
+- [x] **P1.T1: Build the export payload and file name** — covers: FR-2, FR-3
+  - [x] **P1.T1.1:** Export `MAX_IMPORT_BYTES` (1 MB) and
     `exportFileName(date)` returning `tiny-tracks-YYYY-MM-DD.json` with zero
     padding and no time component.
-  - [ ] **P1.T1.2:** Export `buildExport(world)` returning the serialized
+  - [x] **P1.T1.2:** Export `buildExport(world)` returning the serialized
     snapshot string for pieces, scenery, train, consist and deliveries, with no
     `preferences` block, reusing `serializeWorld` from `src/core/save.ts`.
-  - [ ] **P1.T1.3:** Cover an empty world and a seeded starter world so export
+  - [x] **P1.T1.3:** Cover an empty world and a seeded starter world so export
     never depends on there being content.
 
-- [ ] **P1.T2: Judge an incoming file** — covers: FR-5, FR-6, NFR-5
-  - [ ] **P1.T2.1:** Export `readImport(text, byteLength)` returning a
+- [x] **P1.T2: Judge an incoming file** — covers: FR-5, FR-6, NFR-5
+  - [x] **P1.T2.1:** Export `readImport(text, byteLength)` returning a
     discriminated result: `too-large`, `unreadable`, `imported` with
     `droppedPieces`/`droppedScenery`/`droppedDuplicates`.
-  - [ ] **P1.T2.2:** Delegate validation to `parseWorldSnapshot`; treat
+  - [x] **P1.T2.2:** Delegate validation to `parseWorldSnapshot`; treat
     `unreadable` as a refusal and `salvaged` as an import with a skip count.
-  - [ ] **P1.T2.3:** Prove atomicity — a refusal result carries no world and the
+  - [x] **P1.T2.3:** Prove atomicity — a refusal result carries no world and the
     function mutates nothing.
 
-- [ ] **P1.T3: Prove round-trip identity and size** — covers: NFR-2, NFR-3
-  - [ ] **P1.T3.1:** A world with mixed pieces, scenery, non-default train,
+- [x] **P1.T3: Prove round-trip identity and size** — covers: NFR-2, NFR-3
+  - [x] **P1.T3.1:** A world with mixed pieces, scenery, non-default train,
     consist and deliveries survives export → readImport with identical ids,
     types, rotations, cells, train, consist and delivery counts.
-  - [ ] **P1.T3.2:** A maximum-size world (64 meadow items) exports under
+  - [x] **P1.T3.2:** A maximum-size world (64 meadow items) exports under
     100 KB.
+
+**Result:** verified
+**Checkpoint:** 9f0df15
+**Evidence:** conductor/tracks/world-portability_20261107/verification/phase-1.md
 
 ## Phase 2: Parent-gate wiring
 
