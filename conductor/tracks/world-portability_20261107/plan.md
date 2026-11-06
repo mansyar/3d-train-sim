@@ -104,7 +104,7 @@
 - **Touches:** `e2e/world-portability.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/world-portability.spec.ts`
   and `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Prove export content and import round trip** — covers: AC-1,
   AC-3, AC-6, AC-9
