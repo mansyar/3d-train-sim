@@ -42,11 +42,11 @@ together, not one phase at a time.
 | AC | Phase | Proof |
 | --- | --- | --- |
 | AC-1 partial snapshot keeps valid toys | 1, 4 | 10-valid/1-invalid unit test; browser seeds 3 valid + 1 unknown type and gets exactly `piece-1..3` |
-| AC-2 one bad entry does not discard the meadow | 1 | `parseWorldSnapshot` unit tests; `deserializeWorld` keeps its contract |
+| AC-2 duplicate cells keep the first entry and count one duplicate | 1 | Unit tests for duplicate cells and ids |
 | AC-3 corrupt `current` restores `previous` | 2, 4 | Unit fallback tests; browser seeds `current: 'garbage'` + valid `previous` and gets `piece-10`, `piece-11` |
-| AC-4 save promotes only readable payloads | 2 | Transaction test: unreadable prior is never promoted |
-| AC-5 next save after a restore writes clean data | 2 | Restore-then-save unit test |
-| AC-6 duplicates resolve keep-first | 1 | Unit tests for duplicate cells and ids |
+| AC-4 two saves leave the pre-change state in `previous`; an interrupted write leaves a consistent pair | 2 | Two-save unit test covered; the interrupted-write half was **unverified** at review (F4) and is closed in Phase R1 |
+| AC-5 next save after a restore writes clean data | 2 | Restore-then-save unit test — narrowed in Phase R1 (F1: an empty salvage could still be promoted) |
+| AC-6 status and counts observable for all four statuses | 1, 2 | `parseWorldSnapshot` tests; `loadWorldRecovery` tests |
 | AC-7 parent note appears and dismisses | 3, 4 | Formatter unit tests; browser holds the real 2 s gate, asserts the singular text, dismisses, re-arms, still hidden |
 | AC-8 both slots unreadable seeds the starter | 1, 2, 4 | Unit fresh path; browser asserts the starter ids with no console errors |
 | AC-9 v1/v2/v3 snapshots still load | 1 | Fixtures per version, status `clean` |

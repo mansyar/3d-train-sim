@@ -131,3 +131,28 @@
 **Result:** verified
 **Checkpoint:** ba86433
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-4.md
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review findings F1, F2, F3, F4, F6, and F7.
+- **Depends on:** Phase 4
+- **Covers:** F1, F2, F3, F4, F6, F7
+- **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`,
+  `src/core/recovery.ts`, `src/core/recovery.test.ts`, `src/main.ts`,
+  `src/core/save.ts`, `src/core/save.test.ts`, `e2e/save-recovery.spec.ts`
+- **Verification:** `pnpm check` and
+  `pnpm exec playwright test e2e/save-recovery.spec.ts`
+- **Status:** pending
+
+- [ ] **R1.T1: Reject empty salvage and stop promoting it** — covers: F1
+- [ ] **R1.T2: Surface duplicate drops in the notice** — covers: F2
+- [ ] **R1.T3: Remove the gate-timing headroom** — covers: F3
+- [ ] **R1.T4: Make the transaction harness abortable** — covers: F4
+- [ ] **R1.T5: Check duplicates before capacity** — covers: F6
+- [ ] **R1.T6: Remove the duplicate overflow test** — covers: F7
+
+<!--
+**Result:** verified
+**Checkpoint:** <short-sha>
+**Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-R1.md
+-->
