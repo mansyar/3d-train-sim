@@ -5,6 +5,7 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { type DayPhase, DEFAULT_DAY_PHASE } from './core/day-clock';
+import { buildExport, exportFileName } from './core/portable';
 import { recoveryNotice } from './core/recovery';
 import { deserializeWorld, serializeWorld } from './core/save';
 import { cozyOval } from './core/starters';
@@ -259,10 +260,23 @@ if (root) {
       __tinyTracksWorld: unknown;
       __tinyTracksScene: unknown;
       __tinyTracksReady: boolean;
+      __tinyTracksExport: () => { name: string; json: string };
     };
     devWindow.__tinyTracksWorld = world;
     devWindow.__tinyTracksScene = scene;
     devWindow.__tinyTracksReady = false;
+    // The same path the tray's Save button takes, without the download, so a
+    // spec can assert the payload byte-for-byte.
+    devWindow.__tinyTracksExport = () => ({
+      name: exportFileName(new Date()),
+      json: buildExport({
+        pieces: world.pieces(),
+        scenery: world.scenery(),
+        train: world.train(),
+        consist: world.consist(),
+        deliveries: world.deliveries(),
+      }),
+    });
     // Reuse the boot read instead of probing storage a second time.
     void recoveryRead.then(() => {
       devWindow.__tinyTracksReady = true;

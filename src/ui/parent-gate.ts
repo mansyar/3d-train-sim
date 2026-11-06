@@ -1,10 +1,16 @@
 import type { AudioController } from '../audio/audio-controller';
+import { buildExport, exportFileName, MAX_IMPORT_BYTES, readImport } from '../core/portable';
 import { STARTER_PRESETS } from '../core/starters';
 import type { WorldStore } from '../state/world';
+import { readWorldFile, saveWorldFile } from './portable-file';
 
 export interface ParentGateDeps {
   world: WorldStore;
   audio: AudioController;
+  /** Gently stops any ride before an import replaces the meadow it ran through. */
+  stopRide?: (() => void) | undefined;
+  /** Whether any train is riding right now. */
+  isRiding?: (() => boolean) | undefined;
   /** Asynchronous startup restoration gate — resets refuse until ready. */
   isReady?: (() => boolean) | undefined;
   /** Supplies the grown-up recovery line; read as the tray opens. */
@@ -94,7 +100,9 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     parentGate.classList.add('is-confirm');
     parentGate.setAttribute('aria-label', CONFIRM_LABEL);
     presetTray.hidden = false;
+    presetTray.classList.remove('is-reporting');
     refreshRecoveryNote();
+    clearPortableNote();
   };
 
   const disarmConfirm = () => {
@@ -163,9 +171,128 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     });
   }
 
+  // ---- Saving and loading the meadow as a file ---------------------------
+  // Both controls sit inside the 2 s-hold tray, so a toddler can never reach
+  // them. Their note is transient — every attempt writes it afresh — which is
+  // why it is not the session-dismissible recovery line above.
+  const exportButton = presetTray.querySelector<HTMLButtonElement>('.portable-export');
+  const importButton = presetTray.querySelector<HTMLButtonElement>('.portable-import');
+  const importInput = presetTray.querySelector<HTMLInputElement>('.portable-import-input');
+  const portableNote = presetTray.querySelector<HTMLDivElement>('.portable-note');
+  const portableNoteText = portableNote?.querySelector<HTMLSpanElement>('.portable-note-text');
+  if (!exportButton || !importButton || !importInput || !portableNote || !portableNoteText) {
+    throw new Error('portable file controls missing from the preset tray');
+  }
+
+  const TOO_LARGE_NOTE = 'That file is too big to be a meadow. Tiny Tracks saves stay under 1 MB.';
+  const UNREADABLE_NOTE = 'That file is not a Tiny Tracks meadow, so nothing changed.';
+
+  // Plain text only: a note may carry a file name, never markup.
+  const showPortableNote = (text: string) => {
+    portableNoteText.textContent = text;
+    portableNote.hidden = false;
+  };
+  const clearPortableNote = () => {
+    portableNoteText.textContent = '';
+    portableNote.hidden = true;
+  };
+
+  // A file action closes the tray, so the outcome line outlives it: the tray
+  // stays open in a report-only state (its controls are hidden by CSS) until a
+  // tap elsewhere dismisses it. Nothing interactive is left within reach.
+  const showPortableReport = (text: string) => {
+    showPortableNote(text);
+    presetTray.hidden = false;
+    presetTray.classList.add('is-reporting');
+  };
+  const clearPortableReport = () => {
+    if (!presetTray.classList.contains('is-reporting')) return;
+    presetTray.classList.remove('is-reporting');
+    presetTray.hidden = true;
+    clearPortableNote();
+  };
+
+  // A refusal can land after the tray was dismissed (the read is async, and a
+  // tap outside disarms at once), so it cannot assume the tray is on screen.
+  const refuseImport = (text: string) => {
+    if (presetTray.hidden) {
+      disarmConfirm();
+      showPortableReport(text);
+      return;
+    }
+    if (recoveryNote) recoveryNote.hidden = true;
+    showPortableNote(text);
+  };
+
+  exportButton.addEventListener('click', () => {
+    disarmConfirm();
+    const fileName = exportFileName(new Date());
+    saveWorldFile(
+      fileName,
+      buildExport({
+        pieces: world.pieces(),
+        scenery: world.scenery(),
+        train: world.train(),
+        consist: world.consist(),
+        deliveries: world.deliveries(),
+      }),
+    );
+    audio.ding();
+    showPortableReport(`Saved ${fileName}`);
+  });
+
+  importButton.addEventListener('click', () => importInput.click());
+
+  importInput.addEventListener('change', async () => {
+    // Capture before clearing: re-picking the same file must fire change again.
+    const file = importInput.files?.[0];
+    importInput.value = '';
+    if (!file) return; // Picker dismissed — no note, nothing changes.
+
+    // Refuse on the file's own byte count before decoding it: a mistaken
+    // 300 MB pick must never be materialised on a tablet. `readImport` keeps
+    // its own check as defence in depth for callers that bypass this handler.
+    if (file.size > MAX_IMPORT_BYTES) {
+      refuseImport(TOO_LARGE_NOTE);
+      return;
+    }
+
+    let text: string;
+    let byteLength: number;
+    try {
+      ({ text, byteLength } = await readWorldFile(file));
+    } catch {
+      refuseImport(UNREADABLE_NOTE);
+      return;
+    }
+
+    const result = readImport(text, byteLength);
+    if (result.status === 'too-large') {
+      refuseImport(TOO_LARGE_NOTE);
+      return;
+    }
+    if (result.status === 'unreadable') {
+      refuseImport(UNREADABLE_NOTE);
+      return;
+    }
+
+    // Stop any ride first: the meadow it was running through is about to go.
+    if (deps.isRiding?.()) deps.stopRide?.();
+    world.importWorld(result.world);
+    audio.ding();
+    disarmConfirm();
+    const skipped = result.droppedPieces + result.droppedScenery + result.droppedDuplicates;
+    const skippedNote =
+      skipped > 0 ? ` Skipped ${skipped} broken toy${skipped === 1 ? '' : 's'}.` : '';
+    showPortableReport(`Loaded the meadow.${skippedNote}`);
+  });
+
   // A tap anywhere outside the armed gate dismisses it silently.
   window.addEventListener('pointerdown', (event) => {
-    if (!confirmArmed) return;
+    if (!confirmArmed) {
+      clearPortableReport();
+      return;
+    }
     if (event.target instanceof Element && event.target.closest('.parent-gate, .preset-tray'))
       return;
     disarmConfirm();

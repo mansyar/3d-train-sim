@@ -73,7 +73,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
             aria-label="Parent gate — press and hold to reset the world">
       <span class="gate-icon" aria-hidden="true">♻️</span>
     </button>
-    <div class="preset-tray" role="group" aria-label="Starter railways" hidden>
+    <div class="preset-tray" role="group" aria-label="Parent controls" hidden>
       <button class="preset-pick" type="button" data-preset="cozy-oval"
               aria-label="Build the cozy oval starter railway">${PIECE_ICONS.corner}</button>
       <button class="preset-pick" type="button" data-preset="station-village"
@@ -82,6 +82,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Build the river crossing starter railway">${PIECE_ICONS.bridge}</button>
       <button class="preset-pick" type="button" data-preset="hilltop-junction"
               aria-label="Build the hilltop junction starter railway">${PIECE_ICONS.switch}</button>
+      <button class="portable-export" type="button"
+              aria-label="Save the meadow as a file">💾 Save meadow</button>
+      <button class="portable-import" type="button"
+              aria-label="Load a meadow from a file">📂 Load meadow</button>
+      <input class="portable-import-input" type="file" accept="application/json,.json" hidden>
+      <div class="portable-note" role="status" hidden><span class="portable-note-text"></span></div>
       <div class="recovery-note" role="status" hidden>
         <span class="recovery-note-text"></span>
         <button class="recovery-dismiss" type="button"
@@ -232,6 +238,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     audio: options.audio,
     isReady: options.isReady,
     recoveryNote: options.recoveryNote,
+    stopRide: options.stopRide,
+    isRiding: () => riding,
   });
 
   // ---- The sun/moon: the toddler turns the page on the day, not the clock --

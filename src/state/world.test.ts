@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
+import type { WorldData } from '../core/save';
 import { cozyOval, hilltopJunction, STARTER_PRESETS, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
 import { TRAIN_KINDS } from '../core/trains';
@@ -915,5 +916,105 @@ describe("world store preset apply preserves the kid's train", () => {
 
     expect(reloaded.train()).toBe('diesel');
     expect(reloaded.consistFor('diesel')).toBe('coal');
+  });
+});
+
+describe('world store import', () => {
+  const importedWorld = (): WorldData => ({
+    pieces: [
+      { id: 'piece-40', type: 'corner', cell: { x: 3, y: 3 }, rotation: 90 },
+      { id: 'piece-41', type: 'straight', cell: { x: 4, y: 3 }, rotation: 0 },
+    ],
+    scenery: [{ id: 'scenery-12', kind: 'station', cell: { x: 5, y: 5 }, rotation: 0 }],
+    train: 'diesel',
+    deliveries: { 'scenery-12': 4 },
+    consist: withConsistPreset(defaultConsist(), 'diesel', 'coal'),
+  });
+
+  it('replaces pieces, scenery, train, and consist from the file', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.placeScenery('tree', NEXT_CELL, 0);
+    store.selectTrain('tram');
+    store.selectConsist('tram', 'container');
+
+    store.importWorld(importedWorld());
+
+    expect(store.pieces()).toEqual(importedWorld().pieces);
+    expect(store.scenery()).toEqual(importedWorld().scenery);
+    expect(store.train()).toBe('diesel');
+    expect(store.consistFor('diesel')).toBe('coal');
+    expect(store.consistFor('tram')).toBe('classic');
+  });
+
+  it('sets the delivery ledger shipped with the file', () => {
+    const store = createWorldStore();
+    store.importWorld(importedWorld());
+
+    expect(store.deliveries()).toEqual({ 'scenery-12': 4 });
+    expect(store.deliveryCount('scenery-12')).toBe(4);
+    expect(store.deliveryCount('scenery-99')).toBe(0);
+  });
+
+  it('is one undoable change: undo restores the whole prior meadow', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    store.placeScenery('station', NEXT_CELL, 0);
+    const stationId = store.scenery()[0]?.id;
+    if (!stationId) throw new Error('fixture failed');
+    store.deliverCrate(stationId);
+    store.selectTrain('tram');
+    store.selectConsist('tram', 'container');
+    const beforePieces = store.pieces();
+    const beforeScenery = store.scenery();
+
+    store.importWorld(importedWorld());
+    expect(store.canUndo()).toBe(true);
+
+    expect(store.undo()).toBe(true);
+    expect(store.pieces()).toEqual(beforePieces);
+    expect(store.scenery()).toEqual(beforeScenery);
+    expect(store.deliveries()).toEqual({ [stationId]: 1 });
+    expect(store.train()).toBe('tram');
+    expect(store.consistFor('tram')).toBe('container');
+    expect(store.consistFor('diesel')).toBe('classic');
+    // A second undo has nothing left to take back.
+    expect(store.canUndo()).toBe(false);
+    expect(store.undo()).toBe(false);
+  });
+
+  it('advances the id counter past the imported ids', () => {
+    const store = createWorldStore();
+    store.importWorld(importedWorld());
+
+    expect(store.place('corner', ORIGIN, 0)).toBe('placed');
+    expect(store.placeScenery('tree', { x: 0, y: 1 }, 0)).toBe('placed');
+
+    const importedIds = importedWorld().pieces.map((piece) => piece.id);
+    const newPiece = store.pieces().find((piece) => !importedIds.includes(piece.id));
+    expect(newPiece?.id).toBe('piece-42');
+    expect(store.scenery().some((item) => item.id === 'scenery-43')).toBe(true);
+    const ids = [
+      ...store.pieces().map((piece) => piece.id),
+      ...store.scenery().map((item) => item.id),
+    ];
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('notifies exactly once even when the file is a default world', () => {
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.importWorld({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+    });
+
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 });

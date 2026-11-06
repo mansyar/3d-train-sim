@@ -1,0 +1,32 @@
+{
+  "id": "world-portability_20261107",
+  "title": "World Portability",
+  "type": "feature",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-07T06:43:50+11:00",
+  "updated_at": "2026-11-07T08:30:00+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/world-portability_20261107",
+  "base_branch": "main",
+  "base_sha": "53d9a937ebaca7ca58b3fb48ed6778b4ebb99272",
+  "progress": {
+    "phases_total": 5,
+    "phases_verified": 5,
+    "tasks_total": 20,
+    "tasks_done": 20
+  },
+  "last_checkpoint": "093c8d5",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 2,
+  "doc_sync": "synced",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/66",
+  "pr_state": "open",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-07T08:30:00+11:00",
+  "archive_path": "conductor/archive/world-portability_20261107"
+}

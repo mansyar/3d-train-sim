@@ -79,6 +79,12 @@ export interface WorldStore {
    * picks carry forward untouched (presets never undress the workshop).
    */
   applyPreset(data: WorldData): void;
+  /**
+   * Replaces the whole meadow with an imported file as ONE undoable change.
+   * Unlike `applyPreset`, the file is the parent's chosen world, so its train
+   * and wagon picks land too (and a single undo restores the prior meadow).
+   */
+  importWorld(data: WorldData): void;
   /** Returns the meadow to a factory-fresh world: empty, steam selected. */
   reset(): void;
   subscribe(listener: WorldListener): () => void;
@@ -99,6 +105,15 @@ function readConsist(value: TrainConsist | undefined): TrainConsist {
   };
 }
 
+/** Deep-copies meadow records so an undo snapshot never aliases live state. */
+function copyPieces(list: readonly PlacedPiece[]): PlacedPiece[] {
+  return list.map((piece) => ({ ...piece, cell: { ...piece.cell } }));
+}
+
+function copyScenery(list: readonly PlacedScenery[]): PlacedScenery[] {
+  return list.map((item) => ({ ...item, cell: { ...item.cell } }));
+}
+
 export function createWorldStore(): WorldStore {
   const placed: PlacedPiece[] = [];
   const scenery: PlacedScenery[] = [];
@@ -111,6 +126,15 @@ export function createWorldStore(): WorldStore {
   const advanceId = (id: string): void => {
     const match = /(?:piece|scenery)-(\d+)$/.exec(id);
     if (match?.[1]) nextId = Math.max(nextId, Number(match[1]) + 1);
+  };
+
+  /** Swaps in a whole meadow and advances the id counter past its ids. */
+  const replaceMeadow = (data: WorldData): void => {
+    placed.splice(0, placed.length, ...copyPieces(data.pieces));
+    scenery.splice(0, scenery.length, ...copyScenery(data.scenery));
+    nextId = 1;
+    for (const piece of placed) advanceId(piece.id);
+    for (const item of scenery) advanceId(item.id);
   };
 
   const notify = () => {
@@ -333,10 +357,6 @@ export function createWorldStore(): WorldStore {
       // undo restores it exactly, replacing any in-progress edit undo. The
       // kid's train + wagon picks carry forward — only rails, scenery, and
       // deliveries swap.
-      const copyPieces = (list: PlacedPiece[]) =>
-        list.map((piece) => ({ ...piece, cell: { ...piece.cell } }));
-      const copyScenery = (list: PlacedScenery[]) =>
-        list.map((item) => ({ ...item, cell: { ...item.cell } }));
       const priorPieces = copyPieces(placed);
       const priorScenery = copyScenery(scenery);
       const priorDeliveries = { ...deliveries };
@@ -344,11 +364,33 @@ export function createWorldStore(): WorldStore {
       const priorConsist = { ...consist };
       const priorNextId = nextId;
       deliveries = { ...(data.deliveries ?? {}) };
-      placed.splice(0, placed.length, ...copyPieces(data.pieces));
-      scenery.splice(0, scenery.length, ...copyScenery(data.scenery));
-      nextId = 1;
-      for (const piece of placed) advanceId(piece.id);
-      for (const item of scenery) advanceId(item.id);
+      replaceMeadow(data);
+      pendingUndo = () => {
+        selectedTrain = priorTrain;
+        deliveries = { ...priorDeliveries };
+        consist = { ...priorConsist };
+        placed.splice(0, placed.length, ...copyPieces(priorPieces));
+        scenery.splice(0, scenery.length, ...copyScenery(priorScenery));
+        nextId = priorNextId;
+      };
+      notify();
+    },
+
+    importWorld(data) {
+      // An imported file is the parent's chosen world, so — unlike
+      // applyPreset — its train and wagon picks land too. It still arrives as
+      // ONE mutation with the whole prior meadow as the pending undo, so a
+      // single ↩️ tap brings the old world back.
+      const priorPieces = copyPieces(placed);
+      const priorScenery = copyScenery(scenery);
+      const priorDeliveries = { ...deliveries };
+      const priorTrain = selectedTrain;
+      const priorConsist = { ...consist };
+      const priorNextId = nextId;
+      selectedTrain = data.train;
+      consist = readConsist(data.consist);
+      deliveries = { ...(data.deliveries ?? {}) };
+      replaceMeadow(data);
       pendingUndo = () => {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };
