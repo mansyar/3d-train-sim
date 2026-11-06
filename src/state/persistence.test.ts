@@ -4,6 +4,7 @@ import { createDayClock, DAY_LENGTH_MS } from '../core/day-clock';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
 import { defaultConsist } from '../core/wagons';
 import {
+  loadWorldRecovery,
   loadWorldSnapshot,
   restoreDayPhasePreference,
   restoreMutePreference,
@@ -335,39 +336,214 @@ describe('day-phase preference', () => {
 });
 
 describe('indexeddb storage', () => {
-  const makeDb = () => ({
-    get: vi.fn<(store: string, key: string) => Promise<unknown>>(async () => undefined),
-    put: vi.fn<(store: string, value: unknown, key: string) => Promise<undefined>>(
-      async () => undefined,
-    ),
-    close: vi.fn<() => void>(),
-  });
+  const stored: WorldSnapshot = {
+    version: 3,
+    pieces: [{ id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 }],
+    scenery: [{ id: 'scenery-41', kind: 'tree', cell: NEXT_CELL, rotation: 90 }],
+    train: 'diesel',
+  };
+  const corrupt = { version: 99, pieces: [], scenery: [] };
+  const salvaged: WorldSnapshot = {
+    version: 3,
+    pieces: [
+      { id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 },
+      { id: 'piece-99', type: 'loop', cell: { x: 5, y: 5 }, rotation: 0 } as never,
+    ],
+    scenery: [],
+  };
+
+  // A whole IndexedDB stand-in: reads go through `db.get`, saves through the
+  // transaction's store, and both share one map so tests can inspect the pair.
+  const makeDb = (initial: Record<string, unknown> = {}) => {
+    const entries = new Map(Object.entries(initial));
+    const store = {
+      get: vi.fn<(key: string) => Promise<unknown>>(async (key) => entries.get(key)),
+      put: vi.fn<(value: unknown, key: string) => Promise<string>>(async (value, key) => {
+        entries.set(key, value);
+        return key;
+      }),
+    };
+    return {
+      entries,
+      store,
+      get: vi.fn<(name: string, key: string) => Promise<unknown>>(async (_name, key) =>
+        entries.get(key),
+      ),
+      transaction: vi.fn(() => ({ store, done: Promise.resolve() })),
+      close: vi.fn(),
+    };
+  };
 
   beforeEach(() => {
     openDBMock.mockReset();
   });
 
-  it('loads the stored world snapshot', async () => {
-    const db = makeDb();
-    const stored: WorldSnapshot = { version: 3, pieces: [], scenery: [] };
-    db.get.mockResolvedValue(stored);
+  it('loads the stored world snapshot with a single read', async () => {
+    const db = makeDb({ current: stored });
     openDBMock.mockResolvedValue(db as never);
 
     await expect(loadWorldSnapshot()).resolves.toEqual(stored);
+    expect(db.get).toHaveBeenCalledTimes(1);
     expect(db.close).toHaveBeenCalledTimes(1);
   });
 
   it('loads null when storage is empty or unavailable', async () => {
-    openDBMock.mockResolvedValue(makeDb() as never);
+    const empty = makeDb();
+    openDBMock.mockResolvedValue(empty as never);
     await expect(loadWorldSnapshot()).resolves.toBeNull();
+    expect(empty.get).toHaveBeenCalledTimes(2);
 
     openDBMock.mockRejectedValue(new Error('blocked'));
     await expect(loadWorldSnapshot()).resolves.toBeNull();
   });
 
-  it('saves snapshots and treats storage failures as non-fatal', async () => {
+  it('reports a clean snapshot after one read', async () => {
+    const db = makeDb({ current: stored, previous: corrupt });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: stored,
+      status: 'clean',
+      droppedPieces: 0,
+      droppedScenery: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a salvaged snapshot with its dropped counts', async () => {
+    const db = makeDb({ current: salvaged });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: salvaged,
+      status: 'salvaged',
+      droppedPieces: 1,
+      droppedScenery: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('restores the previous snapshot when current is unreadable', async () => {
+    const db = makeDb({ current: corrupt, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: stored,
+      status: 'restored',
+      droppedPieces: 0,
+      droppedScenery: 0,
+    });
+    // The boot read budget: current, then previous, and no more.
+    expect(db.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('restores a salvaged previous snapshot with its counts', async () => {
+    const db = makeDb({ current: corrupt, previous: salvaged });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: salvaged,
+      status: 'restored',
+      droppedPieces: 1,
+      droppedScenery: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('falls back to fresh when both slots are unreadable or missing', async () => {
+    const db = makeDb({ current: corrupt, previous: { nope: true } });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: null,
+      status: 'fresh',
+      droppedPieces: 0,
+      droppedScenery: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(2);
+
+    openDBMock.mockRejectedValue(new Error('blocked'));
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: null,
+      status: 'fresh',
+      droppedPieces: 0,
+      droppedScenery: 0,
+    });
+  });
+
+  it('promotes the prior current snapshot into previous in one transaction', async () => {
+    const db = makeDb({ current: stored });
+    openDBMock.mockResolvedValue(db as never);
+    const next: WorldSnapshot = { ...stored, train: 'steam' };
+
+    await saveWorldSnapshot(next);
+
+    expect(db.transaction).toHaveBeenCalledTimes(1);
+    expect(db.transaction).toHaveBeenCalledWith('worlds', 'readwrite');
+    expect(db.store.put).toHaveBeenCalledTimes(2);
+    expect(db.store.put).toHaveBeenNthCalledWith(1, stored, 'previous');
+    expect(db.store.put).toHaveBeenNthCalledWith(2, next, 'current');
+    expect(db.entries.get('previous')).toEqual(stored);
+    expect(db.entries.get('current')).toEqual(next);
+    expect(db.entries.size).toBe(2);
+    expect(db.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes only current on the first save', async () => {
     const db = makeDb();
     openDBMock.mockResolvedValue(db as never);
+
+    await saveWorldSnapshot(stored);
+
+    expect(db.store.put).toHaveBeenCalledTimes(1);
+    expect(db.store.put).toHaveBeenCalledWith(stored, 'current');
+    expect(db.entries.has('previous')).toBe(false);
+  });
+
+  it('after two saves previous holds the state before the last change', async () => {
+    const db = makeDb();
+    openDBMock.mockResolvedValue(db as never);
+    const second: WorldSnapshot = { ...stored, train: 'steam' };
+
+    await saveWorldSnapshot(stored);
+    await saveWorldSnapshot(second);
+
+    expect(db.entries.get('previous')).toEqual(stored);
+    expect(db.entries.get('current')).toEqual(second);
+    // Two saves, three writes: the first has nothing to promote.
+    expect(db.store.put).toHaveBeenCalledTimes(3);
+    expect(db.entries.size).toBe(2);
+  });
+
+  it('never promotes an unreadable current into previous', async () => {
+    const db = makeDb({ current: corrupt, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+    const next: WorldSnapshot = { ...stored, pieces: [] };
+
+    await saveWorldSnapshot(next);
+
+    expect(db.store.put).toHaveBeenCalledTimes(1);
+    expect(db.store.put).toHaveBeenCalledWith(next, 'current');
+    expect(db.entries.get('previous')).toEqual(stored);
+  });
+
+  it('keeps the recovered world as the previous baseline after a restore', async () => {
+    const db = makeDb({ current: corrupt, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+    await expect(loadWorldRecovery()).resolves.toMatchObject({
+      snapshot: stored,
+      status: 'restored',
+    });
+
+    const next: WorldSnapshot = { ...stored, pieces: [] };
+    await saveWorldSnapshot(next);
+
+    // The corrupt bytes are gone from both slots; previous stays recoverable.
+    expect(db.entries.get('previous')).toEqual(stored);
+    expect(db.entries.get('current')).toEqual(next);
+  });
+
+  it('treats storage failures as non-fatal', async () => {
     const snapshot: WorldSnapshot = {
       version: 3,
       pieces: [],
@@ -375,11 +551,14 @@ describe('indexeddb storage', () => {
       preferences: { muted: true },
     };
 
-    await saveWorldSnapshot(snapshot);
-    expect(db.put).toHaveBeenCalledWith('worlds', snapshot, 'current');
-    expect(db.close).toHaveBeenCalledTimes(1);
-
     openDBMock.mockRejectedValue(new Error('quota exceeded'));
+    await expect(saveWorldSnapshot(snapshot)).resolves.toBeUndefined();
+
+    const db = makeDb();
+    db.transaction.mockImplementation(() => {
+      throw new Error('transaction blocked');
+    });
+    openDBMock.mockResolvedValue(db as never);
     await expect(saveWorldSnapshot(snapshot)).resolves.toBeUndefined();
   });
 });

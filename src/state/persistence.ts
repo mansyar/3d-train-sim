@@ -1,6 +1,12 @@
 import { type DBSchema, openDB } from 'idb';
 import { type DayPhase, DEFAULT_DAY_PHASE } from '../core/day-clock';
-import { deserializePreferences, serializeWorld, type WorldSnapshot } from '../core/save';
+import {
+  deserializePreferences,
+  parseWorldSnapshot,
+  type SnapshotStatus,
+  serializeWorld,
+  type WorldSnapshot,
+} from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
 import type { PlacedPiece } from '../core/track-graph';
 import type { TrainKind } from '../core/trains';
@@ -9,6 +15,7 @@ import type { TrainConsist } from '../core/wagons';
 const DATABASE_NAME = 'tiny-tracks';
 const DATABASE_VERSION = 1;
 const WORLD_KEY = 'current';
+const PREVIOUS_KEY = 'previous';
 
 interface TinyTracksDatabase extends DBSchema {
   worlds: {
@@ -25,15 +32,64 @@ async function database(): Promise<ReturnType<typeof openDB<TinyTracksDatabase>>
   });
 }
 
-export async function loadWorldSnapshot(): Promise<WorldSnapshot | null> {
+/** What a boot found: a clean world, a salvaged one, a restored backup, or nothing. */
+export type WorldRecoveryStatus = SnapshotStatus | 'restored' | 'fresh';
+
+export interface WorldRecovery {
+  snapshot: WorldSnapshot | null;
+  status: WorldRecoveryStatus;
+  droppedPieces: number;
+  droppedScenery: number;
+}
+
+function freshRecovery(): WorldRecovery {
+  return { snapshot: null, status: 'fresh', droppedPieces: 0, droppedScenery: 0 };
+}
+
+/**
+ * Reads both save slots and reports what the boot found. A readable `current`
+ * wins even when it had to be salvaged — keeping every valid piece beats
+ * throwing the whole world away for the backup. Only an unreadable `current`
+ * falls back to `previous`, which then reports `restored`. Never throws: a
+ * storage failure is simply a fresh meadow. At most two reads per boot.
+ */
+export async function loadWorldRecovery(): Promise<WorldRecovery> {
   try {
     const db = await database();
-    const snapshot = await db.get('worlds', WORLD_KEY);
-    db.close();
-    return snapshot ?? null;
+    try {
+      const current = await db.get('worlds', WORLD_KEY);
+      const parsed = parseWorldSnapshot(current);
+      if (parsed.status !== 'unreadable') {
+        return {
+          snapshot: current ?? null,
+          status: parsed.status,
+          droppedPieces: parsed.droppedPieces,
+          droppedScenery: parsed.droppedScenery,
+        };
+      }
+
+      const previous = await db.get('worlds', PREVIOUS_KEY);
+      const backup = parseWorldSnapshot(previous);
+      if (backup.status !== 'unreadable') {
+        return {
+          snapshot: previous ?? null,
+          status: 'restored',
+          droppedPieces: backup.droppedPieces,
+          droppedScenery: backup.droppedScenery,
+        };
+      }
+      return freshRecovery();
+    } finally {
+      db.close();
+    }
   } catch {
-    return null;
+    return freshRecovery();
   }
+}
+
+/** Snapshot-only view of the recovery read; the boot wiring uses the status. */
+export async function loadWorldSnapshot(): Promise<WorldSnapshot | null> {
+  return (await loadWorldRecovery()).snapshot;
 }
 
 interface WorldReader {
@@ -142,11 +198,27 @@ export function restoreDayPhasePreference(
   if (dayPhase) clock.setPhase(dayPhase);
 }
 
+/**
+ * Saves the world and keeps the one before it as a safety net. Both writes
+ * share a single `readwrite` transaction, so an interrupted save leaves a
+ * consistent pair: either the new world plus its predecessor, or neither. A
+ * prior payload that no longer parses is never promoted — corrupt bytes must
+ * not replace a good backup. Storage failures stay non-fatal.
+ */
 export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> {
   try {
     const db = await database();
-    await db.put('worlds', snapshot, WORLD_KEY);
-    db.close();
+    try {
+      const tx = db.transaction('worlds', 'readwrite');
+      const prior = await tx.store.get(WORLD_KEY);
+      if (prior !== undefined && parseWorldSnapshot(prior).status !== 'unreadable') {
+        await tx.store.put(prior, PREVIOUS_KEY);
+      }
+      await tx.store.put(snapshot, WORLD_KEY);
+      await tx.done;
+    } finally {
+      db.close();
+    }
   } catch {
     // Storage is an enhancement; never make the toy world unusable.
   }
