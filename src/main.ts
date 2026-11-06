@@ -5,6 +5,7 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import { type DayPhase, DEFAULT_DAY_PHASE } from './core/day-clock';
+import { recoveryNotice } from './core/recovery';
 import { deserializeWorld, serializeWorld } from './core/save';
 import { cozyOval } from './core/starters';
 import {
@@ -15,7 +16,7 @@ import {
 } from './core/update-state';
 import { initScene, type SceneHandle } from './scene/init-scene';
 import {
-  loadWorldSnapshot,
+  loadWorldRecovery,
   restoreDayPhasePreference,
   restoreMutePreference,
   saveWorldSnapshot,
@@ -36,7 +37,17 @@ if (root) {
   // The sound box: ride-synced chug, whistle, dings, global mute.
   const audio = createAudioController(createHowlerVoice());
   let restoring = true;
-  void loadWorldSnapshot().then((snapshot) => {
+  // One storage read serves both the boot hydration and the parent-gate note.
+  // The line is filled when the read settles; the gate reads it lazily as it
+  // opens (behind the 2 s hold, long after this resolves).
+  let recoveryLine: string | null = null;
+  const recoveryRead = loadWorldRecovery();
+  void recoveryRead.then((recovery) => {
+    const snapshot = recovery.snapshot;
+    // `unreadable` never escapes the loader (it falls back or reports fresh),
+    // but the exported status type still carries it.
+    const status = recovery.status === 'unreadable' ? 'fresh' : recovery.status;
+    recoveryLine = recoveryNotice(status, recovery.droppedPieces, recovery.droppedScenery);
     if (snapshot) {
       world.hydrate(deserializeWorld(snapshot));
     } else {
@@ -181,6 +192,7 @@ if (root) {
     isReady: () => !restoring,
     world,
     audio,
+    recoveryNote: () => recoveryLine,
     // The scene does not exist until the canvas mounts — bind late.
     cellFromPoint: (clientX, clientY) => scene?.cellFromPoint(clientX, clientY) ?? null,
     beginGhost: (type) => scene?.beginGhost(type),
@@ -249,7 +261,8 @@ if (root) {
     devWindow.__tinyTracksWorld = world;
     devWindow.__tinyTracksScene = scene;
     devWindow.__tinyTracksReady = false;
-    void loadWorldSnapshot().then(() => {
+    // Reuse the boot read instead of probing storage a second time.
+    void recoveryRead.then(() => {
       devWindow.__tinyTracksReady = true;
     });
   }
