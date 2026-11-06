@@ -142,17 +142,15 @@
   `src/core/save.ts`, `src/core/save.test.ts`, `e2e/save-recovery.spec.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/save-recovery.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R1.T1: Reject empty salvage and stop promoting it** — covers: F1
-- [ ] **R1.T2: Surface duplicate drops in the notice** — covers: F2
-- [ ] **R1.T3: Remove the gate-timing headroom** — covers: F3
-- [ ] **R1.T4: Make the transaction harness abortable** — covers: F4
-- [ ] **R1.T5: Check duplicates before capacity** — covers: F6
-- [ ] **R1.T6: Remove the duplicate overflow test** — covers: F7
+- [x] **R1.T1: Reject empty salvage and stop promoting it** — covers: F1
+- [x] **R1.T2: Surface duplicate drops in the notice** — covers: F2
+- [x] **R1.T3: Remove the gate-timing headroom** — covers: F3
+- [x] **R1.T4: Make the transaction harness abortable** — covers: F4
+- [x] **R1.T5: Check duplicates before capacity** — covers: F6
+- [x] **R1.T6: Remove the duplicate overflow test** — covers: F7
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 410db42
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-R1.md
--->
