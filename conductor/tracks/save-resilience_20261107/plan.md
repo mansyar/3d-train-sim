@@ -117,19 +117,17 @@
 - **Covers:** AC-1, AC-3, AC-7, AC-8
 - **Touches:** `e2e/save-recovery.spec.ts`, `e2e/helpers.ts`
 - **Verification:** `pnpm exec playwright test e2e/save-recovery.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P4.T1: Salvage path e2e** — covers: AC-1, AC-3, AC-7
-  - [ ] **P4.T1.1:** Seed `worlds/current` with valid pieces plus one corrupt
+- [x] **P4.T1: Salvage path e2e** — covers: AC-1, AC-3, AC-7
+  - [x] **P4.T1.1:** Seed `worlds/current` with valid pieces plus one corrupt
         entry, reload, assert the valid pieces are on the meadow
-  - [ ] **P4.T1.2:** Hold the parent gate, assert the recovery note, dismiss it,
+  - [x] **P4.T1.2:** Hold the parent gate, assert the recovery note, dismiss it,
         and confirm it stays dismissed
-- [ ] **P4.T2: Disaster path e2e** — covers: AC-8
-  - [ ] **P4.T2.1:** Corrupt both slots, reload, assert the starter railway and
+- [x] **P4.T2: Disaster path e2e** — covers: AC-8
+  - [x] **P4.T2.1:** Corrupt both slots, reload, assert the starter railway and
         no console error
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** ba86433
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-4.md
--->
