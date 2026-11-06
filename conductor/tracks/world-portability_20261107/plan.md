@@ -104,23 +104,27 @@
 - **Touches:** `e2e/world-portability.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/world-portability.spec.ts`
   and `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Prove export content and import round trip** — covers: AC-1,
+- [x] **P3.T1: Prove export content and import round trip** — covers: AC-1,
   AC-3, AC-6, AC-9
-  - [ ] **P3.T1.1:** Read the export payload through a dev-only handle (both
+  - [x] **P3.T1.1:** Read the export payload through a dev-only handle (both
     Playwright projects are WebKit, where a Blob download event is the least
     reliable assertion) and assert the file name and shape.
-  - [ ] **P3.T1.2:** Import a seeded file with `setInputFiles` and assert the
+  - [x] **P3.T1.2:** Import a seeded file with `setInputFiles` and assert the
     meadow matches the file's pieces, including a salvaged file that reports its
     skip count.
-  - [ ] **P3.T1.3:** Import an empty world and assert the meadow is empty with
+  - [x] **P3.T1.3:** Import an empty world and assert the meadow is empty with
     no console error.
 
-- [ ] **P3.T2: Prove refusals, undo, ride-stop and reachability** — covers:
+- [x] **P3.T2: Prove refusals, undo, ride-stop and reachability** — covers:
   AC-4, AC-5, AC-7, AC-8, AC-10
-  - [ ] **P3.T2.1:** Oversized and unreadable inputs each leave the world
+  - [x] **P3.T2.1:** Oversized and unreadable inputs each leave the world
     unchanged and show the refusal note.
-  - [ ] **P3.T2.2:** Undo after an import restores the pre-import meadow.
-  - [ ] **P3.T2.3:** Importing while a train runs stops the ride.
-  - [ ] **P3.T2.4:** Before the 2 s hold, the controls are not actionable.
+  - [x] **P3.T2.2:** Undo after an import restores the pre-import meadow.
+  - [x] **P3.T2.3:** Importing while a train runs stops the ride.
+  - [x] **P3.T2.4:** Before the 2 s hold, the controls are not actionable.
+
+**Result:** verified
+**Checkpoint:** c90c6d8
+**Evidence:** conductor/tracks/world-portability_20261107/verification/phase-3.md
