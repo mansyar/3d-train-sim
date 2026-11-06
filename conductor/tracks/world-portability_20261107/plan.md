@@ -58,9 +58,9 @@
   AC-7, AC-8, AC-10
 - **Touches:** `src/ui/portable-file.ts`, `src/ui/parent-gate.ts`,
   `src/ui/app.ts`, `src/state/world.ts`, `src/state/world.test.ts`,
-  `src/style.css`
+  `src/main.ts`, `src/style.css`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Make replacement one undoable change** — covers: FR-7
   - [ ] **P2.T1.1:** Add a store method that replaces pieces, scenery, train,
@@ -87,6 +87,9 @@
   - [ ] **P2.T3.3:** Import stops an active ride before the world is replaced.
   - [ ] **P2.T3.4:** Style the controls and status line for the parent tray,
     respecting `prefers-reduced-motion`, without changing the child rail.
+  - [ ] **P2.T3.5:** Expose a dev-only `window.__tinyTracksExport()` returning
+    `{ name, json }` from the same `buildExport` + `exportFileName` path so the
+    Phase 3 spec can assert the payload without a WebKit download event.
 
 ## Phase 3: Browser proof
 
