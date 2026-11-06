@@ -142,7 +142,7 @@
   `src/core/save.ts`, `src/core/save.test.ts`, `e2e/save-recovery.spec.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/save-recovery.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R1.T1: Reject empty salvage and stop promoting it** — covers: F1
 - [ ] **R1.T2: Surface duplicate drops in the notice** — covers: F2
