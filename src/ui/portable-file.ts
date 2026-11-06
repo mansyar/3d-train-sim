@@ -17,9 +17,11 @@ export function saveWorldFile(fileName: string, json: string): void {
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
-  // Revoke on the next tick: Safari aborts a download whose URL disappears in
-  // the same task as the click.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // Revoke with real headroom: WebKit has aborted a blob download when its URL
+  // disappeared on the next tick, so the URL must outlive the hand-off to the
+  // download manager. Five seconds is well past any start-up latency and still
+  // releases the blob promptly.
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 /**

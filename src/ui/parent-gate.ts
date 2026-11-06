@@ -1,5 +1,5 @@
 import type { AudioController } from '../audio/audio-controller';
-import { buildExport, exportFileName, readImport } from '../core/portable';
+import { buildExport, exportFileName, MAX_IMPORT_BYTES, readImport } from '../core/portable';
 import { STARTER_PRESETS } from '../core/starters';
 import type { WorldStore } from '../state/world';
 import { readWorldFile, saveWorldFile } from './portable-file';
@@ -212,6 +212,18 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     clearPortableNote();
   };
 
+  // A refusal can land after the tray was dismissed (the read is async, and a
+  // tap outside disarms at once), so it cannot assume the tray is on screen.
+  const refuseImport = (text: string) => {
+    if (presetTray.hidden) {
+      disarmConfirm();
+      showPortableReport(text);
+      return;
+    }
+    if (recoveryNote) recoveryNote.hidden = true;
+    showPortableNote(text);
+  };
+
   exportButton.addEventListener('click', () => {
     disarmConfirm();
     const fileName = exportFileName(new Date());
@@ -237,22 +249,30 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     importInput.value = '';
     if (!file) return; // Picker dismissed — no note, nothing changes.
 
+    // Refuse on the file's own byte count before decoding it: a mistaken
+    // 300 MB pick must never be materialised on a tablet. `readImport` keeps
+    // its own check as defence in depth for callers that bypass this handler.
+    if (file.size > MAX_IMPORT_BYTES) {
+      refuseImport(TOO_LARGE_NOTE);
+      return;
+    }
+
     let text: string;
     let byteLength: number;
     try {
       ({ text, byteLength } = await readWorldFile(file));
     } catch {
-      showPortableNote(UNREADABLE_NOTE);
+      refuseImport(UNREADABLE_NOTE);
       return;
     }
 
     const result = readImport(text, byteLength);
     if (result.status === 'too-large') {
-      showPortableNote(TOO_LARGE_NOTE);
+      refuseImport(TOO_LARGE_NOTE);
       return;
     }
     if (result.status === 'unreadable') {
-      showPortableNote(UNREADABLE_NOTE);
+      refuseImport(UNREADABLE_NOTE);
       return;
     }
 

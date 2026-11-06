@@ -73,7 +73,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
             aria-label="Parent gate — press and hold to reset the world">
       <span class="gate-icon" aria-hidden="true">♻️</span>
     </button>
-    <div class="preset-tray" role="group" aria-label="Starter railways" hidden>
+    <div class="preset-tray" role="group" aria-label="Parent controls" hidden>
       <button class="preset-pick" type="button" data-preset="cozy-oval"
               aria-label="Build the cozy oval starter railway">${PIECE_ICONS.corner}</button>
       <button class="preset-pick" type="button" data-preset="station-village"

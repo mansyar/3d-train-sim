@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
@@ -143,6 +145,8 @@ test('save and load stay out of reach until the parent gate is held', async ({ p
 
   // The two-second hold is the only door: both controls appear with the tray.
   await expect(tray).toBeVisible();
+  // The tray holds presets, Save/Load, both notes and the version line now.
+  await expect(tray).toHaveAccessibleName('Parent controls');
   await expect(save).toBeVisible();
   await expect(load).toBeVisible();
 
@@ -169,9 +173,15 @@ test('saving writes the starter meadow as a dated v3 file', async ({ page }) => 
     (await readMeadow(page)).pieces.map((piece) => piece.id),
   );
 
-  // The button's note names the same file the payload carries.
+  // The button's note names the same file the payload carries, and the
+  // browser really starts a download whose bytes match the dev handle.
   await openTray(page);
-  await page.locator('.portable-export').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('.portable-export').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe(exported.name);
+  expect(await readFile(await download.path(), 'utf8')).toBe(exported.json);
   await expect(noteText(page)).toHaveText(`Saved ${exported.name}`);
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
@@ -266,9 +276,26 @@ test('an oversized file is refused and changes nothing', async ({ page }) => {
   const before = (await exportWorld(page)).json;
 
   await openTray(page);
+  // Count every File decode, so this proves the refusal happens on the size
+  // before the bytes are read. Without the pre-read guard the read still
+  // happens (the note would pass), so the zero-read assertion is the witness.
+  await page.evaluate(() => {
+    const original = File.prototype.text;
+    const counter = { reads: 0 };
+    (window as unknown as { __fileReads?: { reads: number } }).__fileReads = counter;
+    File.prototype.text = function (this: File) {
+      counter.reads += 1;
+      return original.call(this);
+    };
+  });
   await importFile(page, Buffer.alloc(1_048_577, 0x20));
 
   await expect(noteText(page)).toHaveText(NOTE.tooLarge);
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __fileReads?: { reads: number } }).__fileReads?.reads,
+    ),
+  ).toBe(0);
   // Refused before parsing: the meadow is byte-identical.
   expect((await exportWorld(page)).json).toBe(before);
 
@@ -310,6 +337,35 @@ test('unreadable files are refused and change nothing', async ({ page }) => {
   await expect(noteText(page)).toHaveText(NOTE.unreadable);
   expect((await exportWorld(page)).json).toBe(before);
 
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('a refusal after the tray is dismissed stays visible', async ({ page }) => {
+  test.setTimeout(60_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+  const before = (await exportWorld(page)).json;
+
+  // Arm the gate, then dismiss the tray with a tap outside it. The hidden input
+  // still accepts a programmatic file, so the refusal lands after the
+  // dismissal — where a note written into the hidden tray would be invisible.
+  await openTray(page);
+  await page.locator('.mute-toggle').click();
+  await expect(page.locator('.preset-tray')).toBeHidden();
+
+  await importFile(page, "{'not a meadow'");
+
+  await expect(page.locator('.preset-tray')).toBeVisible();
+  await expect(page.locator('.preset-tray')).toHaveClass(/is-reporting/);
+  await expect(page.locator('.portable-note')).toBeVisible();
+  await expect(noteText(page)).toHaveText(NOTE.unreadable);
+  // Reporting only: no tray button comes back within reach.
+  await expect(page.locator('.portable-export')).toBeHidden();
+  await expect(page.locator('.portable-import')).toBeHidden();
+
+  expect((await exportWorld(page)).json).toBe(before);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
@@ -357,6 +413,33 @@ test('importing mid-ride stops the train before the meadow changes', async ({ pa
   await expect(ride).not.toHaveClass(/is-riding/);
   await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
   expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual(['piece-1', 'piece-2']);
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('importing the very same meadow still stops the ride explicitly', async ({ page }) => {
+  test.setTimeout(90_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+
+  const ride = page.locator('.ride-toggle');
+  await ride.click();
+  await expect(ride).toHaveClass(/is-riding/, { timeout: 15_000 });
+
+  // Identical pieces: the ride controller's own subscription sees no edit, so
+  // only `deps.isRiding() → deps.stopRide()` can end the ride before the import.
+  const riding = await exportWorld(page);
+
+  await openTray(page);
+  await importFile(page, riding.json);
+  await expect(noteText(page)).toHaveText(NOTE.imported);
+
+  await expect(ride).not.toHaveClass(/is-riding/);
+  await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
+  // The world did not change into something else — it is the same meadow.
+  expect((await exportWorld(page)).json).toBe(riding.json);
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
