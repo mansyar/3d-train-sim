@@ -4,11 +4,12 @@ import { isWater } from './river';
 import {
   deserializePreferences,
   deserializeWorld,
+  parseWorldSnapshot,
   serializeWorld,
   type WorldSnapshot,
 } from './save';
 import type { PlacedScenery } from './scenery';
-import type { PlacedPiece } from './track-graph';
+import { MAX_PIECES, type PlacedPiece } from './track-graph';
 import { defaultConsist, withConsistPreset } from './wagons';
 
 const pieces: PlacedPiece[] = [
@@ -211,24 +212,28 @@ describe('world snapshots', () => {
     });
   });
 
-  it('rejects duplicate cells across tracks and scenery', () => {
-    const invalid = {
+  it('keeps the first claimant of a duplicated cell and drops the rest', () => {
+    const duplicated = {
       version: 1,
       pieces: [{ id: 'piece-1', type: 'straight', cell: { x: 0, y: 0 }, rotation: 0 }],
       scenery: [{ id: 'scenery-2', kind: 'tree', cell: { x: 0, y: 0 }, rotation: 0 }],
     };
 
-    expect(deserializeWorld(invalid)).toEqual({
-      pieces: [],
+    const result = parseWorldSnapshot(duplicated);
+
+    expect(result.world).toEqual({
+      pieces: duplicated.pieces,
       scenery: [],
       train: 'steam',
       deliveries: {},
       consist: defaultConsist(),
     });
+    expect(result.status).toBe('salvaged');
+    expect(result.droppedDuplicates).toBe(1);
   });
 
-  it('rejects snapshots over the shared capacity', () => {
-    const fullPieces = Array.from({ length: 65 }, (_, index) => ({
+  it('keeps the first MAX_PIECES entries and counts the overflow', () => {
+    const fullPieces = Array.from({ length: MAX_PIECES + 1 }, (_, index) => ({
       id: `piece-${index}`,
       type: 'straight' as const,
       cell: { x: index % 16, y: Math.floor(index / 16) },
@@ -236,15 +241,338 @@ describe('world snapshots', () => {
     }));
     const snapshot: WorldSnapshot = { version: 3, pieces: fullPieces, scenery: [] };
 
-    expect(deserializeWorld(snapshot)).toEqual({
+    const result = parseWorldSnapshot(snapshot);
+
+    expect(result.world.pieces).toEqual(fullPieces.slice(0, MAX_PIECES));
+    expect(result.status).toBe('salvaged');
+    expect(result.droppedPieces).toBe(1);
+  });
+});
+
+describe('snapshot recovery — malformed entries never destroy valid work', () => {
+  const statuses = ['clean', 'salvaged', 'unreadable'] as const;
+  const tenPieces: PlacedPiece[] = Array.from({ length: 10 }, (_, index) => ({
+    id: `piece-${index}`,
+    type: 'straight',
+    cell: { x: index, y: 0 },
+    rotation: 0,
+  }));
+
+  it('salvages the valid pieces from a v3 snapshot with one malformed entry', () => {
+    const snapshot = {
+      version: 3 as const,
+      pieces: [
+        ...tenPieces.slice(0, 5),
+        { id: 'piece-bad', type: 'hovercraft', cell: { x: 5, y: 0 }, rotation: 0 },
+        ...tenPieces.slice(5),
+      ],
+      scenery: [],
+    };
+
+    const result = parseWorldSnapshot(snapshot);
+
+    expect(result.world.pieces).toEqual(tenPieces);
+    expect(result.status).toBe('salvaged');
+    expect(result.droppedPieces).toBe(1);
+    expect(result.droppedScenery).toBe(0);
+    expect(result.droppedDuplicates).toBe(0);
+    expect(deserializeWorld(snapshot)).toEqual(result.world);
+  });
+
+  it('treats an empty world as clean, not corrupt', () => {
+    const result = parseWorldSnapshot({ version: 3, pieces: [], scenery: [] });
+
+    expect(result.world).toEqual({
       pieces: [],
       scenery: [],
       train: 'steam',
       deliveries: {},
       consist: defaultConsist(),
     });
+    expect(result.status).toBe('clean');
+    expect(result.droppedPieces + result.droppedScenery + result.droppedDuplicates).toBe(0);
+  });
+
+  it('reserves unreadable for structurally broken snapshots', () => {
+    const unreadable: unknown[] = [
+      null,
+      'world',
+      42,
+      { version: 4, pieces: [], scenery: [] },
+      { pieces: [], scenery: [] },
+      { version: 3, pieces: 'bad', scenery: [] },
+      { version: 3, pieces: [], scenery: 'bad' },
+    ];
+
+    for (const value of unreadable) {
+      const result = parseWorldSnapshot(value);
+
+      expect(result.status).toBe('unreadable');
+      expect(result.world.pieces).toEqual([]);
+      expect(result.world.scenery).toEqual([]);
+      expect(result.droppedPieces + result.droppedScenery + result.droppedDuplicates).toBe(0);
+    }
+  });
+
+  it('keeps the first claimant of a duplicated cell and counts the later ones', () => {
+    const first: PlacedPiece = {
+      id: 'piece-1',
+      type: 'straight',
+      cell: { x: 0, y: 0 },
+      rotation: 0,
+    };
+    const second: PlacedPiece = {
+      id: 'piece-2',
+      type: 'corner',
+      cell: { x: 0, y: 0 },
+      rotation: 90,
+    };
+    const tree: PlacedScenery = {
+      id: 'scenery-1',
+      kind: 'tree',
+      cell: { x: 0, y: 0 },
+      rotation: 0,
+    };
+
+    const result = parseWorldSnapshot({ version: 3, pieces: [first, second], scenery: [tree] });
+
+    expect(result.world.pieces).toEqual([first]);
+    expect(result.world.scenery).toEqual([]);
+    expect(result.droppedPieces).toBe(0);
+    expect(result.droppedDuplicates).toBe(2);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('keeps the first piece per id and counts duplicate ids', () => {
+    const first: PlacedPiece = {
+      id: 'piece-1',
+      type: 'straight',
+      cell: { x: 0, y: 0 },
+      rotation: 0,
+    };
+    const sameId: PlacedPiece = {
+      id: 'piece-1',
+      type: 'straight',
+      cell: { x: 1, y: 0 },
+      rotation: 0,
+    };
+
+    const result = parseWorldSnapshot({ version: 3, pieces: [first, sameId], scenery: [] });
+
+    expect(result.world.pieces).toEqual([first]);
+    expect(result.droppedDuplicates).toBe(1);
+    expect(result.droppedPieces).toBe(0);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('keeps the first MAX_PIECES entries and counts the overflow', () => {
+    const overflow: PlacedPiece[] = Array.from({ length: MAX_PIECES + 1 }, (_, index) => ({
+      id: `piece-${index}`,
+      type: 'straight',
+      cell: { x: index % 16, y: Math.floor(index / 16) },
+      rotation: 0,
+    }));
+
+    const result = parseWorldSnapshot({ version: 3, pieces: overflow, scenery: [] });
+
+    expect(result.world.pieces).toEqual(overflow.slice(0, MAX_PIECES));
+    expect(result.droppedPieces).toBe(1);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('fills the shared capacity with pieces before scenery', () => {
+    const fill: PlacedPiece[] = Array.from({ length: MAX_PIECES }, (_, index) => ({
+      id: `piece-${index}`,
+      type: 'straight',
+      cell: { x: index % 16, y: Math.floor(index / 16) },
+      rotation: 0,
+    }));
+    const tree: PlacedScenery = {
+      id: 'scenery-1',
+      kind: 'tree',
+      cell: { x: 15, y: 15 },
+      rotation: 0,
+    };
+
+    const result = parseWorldSnapshot({ version: 3, pieces: fill, scenery: [tree] });
+
+    expect(result.world.pieces).toHaveLength(MAX_PIECES);
+    expect(result.world.scenery).toEqual([]);
+    expect(result.droppedScenery).toBe(1);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('salvages valid scenery and counts the rest', () => {
+    const kept: PlacedScenery[] = [
+      { id: 'scenery-1', kind: 'tree', cell: { x: 1, y: 1 }, rotation: 0 },
+      { id: 'scenery-3', kind: 'station', cell: { x: 3, y: 1 }, rotation: 0 },
+    ];
+
+    const result = parseWorldSnapshot({
+      version: 3,
+      pieces: [],
+      scenery: [
+        kept[0],
+        { id: 'scenery-2', kind: 'dragon', cell: { x: 2, y: 1 }, rotation: 0 },
+        kept[1],
+      ],
+    });
+
+    expect(result.world.scenery).toEqual(kept);
+    expect(result.droppedScenery).toBe(1);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('loads v1, v2, and v3 fixtures to their expected worlds with status clean', () => {
+    const consist = withConsistPreset(defaultConsist(), 'steam', 'coal');
+    const fixtures: Array<{ fixture: unknown; expected: unknown }> = [
+      {
+        fixture: {
+          version: 1,
+          pieces: [{ id: 'piece-1', type: 'straight', cell: { x: 0, y: 0 }, rotation: 0 }],
+          scenery: [{ id: 'scenery-1', kind: 'tree', cell: { x: 1, y: 0 }, rotation: 0 }],
+        },
+        expected: {
+          pieces: [{ id: 'piece-1', type: 'straight', cell: { x: 0, y: 0 }, rotation: 0 }],
+          scenery: [{ id: 'scenery-1', kind: 'tree', cell: { x: 1, y: 0 }, rotation: 0 }],
+          train: 'steam',
+          deliveries: {},
+          consist: defaultConsist(),
+        },
+      },
+      {
+        fixture: {
+          version: 2,
+          pieces: [{ id: 'piece-2', type: 'tunnel', cell: { x: 2, y: 0 }, rotation: 90 }],
+          scenery: [],
+          train: 'diesel',
+        },
+        expected: {
+          pieces: [{ id: 'piece-2', type: 'tunnel', cell: { x: 2, y: 0 }, rotation: 90 }],
+          scenery: [],
+          train: 'diesel',
+          deliveries: {},
+          consist: defaultConsist(),
+        },
+      },
+      {
+        fixture: {
+          version: 3,
+          pieces: [{ id: 'piece-3', type: 'switch', cell: { x: 3, y: 0 }, rotation: 180 }],
+          scenery: [{ id: 'scenery-3', kind: 'station', cell: { x: 3, y: 1 }, rotation: 0 }],
+          train: 'tram',
+          deliveries: { 'scenery-3': 2 },
+          consist,
+        },
+        expected: {
+          pieces: [{ id: 'piece-3', type: 'switch', cell: { x: 3, y: 0 }, rotation: 180 }],
+          scenery: [{ id: 'scenery-3', kind: 'station', cell: { x: 3, y: 1 }, rotation: 0 }],
+          train: 'tram',
+          deliveries: { 'scenery-3': 2 },
+          consist,
+        },
+      },
+    ];
+
+    for (const { fixture, expected } of fixtures) {
+      const result = parseWorldSnapshot(fixture);
+
+      expect(result.status).toBe('clean');
+      expect(result.world).toEqual(expected);
+    }
+  });
+
+  it('never throws and always reports a defined status for hostile input', () => {
+    const rand = seededRandom(20261107);
+    const hostile: unknown[] = [
+      undefined,
+      null,
+      0,
+      1,
+      -1,
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      '',
+      'world',
+      true,
+      false,
+      [],
+      {},
+      () => undefined,
+      Symbol('world'),
+      10n,
+    ];
+
+    for (const value of hostile) {
+      expect(() => parseWorldSnapshot(value)).not.toThrow();
+      expect(statuses).toContain(parseWorldSnapshot(value).status);
+    }
+
+    for (let index = 0; index < 250; index += 1) {
+      const value = randomJson(rand, 4);
+
+      expect(() => parseWorldSnapshot(value)).not.toThrow();
+      const result = parseWorldSnapshot(value);
+      expect(statuses).toContain(result.status);
+      expect(Array.isArray(result.world.pieces)).toBe(true);
+      expect(Array.isArray(result.world.scenery)).toBe(true);
+    }
   });
 });
+
+/** Deterministic LCG so a fuzz failure is always reproducible. */
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1_664_525 + 1_013_904_223) >>> 0;
+    return state / 0x1_0000_0000;
+  };
+}
+
+/** JSON-shaped hostile values: primitives, arrays, and objects with save keys. */
+function randomJson(rand: () => number, depth: number): unknown {
+  const roll = Math.floor(rand() * 8);
+  if (depth <= 0 || roll < 3) {
+    const primitives: unknown[] = [
+      null,
+      true,
+      false,
+      Math.floor(rand() * 1_000) - 500,
+      '',
+      'straight',
+      'tree',
+      0,
+    ];
+    return primitives[Math.floor(rand() * primitives.length)];
+  }
+  if (roll < 5) {
+    return Array.from({ length: Math.floor(rand() * 4) }, () => randomJson(rand, depth - 1));
+  }
+  const keys = [
+    'version',
+    'pieces',
+    'scenery',
+    'train',
+    'deliveries',
+    'consist',
+    'id',
+    'type',
+    'kind',
+    'cell',
+    'rotation',
+    'x',
+    'y',
+    'preferences',
+    'muted',
+    'dayPhase',
+  ];
+  const value: Record<string, unknown> = {};
+  for (let index = 0; index < Math.floor(rand() * 6); index += 1) {
+    const key = keys[Math.floor(rand() * keys.length)] ?? 'version';
+    value[key] = randomJson(rand, depth - 1);
+  }
+  return value;
+}
 
 describe('tunnel snapshots', () => {
   const tunnelPiece: PlacedPiece = {
@@ -858,7 +1186,7 @@ describe('river migration — v1 snapshots load as v2 bridges', () => {
     expect(twice).toEqual(once);
   });
 
-  it('still refuses broken v1 snapshots — migration never weakens validation', () => {
+  it('drops broken v1 pieces without weakening the migration', () => {
     expect(
       deserializeWorld({ version: 1, pieces: [{ id: 'x', type: 'nope' }], scenery: [] }),
     ).toEqual({
