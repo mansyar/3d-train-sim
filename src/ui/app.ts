@@ -19,6 +19,11 @@ export interface AppOptions {
   isReady?: () => boolean;
   /** The sound box: whistle toots, placement dings, the big mute switch. */
   audio: AudioController;
+  /**
+   * Supplies the parent-facing line about a salvaged or restored save. The
+   * boot read settles after mount, so the gate asks lazily when it opens.
+   */
+  recoveryNote?: () => string | null;
   cellFromPoint: CellFromPoint;
   /** Begin the in-scene ghost preview for a dragged track piece or scenery toy. */
   beginGhost(kind: PieceType | SceneryKind): void;
@@ -77,6 +82,11 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Build the river crossing starter railway">${PIECE_ICONS.bridge}</button>
       <button class="preset-pick" type="button" data-preset="hilltop-junction"
               aria-label="Build the hilltop junction starter railway">${PIECE_ICONS.switch}</button>
+      <div class="recovery-note" role="status" hidden>
+        <span class="recovery-note-text"></span>
+        <button class="recovery-dismiss" type="button"
+                aria-label="Dismiss the save notice">OK</button>
+      </div>
       <span class="app-version">v${__APP_VERSION__}</span>
     </div>
     <div class="toybox-rail" role="toolbar" aria-label="Toy box">
@@ -221,6 +231,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     world: options.world,
     audio: options.audio,
     isReady: options.isReady,
+    recoveryNote: options.recoveryNote,
   });
 
   // ---- The sun/moon: the toddler turns the page on the day, not the clock --

@@ -7,6 +7,8 @@ export interface ParentGateDeps {
   audio: AudioController;
   /** Asynchronous startup restoration gate — resets refuse until ready. */
   isReady?: (() => boolean) | undefined;
+  /** Supplies the grown-up recovery line; read as the tray opens. */
+  recoveryNote?: (() => string | null) | undefined;
 }
 
 export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void {
@@ -40,6 +42,31 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     throw new Error('preset tray missing from app frame');
   }
 
+  // ---- Recovery note: a quiet grown-up line inside the gated tray --------
+  // The note only appears when the loader had to salvage or restore a save,
+  // and dismissal lasts for this session — nothing is written to storage.
+  const recoveryNote = root.querySelector<HTMLDivElement>('.recovery-note');
+  const recoveryNoteText = recoveryNote?.querySelector<HTMLSpanElement>('.recovery-note-text');
+  const recoveryDismiss = recoveryNote?.querySelector<HTMLButtonElement>('.recovery-dismiss');
+  let recoveryDismissed = false;
+
+  const refreshRecoveryNote = () => {
+    if (!recoveryNote || !recoveryNoteText) return;
+    const text = recoveryDismissed ? null : (deps.recoveryNote?.() ?? null);
+    if (!text) {
+      recoveryNote.hidden = true;
+      return;
+    }
+    // Plain text only: the line is built by core/recovery.ts, never HTML.
+    recoveryNoteText.textContent = text;
+    recoveryNote.hidden = false;
+  };
+
+  recoveryDismiss?.addEventListener('click', () => {
+    recoveryDismissed = true;
+    if (recoveryNote) recoveryNote.hidden = true;
+  });
+
   const HOLD_MS = 2000;
   const DRIFT_PX = 48;
   const HOLD_LABEL = 'Parent gate — press and hold to reset the world';
@@ -67,6 +94,7 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     parentGate.classList.add('is-confirm');
     parentGate.setAttribute('aria-label', CONFIRM_LABEL);
     presetTray.hidden = false;
+    refreshRecoveryNote();
   };
 
   const disarmConfirm = () => {

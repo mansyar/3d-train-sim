@@ -12,7 +12,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8. `workbox-window` (devDependency) required for the production build — the `virtual:pwa-register` module imports it (`generateSW` mode); found missing on the first containerized build (2026-08-29, release-pipeline track). Self-update flow (pwa-self-update_20260905): `registerType: 'autoUpdate'` bakes `skipWaiting` into the SW, so `controllerchange` (on a page that already had a controller) is the update-adopted signal; probes run via `registration.update()` on visibility regain + hourly, gated by `src/core/update-state.ts` (`BOOT_GUARD_MS` 15 s reload guard, `PROBE_INTERVAL_MS` 1 h); the reload applies only while the ride is idle. `__APP_VERSION__` is injected from `package.json` via Vite `define` and shown in the parent-gate tray |
 | Font | @fontsource/baloo-2 | ^5.3 | Bundled variable font (Baloo 2, the kid-playful display face) — offline-safe, no runtime font download; imported in `src/main.ts` (added 2026-08-30, mobile-ux-polish track) |
 | Audio | howler | ^2.2.4 | Ride-synced chug loop, whistle, placement ding; handles iOS unlock |
-| Persistence | idb | ^8 | Thin promise wrapper over IndexedDB; one object store `worlds` |
+| Persistence | idb | ^8 | Thin promise wrapper over IndexedDB; one object store `worlds`, two slots (`current`, `previous`) for atomic recovery. `loadWorldRecovery()` reads `current`, falls back to `previous` when `current` is unreadable **or parses as a salvage that kept no pieces or scenery** (a clean empty world still loads), never promotes corrupt bytes, and reports `clean` / `salvaged` / `restored` / `fresh`; `saveWorldSnapshot()` promotes the prior payload inside one `readwrite` transaction (2026-11-07, save-resilience track) |
 | UI | Vanilla TS + DOM overlay | — | No framework. Chunky toy UI as HTML/CSS over the canvas |
 | Styling | Hand-written CSS | — | Custom properties, no preprocessor, no CSS framework |
 
@@ -51,8 +51,10 @@ src/
     track-graph.ts #   nodes/edges, piece connectivity
     snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
     pathing.ts     #   train path along track, speed, looping
-    save.ts        #   serialize/deserialize world (v3; `preferences` carries the
-                   #   device mute + optional chosen dayPhase, defaults omitted)
+    save.ts        #   serialize/parse world (v3; `preferences` carries the
+                   #   device mute + optional chosen dayPhase, defaults omitted);
+                   #   `parseWorldSnapshot` salvages per entry and reports drops
+    recovery.ts    #   parent-facing text for salvaged/restored boots (pure)
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring; init-scene.ts is the thin assembler that
                    #   builds one SceneContext (scene-context.ts) and hands it to

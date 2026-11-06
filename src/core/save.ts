@@ -92,38 +92,108 @@ export function serializeWorld(
   return snapshot;
 }
 
-export function deserializeWorld(value: unknown): WorldData {
-  if (!isRecord(value)) return emptyWorld();
+export type SnapshotStatus = 'clean' | 'salvaged' | 'unreadable';
+
+export interface WorldParseResult {
+  world: WorldData;
+  status: SnapshotStatus;
+  droppedPieces: number;
+  droppedScenery: number;
+  droppedDuplicates: number;
+}
+
+/**
+ * Reads a snapshot forgivingly: every entry is validated on its own, the first
+ * claimant of a cell (pieces before scenery) and the first piece per id win,
+ * and the shared capacity keeps the first `MAX_PIECES` valid entries. Only a
+ * structurally unreadable payload — not a record, an unknown version, or
+ * non-array `pieces`/`scenery` — yields status `unreadable`; everything
+ * narrower is salvaged. A lost toy is a pity — a lost world is a tragedy.
+ */
+export function parseWorldSnapshot(value: unknown): WorldParseResult {
+  if (!isRecord(value)) return unreadableSnapshot();
   const version = value.version;
   if (typeof version !== 'number' || !SUPPORTED_VERSIONS.includes(version)) {
-    return emptyWorld();
+    return unreadableSnapshot();
   }
-  const legacy = version === 1;
-  if (!Array.isArray(value.pieces) || !Array.isArray(value.scenery)) return emptyWorld();
-  if (value.pieces.length + value.scenery.length > MAX_PIECES) return emptyWorld();
+  if (!Array.isArray(value.pieces) || !Array.isArray(value.scenery)) {
+    return unreadableSnapshot();
+  }
 
-  const parsedPieces = value.pieces.map(parsePiece);
-  if (parsedPieces.some((piece) => piece === null)) return emptyWorld();
-  const validPieces = legacy
-    ? (parsedPieces as PlacedPiece[]).map(migratePieceToV2)
-    : (parsedPieces as PlacedPiece[]);
+  const rawPieces: unknown[] = value.pieces;
+  const rawScenery: unknown[] = value.scenery;
+  const legacy = version === 1;
+  const claimedCells = new Set<string>();
+  const claimedIds = new Set<string>();
+  const pieces: PlacedPiece[] = [];
+  const scenery: PlacedScenery[] = [];
+  let droppedPieces = 0;
+  let droppedScenery = 0;
+  let droppedDuplicates = 0;
+
+  for (const raw of rawPieces) {
+    const piece = parsePiece(raw);
+    if (!piece) {
+      droppedPieces += 1;
+      continue;
+    }
+    const migrated = legacy ? migratePieceToV2(piece) : piece;
+    const cell = cellKey(migrated.cell);
+    // Duplicates are identified before capacity so an overflow entry that
+    // merely repeats an accepted cell is reported as the duplicate it is.
+    if (claimedIds.has(migrated.id) || claimedCells.has(cell)) {
+      droppedDuplicates += 1;
+      continue;
+    }
+    if (pieces.length + scenery.length >= MAX_PIECES) {
+      droppedPieces += 1;
+      continue;
+    }
+    claimedIds.add(migrated.id);
+    claimedCells.add(cell);
+    pieces.push(migrated);
+  }
 
   // Unknown scenery kinds (e.g. from a newer version) drop back to the
-  // drawer; everything else restores exactly as it was. A lost toy is a
-  // pity — a lost world is a tragedy.
-  const parsedScenery = value.scenery.map(parseScenery);
-  const validScenery = parsedScenery.filter((item): item is PlacedScenery => item !== null);
+  // drawer; everything else restores exactly as it was.
+  for (const raw of rawScenery) {
+    const item = parseScenery(raw);
+    if (!item) {
+      droppedScenery += 1;
+      continue;
+    }
+    const cell = cellKey(item.cell);
+    if (claimedCells.has(cell)) {
+      droppedDuplicates += 1;
+      continue;
+    }
+    if (pieces.length + scenery.length >= MAX_PIECES) {
+      droppedScenery += 1;
+      continue;
+    }
+    claimedCells.add(cell);
+    scenery.push(item);
+  }
 
-  const cells = [...validPieces, ...validScenery].map((item) => `${item.cell.x},${item.cell.y}`);
-  if (new Set(cells).size !== cells.length) return emptyWorld();
-
+  const dropped = droppedPieces + droppedScenery + droppedDuplicates;
   return {
-    pieces: validPieces,
-    scenery: validScenery,
-    train: isTrainKind(value.train) ? value.train : 'steam',
-    deliveries: parseDeliveries(value.deliveries),
-    consist: parseConsist(value.consist),
+    world: {
+      pieces,
+      scenery,
+      train: isTrainKind(value.train) ? value.train : 'steam',
+      deliveries: parseDeliveries(value.deliveries),
+      consist: parseConsist(value.consist),
+    },
+    status: dropped > 0 ? 'salvaged' : 'clean',
+    droppedPieces,
+    droppedScenery,
+    droppedDuplicates,
   };
+}
+
+/** World-only view of a snapshot; the recovery-aware caller wants the rest. */
+export function deserializeWorld(value: unknown): WorldData {
+  return parseWorldSnapshot(value).world;
 }
 
 /**
@@ -249,4 +319,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function emptyWorld(): WorldData {
   return { pieces: [], scenery: [], train: 'steam', deliveries: {}, consist: defaultConsist() };
+}
+
+function unreadableSnapshot(): WorldParseResult {
+  return {
+    world: emptyWorld(),
+    status: 'unreadable',
+    droppedPieces: 0,
+    droppedScenery: 0,
+    droppedDuplicates: 0,
+  };
+}
+
+function cellKey(cell: { x: number; y: number }): string {
+  return `${cell.x},${cell.y}`;
 }
