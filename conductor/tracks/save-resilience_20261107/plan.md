@@ -154,3 +154,21 @@
 **Result:** verified
 **Checkpoint:** 410db42
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-R1.md
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** Resolve the three Low findings from review round 2.
+- **Depends on:** Phase R1
+- **Covers:** R2-F1, R2-F2, R2-F3
+- **Touches:** `src/core/recovery.ts`, `src/core/recovery.test.ts`,
+  `src/state/persistence.ts`, `src/main.ts`
+- **Verification:** `pnpm check`
+- **Status:** verified
+
+- [x] **R2.T1: Report toys the backup itself skipped** — covers: R2-F1
+- [x] **R2.T2: Record the empty-salvage fallback trigger in tech-stack** — covers: R2-F2
+- [x] **R2.T3: Stop advertising an unreachable status** — covers: R2-F3
+
+**Result:** verified
+**Checkpoint:** 44712d7
+**Evidence:** conductor/tracks/save-resilience_20261107/review.md

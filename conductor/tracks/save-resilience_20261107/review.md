@@ -3,24 +3,22 @@
 - **Track:** `save-resilience_20261107`
 - **Type:** bug
 - **Branch:** `fix/save-resilience_20261107`
-- **Range:** `0ea627a..fa690ab`
-- **Date:** 2026-11-07T01:05:00+11:00
-- **Verdict:** `BLOCK`
+- **Range:** `0ea627a..4962a74`
+- **Date:** 2026-11-07T01:50:00+11:00
+- **Verdict:** `PASS WITH FINDINGS` (round 2; all findings fixed in Phase R2)
 
 ## Summary
 
-The core of the track is sound: per-entry salvage is total, duplicate handling is
-keep-first with pieces-before-scenery precedence, the loader never leaks
-`unreadable`, the two-slot save is one `readwrite` transaction with at most two
-reads, and the parent note is correctly hidden behind the 2 s hold with
-session-scoped dismissal. The review blocks on one High finding: a salvage that
-keeps **zero** entries is accepted as usable, `previous` is never consulted, and
-the next autosave then promotes that empty payload over the last good backup —
-the exact permanent-loss path the track exists to remove. Two Medium findings
-follow from it: duplicate-only salvage produces no parent note, and the
-transaction test harness cannot observe an aborted write. Three Low findings are
-mechanical (timing headroom in the new spec, a mis-ordered capacity/duplicate
-check, and one duplicated test block).
+Round 2 confirms every round-1 finding is genuinely fixed with behavioural
+tests. Round 1 blocked on one High finding — a salvage that kept **zero**
+entries was accepted as usable, `previous` was never consulted, and the next
+autosave promoted that empty payload over the last good backup, the exact
+permanent-loss path the track exists to remove. That path is now closed by a
+shared `isUsable` predicate applied on both read and promotion, and it is proven
+by unit and browser tests. Round 2 found only three Low items: a restored backup
+could itself have skipped entries while the note read as a clean restore, a stale
+`tech-stack.md` sentence, and a `WorldRecoveryStatus` member that no code could
+return. All three are fixed and covered by tests.
 
 ## Verification
 
@@ -186,14 +184,25 @@ before accepting the phase. Phase 4's evidence records that correction.
 
 ## Debt
 
-- None deferred. `review.strict` is on, so F1–F7 are fixed in Phase R1.
+- None deferred. `review.strict` is on, so F1-F7 are fixed in Phase R1 and the
+  three Low findings from round 2 are fixed in Phase R2.
 
 ## Doc sync
 
-`pending` — tech-stack already notes the two-slot store; re-check after R1.
+`synced` - `tech-stack.md` records the empty-salvage fallback trigger and the
+`recovery.ts` module; no product or guideline change was needed.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | BLOCK | 0 | 1 | 3 | 3 | 1 (F5, by primary) |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 0 | 3 | all 3 (Phase R2) |
+
+### Round 2 findings and resolution
+
+| ID | Severity | Finding | Resolution |
+| --- | --- | --- | --- |
+| R2-F1 | Low | A restored backup that itself lost entries reported a clean restore | The restored line now appends `and N broken toy(s) was/were skipped` when the backup dropped anything; two formatter tests added |
+| R2-F2 | Low | `tech-stack.md` still described only the unreadable trigger | Reworded to include the empty-salvage trigger and the clean-empty exception |
+| R2-F3 | Low | `WorldRecoveryStatus` advertised `unreadable`, forcing a dead branch in `main.ts` | Narrowed to `Exclude<SnapshotStatus,'unreadable'> \| 'restored' \| 'fresh'` via a type-predicate `isUsable`; dead branch removed |
