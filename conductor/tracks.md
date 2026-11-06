@@ -4,6 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [world-portability_20261107](tracks/world-portability_20261107/index.md) | World Portability | Feature | new |
 | [save-resilience_20261107](./archive/save-resilience_20261107/index.md) | Save Resilience | Bug | archived |
 | [sun-moon_20260930](archive/sun-moon_20260930/index.md) | Sun & Moon - Child-Controlled Time of Day | Feature | archived |
 | [double-slip-switch_20260930](archive/double-slip-switch_20260930/index.md) | Double-Slip Switch | Feature | archived |
