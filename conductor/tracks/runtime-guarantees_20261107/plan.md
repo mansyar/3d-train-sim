@@ -94,29 +94,33 @@ the precached fonts otherwise carried no cache header.
 - **Covers:** FR-6, FR-7, FR-8, AC-2, AC-4, AC-5, AC-6
 - **Touches:** `e2e/runtime-guarantees.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/runtime-guarantees.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Assert real headers on every asset class** — covers: AC-2
-  - [ ] **P3.T1.1: Against the preview server on 5198, check `index.html`, a
+- [x] **P3.T1: Assert real headers on every asset class** — covers: AC-2
+  - [x] **P3.T1.1: Against the preview server on 5198, check `index.html`, a
     hashed JS chunk taken from the page, a `glb` and a `woff2` for the full CSP
     and both extra headers**
-- [ ] **P3.T2: Prove the meadow boots, builds and rides offline** — covers: FR-6
-  - [ ] **P3.T2.1: Warm the worker until it controls the page, confirm an update
+- [x] **P3.T2: Prove the meadow boots, builds and rides offline** — covers: FR-6
+  - [x] **P3.T2.1: Warm the worker until it controls the page, confirm an update
     probe resolves, then disable the network and reload**
-  - [ ] **P3.T2.2: Assert the starter pieces, place one toy through the drawer,
+  - [x] **P3.T2.2: Assert the starter pieces, place one toy through the drawer,
     press ride, and assert the train moves with no console errors**
-- [ ] **P3.T3: Prove nothing leaves the device** — covers: FR-7
-  - [ ] **P3.T3.1: Record every request during boot, placement and ride and fail
+- [x] **P3.T3: Prove nothing leaves the device** — covers: FR-7
+  - [x] **P3.T3.1: Record every request during boot, placement and ride and fail
     on any URL whose origin is not the app's own (blob/data/devtools allowed)**
-- [ ] **P3.T4: Prove the policy is live** — covers: FR-8
-  - [ ] **P3.T4.1: Inject an inline script that would set a global, assert the
+- [x] **P3.T4: Prove the policy is live** — covers: FR-8
+  - [x] **P3.T4.1: Inject an inline script that would set a global, assert the
     global never appears, and assert the app's own bundle did run**
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 2971f18
 **Evidence:** conductor/tracks/runtime-guarantees_20261107/verification/phase-3.md
--->
+**Deviations:** the offline half runs on Chromium under the same tablet and phone
+profiles, because Playwright's WebKit cannot emulate offline behind a service
+worker; AC-4 was amended to say so and the iPad path stays manual. AC-5 was
+reworded after a probe showed a real foreign fetch is refused by `connect-src`
+before `page.on('request')` fires, so the filter's negative control uses a
+synthetic entry and the real refusal is captured from the browser.
 
 ## Phase 4: Documentation
 
