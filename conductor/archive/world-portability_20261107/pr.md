@@ -63,7 +63,7 @@ no network, no identifier, no upload.
 | `pnpm test:coverage` (`src/core` + `src/state`) | pass — 97.33% stmts / 91.01% branches / 98.07% funcs / 99.44% lines (gate 80%) |
 | `pnpm build` | pass — PWA, 174 precache entries |
 | `pnpm exec playwright test e2e/world-portability.spec.ts` | pass — 24 (12 tests × tablet + phone) |
-| `pnpm exec playwright test` | pass — 177 before the R2 addition; CI e2e is the release authority |
+| `pnpm exec playwright test` | pass — 183 (tablet, phone, prod), no retries; CI e2e is the release authority |
 
 ## Media
 

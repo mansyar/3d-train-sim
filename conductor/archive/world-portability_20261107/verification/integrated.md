@@ -19,7 +19,7 @@ proof. Phase checkpoints: Phase 1 `9f0df15`, Phase 2 `79f1920`, Phase 3 `c90c6d8
 | coverage | `pnpm test:coverage` | 0 | statements 97.33%, branches 91.01%, functions 98.07%, lines 99.44% on `src/core` + `src/state` (gate 80%) |
 | build | `pnpm build` | 0 | PWA `generateSW`, 174 precache entries, 10,544.41 KiB (chunk-size warning is pre-existing) |
 | e2e (track) | `pnpm exec playwright test e2e/world-portability.spec.ts` | 0 | 18 passed (tablet 9, phone 9) |
-| e2e (full) | `pnpm exec playwright test` | 0 | **177 passed** (tablet, phone, prod) in 12.7 min, no retries, no page crashes |
+| e2e (full) | `pnpm exec playwright test` | 0 | **183 passed** (tablet, phone, prod) in 13.2 min after the R2 addition, no retries, no page crashes |
 
 ## Acceptance criteria
 
@@ -52,7 +52,7 @@ proof. Phase checkpoints: Phase 1 `9f0df15`, Phase 2 `79f1920`, Phase 3 `c90c6d8
 ## Verdict
 
 Integrated and ready for review. Every phase checkpoint is in the history, the full
-suite passed on all three projects in one run (177/177, no retries — the two phone
+suite passed on all three projects in one run (183/183 after the R2 test, no retries — the two phone
 `Page crashed` failures seen during the previous track did not recur), and every
 acceptance criterion has an automated witness at the unit or browser layer. Nothing
 in the track changed `src/core/save.ts`, the snapshot version, or the persistence
