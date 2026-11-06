@@ -53,7 +53,7 @@
   atomically on every save, and restores it when `current` is unreadable —
   without ever promoting a corrupt payload.
 - **Depends on:** Phase 1
-- **Covers:** FR-3, FR-4, FR-5, NFR-2, NFR-3, NFR-4, AC-3, AC-4, AC-5
+- **Covers:** FR-3, FR-4, FR-5, NFR-2, NFR-3, NFR-4, NFR-5, AC-3, AC-4, AC-5
 - **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`
 - **Verification:** `pnpm check`
 - **Status:** pending
@@ -67,6 +67,8 @@
         `{ snapshot, status, droppedPieces, droppedScenery }`
   - [ ] **P2.T2.2:** Try `current`, then `previous`; map outcomes to `clean` /
         `salvaged` / `restored` / `fresh`
+  - [ ] **P2.T2.3:** Record the added boot read cost in the phase evidence;
+        assert the loader performs at most two reads per boot
 - [ ] **P2.T3: Keep the baseline clean after recovery** — covers: FR-5, AC-5
   - [ ] **P2.T3.1:** Ensure the next save after a restore promotes the
         recovered world, not the corrupt bytes
