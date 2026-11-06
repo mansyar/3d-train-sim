@@ -16,7 +16,7 @@
 - **Covers:** FR-1, FR-2, FR-6, FR-8, FR-9, NFR-1, AC-1, AC-2, AC-6, AC-8, AC-9
 - **Touches:** `src/core/save.ts`, `src/core/save.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add the parse-result contract** — covers: FR-6
   - [ ] **P1.T1.1:** Export `parseWorldSnapshot(value)` returning
