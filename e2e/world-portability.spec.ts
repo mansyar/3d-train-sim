@@ -122,6 +122,79 @@ const importFile = async (
 
 const noteText = (page: Page) => page.locator('.portable-note-text');
 
+/** The line the loader's recovery path produces after falling back to `previous`. */
+const RESTORED_LINE = 'Your meadow was restored from the last good save.';
+
+/** The last good save a restored boot falls back to: two dry-land rails. */
+const restoredSnapshot = {
+  version: 3,
+  pieces: [
+    { id: 'piece-10', type: 'straight', cell: { x: 1, y: 6 }, rotation: 0 },
+    { id: 'piece-11', type: 'corner', cell: { x: 1, y: 7 }, rotation: 90 },
+  ],
+  scenery: [],
+};
+
+/**
+ * Waits until the boot's autosave has committed a `current` snapshot.
+ *
+ * A first boot seeds the starter railway and saves it asynchronously; writing
+ * the seed before that transaction commits lets the save overwrite it. Once
+ * the key exists, the boot's persistence has no pending writes left.
+ */
+const waitForStoredCurrent = async (page: Page): Promise<void> => {
+  await page.waitForFunction(
+    () =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open('tiny-tracks');
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          const read = db.transaction('worlds', 'readonly').objectStore('worlds').get('current');
+          read.onsuccess = () => {
+            db.close();
+            resolve(read.result !== undefined);
+          };
+          read.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+      }),
+  );
+};
+
+/**
+ * Writes raw payloads into the autosave slots.
+ *
+ * The app owns store creation, so this opens without an upgrade handler: a
+ * missing store is a test bug, not something to paper over by racing the
+ * app's own schema.
+ */
+const writeSlots = (page: Page, slots: Record<string, unknown>): Promise<void> =>
+  page.evaluate(
+    (payloads) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('tiny-tracks');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction('worlds', 'readwrite');
+          const store = tx.objectStore('worlds');
+          for (const [key, value] of Object.entries(payloads)) {
+            store.put(value, key);
+          }
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+          tx.onabort = () => reject(tx.error);
+        };
+      }),
+    slots,
+  );
+
 test('save and load stay out of reach until the parent gate is held', async ({ page }) => {
   // The first test in each worker pays the dev server's cold transform of the
   // whole app (~40 s with both form factors booting at once); later boots are
@@ -365,6 +438,47 @@ test('a refusal after the tray is dismissed stays visible', async ({ page }) => 
   await expect(page.locator('.portable-export')).toBeHidden();
   await expect(page.locator('.portable-import')).toBeHidden();
 
+  expect((await exportWorld(page)).json).toBe(before);
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('a refusal replaces the recovery note, and re-arming restores it', async ({ page }) => {
+  test.setTimeout(120_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+  // The boot's own autosave must commit before the seed, or it lands after it.
+  await waitForStoredCurrent(page);
+  await writeSlots(page, { current: 'garbage', previous: restoredSnapshot });
+
+  await page.reload();
+  await waitForReady(page);
+
+  const tray = page.locator('.preset-tray');
+  const recovery = page.locator('.recovery-note');
+  await openTray(page);
+  await expect(recovery).toBeVisible();
+  await expect(recovery.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
+
+  const before = (await exportWorld(page)).json;
+
+  // A refusal inside the open tray replaces the grown-up line: the two notes
+  // never stack, because a stale "restored" beside "nothing changed" misleads.
+  await importFile(page, "{'not a meadow'");
+  await expect(noteText(page)).toHaveText(NOTE.unreadable);
+  await expect(recovery).toBeHidden();
+
+  // The armed tray closes on a tap outside it; the mute toggle is on the rail.
+  await page.locator('.mute-toggle').click();
+  await expect(tray).toBeHidden();
+
+  // Re-arming recomputes the note from the session state, so it comes back.
+  await openTray(page);
+  await expect(recovery).toBeVisible();
+  await expect(recovery.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
+
+  // Refused before parsing: the restored meadow is byte-identical.
   expect((await exportWorld(page)).json).toBe(before);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
