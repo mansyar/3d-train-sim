@@ -89,27 +89,25 @@
 - **Touches:** `src/core/recovery.ts`, `src/core/recovery.test.ts`,
   `src/main.ts`, `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Pure notice formatter** — covers: FR-7
-  - [ ] **P3.T1.1:** `recoveryNotice(status, counts)` returns `null` for
+- [x] **P3.T1: Pure notice formatter** — covers: FR-7
+  - [x] **P3.T1.1:** `recoveryNotice(status, counts)` returns `null` for
         `clean`/`fresh`, and a short parent-facing line for `salvaged`/`restored`
-  - [ ] **P3.T1.2:** Unit-test every status and the singular/plural counts
-- [ ] **P3.T2: Thread the recovery result to the UI** — covers: FR-7
-  - [ ] **P3.T2.1:** `main.ts` uses `loadWorldRecovery()` and passes the result
+  - [x] **P3.T1.2:** Unit-test every status and the singular/plural counts
+- [x] **P3.T2: Thread the recovery result to the UI** — covers: FR-7
+  - [x] **P3.T2.1:** `main.ts` uses `loadWorldRecovery()` and passes the result
         through `AppOptions`
-  - [ ] **P3.T2.2:** `app.ts` forwards it to `createParentGate`
-- [ ] **P3.T3: Render and dismiss the note** — covers: FR-7, AC-7
-  - [ ] **P3.T3.1:** Create the note element inside the gate's preset tray, with
+  - [x] **P3.T2.2:** `app.ts` forwards it to `createParentGate`
+- [x] **P3.T3: Render and dismiss the note** — covers: FR-7, AC-7
+  - [x] **P3.T3.1:** Create the note element inside the gate's preset tray, with
         a dismiss control
-  - [ ] **P3.T3.2:** Dismissal is session-scoped; no persistence, no save-format
+  - [x] **P3.T3.2:** Dismissal is session-scoped; no persistence, no save-format
         change
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 64dcac6
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-3.md
--->
 
 ## Phase 4: End-to-end recovery proof
 
