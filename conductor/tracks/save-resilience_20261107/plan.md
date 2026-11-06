@@ -54,33 +54,31 @@
 - **Covers:** FR-3, FR-4, FR-5, NFR-2, NFR-3, NFR-4, NFR-5, AC-3, AC-4, AC-5
 - **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Write both slots in one transaction** — covers: FR-4
-  - [ ] **P2.T1.1:** Read `current` inside a `readwrite` transaction, put it
+- [x] **P2.T1: Write both slots in one transaction** — covers: FR-4
+  - [x] **P2.T1.1:** Read `current` inside a `readwrite` transaction, put it
         into `previous`, put the new snapshot into `current`, await `tx.done`
-  - [ ] **P2.T1.2:** Skip promotion when the prior payload is unreadable
-- [ ] **P2.T2: Load with fallback** — covers: FR-3
-  - [ ] **P2.T2.1:** Export `loadWorldRecovery()` returning
+  - [x] **P2.T1.2:** Skip promotion when the prior payload is unreadable
+- [x] **P2.T2: Load with fallback** — covers: FR-3
+  - [x] **P2.T2.1:** Export `loadWorldRecovery()` returning
         `{ snapshot, status, droppedPieces, droppedScenery }`
-  - [ ] **P2.T2.2:** Try `current`, then `previous`; map outcomes to `clean` /
+  - [x] **P2.T2.2:** Try `current`, then `previous`; map outcomes to `clean` /
         `salvaged` / `restored` / `fresh`
-  - [ ] **P2.T2.3:** Record the added boot read cost in the phase evidence;
+  - [x] **P2.T2.3:** Record the added boot read cost in the phase evidence;
         assert the loader performs at most two reads per boot
-- [ ] **P2.T3: Keep the baseline clean after recovery** — covers: FR-5, AC-5
-  - [ ] **P2.T3.1:** Ensure the next save after a restore promotes the
+- [x] **P2.T3: Keep the baseline clean after recovery** — covers: FR-5, AC-5
+  - [x] **P2.T3.1:** Ensure the next save after a restore promotes the
         recovered world, not the corrupt bytes
-- [ ] **P2.T4: Extend the storage test harness** — covers: NFR-2, NFR-3, NFR-4
-  - [ ] **P2.T4.1:** Replace the `get`/`put` mock with a transaction mock
+- [x] **P2.T4: Extend the storage test harness** — covers: NFR-2, NFR-3, NFR-4
+  - [x] **P2.T4.1:** Replace the `get`/`put` mock with a transaction mock
         exposing `store.get`, `store.put`, and `done`
-  - [ ] **P2.T4.2:** Assert at most two puts per save and that storage failures
+  - [x] **P2.T4.2:** Assert at most two puts per save and that storage failures
         stay non-fatal
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 6ae456d
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-2.md
--->
 
 ## Phase 3: Parent-gate recovery notice
 
