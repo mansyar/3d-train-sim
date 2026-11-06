@@ -17,7 +17,7 @@
   AC-4, AC-5, AC-9
 - **Touches:** `src/core/portable.ts`, `src/core/portable.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Build the export payload and file name** — covers: FR-2, FR-3
   - [ ] **P1.T1.1:** Export `MAX_IMPORT_BYTES` (1 MB) and
