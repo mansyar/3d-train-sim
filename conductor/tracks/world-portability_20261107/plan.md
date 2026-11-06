@@ -128,3 +128,38 @@
 **Result:** verified
 **Checkpoint:** c90c6d8
 **Evidence:** conductor/tracks/world-portability_20261107/verification/phase-3.md
+
+## Phase R1: Review fixes
+
+- **Goal:** Close the five review findings: refuse an oversized file before it is
+  read, prove the download actually lands, prove the explicit mid-ride stop (not
+  the incidental world edit) is what halts the train, keep a refusal visible if
+  the tray was dismissed, and label the tray for what it now holds.
+- **Depends on:** Phase 3
+- **Covers:** F1, F2, F3, F4, F5 (review round 1)
+- **Touches:** `src/ui/parent-gate.ts`, `src/ui/portable-file.ts`,
+  `src/ui/app.ts`, `src/main.ts`, `e2e/world-portability.spec.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/world-portability.spec.ts`
+- **Status:** pending
+
+- [ ] **R1.T1: Refuse by size before reading the file** - covers: F1
+  - [ ] **R1.T1.1:** Check `file.size > MAX_IMPORT_BYTES` before `readWorldFile`.
+  - [ ] **R1.T1.2:** Keep `readImport`'s own size check as defence in depth.
+- [ ] **R1.T2: Prove the export download and give revoke headroom** - covers: F2
+  - [ ] **R1.T2.1:** Revoke the object URL after a delay the download can survive.
+  - [ ] **R1.T2.2:** Await the browser `download` event and compare its bytes to
+    the dev-handle payload.
+- [ ] **R1.T3: Prove the explicit mid-ride stop** - covers: F3
+  - [ ] **R1.T3.1:** Import a file identical to the ridden world and assert the
+    ride ends.
+- [ ] **R1.T4: Keep refusals visible after a dismissal** - covers: F4
+  - [ ] **R1.T4.1:** Route refusals through the report state when the tray is
+    closed.
+  - [ ] **R1.T4.2:** Hide a visible recovery note when a refusal is shown in the
+    tray.
+- [ ] **R1.T5: Label the tray for what it holds** - covers: F5
+  - [ ] **R1.T5.1:** Rename the tray's aria-label to parent controls.
+
+**Result:**
+**Checkpoint:**
+**Evidence:** conductor/tracks/world-portability_20261107/review.md
