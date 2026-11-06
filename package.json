@@ -13,6 +13,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "check": "pnpm exec biome check . && pnpm exec tsc --noEmit && pnpm test",
     "check:fix": "pnpm exec biome check . --write"
   },

@@ -64,8 +64,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Unit & integration suite
-        run: pnpm test
+      # Tests plus the 80% coverage gate on src/core + src/state. The
+      # thresholds live in vite.config.ts, so a regression fails this job.
+      - name: Unit & integration suite + coverage gate
+        run: pnpm test:coverage
 
   e2e:
     name: Gate · e2e (tablet · phone · prod)

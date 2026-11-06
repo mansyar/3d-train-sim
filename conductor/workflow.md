@@ -2,194 +2,82 @@
 
 ## Guiding Principles
 
-1.  **The Plan is the Source of Truth:** All work must be tracked in `plan.md`
-2.  **The Tech Stack is Deliberate:** Changes to the tech stack must be
-    documented in `tech-stack.md` *before* implementation
-3.  **Test-Driven Development — for logic-bearing code only:** Write unit tests
-    before implementing functionality that contains logic (algorithms, state,
-    computation, data transformation). Visual wiring, scene setup, and glue code
-    are verified via smoke tests and manual verification instead.
-4.  **Coverage where it counts:** Aim for >80% coverage on logic-bearing
-    modules. Do not chase coverage on render wiring or UI glue.
-5.  **User Experience First:** Every decision should prioritize the toddler
-    experience (see `product-guidelines.md`)
-6.  **Privacy First:** Nothing leaves the device. No analytics, no network calls
-    at runtime.
-7.  **Non-Interactive & CI-Aware:** Prefer non-interactive commands. Use
-    `CI=true` for watch-mode tools (tests, linters) to ensure single execution.
+1. **The plan is the source of truth.** Every phase, task, result, checkpoint,
+   and evidence link lives in `plan.md`.
+2. **The tech stack is deliberate.** A change to the stack is recorded in
+   `tech-stack.md` before the implementation depends on it.
+3. **Verification is agent-executed.** The phase subagent runs the configured
+   checks and writes evidence. The user is not asked to manually verify routine
+   work.
+4. **Evidence over assertion.** A phase is complete only when the configured
+   checks pass and the evidence file exists.
+5. **No silent debt.** A finding is fixed, explicitly accepted with a reason, or
+   tracked as an issue. It is never quietly ignored.
+6. **Stay inside the phase contract.** `Touches` defines the expected blast
+   radius. A required deviation is allowed, recorded, and reviewed.
+7. **Non-interactive and CI-aware.** Prefer commands that terminate. The test
+   suite is already single-run (`vitest run`), so no CI prefix is required.
+8. **User experience first.** Every decision prioritizes the toddler experience
+   (`product-guidelines.md`).
+9. **Privacy first.** Nothing leaves the device. No analytics, no network calls
+   at runtime.
+
+## Workflow Config
+
+```yaml
+project:
+  type: "static-web-pwa"
+  languages: ["TypeScript"]
+commands:
+  setup: "pnpm install"
+  dev: "pnpm dev"
+  test: "pnpm test"
+  coverage: "pnpm test:coverage"
+  lint: "pnpm exec biome check ."
+  format: "pnpm exec biome check . --write"
+  typecheck: "pnpm exec tsc --noEmit"
+  build: "pnpm build"
+  verify_phase: "pnpm check"
+coverage:
+  gate: "80% statements/branches/functions/lines on src/core + src/state"
+  scope: "project"
+verification:
+  layers: ["static", "unit", "e2e", "smoke", "manual-device"]
+  retry: 2
+  manual_exceptions:
+    - "iPad Safari and Android Chrome touch feel, audio unlock, and frame rate"
+git:
+  base_branch: "main"
+  fetch: true
+  commit_style: "conventional"
+  task_commits: true
+  phase_squash: true
+review:
+  strict: true
+  issues:
+    enabled: true
+    auto_create: true
+    min_severity: "medium"
+    group_low: true
+    labels: ["tech-debt", "conductor"]
+pr:
+  enabled: true
+  tool: "gh"
+  base: "main"
+  media: "always"
+  watch_ci: true
+  watch_timeout_minutes: 30
+  merge_method: "squash"
+```
 
 ## Definitions
 
-- **Logic-bearing code:** Code whose correctness can be captured in assertions —
+- **Logic-bearing code:** code whose correctness can be captured in assertions —
   pure functions, algorithms, state machines, serialization, path resolution.
   In this project: everything in `src/core/` and `src/state/`.
-- **Non-logic code:** Renderers, scene graph setup, DOM wiring, audio triggers,
-  model loading. Verified by Playwright smoke tests + explicit manual
+- **Non-logic code:** renderers, scene graph setup, DOM wiring, audio triggers,
+  model loading. Verified by Playwright smoke tests and explicit manual
   verification steps, not unit tests.
-
-## Task Workflow
-
-All tasks follow a strict lifecycle:
-
-### Standard Task Workflow
-
-1.  **Select Task:** Choose the next available task from `plan.md` in sequential
-    order
-
-2.  **Mark In Progress:** Before beginning work, edit `plan.md` and change the
-    task from `[ ]` to `[~]`
-
-3.  **Define Expected Behavior:**
-    -   **Logic-bearing task:** Write failing unit tests first (Red phase).
-        Run the suite and confirm they fail as expected. Do not proceed until
-        you have failing tests.
-    -   **Non-logic task:** Write down the observable acceptance criteria
-        (what you will see/hear/feel) in `plan.md` under the task, to be
-        verified manually or by a smoke test after implementation.
-
-4.  **Implement to Pass (Green Phase):**
-    -   Logic-bearing: write the minimum code to make the failing tests pass,
-        rerun, confirm green.
-    -   Non-logic: implement to the acceptance criteria.
-
-5.  **Refactor (Optional but Recommended):**
-    -   With the safety of passing tests, improve clarity, remove duplication,
-        and enhance performance without changing external behavior.
-    -   Rerun tests after refactoring.
-
-6.  **Verify Coverage (logic-bearing code only):** Run `CI=true pnpm test -- --coverage`.
-    Target >80% for new code in `src/core/` and `src/state/`. Skip for scene/UI.
-
-7.  **Document Deviations:** If implementation differs from tech stack:
-
-    -   **STOP** implementation
-    -   Update `tech-stack.md` with new design
-    -   Add dated note explaining the change
-    -   Resume implementation
-
-8.  **Commit Code Changes:**
-
-    -   Stage all code changes related to the task.
-    -   Propose a clear, concise commit message e.g. `feat(ui): Create basic toybox structure`.
-    -   Perform the commit.
-
-9.  **Append Task Summary to plan.md (NOT git notes):**
-
-    -   **Step 9.1: Draft Note Content:** Create a detailed summary for the
-        completed task: task name, summary of changes, list of
-        created/modified files, and the core "why" for the change.
-    -   **Step 9.2: Write to plan.md:** Append the summary as a nested
-        "Notes:" block directly under the completed task's checklist entry.
-
-10. **Record Task Commit SHA:**
-
-    -   **Step 10.1: Update Plan:** In `plan.md`, find the completed task,
-        change its status from `[~]` to `[x]`, and append the first 7 characters
-        of the just-completed commit's hash.
-    -   **Step 10.2: Write Plan:** Write the updated content back to `plan.md`.
-
-11. **Commit Plan Update:**
-
-    -   **Action:** Stage the modified `plan.md` file.
-    -   **Action:** Commit with a descriptive message (e.g.,
-        `conductor(plan): Mark task 'Create track graph' as complete`).
-
-### Task Correction & Plan Amendment Workflows
-
-When an implemented task or phase requires corrections, amendments, or additions:
-
-1.  **In-Flight Refinements:** Minor gaps found while a task is `[~]` are fixed
-    directly in the active implementation stream, with passing tests (logic)
-    / met criteria (non-logic) before committing.
-2.  **Code Review Corrections (`conductor-review`):** Issues found during
-    review automatically append a `Review Fixes` phase to `plan.md` so
-    corrections are formally tracked and checkpointed.
-3.  **Logical State Reversions (`conductor-revert`):** A fundamentally flawed
-    task is reverted (commits rolled back, task reset to `[ ]` in `plan.md`)
-    for a clean restart.
-
-### Phase Completion Verification and Checkpointing Protocol
-
-**Trigger:** Executed immediately after a task completes a phase in `plan.md`.
-
-1.  **Announce Protocol Start.**
-
-2.  **Ensure Test Coverage for Phase Changes (logic-bearing files only):**
-
-    -   **Step 2.1: Determine Phase Scope:** Read `plan.md` to find the previous
-        phase's checkpoint SHA. If none exists, scope is all changes since the
-        first commit.
-    -   **Step 2.2: List Changed Files:** `git diff --name-only <prev_sha> HEAD`.
-    -   **Step 2.3: Verify Tests:** Exclude non-code files (`.json`, `.md`, `.glb`, …).
-        For remaining files, check whether the file is **logic-bearing**:
-        -   If yes and a test file is missing, **create one** — first analyze
-            existing test files for naming/style conventions; tests must
-            validate this phase's described functionality.
-        -   If no (scene/UI/glue), unit tests are **not required**; ensure the
-            acceptance criteria were recorded and are verifiable.
-
-3.  **Execute Automated Tests with Proactive Debugging:**
-
-    -   Announce the exact command, e.g. **Command:** `CI=true pnpm test`.
-    -   Execute. If tests fail, propose a fix a **maximum of two times**; if
-        still failing, **stop** and ask the user for guidance.
-
-4.  **Propose a Detailed, Actionable Manual Verification Plan:**
-
-    -   First analyze `product.md`, `product-guidelines.md`, and `plan.md` to
-        determine user-facing goals of the completed phase.
-    -   Present step-by-step manual verification with commands and expected
-        outcomes, e.g.:
-
-        ```text
-        The automated tests have passed. For manual verification, please follow these steps:
-
-        Manual Verification Steps:
-        1. Start the dev server: `pnpm dev`
-        2. Open on a tablet (or browser touch emulation) at the shown URL
-        3. Confirm that you see: the toybox grid and a draggable track piece
-        4. Confirm that dragging snaps the piece to grid positions with a bounce
-        ```
-
-5.  **Await Explicit User Feedback:**
-
-    -   Ask: "**Does this meet your expectations? Please confirm with yes or provide feedback.**"
-    -   **PAUSE**. Do not proceed without an explicit yes.
-
-6.  **Record the Phase Verification Report in plan.md (NOT git notes):**
-
-    -   Draft a verification report: automated test command + result, the
-        manual verification steps, and the user's confirmation (date).
-    -   Append it to `plan.md` as a "Verification Report" block under the
-        completed phase heading.
-
-7.  **Record Phase Checkpoint SHA:**
-
-    -   **Step 7.1:** Get the hash of the last functional commit
-        (`git log -1 --format="%H"`). Do NOT create empty checkpoint commits.
-    -   **Step 7.2: Update Plan:** Append to the phase heading in `plan.md`:
-        `[checkpoint: <sha>]`.
-    -   **Step 7.3: Write Plan.**
-
-8.  **Commit Plan Update:**
-
-    -   Stage `plan.md`, commit as `conductor(plan): Mark phase '<PHASE NAME>' as complete`.
-
-9.  **Announce Completion.**
-
-### Quality Gates
-
-Before marking any task complete, verify:
-
--   [ ] All tests pass
--   [ ] Coverage >80% for new **logic-bearing** code (not applicable to scene/UI)
--   [ ] Code follows project's code style guidelines (see `conductor/code_styleguides/`)
--   [ ] Type safety enforced (`tsc --noEmit` clean)
--   [ ] No Biome errors (`pnpm biome check .`)
--   [ ] Works correctly on tablets (touch, no hover dependencies)
--   [ ] `product-guidelines.md` respected (no fail states, instant feedback, privacy)
--   [ ] Documentation updated if needed
--   [ ] No security or privacy regressions (no network calls, no identifiers)
 
 ## Development Commands
 
@@ -203,64 +91,174 @@ pnpm install
 
 ```bash
 pnpm dev                          # Vite dev server
-CI=true pnpm test                 # Vitest, single run (POSIX shells)
-$env:CI='true'; pnpm test         # Vitest, single run (Windows pwsh)
-pnpm test                         # identical — scripts use `vitest run` (single-run by design)
-CI=true pnpm test -- --coverage   # with coverage
-pnpm exec tsc --noEmit            # typecheck gate
+pnpm test                         # Vitest, single run
+pnpm test:coverage                # Vitest + 80% gate on src/core + src/state
 pnpm exec biome check .           # lint + format check
 pnpm exec biome check . --write   # lint + format fix
-pnpm exec playwright test         # E2E smoke
+pnpm exec tsc --noEmit            # typecheck gate
+pnpm build                        # production build
+pnpm exec playwright test         # e2e (tablet, phone, prod profiles)
 ```
-
-> **Windows note:** bash-style `VAR=value cmd` prefixes fail under pnpm's Windows
-> shell. The `check` script therefore omits `CI=true` — the suite is `vitest run`,
-> which is single-run regardless of environment.
 
 ### Before Committing
 
 ```bash
-pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test
+pnpm check
 ```
 
-## Testing Requirements
+> **Windows note:** bash-style `VAR=value cmd` prefixes fail under pnpm's Windows
+> shell. The `check` script therefore omits `CI=true`; Vitest runs with
+> `vitest run`, which is single-run regardless of environment.
 
-### Unit Testing (logic-bearing code only)
+## Phase & Task Workflow
 
--   Modules in `src/core/` and `src/state/` must have corresponding tests.
--   Use appropriate setup/teardown (fixtures, beforeEach/afterEach).
--   Mock external dependencies (IndexedDB access via fakes).
--   Test both success and failure cases.
--   **Do not write unit tests for** render wiring, scene setup, DOM glue, or
-    audio trigger code — cover those with smoke tests and manual verification.
+Implementation is executed one phase at a time by a phase subagent. The primary
+agent owns `plan.md`, `metadata.json`, the registry, and review artifacts.
 
-### E2E Smoke Testing (Playwright)
+### Task Lifecycle
 
--   Boots the app, places pieces, starts the train, asserts no console errors.
--   Runs in a touch-emulated tablet viewport by default.
+1. Read the phase contract in `plan.md`, the relevant requirements in `spec.md`,
+   and the applicable style guides.
+2. Work through the phase's tasks in order.
+3. **Logic-bearing task:** write the failing test first (Red), confirm it fails
+   for the expected reason, then implement to Green.
+   **Non-logic task:** record the observable acceptance criteria in the task's
+   notes, then implement to them.
+4. Implement the smallest change that satisfies the task.
+5. Run the targeted checks for the task.
+6. Commit the task with a conventional commit message.
+7. Report the task's status and commit SHA to the primary agent.
 
-### Tablet Testing
+The subagent does **not** edit `plan.md`. The primary marks tasks complete after
+it accepts the phase.
 
--   Test on actual iPad (Safari) and Android tablet (Chrome) when possible.
--   Use Safari developer tools / Chrome device emulation.
--   Verify touch interactions, responsive layout, and 60 FPS performance.
+### Deviations
 
-## Code Review Process
+- If the phase goal requires a file outside `Touches`, make the smallest
+  necessary change and record it in the report under `deviations`.
+- If the work requires a product or design decision, stop and report `blocked`.
+- If implementation contradicts `tech-stack.md`, stop, update the stack doc with
+  a dated note, then resume.
+- Never add a runtime dependency, introduce a network call, or migrate unrelated
+  code without an explicit decision.
 
-### Self-Review Checklist
+### Phase Completion
 
-1.  **Functionality** — works as specified; edge cases handled; no fail states introduced
-2.  **Code Quality** — style guide followed; DRY; clear names
-3.  **Testing** — logic-bearing code unit-tested; smoke tests pass
-4.  **Privacy & Security** — nothing leaves the device; no hardcoded secrets
-5.  **Performance** — 60 FPS target respected; no per-frame allocations in render loop
-6.  **Tablet Experience** — targets ≥64px; readable at arm's length; feels native
+1. Run the phase's `Verification` command exactly as written in `plan.md`.
+2. Run `verify_phase` when it is configured and different from the phase command.
+3. Write the evidence file using the configured evidence path.
+4. Return the structured report to the primary agent.
+5. Do not merge, rebase, reset, push, open a PR, or edit Conductor state files.
+
+## Verification Strategy
+
+### Layers
+
+- **Static:** Biome (lint + format) and `tsc --noEmit`.
+- **Unit:** Vitest for `src/core/` and `src/state/` — algorithms, state, save
+  migration, pathing, switches, pacing.
+- **E2E:** Playwright across `tablet` (iPad Mini), `phone` (iPhone 13), and
+  `prod` (built output served by `vite preview`).
+- **Smoke:** every placed piece class has a spec that boots the app, places it,
+  starts a ride, and requires a clean console.
+- **Manual device:** iPad Safari and Android Chrome — touch feel, audio unlock,
+  and frame rate. Human-only; never claimed as agent-verified.
+
+### Commands
+
+| Layer | Command | Required |
+| --- | --- | --- |
+| static | `pnpm exec biome check .` | yes |
+| static | `pnpm exec tsc --noEmit` | yes |
+| unit | `pnpm test` | yes |
+| coverage | `pnpm test:coverage` | yes when logic-bearing code changed |
+| build | `pnpm build` | yes before e2e `prod` and before a release |
+| e2e | `pnpm exec playwright test` | yes for user-facing changes |
+| manual-device | iPad Safari / Android Chrome check | human-only |
+
+### Services and Fixtures
+
+- **Services:** Vite dev server on `5199`; `vite preview` on `5198` (prod e2e).
+  Playwright starts both from `playwright.config.ts`.
+- **Containers:** none for development. The release pipeline builds a Docker
+  image (`nginx:alpine` serving `dist/`).
+- **Database:** none. Persistence is IndexedDB (`tiny-tracks` → `worlds`), faked
+  in unit tests.
+- **Fixtures/seed data:** `cozyOval()` and the starter gallery in
+  `src/core/starters.ts`; dev builds expose `window.__tinyTracksWorld` and
+  `window.__tinyTracksScene` for deterministic placement in e2e.
+- **Environment variables:** none at runtime. `__APP_VERSION__` is injected at
+  build time from `package.json`.
+- **Start/stop commands:** Playwright manages both web servers. Do not reuse a
+  running dev server in CI.
+
+### Pass Criteria
+
+- Every required command exits `0`.
+- The coverage gate is met: 80% statements, branches, functions, and lines on
+  `src/core` + `src/state`.
+- Every acceptance criterion has a test or a documented evidence artifact.
+- No new Critical or High review findings remain.
+- No new runtime network request, identifier, or third-party script appears.
+
+### Evidence
+
+Write a report to:
+
+```text
+conductor/tracks/<track-id>/verification/phase-<n>.md
+```
+
+Include: title; track, phase, date, branch, base and head commits; result
+(`verified`, `failed`, `blocked`, or `partial`); a commands table (layer,
+command, exit, summary); an acceptance-criteria table (ID, criterion, evidence,
+status); evidence paths; deviations; and notes.
+
+Put screenshots, traces, and large reports under `.conductor/evidence/`; that
+directory is gitignored. The Markdown report itself is committed with the track.
+
+### Fallback Ladder
+
+1. Run the full configured layer.
+2. If a browser or service is missing, install it
+   (`pnpm exec playwright install --with-deps`) and retry.
+3. If it still cannot run, run the narrowest reliable subset and mark the phase
+   `partial` with the reason.
+4. Stop and ask the user (via the question tool) only for physical-device
+   verification or an external approval.
+
+### Retry Policy
+
+- A failed check may be fixed and re-run at most **2** times.
+- If it still fails, report `failed` with the command and output.
+- Never mark a phase `verified` when a required check did not run.
+
+### Human-Only Exceptions
+
+- iPad Safari touch feel, audio unlock, and sustained frame rate.
+- Android Chrome touch feel and sustained frame rate.
+- Final production smoke on a family device after a release.
+
+## Quality Gates
+
+Before a phase is accepted:
+
+- [ ] Required tests pass
+- [ ] Coverage gate met on `src/core` + `src/state`
+- [ ] `biome check .` passes
+- [ ] `tsc --noEmit` passes
+- [ ] `pnpm build` passes when the build output changed
+- [ ] e2e suite passes for user-facing changes
+- [ ] Code follows `conductor/code_styleguides/`
+- [ ] `product-guidelines.md` respected (no fail states, instant feedback, privacy)
+- [ ] No secrets, identifiers, analytics, or runtime network calls introduced
+- [ ] Evidence is written and linked in `plan.md`
 
 ## Commit Guidelines
 
 ### Message Format
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -270,13 +268,13 @@ pnpm exec biome check . && pnpm exec tsc --noEmit && CI=true pnpm test
 
 ### Types
 
--   `feat`: New feature
--   `fix`: Bug fix
--   `docs`: Documentation only
--   `style`: Formatting
--   `refactor`: Neither fixes a bug nor adds a feature
--   `test`: Adding missing tests
--   `chore`: Maintenance tasks
+- `feat`: new feature
+- `fix`: bug fix
+- `docs`: documentation only
+- `style`: formatting
+- `refactor`: behavior-preserving change
+- `test`: tests only
+- `chore`: maintenance
 
 ### Examples
 
@@ -287,79 +285,92 @@ git commit -m "test(core): Add pathing loop coverage for broken tracks"
 git commit -m "chore(deps): Bump three to 0.185.1"
 ```
 
-## Branching
+Task-level commits are made by the phase subagent. The primary squashes them
+into one phase commit on acceptance, unless a foreign commit landed in the range.
+The plan update is a separate state commit.
 
--   Trunk-based: short-lived `track/<track-id>` branches off `main`, merged back when complete.
--   Keep branches small; one track (or one review-fix batch) per branch.
+## Branching & PRs
+
+- Trunk-based: short-lived `track/<track-id>` branches off `main`.
+- The primary fetches `main` before branching so the track starts current.
+- When the track is complete, push the branch and open a PR with `gh` against
+  `main`.
+- Visual/UI tracks include a media demo (GIF or short video) in the PR body —
+  diffs cannot prove feel.
+- Watch CI with a 30-minute cap. Merge with **squash** once CI is green.
+- Merging to `main` never deploys. Only `v*` tags ship.
 
 ## Definition of Done
 
-A task is complete when:
+A track is complete when:
 
-1.  All code implemented to specification
-2.  Unit tests written and passing (logic-bearing code only)
-3.  Coverage meets requirements for logic-bearing modules
-4.  Documentation complete (if applicable)
-5.  Code passes Biome and typecheck gates
-6.  Works beautifully on tablets (if applicable)
-7.  Implementation notes added to `plan.md`
-8.  Changes committed with proper message
+1. Every phase is `verified` with a checkpoint and evidence.
+2. The integrated verification on the track branch passes.
+3. Review is `PASS`, or every finding is fixed, accepted with a reason, or
+   tracked as an issue. No Critical or High finding remains unresolved without an
+   explicit user override recorded in `review.md`.
+4. Post-review documentation sync is complete (`product.md`, `tech-stack.md`,
+   `CHANGELOG.md` when behaviour or scope changed).
+5. The registry and `metadata.json` show the track as complete.
+6. The branch is pushed and a PR is open (or `pr_state: "unavailable"` records
+   that PR creation could not run).
 
 ## Emergency Procedures
 
-### Critical Bug on the Family Devices
+### Critical Bug on Family Devices
 
-1.  Create hotfix branch from main
-2.  Reproduce + fix (unit test first if logic-bearing)
-3.  Verify on tablet
-4.  Tag patch release → pipeline deploys
-5.  Document in plan.md
+1. Create a hotfix branch from `main`.
+2. Write a failing regression test (logic-bearing) or reproduce step-by-step.
+3. Implement the minimal fix.
+4. Run the full verification strategy.
+5. Open a PR immediately; do not batch unrelated work.
 
-### Kid World Data Loss (IndexedDB incident)
+### Kid World Data Loss (IndexedDB)
 
-1.  Stop all write operations immediately
-2.  Attempt recovery: export/inspect IndexedDB on affected device
-3.  Rebuild the world with the kid (it's a toy — rebuilding together is gameplay)
-4.  Fix the persistence bug; add regression test if logic-bearing
-5.  Document in plan.md
+1. Stop all write operations immediately.
+2. Attempt recovery: export/inspect IndexedDB on the affected device.
+3. Rebuild the world with the kid — rebuilding together is gameplay.
+4. Fix the persistence bug; add a regression test.
+5. Document the incident in the track.
 
 ### Privacy Breach (network call detected)
 
-1.  Identify and remove the offending dependency/code immediately
-2.  Audit all runtime network usage
-3.  Add a Playwright check asserting zero external requests
-4.  Document in plan.md
+1. Identify and remove the offending dependency/code immediately.
+2. Audit all runtime network usage.
+3. Add a Playwright check asserting zero external requests.
+4. Document the incident in the track.
 
-## Deployment Workflow
+## Deployment
 
-Per `tech-stack.md` pipeline: tag → gates → Docker → GHCR (public) → Coolify. Production only.
+Single environment: production. Family devices load the domain.
 
 ### Pre-Deployment Checklist
 
--   [ ] Biome + typecheck + Vitest gates passing
--   [ ] Playwright smoke passing
--   [ ] Manual tablet check complete
--   [ ] Version bumped, changelog note in plan.md
--   [ ] Bundle size reasonable (<2 MB gzipped code, assets excluded)
+- [ ] Biome + typecheck + Vitest + coverage gates passing
+- [ ] Playwright suite passing on ubuntu (release authority)
+- [ ] Manual tablet check complete
+- [ ] Version bumped in `package.json`
+- [ ] `CHANGELOG.md` updated for parents, compare links refreshed
+- [ ] Bundle size reasonable (<2 MB gzipped code, assets excluded)
 
 ### Deployment Steps
 
-1.  Merge `track/<id>` branch to main
-2.  Tag release (e.g. `v1.2.3`) and push
-3.  Pipeline builds, pushes image, deploys via Coolify
-4.  Verify deployment: load domain on a family device
-5.  Test critical paths: build a loop, press play, hear the whistle
+1. Merge the release track PR to `main`.
+2. Push `main`, then push the `vX.Y.Z` tag — only the tag triggers
+   `release.yml`.
+3. Pipeline: gates → Docker build → push `ghcr.io/mansyar/tiny-tracks` →
+   Coolify webhook.
+4. Verify the deployment: load the domain cold on a family device.
 
 ### Post-Deployment
 
-1.  Watch the kids play (the only "analytics" we need)
-2.  Note friction points in plan.md
-3.  Plan next iteration
+1. Watch the kids play — the only analytics this project has.
+2. Note friction points as a new track.
+3. Rollback by redeploying the previous image digest in Coolify.
 
 ## Continuous Improvement
 
--   Review workflow after each track
--   Update based on pain points
--   Document lessons learned
--   Optimize for kid happiness
--   Keep things simple and maintainable
+- Review this workflow after each track.
+- Update commands and verification layers when tooling changes.
+- Record recurring review findings as process improvements.
+- Keep the process as small as the project allows.

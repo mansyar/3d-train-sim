@@ -11,6 +11,20 @@ export default defineConfig({
   test: {
     // Unit tests live in src/ only; e2e/ belongs to Playwright.
     include: ['src/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      // Logic-bearing modules only — scene/UI/audio glue is covered by
+      // Playwright and manual tablet checks (conductor/workflow.md).
+      include: ['src/core/**/*.ts', 'src/state/**/*.ts'],
+      exclude: ['**/*.test.ts'],
+      // The project's quality bar: 80% on logic-bearing code.
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+      },
+    },
   },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),

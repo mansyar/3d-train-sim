@@ -18,6 +18,9 @@ test-results/
 .DS_Store
 Thumbs.db
 
+# Conductor runtime state (evidence, backups, local run state)
+.conductor/
+
 # Freebuff local metadata
 .freebuff/
 
