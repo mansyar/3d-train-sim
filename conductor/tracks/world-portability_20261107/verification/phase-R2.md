@@ -118,3 +118,25 @@ Also stale in `review.md` after round 2 (optional, but it says what actually
 happened): the Verification table's track e2e row is `18`, now `24`; and
 FR-1/FR-5/FR-8/FR-9 plus AC-1/AC-4/AC-8 still read `partial (F2/F3)`, though
 both were closed in Phase R1.
+
+## Primary verification
+
+- HEAD at verification: `093c8d5`; working tree clean; range `bb44ce2..HEAD`
+  touches only `e2e/world-portability.spec.ts` plus this evidence file
+  (+136/−6). No `src/**` change.
+- `pnpm check` re-run by the primary agent: exit 0 — Biome 167 files, `tsc`
+  clean, Vitest 43 files / 820 tests.
+- `pnpm exec playwright test e2e/world-portability.spec.ts` re-run: exit 0,
+  **24 passed** (12 tests × tablet + phone) in 1.1 min, no retries.
+- R2.T3 could not be done by the subagent (`review.md` is refused by its
+  sandbox, as the phase template intends), so the primary wrote the record:
+  round-1 verdict corrected to PASS WITH FINDINGS, round-2 rows for F6/F7,
+  Debt, Doc sync and History updated, and the stale `18`/`partial` rows fixed.
+- Diff review: the new recovery test seeds `previous` after
+  `waitForStoredCurrent`, reloads, asserts the restored line, refuses an
+  import, asserts `.recovery-note` hidden, dismisses and re-arms, and asserts
+  the line returns — both halves of the F4 fix now have a witness. The decode
+  counter patches `File.text`, `Blob.text` and `FileReader.readAsText` from
+  captured originals so one read counts once.
+- Residual: a full-suite run was started after this checkpoint and reported
+  separately; the PR's CI e2e job is the release gate.

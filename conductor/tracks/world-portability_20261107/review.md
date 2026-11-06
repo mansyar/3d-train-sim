@@ -3,9 +3,9 @@
 - **Track:** `world-portability_20261107`
 - **Branch:** `feat/world-portability_20261107`
 - **Range:** `53d9a93..HEAD`
-- **Round:** 1
+- **Rounds:** 2
 - **Date:** 2026-11-07
-- **Verdict:** BLOCK (round 1; 3 Medium + 2 Low, all fixed in Phase R1)
+- **Verdict:** PASS WITH FINDINGS (round 2; every finding fixed in Phases R1 and R2)
 
 ## Summary
 
@@ -14,35 +14,45 @@ emit `preferences`, `readImport` re-validates through `parseWorldSnapshot`, and 
 e2e proves a byte-identical re-export. No child-reachable control or recovery note
 survives the `is-reporting` state, and nothing leaves the device.
 
-What does not hold up: the 1 MB cap is enforced after the whole file is decoded, so
-a mistaken 300 MB pick is fully read before refusal; the download itself is never
-observed by a test, so "Saved …" could be shown with no file; and the mid-ride test
-passes even if the explicit stop is deleted, because replacing the world already
-stops the ride as a side effect.
+Round 1 found three Medium and two Low problems: the 1 MB cap was enforced after
+the whole file had been decoded, the download itself was never observed, the
+mid-ride test could pass without the explicit stop, a refusal could be written into
+a dismissed tray, and the tray was still labelled "Starter railways". All five were
+fixed in Phase R1 (`22041e2`) with tests that fail without the fix: a decode counter
+that must stay at zero, a real `download` event compared byte for byte, an
+identical-world mid-ride import, a refusal recorded after the tray was dismissed,
+and an accessible-name assertion.
+
+Round 2 confirmed every closure and found two more small gaps: the recovery-note
+half of the refusal path had no test, and the size witness patched only
+`File.prototype.text`. Both were closed in Phase R2 (`093c8d5`): a restored boot is
+seeded from the save slots, a refusal is shown to replace the recovery line, and
+re-arming brings it back; the counter now patches `File.text`, `Blob.text` and
+`FileReader.readAsText`.
 
 ## Verification
 
 | Check | Command | Result |
 | --- | --- | --- |
 | Static + unit | `pnpm check` | pass — Biome 167 files, `tsc` clean, Vitest 43 files / 820 tests |
-| Coverage | `pnpm test:coverage` | pass — 97.33 / 91.01 / 98.07 / 99.44 (`src/core` + `src/state`) |
+| Coverage | `pnpm test:coverage` | pass — 97.33 / 91.01 / 98.07 / 99.44 (`src/core` + `src/state`, gate 80%) |
 | Build | `pnpm build` | pass — 174 precache entries |
-| Track e2e | `pnpm exec playwright test e2e/world-portability.spec.ts` | pass — 18 |
-| Full e2e | `pnpm exec playwright test` | pass — 177 in 12.7 min |
+| Track e2e | `pnpm exec playwright test e2e/world-portability.spec.ts` | pass — 24 (12 tests × tablet + phone) |
+| Full e2e | `pnpm exec playwright test` | pass — 177 before the R2 test addition; re-run at completion, and CI e2e is the release gate |
 
 ## Requirements coverage
 
 | ID | Requirement | Status |
 | --- | --- | --- |
-| FR-1 | Save downloads a dated world file | partial (F2: no download observed) |
+| FR-1 | Save downloads a dated world file | covered |
 | FR-2 | File holds world data only | covered |
 | FR-3 | Empty meadow exports and re-imports | covered |
-| FR-4 | Load accepts a JSON file | covered (input driven directly; native picker not automatable) |
-| FR-5 | Files over 1 MB refused | covered (hardening gap F1) |
+| FR-4 | Load accepts a JSON file | covered (input driven directly; the native sheet is not automatable) |
+| FR-5 | Files over 1 MB refused before being read | covered |
 | FR-6 | Unreadable files refused, world untouched | covered |
 | FR-7 | Import replaces the world as one undoable change | covered |
-| FR-8 | Import while riding stops the ride first | partial (F3: mechanism unproven) |
-| FR-9 | A note states what happened | covered (edge case F4) |
+| FR-8 | Import while riding stops the ride first | covered (identical-world case proves the explicit stop) |
+| FR-9 | A note states what happened | covered (including the recovery-note replacement) |
 | FR-10 | Controls unreachable before the hold | covered |
 | NFR-1 | Nothing leaves the device | covered |
 | NFR-2 | Round trip is lossless | covered |
@@ -50,109 +60,73 @@ stops the ride as a side effect.
 | NFR-4 | No per-frame cost | covered |
 | NFR-5 | Refusals mutate nothing | covered |
 | NFR-6 | Logic covered by unit tests | covered |
-| AC-1 | Dated file with the world | partial (F2) |
+| AC-1 | Dated file with the world, actually downloaded | covered |
 | AC-2 | Under 100 KB | covered |
 | AC-3 | Empty round trip | covered |
 | AC-4 | >1 MB refused | covered |
 | AC-5 | Three unreadable inputs refused | covered |
 | AC-6 | Valid file replaces; ids/rotations/cells/consist survive | covered |
 | AC-7 | Undo restores the previous meadow | covered |
-| AC-8 | Mid-ride import stops the ride | covered (F3) |
+| AC-8 | Mid-ride import stops the ride | covered |
 | AC-9 | Salvage loads valid toys and names the count | covered |
 | AC-10 | Hidden until the hold | covered |
 
 ## Findings
 
-### F1 — Medium — oversized files are read before they are refused
+### Round 1 — fixed in Phase R1 (`22041e2`)
 
-- **File:** `src/ui/parent-gate.ts:240-249`, `src/ui/portable-file.ts:29-30`, `src/core/portable.ts:80`
-- **What:** `readWorldFile(file)` calls `file.text()` and only then does `readImport`
-  compare `byteLength`. The cap bounds parsing, not reading.
-- **Why:** This feature exists because storage can vanish. A refusal path that can
-  freeze or crash the tab on a mistaken 300 MB pick makes the safety net the
-  incident, and on iOS a tab crash reads to a parent as a lost world.
-- **Fix:** Refuse on `file.size` before reading, keeping the pure check as defence
-  in depth.
-- **Test gap:** The e2e oversized payload fits in memory, so it cannot fail if the
-  guard moves back after the read.
+| ID | Severity | Finding | Fix |
+| --- | --- | --- | --- |
+| F1 | Medium | The 1 MB guard ran after `file.text()`, so a mistaken huge pick was fully decoded before refusal | `file.size` check before the read; e2e requires zero decode calls |
+| F2 | Medium | The download was never observed; the blob URL was revoked on the next macrotask | Revoke after 5 s; e2e awaits the `download` event and compares its bytes to the dev-handle payload |
+| F3 | Medium | The mid-ride test also passed without the explicit stop, because replacing the world stops the ride as a side effect | New case imports the ridden meadow's own JSON, where no piece changes |
+| F4 | Low | A refusal could be written into a dismissed tray, and did not replace a visible recovery note | `refuseImport()`; hidden tray routes to the report state, armed tray hides the recovery line |
+| F5 | Low | The tray was announced as "Starter railways" while holding file actions | `aria-label="Parent controls"`, asserted |
 
-### F2 — Medium — the export download is never observed
+### Round 2 — fixed in Phase R2 (`093c8d5`)
 
-- **File:** `src/ui/portable-file.ts:11-23`, `src/main.ts:270-279`
-- **What:** Tests assert the dev handle's string and the note text, which is written
-  after a fire-and-forget `anchor.click()`. `URL.revokeObjectURL` runs on the next
-  macrotask, the timing WebKit has historically aborted downloads on.
-- **Why:** AC-1 says the export *downloads* a file. An export that does not land is
-  the worst failure for a feature whose entire purpose is an off-device copy, and it
-  would be invisible to both the parent and CI.
-- **Fix:** Revoke later (5 s), and assert the `download` event plus its bytes.
-- **Test gap:** No `page.waitForEvent('download')` anywhere.
-
-### F3 — Medium — the explicit mid-ride stop is not what the test proves
-
-- **File:** `src/ui/parent-gate.ts:259-261`, `src/state/ride.ts:124-145`
-- **What:** `importWorld` empties the piece set, so the ride controller's own
-  subscription stops the ride anyway. The test asserts only the end state, so
-  deleting `if (deps.isRiding?.()) deps.stopRide?.()` keeps it green.
-- **Why:** FR-8 promises the ride stops *before* the world is replaced. The only case
-  that needs the explicit stop is importing the same world — exactly the case that
-  is untested.
-- **Fix:** Import a file identical to the ridden world and assert the ride ends.
-- **Test gap:** `e2e/world-portability.spec.ts:345`.
-
-### F4 — Low — a refusal can be written into a hidden tray
-
-- **File:** `src/ui/parent-gate.ts:191-198`, `:271-279`
-- **What:** `showPortableNote` assumes the tray is on screen. If the tray is
-  dismissed while the read resolves, the refusal is written into a hidden div. Also,
-  a refusal leaves an existing recovery note visible beside it.
-- **Why:** Refusals are when a parent most needs the message.
-- **Fix:** Route refusals through the report state when the tray is closed; hide the
-  recovery note when a refusal is shown inside the tray.
-
-### F5 — Low — the tray is still labelled "Starter railways"
-
-- **File:** `src/ui/app.ts:76`
-- **What:** `role="group"` + `aria-label="Starter railways"` now wraps presets, Save,
-  Load, the file input, both notes and the version line.
-- **Why:** A screen-reader parent gets a misleading group name for the only
-  orientation available inside the gate.
-- **Fix:** `aria-label="Parent controls"`.
+| ID | Severity | Finding | Fix |
+| --- | --- | --- | --- |
+| F6 | Medium | The recovery-note half of F4 was untested while the record claimed no debt | Seeded restored boot: refusal hides the recovery line, re-arming brings it back |
+| F7 | Low | The size witness patched only `File.prototype.text`, so a different decode API could regress it silently | One counter patches `File.text`, `Blob.text` and `FileReader.readAsText` |
 
 ## Overrides
 
-None. Strict mode — no finding deferred.
+None. Strict mode — every finding was fixed; nothing deferred.
 
 ## Plan compliance
 
-All three phases verified with evidence; the phase checkpoints match the plan
-(`9f0df15`, `79f1920`, `c90c6d8`). Two deviations were recorded honestly and one
-gap was found by primary verification and closed before review:
+Four phases, all verified with evidence: Phase 1 `9f0df15`, Phase 2 `79f1920`,
+Phase 3 `c90c6d8`, R1 `22041e2`, R2 `093c8d5`. Recorded deviations, all honest and
+reviewed:
 
-- `.portable-note` instead of `.recovery-note` (different lifetime).
-- `is-reporting` tray state, so the outcome line is visible after the tray would
-  otherwise close — correct, because FR-9 requires it.
-- The `[]` refusal branch was missing from the AC-5 e2e and was added during Phase 3
-  verification.
+- `.portable-note` rather than `.recovery-note` (different lifetime and dismissal).
+- An `is-reporting` tray state so the outcome line survives the tray closing; its
+  controls are hidden by CSS, verified by `toBeHidden()` assertions.
+- The `[]` refusal branch was missing from the AC-5 e2e and was added during
+  Phase 3 verification.
+- The R1 subagent rebuilt intermediate commits because `git apply` was denied; the
+  final tree was diffed against the tested tree and is identical.
 
 ## Out of scope
 
 - Real iPad/Android hardware (manual-device layer, still outstanding for this track).
-- The native file picker sheet (the spec drives the input directly).
+- The native file picker sheet.
 - A parent importing a valid but unwanted file — one undo is the designed net.
 
 ## Debt
 
-None. All findings fixed in Phase R1.
+None carried forward. The F4 residual was a missing test, not a missing harness; it
+was closed in Phase R2 rather than recorded as debt.
 
 ## Doc sync
 
-Pending — tech-stack was synced before review (`portable.ts`, `portable-file.ts`,
-world-only file format); the post-review sync records the pre-read size refusal and
-the download test.
+Synced. `conductor/tech-stack.md` records the world-only file format, the pre-read
+size refusal and the two new UI/core modules (`portable.ts`, `portable-file.ts`).
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | BLOCK | 0 | 0 | 3 | 2 | 0 |
+| 1 | PASS WITH FINDINGS | 0 | 0 | 3 | 2 | 5 (Phase R1) |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 1 | 1 | 2 (Phase R2) |

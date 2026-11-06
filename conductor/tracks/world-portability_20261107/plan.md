@@ -173,17 +173,17 @@
 - **Touches:** `e2e/world-portability.spec.ts`,
   `conductor/tracks/world-portability_20261107/review.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/world-portability.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R2.T1: Prove a refusal replaces and then restores the recovery note** - covers: F6
-  - [ ] R2.T1.1 Seed a restored boot from the save slots and confirm the recovery line.
-  - [ ] R2.T1.2 Refuse an import and assert only the portable note remains visible.
-  - [ ] R2.T1.3 Re-arm and assert the recovery line is back.
-- [ ] **R2.T2: Count every decode entry point** - covers: F7
-  - [ ] R2.T2.1 Also count `FileReader.readAsText` and `Blob.text`.
-- [ ] **R2.T3: Correct the review record** - covers: F6
-  - [ ] R2.T3.1 Record round 1 as the reviewer returned it and state the real debt.
+- [x] **R2.T1: Prove a refusal replaces and then restores the recovery note** - covers: F6
+  - [x] R2.T1.1 Seed a restored boot from the save slots and confirm the recovery line.
+  - [x] R2.T1.2 Refuse an import and assert only the portable note remains visible.
+  - [x] R2.T1.3 Re-arm and assert the recovery line is back.
+- [x] **R2.T2: Count every decode entry point** - covers: F7
+  - [x] R2.T2.1 Also count `FileReader.readAsText` and `Blob.text`.
+- [x] **R2.T3: Correct the review record** - covers: F6
+  - [x] R2.T3.1 Record round 1 as the reviewer returned it and state the real debt.
 
-**Result:**
-**Checkpoint:**
+**Result:** verified
+**Checkpoint:** 093c8d5
 **Evidence:** conductor/tracks/world-portability_20261107/review.md
