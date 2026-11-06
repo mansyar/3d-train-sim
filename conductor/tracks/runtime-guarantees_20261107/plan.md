@@ -19,37 +19,35 @@
 - **Verification:** `pnpm build`
 - **Status:** in_progress
 
-- [ ] **P1.T1: Export the single header source of truth** — covers: FR-2
-  - [ ] **P1.T1.1: Define the CSP directive list and the two extra headers in one
+- [x] **P1.T1: Export the single header source of truth** — covers: FR-2
+  - [x] **P1.T1.1: Define the CSP directive list and the two extra headers in one
     module, with a `headerLines()` helper that renders the exact
     `Name: value` lines the nginx include must mirror**
-  - [ ] **P1.T1.2: Unit-test the exported shape: every directive present, no
+  - [x] **P1.T1.2: Unit-test the exported shape: every directive present, no
     `'unsafe-*'` token anywhere, headers are exactly `nosniff` and
     `no-referrer`, and rendering is deterministic**
-- [ ] **P1.T2: Apply the headers from a Vite plugin** — covers: FR-3, NFR-3
-  - [ ] **P1.T2.1: Add `configureServer` and `configurePreviewServer` hooks that
+- [x] **P1.T2: Apply the headers from a Vite plugin** — covers: FR-3, NFR-3
+  - [x] **P1.T2.1: Add `configureServer` and `configurePreviewServer` hooks that
     set every header on each response, with an exported `applySecurityHeaders`
     seam so the behaviour is unit-testable without a running server**
-  - [ ] **P1.T2.2: Confirm `pnpm dev` still boots and the HMR client still
+  - [x] **P1.T2.2: Confirm `pnpm dev` still boots and the HMR client still
     connects with the policy active; record the observation in the evidence**
-- [ ] **P1.T3: Precache the bundled font** — covers: FR-1, NFR-2
-  - [ ] **P1.T3.1: Add `woff2` to `workbox.globPatterns` and leave `woff` out**
-  - [ ] **P1.T3.2: Build and record in evidence: the four font files listed in
+- [x] **P1.T3: Precache the bundled font** — covers: FR-1, NFR-2
+  - [x] **P1.T3.1: Add `woff2` to `workbox.globPatterns` and leave `woff` out**
+  - [x] **P1.T3.2: Build and record in evidence: the four font files listed in
     `dist/sw.js`, that no `woff` file appears, and the manifest size delta
     against the 10,544 KiB baseline**
-- [ ] **P1.T4: Ban external URLs in shipped sources** — covers: FR-9
-  - [ ] **P1.T4.1: Add a unit test that walks `src/**`, skips `*.test.ts`, and
+- [x] **P1.T4: Ban external URLs in shipped sources** — covers: FR-9
+  - [x] **P1.T4.1: Add a unit test that walks `src/**`, skips `*.test.ts`, and
     fails on any `http://` or `https://` literal, with a clear failure message
     naming the file**
-  - [ ] **P1.T4.2: Prove the guard can fail by temporarily adding a literal,
+  - [x] **P1.T4.2: Prove the guard can fail by temporarily adding a literal,
     observing the failure, and removing it again**
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 2f855e0
 **Evidence:** conductor/tracks/runtime-guarantees_20261107/verification/phase-1.md
--->
+**Deviations:** the seam is a module-local `applyHeaders` factory with a dev/preview split rather than one exported `applySecurityHeaders`; HMR was not observed directly (no browser probe was available to the phase), so NFR-3 is evidenced by the tablet smoke suite passing 20/20 against the dev server with the policy active. The shipped policy carries `connect-src 'self' blob:` and the dev server relaxes `style-src` only, both discovered by that suite after the first delivery — see the evidence rework section.
 
 ## Phase 2: Production parity
 
