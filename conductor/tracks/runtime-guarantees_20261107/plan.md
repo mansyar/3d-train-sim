@@ -17,7 +17,7 @@
 - **Touches:** `src/core/security-headers.ts`, `src/core/security-headers.test.ts`,
   `src/core/no-external-urls.test.ts`, `vite.config.ts`
 - **Verification:** `pnpm build`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Export the single header source of truth** — covers: FR-2
   - [ ] **P1.T1.1: Define the CSP directive list and the two extra headers in one
