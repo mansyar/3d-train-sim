@@ -60,36 +60,40 @@
   `src/ui/app.ts`, `src/state/world.ts`, `src/state/world.test.ts`,
   `src/main.ts`, `src/style.css`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Make replacement one undoable change** — covers: FR-7
-  - [ ] **P2.T1.1:** Add a store method that replaces pieces, scenery, train,
+- [x] **P2.T1: Make replacement one undoable change** — covers: FR-7
+  - [x] **P2.T1.1:** Add a store method that replaces pieces, scenery, train,
     consist and deliveries and records the previous state as the single pending
     undo, mirroring `applyPreset`.
-  - [ ] **P2.T1.2:** Unit-test that one undo after a replacement restores the
+  - [x] **P2.T1.2:** Unit-test that one undo after a replacement restores the
     prior world, and that a second undo does nothing.
 
-- [ ] **P2.T2: Add the download and file-read helpers** — covers: FR-1, FR-4,
+- [x] **P2.T2: Add the download and file-read helpers** — covers: FR-1, FR-4,
   NFR-1
-  - [ ] **P2.T2.1:** `src/ui/portable-file.ts` exports a save helper that
+  - [x] **P2.T2.1:** `src/ui/portable-file.ts` exports a save helper that
     creates a Blob, an object URL and a temporary anchor, clicks it, then
     revokes the URL.
-  - [ ] **P2.T2.2:** The same module reads a `File` as text and reports its size
+  - [x] **P2.T2.2:** The same module reads a `File` as text and reports its size
     so the caller can refuse oversized files before parsing.
 
-- [ ] **P2.T3: Wire the tray controls** — covers: FR-8, FR-9, FR-10, NFR-4
-  - [ ] **P2.T3.1:** `app.ts` renders export and import controls inside the
+- [x] **P2.T3: Wire the tray controls** — covers: FR-8, FR-9, FR-10, NFR-4
+  - [x] **P2.T3.1:** `app.ts` renders export and import controls inside the
     preset tray, with a hidden `<input type="file" accept=".json,application/json">`
     and a status line reusing the recovery-note element.
-  - [ ] **P2.T3.2:** `parent-gate.ts` fills the status line with `textContent`
+  - [x] **P2.T3.2:** `parent-gate.ts` fills the status line with `textContent`
     for imported / imported-with-skips / unreadable / too-large, and clears it
     on disarm.
-  - [ ] **P2.T3.3:** Import stops an active ride before the world is replaced.
-  - [ ] **P2.T3.4:** Style the controls and status line for the parent tray,
+  - [x] **P2.T3.3:** Import stops an active ride before the world is replaced.
+  - [x] **P2.T3.4:** Style the controls and status line for the parent tray,
     respecting `prefers-reduced-motion`, without changing the child rail.
-  - [ ] **P2.T3.5:** Expose a dev-only `window.__tinyTracksExport()` returning
+  - [x] **P2.T3.5:** Expose a dev-only `window.__tinyTracksExport()` returning
     `{ name, json }` from the same `buildExport` + `exportFileName` path so the
     Phase 3 spec can assert the payload without a WebKit download event.
+
+**Result:** verified
+**Checkpoint:** 79f1920
+**Evidence:** conductor/tracks/world-portability_20261107/verification/phase-2.md
 
 ## Phase 3: Browser proof
 
