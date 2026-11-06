@@ -33,6 +33,18 @@ describe('recoveryNotice', () => {
     );
   });
 
+  it('reports a duplicate-only salvage in the singular', () => {
+    expect(recoveryNotice('salvaged', 0, 0, 1)).toBe(
+      'We saved your meadow and skipped 1 broken toy.',
+    );
+  });
+
+  it('counts duplicates alongside pieces and scenery', () => {
+    expect(recoveryNotice('salvaged', 0, 1, 1)).toBe(
+      'We saved your meadow and skipped 2 broken toys.',
+    );
+  });
+
   it('says nothing when a salvage dropped nothing', () => {
     expect(recoveryNotice('salvaged', 0, 0)).toBeNull();
   });

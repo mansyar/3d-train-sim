@@ -137,14 +137,16 @@ export function parseWorldSnapshot(value: unknown): WorldParseResult {
       droppedPieces += 1;
       continue;
     }
-    if (pieces.length + scenery.length >= MAX_PIECES) {
-      droppedPieces += 1;
-      continue;
-    }
     const migrated = legacy ? migratePieceToV2(piece) : piece;
     const cell = cellKey(migrated.cell);
+    // Duplicates are identified before capacity so an overflow entry that
+    // merely repeats an accepted cell is reported as the duplicate it is.
     if (claimedIds.has(migrated.id) || claimedCells.has(cell)) {
       droppedDuplicates += 1;
+      continue;
+    }
+    if (pieces.length + scenery.length >= MAX_PIECES) {
+      droppedPieces += 1;
       continue;
     }
     claimedIds.add(migrated.id);
@@ -160,13 +162,13 @@ export function parseWorldSnapshot(value: unknown): WorldParseResult {
       droppedScenery += 1;
       continue;
     }
-    if (pieces.length + scenery.length >= MAX_PIECES) {
-      droppedScenery += 1;
-      continue;
-    }
     const cell = cellKey(item.cell);
     if (claimedCells.has(cell)) {
       droppedDuplicates += 1;
+      continue;
+    }
+    if (pieces.length + scenery.length >= MAX_PIECES) {
+      droppedScenery += 1;
       continue;
     }
     claimedCells.add(cell);

@@ -10,19 +10,21 @@ export type RecoveryStatus = 'clean' | 'salvaged' | 'restored' | 'fresh';
 /**
  * Returns the one-line grown-up notice for a boot, or `null` when there is
  * nothing a parent needs to read: a clean load, a fresh meadow, or a salvage
- * that somehow dropped nothing.
+ * that somehow dropped nothing. Broken toys, scenery, and duplicates all count
+ * as skipped toys.
  */
 export function recoveryNotice(
   status: RecoveryStatus,
   droppedPieces: number,
   droppedScenery: number,
+  droppedDuplicates = 0,
 ): string | null {
   if (status === 'restored') {
     return 'Your meadow was restored from the last good save.';
   }
   if (status !== 'salvaged') return null;
 
-  const dropped = droppedPieces + droppedScenery;
+  const dropped = droppedPieces + droppedScenery + droppedDuplicates;
   if (dropped <= 0) return null;
 
   const toy = dropped === 1 ? 'toy' : 'toys';

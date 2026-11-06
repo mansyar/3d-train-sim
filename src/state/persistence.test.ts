@@ -351,17 +351,40 @@ describe('indexeddb storage', () => {
     ],
     scenery: [],
   };
+  // Every entry fails validation, so the salvage keeps nothing at all.
+  const emptySalvage = {
+    version: 3,
+    pieces: [
+      { id: 'piece-97', type: 'hovercraft', cell: { x: 5, y: 5 }, rotation: 0 },
+      { id: 'piece-98', type: 'loop', cell: { x: 6, y: 6 }, rotation: 0 },
+    ],
+    scenery: [],
+  };
 
-  // A whole IndexedDB stand-in: reads go through `db.get`, saves through the
-  // transaction's store, and both share one map so tests can inspect the pair.
-  const makeDb = (initial: Record<string, unknown> = {}) => {
+  // A whole IndexedDB stand-in: reads go through `db.get`, saves stage writes
+  // in the transaction and commit them only when `done` resolves, and both
+  // views share one map so tests can inspect the committed pair.
+  const makeDb = (initial: Record<string, unknown> = {}, failDone = false) => {
     const entries = new Map(Object.entries(initial));
+    const pending = new Map<string, unknown>();
     const store = {
       get: vi.fn<(key: string) => Promise<unknown>>(async (key) => entries.get(key)),
       put: vi.fn<(value: unknown, key: string) => Promise<string>>(async (value, key) => {
-        entries.set(key, value);
+        pending.set(key, value);
         return key;
       }),
+    };
+    // `done` is read after the puts, so staging is flushed only on commit; an
+    // aborted transaction drops its staged writes entirely.
+    const commit = (): Promise<void> => {
+      if (failDone) {
+        pending.clear();
+        return Promise.reject(new Error('write interrupted'));
+      }
+      return Promise.resolve().then(() => {
+        for (const [key, value] of pending) entries.set(key, value);
+        pending.clear();
+      });
     };
     return {
       entries,
@@ -369,7 +392,12 @@ describe('indexeddb storage', () => {
       get: vi.fn<(name: string, key: string) => Promise<unknown>>(async (_name, key) =>
         entries.get(key),
       ),
-      transaction: vi.fn(() => ({ store, done: Promise.resolve() })),
+      transaction: vi.fn(() => ({
+        store,
+        get done() {
+          return commit();
+        },
+      })),
       close: vi.fn(),
     };
   };
@@ -406,6 +434,7 @@ describe('indexeddb storage', () => {
       status: 'clean',
       droppedPieces: 0,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
     expect(db.get).toHaveBeenCalledTimes(1);
   });
@@ -419,8 +448,30 @@ describe('indexeddb storage', () => {
       status: 'salvaged',
       droppedPieces: 1,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
     expect(db.get).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces duplicate-only drops', async () => {
+    const duplicateOnly: WorldSnapshot = {
+      version: 3,
+      pieces: [
+        { id: 'piece-40', type: 'straight', cell: ORIGIN, rotation: 0 },
+        { id: 'piece-41', type: 'corner', cell: ORIGIN, rotation: 90 },
+      ],
+      scenery: [],
+    };
+    const db = makeDb({ current: duplicateOnly });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: duplicateOnly,
+      status: 'salvaged',
+      droppedPieces: 0,
+      droppedScenery: 0,
+      droppedDuplicates: 1,
+    });
   });
 
   it('restores the previous snapshot when current is unreadable', async () => {
@@ -432,6 +483,7 @@ describe('indexeddb storage', () => {
       status: 'restored',
       droppedPieces: 0,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
     // The boot read budget: current, then previous, and no more.
     expect(db.get).toHaveBeenCalledTimes(2);
@@ -446,8 +498,53 @@ describe('indexeddb storage', () => {
       status: 'restored',
       droppedPieces: 1,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
     expect(db.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('restores the previous world when current is only an empty salvage', async () => {
+    const db = makeDb({ current: emptySalvage, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: stored,
+      status: 'restored',
+      droppedPieces: 0,
+      droppedScenery: 0,
+      droppedDuplicates: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('never promotes an empty salvage over a good previous', async () => {
+    const db = makeDb({ current: emptySalvage, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+    await expect(loadWorldRecovery()).resolves.toMatchObject({
+      snapshot: stored,
+      status: 'restored',
+    });
+
+    await saveWorldSnapshot({ ...stored, train: 'steam' });
+
+    expect(db.entries.get('previous')).toEqual(stored);
+    expect(db.entries.get('current')).toEqual({ ...stored, train: 'steam' });
+  });
+
+  it('still loads a clean empty current as clean', async () => {
+    // The child may have deleted every toy on purpose; that is not a salvage.
+    const emptyWorld: WorldSnapshot = { version: 3, pieces: [], scenery: [] };
+    const db = makeDb({ current: emptyWorld, previous: stored });
+    openDBMock.mockResolvedValue(db as never);
+
+    await expect(loadWorldRecovery()).resolves.toEqual({
+      snapshot: emptyWorld,
+      status: 'clean',
+      droppedPieces: 0,
+      droppedScenery: 0,
+      droppedDuplicates: 0,
+    });
+    expect(db.get).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to fresh when both slots are unreadable or missing', async () => {
@@ -459,6 +556,7 @@ describe('indexeddb storage', () => {
       status: 'fresh',
       droppedPieces: 0,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
     expect(db.get).toHaveBeenCalledTimes(2);
 
@@ -468,6 +566,7 @@ describe('indexeddb storage', () => {
       status: 'fresh',
       droppedPieces: 0,
       droppedScenery: 0,
+      droppedDuplicates: 0,
     });
   });
 
@@ -541,6 +640,21 @@ describe('indexeddb storage', () => {
     // The corrupt bytes are gone from both slots; previous stays recoverable.
     expect(db.entries.get('previous')).toEqual(stored);
     expect(db.entries.get('current')).toEqual(next);
+  });
+
+  it('leaves the committed slots untouched when the write is interrupted', async () => {
+    const previousWorld: WorldSnapshot = { version: 3, pieces: [], scenery: [] };
+    const db = makeDb({ current: stored, previous: previousWorld }, true);
+    openDBMock.mockResolvedValue(db as never);
+    const next: WorldSnapshot = { ...stored, train: 'steam' };
+
+    await expect(saveWorldSnapshot(next)).resolves.toBeUndefined();
+
+    // Both writes were staged, but the aborted transaction committed neither.
+    expect(db.store.put).toHaveBeenCalledTimes(2);
+    expect(db.close).toHaveBeenCalledTimes(1);
+    expect(db.entries.get('current')).toEqual(stored);
+    expect(db.entries.get('previous')).toEqual(previousWorld);
   });
 
   it('treats storage failures as non-fatal', async () => {

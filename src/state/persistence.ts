@@ -5,6 +5,7 @@ import {
   parseWorldSnapshot,
   type SnapshotStatus,
   serializeWorld,
+  type WorldParseResult,
   type WorldSnapshot,
 } from '../core/save';
 import type { PlacedScenery } from '../core/scenery';
@@ -40,18 +41,38 @@ export interface WorldRecovery {
   status: WorldRecoveryStatus;
   droppedPieces: number;
   droppedScenery: number;
+  droppedDuplicates: number;
 }
 
 function freshRecovery(): WorldRecovery {
-  return { snapshot: null, status: 'fresh', droppedPieces: 0, droppedScenery: 0 };
+  return {
+    snapshot: null,
+    status: 'fresh',
+    droppedPieces: 0,
+    droppedScenery: 0,
+    droppedDuplicates: 0,
+  };
 }
 
 /**
- * Reads both save slots and reports what the boot found. A readable `current`
+ * A clean snapshot is always usable, even when empty (the child may have
+ * deleted everything). A salvaged snapshot is usable only if it kept content;
+ * an empty salvage means every entry failed and the backup is the better world.
+ */
+function isUsable(parsed: WorldParseResult): boolean {
+  if (parsed.status === 'salvaged') {
+    return parsed.world.pieces.length + parsed.world.scenery.length > 0;
+  }
+  return parsed.status === 'clean';
+}
+
+/**
+ * Reads both save slots and reports what the boot found. A usable `current`
  * wins even when it had to be salvaged — keeping every valid piece beats
- * throwing the whole world away for the backup. Only an unreadable `current`
- * falls back to `previous`, which then reports `restored`. Never throws: a
- * storage failure is simply a fresh meadow. At most two reads per boot.
+ * throwing the whole world away for the backup. An unreadable `current`, or a
+ * salvage that kept nothing, falls back to `previous`, which then reports
+ * `restored`. Never throws: a storage failure is simply a fresh meadow. At
+ * most two reads per boot.
  */
 export async function loadWorldRecovery(): Promise<WorldRecovery> {
   try {
@@ -59,23 +80,25 @@ export async function loadWorldRecovery(): Promise<WorldRecovery> {
     try {
       const current = await db.get('worlds', WORLD_KEY);
       const parsed = parseWorldSnapshot(current);
-      if (parsed.status !== 'unreadable') {
+      if (isUsable(parsed)) {
         return {
           snapshot: current ?? null,
           status: parsed.status,
           droppedPieces: parsed.droppedPieces,
           droppedScenery: parsed.droppedScenery,
+          droppedDuplicates: parsed.droppedDuplicates,
         };
       }
 
       const previous = await db.get('worlds', PREVIOUS_KEY);
       const backup = parseWorldSnapshot(previous);
-      if (backup.status !== 'unreadable') {
+      if (isUsable(backup)) {
         return {
           snapshot: previous ?? null,
           status: 'restored',
           droppedPieces: backup.droppedPieces,
           droppedScenery: backup.droppedScenery,
+          droppedDuplicates: backup.droppedDuplicates,
         };
       }
       return freshRecovery();
@@ -202,8 +225,8 @@ export function restoreDayPhasePreference(
  * Saves the world and keeps the one before it as a safety net. Both writes
  * share a single `readwrite` transaction, so an interrupted save leaves a
  * consistent pair: either the new world plus its predecessor, or neither. A
- * prior payload that no longer parses is never promoted — corrupt bytes must
- * not replace a good backup. Storage failures stay non-fatal.
+ * prior payload that parses as an empty salvage is never promoted — corrupt
+ * bytes must not replace a good backup. Storage failures stay non-fatal.
  */
 export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> {
   try {
@@ -211,7 +234,7 @@ export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> 
     try {
       const tx = db.transaction('worlds', 'readwrite');
       const prior = await tx.store.get(WORLD_KEY);
-      if (prior !== undefined && parseWorldSnapshot(prior).status !== 'unreadable') {
+      if (prior !== undefined && isUsable(parseWorldSnapshot(prior))) {
         await tx.store.put(prior, PREVIOUS_KEY);
       }
       await tx.store.put(snapshot, WORLD_KEY);

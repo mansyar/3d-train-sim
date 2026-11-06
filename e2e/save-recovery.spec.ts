@@ -18,9 +18,6 @@ interface WorldHandle {
   pieces: () => { id: string }[];
 }
 
-/** The gate's own hold time is 2 s; give the timer a little air. */
-const HOLD_MS = 2100;
-
 const HOLD_LABEL = 'Parent gate — press and hold to reset the world';
 
 /** Three dry-land pieces to keep, plus one structurally invalid piece. */
@@ -46,6 +43,27 @@ const previousSnapshot = {
   pieces: [
     { id: 'piece-10', type: 'straight', cell: { x: 1, y: 6 }, rotation: 0 },
     { id: 'piece-11', type: 'corner', cell: { x: 1, y: 7 }, rotation: 90 },
+  ],
+  scenery: [],
+};
+
+/** A readable v3 snapshot whose every entry is invalid: the salvage keeps nothing. */
+const emptySalvageSnapshot = {
+  version: 3,
+  pieces: [
+    { id: 'piece-97', type: 'hovercraft', cell: { x: 5, y: 5 }, rotation: 0 },
+    { id: 'piece-98', type: 'not-a-piece', cell: { x: 6, y: 6 }, rotation: 0 },
+  ],
+  scenery: [],
+};
+
+/** Three pieces, two of them claiming the same cell: one duplicate is dropped. */
+const duplicateSnapshot = {
+  version: 3,
+  pieces: [
+    { id: 'piece-1', type: 'straight', cell: { x: 2, y: 6 }, rotation: 0 },
+    { id: 'piece-2', type: 'corner', cell: { x: 2, y: 6 }, rotation: 90 },
+    { id: 'piece-3', type: 'straight', cell: { x: 2, y: 7 }, rotation: 0 },
   ],
   scenery: [],
 };
@@ -147,13 +165,15 @@ const worldPieceIds = (page: Page): Promise<string[]> =>
     return handle.pieces().map((piece) => piece.id);
   });
 
-/** Holds the corner gate past its 2 s threshold, then releases. */
+/** Holds the corner gate until it arms, then releases. */
 const holdParentGate = async (page: Page): Promise<void> => {
   const box = await page.locator('.parent-gate').boundingBox();
   if (!box) throw new Error('parent gate is not visible');
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await page.waitForTimeout(HOLD_MS);
+  // The gate arms itself after 2 s; wait for that rather than guessing. The
+  // ceiling is generous because a dev-server boot can throttle the timer.
+  await expect(page.locator('.parent-gate')).toHaveClass(/is-confirm/, { timeout: 20_000 });
   await page.mouse.up();
 };
 
@@ -165,7 +185,10 @@ const tapOutside = async (page: Page): Promise<void> => {
 };
 
 test('a boot salvages the corrupt snapshot and keeps every valid piece', async ({ page }) => {
-  test.setTimeout(60_000);
+  // The first test in each worker pays the dev server's cold transform of the
+  // whole app (~40 s with both form factors booting at once); later boots are
+  // warm. Give that one-off cost room without slowing the rest.
+  test.setTimeout(120_000);
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -200,6 +223,52 @@ test('a boot restores the previous save when current is unreadable', async ({ pa
   await holdParentGate(page);
   const noteText = page.locator('.recovery-note-text');
   await expect(noteText).toHaveText('Your meadow was restored from the last good save.');
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('a boot ignores an empty salvage and restores the previous save', async ({ page }) => {
+  test.setTimeout(60_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+  await waitForStoredCurrent(page);
+  await writeSlots(page, { current: emptySalvageSnapshot, previous: previousSnapshot });
+
+  await page.reload();
+  await waitForReady(page);
+
+  // The salvage kept nothing, so the backup is the better world.
+  expect((await worldPieceIds(page)).sort()).toEqual(['piece-10', 'piece-11']);
+
+  await holdParentGate(page);
+  await expect(page.locator('.recovery-note-text')).toHaveText(
+    'Your meadow was restored from the last good save.',
+  );
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('a duplicate-only salvage still tells a grown-up', async ({ page }) => {
+  test.setTimeout(60_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+  await waitForStoredCurrent(page);
+  await clearSlots(page);
+  await writeSlots(page, { current: duplicateSnapshot });
+
+  await page.reload();
+  await waitForReady(page);
+
+  expect((await worldPieceIds(page)).sort()).toEqual(['piece-1', 'piece-3']);
+
+  await holdParentGate(page);
+  const note = page.locator('.recovery-note');
+  await expect(note).toBeVisible();
+  await expect(note.locator('.recovery-note-text')).toHaveText(
+    'We saved your meadow and skipped 1 broken toy.',
+  );
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 

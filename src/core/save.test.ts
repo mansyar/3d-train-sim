@@ -6,7 +6,6 @@ import {
   deserializeWorld,
   parseWorldSnapshot,
   serializeWorld,
-  type WorldSnapshot,
 } from './save';
 import type { PlacedScenery } from './scenery';
 import { MAX_PIECES, type PlacedPiece } from './track-graph';
@@ -231,22 +230,6 @@ describe('world snapshots', () => {
     expect(result.status).toBe('salvaged');
     expect(result.droppedDuplicates).toBe(1);
   });
-
-  it('keeps the first MAX_PIECES entries and counts the overflow', () => {
-    const fullPieces = Array.from({ length: MAX_PIECES + 1 }, (_, index) => ({
-      id: `piece-${index}`,
-      type: 'straight' as const,
-      cell: { x: index % 16, y: Math.floor(index / 16) },
-      rotation: 0 as const,
-    }));
-    const snapshot: WorldSnapshot = { version: 3, pieces: fullPieces, scenery: [] };
-
-    const result = parseWorldSnapshot(snapshot);
-
-    expect(result.world.pieces).toEqual(fullPieces.slice(0, MAX_PIECES));
-    expect(result.status).toBe('salvaged');
-    expect(result.droppedPieces).toBe(1);
-  });
 });
 
 describe('snapshot recovery — malformed entries never destroy valid work', () => {
@@ -377,6 +360,32 @@ describe('snapshot recovery — malformed entries never destroy valid work', () 
 
     expect(result.world.pieces).toEqual(overflow.slice(0, MAX_PIECES));
     expect(result.droppedPieces).toBe(1);
+    expect(result.status).toBe('salvaged');
+  });
+
+  it('counts an overflow entry that duplicates an accepted cell as a duplicate', () => {
+    const fill: PlacedPiece[] = Array.from({ length: MAX_PIECES }, (_, index) => ({
+      id: `piece-${index}`,
+      type: 'straight',
+      cell: { x: index % 16, y: Math.floor(index / 16) },
+      rotation: 0,
+    }));
+    const overflowDuplicate: PlacedPiece = {
+      id: 'piece-overflow',
+      type: 'corner',
+      cell: { x: 0, y: 0 },
+      rotation: 90,
+    };
+
+    const result = parseWorldSnapshot({
+      version: 3,
+      pieces: [...fill, overflowDuplicate],
+      scenery: [],
+    });
+
+    expect(result.world.pieces).toHaveLength(MAX_PIECES);
+    expect(result.droppedPieces).toBe(0);
+    expect(result.droppedDuplicates).toBe(1);
     expect(result.status).toBe('salvaged');
   });
 
