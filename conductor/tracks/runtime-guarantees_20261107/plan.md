@@ -56,10 +56,10 @@
   drifts.
 - **Depends on:** Phase 1
 - **Covers:** FR-4, FR-5, AC-3
-- **Touches:** `nginx.conf`, `nginx-security-headers.conf`,
+- **Touches:** `nginx.conf`, `nginx-security-headers.conf`, `Dockerfile`,
   `src/core/nginx-headers.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Move the policy into an include and pull it into every context**
   — covers: FR-4
