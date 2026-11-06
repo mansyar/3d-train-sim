@@ -59,26 +59,31 @@
 - **Touches:** `nginx.conf`, `nginx-security-headers.conf`, `Dockerfile`,
   `src/core/nginx-headers.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Move the policy into an include and pull it into every context**
+- [x] **P2.T1: Move the policy into an include and pull it into every context**
   — covers: FR-4
-  - [ ] **P2.T1.1: Create `nginx-security-headers.conf` holding exactly the
+  - [x] **P2.T1.1: Create `nginx-security-headers.conf` holding exactly the
     directives from `headerLines()`**
-  - [ ] **P2.T1.2: `include` it in the server block and in each of the four
+  - [x] **P2.T1.2: `include` it in the server block and in each of the four
     `location` blocks (service worker, index, manifest, hashed assets, media),
     because a location that declares its own `add_header` drops inherited ones**
-- [ ] **P2.T2: Guard the copy against drift** — covers: FR-5
-  - [ ] **P2.T2.1: Parse `nginx.conf` and assert every `location` includes the
+  - [x] **P2.T1.3: Copy the include into the image, and serve hashed `woff2`
+    with the immutable cache rule instead of the uncached fall-through**
+- [x] **P2.T2: Guard the copy against drift** — covers: FR-5
+  - [x] **P2.T2.1: Parse `nginx.conf` and assert every `location` includes the
     header file and the server block does too**
-  - [ ] **P2.T2.2: Assert every line from `headerLines()` appears in the include,
+  - [x] **P2.T2.2: Assert every line from `headerLines()` appears in the include,
     and that the include declares nothing the module does not**
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 1bb7bf5
 **Evidence:** conductor/tracks/runtime-guarantees_20261107/verification/phase-2.md
--->
+**Deviations:** the brief said five locations but `nginx.conf` has six, so seven
+includes ship (server + six) and the guard requires coverage of all of them. No
+container build was possible (no Docker daemon locally or in CI), so the unit
+test is the enforcement; `woff2` was added to the hashed-asset location because
+the precached fonts otherwise carried no cache header.
 
 ## Phase 3: Browser proof
 
