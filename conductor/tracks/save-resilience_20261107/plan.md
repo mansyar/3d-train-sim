@@ -87,9 +87,9 @@
 - **Depends on:** Phase 1, Phase 2
 - **Covers:** FR-7, AC-7
 - **Touches:** `src/core/recovery.ts`, `src/core/recovery.test.ts`,
-  `src/main.ts`, `src/ui/app.ts`, `src/ui/parent-gate.ts`
+  `src/main.ts`, `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Pure notice formatter** — covers: FR-7
   - [ ] **P3.T1.1:** `recoveryNotice(status, counts)` returns `null` for
