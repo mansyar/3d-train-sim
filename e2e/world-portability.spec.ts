@@ -349,16 +349,32 @@ test('an oversized file is refused and changes nothing', async ({ page }) => {
   const before = (await exportWorld(page)).json;
 
   await openTray(page);
-  // Count every File decode, so this proves the refusal happens on the size
-  // before the bytes are read. Without the pre-read guard the read still
-  // happens (the note would pass), so the zero-read assertion is the witness.
+  // Count every decode entry point the helper could plausibly use — File.text,
+  // Blob.text and FileReader.readAsText — against one counter, so this proves
+  // the refusal happens on the size before any bytes are read. Without the
+  // pre-read guard at least one of them still fires (the note would pass), so
+  // the zero-read assertion is the witness.
   await page.evaluate(() => {
-    const original = File.prototype.text;
     const counter = { reads: 0 };
     (window as unknown as { __fileReads?: { reads: number } }).__fileReads = counter;
-    File.prototype.text = function (this: File) {
+    const count = () => {
       counter.reads += 1;
-      return original.call(this);
+    };
+    // Capture all three first: a File read must be counted once, not twice.
+    const fileText = File.prototype.text;
+    const blobText = Blob.prototype.text;
+    const readAsText = FileReader.prototype.readAsText;
+    File.prototype.text = function (this: File) {
+      count();
+      return fileText.call(this);
+    };
+    Blob.prototype.text = function (this: Blob) {
+      count();
+      return blobText.call(this);
+    };
+    FileReader.prototype.readAsText = function (this: FileReader, blob: Blob, encoding?: string) {
+      count();
+      return readAsText.call(this, blob, encoding);
     };
   });
   await importFile(page, Buffer.alloc(1_048_577, 0x20));
