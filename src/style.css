@@ -753,6 +753,49 @@ body {
   min-width: 64px;
 }
 
+/* Save / load the meadow: quiet grown-up buttons in the gated tray, worded
+   rather than icon-only because no toddler can reach them. */
+.portable-export,
+.portable-import {
+  background: var(--toy-cream);
+  border: 2px solid var(--toy-steel);
+  border-radius: 12px;
+  color: var(--toy-brown);
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  min-height: 44px;
+  padding: 0 14px;
+}
+
+/* The outcome line for an export or import: same quiet voice as the recovery
+   note, but transient — every attempt rewrites it. */
+.portable-note {
+  background: var(--toy-cream);
+  border: 2px solid var(--toy-steel);
+  border-radius: 12px;
+  color: var(--toy-brown);
+  flex-basis: 100%;
+  font-size: 15px;
+  line-height: 1.35;
+  max-width: 340px;
+  padding: 10px 12px;
+}
+
+.portable-note[hidden] {
+  display: none;
+}
+
+/* After a save or load the tray closes, but the outcome line outlives it: the
+   tray lingers in a report-only state with every control pulled out of reach,
+   and the next tap elsewhere dismisses it. */
+.preset-tray.is-reporting .preset-pick,
+.preset-tray.is-reporting .portable-export,
+.preset-tray.is-reporting .portable-import,
+.preset-tray.is-reporting .recovery-note {
+  display: none;
+}
+
 /* ---- Narrow screens (phones ≥360px): the rail wraps, drawers clear it ---- */
 @media (max-width: 540px) {
   .toybox-rail {
