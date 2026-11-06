@@ -117,7 +117,7 @@
 - **Covers:** AC-1, AC-3, AC-7, AC-8
 - **Touches:** `e2e/save-recovery.spec.ts`, `e2e/helpers.ts`
 - **Verification:** `pnpm exec playwright test e2e/save-recovery.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Salvage path e2e** — covers: AC-1, AC-3, AC-7
   - [ ] **P4.T1.1:** Seed `worlds/current` with valid pieces plus one corrupt
