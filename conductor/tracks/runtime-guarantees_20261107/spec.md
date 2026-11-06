@@ -71,7 +71,7 @@ GLB failed to load is exactly the "failure state" the product guidelines forbid.
 | ID | Requirement | Priority |
 | --- | --- | --- |
 | FR-1 | The production precache contains every `woff2` the build emits, and no `woff` | must |
-| FR-2 | One TypeScript module exports the full header set: CSP `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`, plus `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` | must |
+| FR-2 | One TypeScript module exports the full header set: CSP `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self'; connect-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`, plus `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer`. The dev server may relax `style-src` (only) to `'self' 'unsafe-inline'`, because Vite injects CSS through `<style>` elements; every server that serves built output stays strict | must |
 | FR-3 | A Vite plugin applies exactly those headers on every dev and preview response | must |
 | FR-4 | `nginx.conf` applies the identical set on every response, including all four `location` blocks, through one included file | must |
 | FR-5 | A unit test fails if any directive or header is missing from any nginx location, or if the include drifts from the TypeScript source | must |
@@ -115,8 +115,13 @@ GLB failed to load is exactly the "failure state" the product guidelines forbid.
   sound is a blocker to report, never a silent relaxation.
 - **`blob:` download** from the parent-gate Save path is an anchor `download`,
   not a CSP fetch.
-- **CSP in dev:** the HMR websocket must survive `connect-src 'self'`; a refusal
-  is recorded as a deviation with the dev-only `ws:` addition.
+- **CSP in dev:** Vite injects styles as `<style>` elements, so the dev server
+  relaxes `style-src` to `'self' 'unsafe-inline'`; preview and production stay
+  strict. The HMR websocket must survive `connect-src 'self' blob:`; a refusal is
+  recorded as a deviation.
+- **GLB textures:** three.js reads embedded textures back through `blob:` object
+  URLs, which is why `connect-src` lists `blob:` — same-device memory, not a
+  network source.
 - **nginx `add_header` inheritance:** a `location` that declares its own
   `add_header` drops inherited ones, which is why the policy lives in an include
   every location pulls in.
