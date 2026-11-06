@@ -140,7 +140,7 @@ synthetic entry and the real refusal is captured from the browser.
     `'none'` (Howler XHR) and that a request assertion now enforces the promise**
 
 **Result:** verified
-**Checkpoint:** pending-squash
+**Checkpoint:** f610a3b
 **Evidence:** conductor/tracks/runtime-guarantees_20261107/verification/phase-4.md
 **Deviations:** performed by the primary agent, because the phase subagent is
 denied writes under `conductor/`. The roadmap row also gained the `blob:` reason
