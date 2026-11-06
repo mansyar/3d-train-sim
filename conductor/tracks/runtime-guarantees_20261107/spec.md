@@ -98,8 +98,8 @@ GLB failed to load is exactly the "failure state" the product guidelines forbid.
 | AC-1 | After `pnpm build`, `dist/sw.js` lists all four `woff2` files and no `woff` | FR-1 |
 | AC-2 | Against the preview server, `index.html`, a hashed JS chunk, a `glb` and a `woff2` response each carry the full CSP and both headers | FR-2, FR-3 |
 | AC-3 | Deleting a directive from the TypeScript constant makes the nginx guard test fail, and deleting it from the include does too | FR-5 |
-| AC-4 | The offline spec passes on tablet and phone with the network disabled | FR-6 |
-| AC-5 | The request assertion fails when a foreign-origin request is introduced (demonstrated with a temporary probe) | FR-7 |
+| AC-4 | The offline spec passes on tablet and phone with the network disabled (browser engine: Chromium — Playwright's WebKit build cannot emulate offline behind a service worker; the iPad path is covered by the manual-device layer, and the policy itself is asserted in WebKit wording during exploration) | FR-6 |
+| AC-5 | The request assertion observes no foreign-origin request during boot, placement and ride; its failure path is shown to fire on a synthetic foreign entry; and a real foreign fetch is refused by `connect-src` before it reaches the network (refusal captured verbatim) | FR-7 |
 | AC-6 | An injected inline script is blocked while the app's own bundle still runs | FR-8 |
 | AC-7 | The static guard fails when an `https://` literal is added to a shipped module | FR-9 |
 | AC-8 | Tech stack and roadmap updated; `pnpm check` green | FR-10 |
@@ -122,6 +122,12 @@ GLB failed to load is exactly the "failure state" the product guidelines forbid.
 - **GLB textures:** three.js reads embedded textures back through `blob:` object
   URLs, which is why `connect-src` lists `blob:` — same-device memory, not a
   network source.
+- **Offline emulation:** Playwright's WebKit build cannot take a
+  service-worker-controlled page offline (`setOffline` fails the navigation with
+  `WebKit encountered an internal error` and worker fetches reject with
+  `Load failed`). The offline spec therefore runs on Chromium with the same
+  tablet and phone profiles; real iPad behaviour is a manual-device check, and the
+  precache manifest assertion is engine-independent.
 - **nginx `add_header` inheritance:** a `location` that declares its own
   `add_header` drops inherited ones, which is why the policy lives in an include
   every location pulls in.
