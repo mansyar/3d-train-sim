@@ -19,12 +19,16 @@ export function recoveryNotice(
   droppedScenery: number,
   droppedDuplicates = 0,
 ): string | null {
+  const dropped = droppedPieces + droppedScenery + droppedDuplicates;
+
   if (status === 'restored') {
-    return 'Your meadow was restored from the last good save.';
+    // The backup can itself have been a salvage, so skipped toys still count.
+    if (dropped <= 0) return 'Your meadow was restored from the last good save.';
+    const skipped = dropped === 1 ? '1 broken toy was' : `${dropped} broken toys were`;
+    return `Your meadow was restored from the last good save, and ${skipped} skipped.`;
   }
   if (status !== 'salvaged') return null;
 
-  const dropped = droppedPieces + droppedScenery + droppedDuplicates;
   if (dropped <= 0) return null;
 
   const toy = dropped === 1 ? 'toy' : 'toys';

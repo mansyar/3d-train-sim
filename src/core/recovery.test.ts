@@ -17,6 +17,18 @@ describe('recoveryNotice', () => {
     );
   });
 
+  it('reports toys the backup itself skipped in the singular', () => {
+    expect(recoveryNotice('restored', 1, 0, 0)).toBe(
+      'Your meadow was restored from the last good save, and 1 broken toy was skipped.',
+    );
+  });
+
+  it('reports toys the backup itself skipped in the plural', () => {
+    expect(recoveryNotice('restored', 0, 2, 1)).toBe(
+      'Your meadow was restored from the last good save, and 3 broken toys were skipped.',
+    );
+  });
+
   it('reports a single skipped toy in the singular', () => {
     expect(recoveryNotice('salvaged', 1, 0)).toBe('We saved your meadow and skipped 1 broken toy.');
   });

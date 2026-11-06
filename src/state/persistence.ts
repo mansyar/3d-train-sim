@@ -34,7 +34,7 @@ async function database(): Promise<ReturnType<typeof openDB<TinyTracksDatabase>>
 }
 
 /** What a boot found: a clean world, a salvaged one, a restored backup, or nothing. */
-export type WorldRecoveryStatus = SnapshotStatus | 'restored' | 'fresh';
+export type WorldRecoveryStatus = UsableSnapshotStatus | 'restored' | 'fresh';
 
 export interface WorldRecovery {
   snapshot: WorldSnapshot | null;
@@ -54,12 +54,17 @@ function freshRecovery(): WorldRecovery {
   };
 }
 
+/** Statuses a usable snapshot can have; `unreadable` never reaches a caller. */
+type UsableSnapshotStatus = Exclude<SnapshotStatus, 'unreadable'>;
+
 /**
  * A clean snapshot is always usable, even when empty (the child may have
  * deleted everything). A salvaged snapshot is usable only if it kept content;
  * an empty salvage means every entry failed and the backup is the better world.
  */
-function isUsable(parsed: WorldParseResult): boolean {
+function isUsable(
+  parsed: WorldParseResult,
+): parsed is WorldParseResult & { status: UsableSnapshotStatus } {
   if (parsed.status === 'salvaged') {
     return parsed.world.pieces.length + parsed.world.scenery.length > 0;
   }

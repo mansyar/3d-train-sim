@@ -44,11 +44,8 @@ if (root) {
   const recoveryRead = loadWorldRecovery();
   void recoveryRead.then((recovery) => {
     const snapshot = recovery.snapshot;
-    // `unreadable` never escapes the loader (it falls back or reports fresh),
-    // but the exported status type still carries it.
-    const status = recovery.status === 'unreadable' ? 'fresh' : recovery.status;
     recoveryLine = recoveryNotice(
-      status,
+      recovery.status,
       recovery.droppedPieces,
       recovery.droppedScenery,
       recovery.droppedDuplicates,
