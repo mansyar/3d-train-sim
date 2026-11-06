@@ -16,36 +16,34 @@
 - **Covers:** FR-1, FR-2, FR-6, FR-8, FR-9, NFR-1, AC-1, AC-2, AC-6, AC-8, AC-9
 - **Touches:** `src/core/save.ts`, `src/core/save.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Add the parse-result contract** — covers: FR-6
-  - [ ] **P1.T1.1:** Export `parseWorldSnapshot(value)` returning
+- [x] **P1.T1: Add the parse-result contract** — covers: FR-6
+  - [x] **P1.T1.1:** Export `parseWorldSnapshot(value)` returning
         `{ world, status: 'clean' | 'salvaged' | 'unreadable', droppedPieces,
         droppedScenery, droppedDuplicates }`
-  - [ ] **P1.T1.2:** Keep `deserializeWorld(value)` as a thin wrapper returning
+  - [x] **P1.T1.2:** Keep `deserializeWorld(value)` as a thin wrapper returning
         `.world`, so existing call sites and tests keep working
-- [ ] **P1.T2: Salvage pieces per entry** — covers: FR-1
-  - [ ] **P1.T2.1:** Replace the `some(piece === null) → emptyWorld()` branch
+- [x] **P1.T2: Salvage pieces per entry** — covers: FR-1
+  - [x] **P1.T2.1:** Replace the `some(piece === null) → emptyWorld()` branch
         with a filter that keeps valid pieces
-  - [ ] **P1.T2.2:** Count every dropped piece and report `salvaged`
-- [ ] **P1.T3: Enforce keep-first duplicates** — covers: FR-2
-  - [ ] **P1.T3.1:** Keep the first claimant of a cell (pieces before scenery)
+  - [x] **P1.T2.2:** Count every dropped piece and report `salvaged`
+- [x] **P1.T3: Enforce keep-first duplicates** — covers: FR-2
+  - [x] **P1.T3.1:** Keep the first claimant of a cell (pieces before scenery)
         and count later duplicates
-  - [ ] **P1.T3.2:** Keep the first piece per `id` and count duplicate ids
-- [ ] **P1.T4: Salvage capacity overflow** — covers: FR-1
-  - [ ] **P1.T4.1:** Keep the first `MAX_PIECES` entries instead of returning
+  - [x] **P1.T3.2:** Keep the first piece per `id` and count duplicate ids
+- [x] **P1.T4: Salvage capacity overflow** — covers: FR-1
+  - [x] **P1.T4.1:** Keep the first `MAX_PIECES` entries instead of returning
         `emptyWorld()`, counting the overflow
-- [ ] **P1.T5: Lock compatibility and totality** — covers: FR-9, NFR-1
-  - [ ] **P1.T5.1:** Fixtures for v1, v2, and v3 load to their expected worlds
+- [x] **P1.T5: Lock compatibility and totality** — covers: FR-9, NFR-1
+  - [x] **P1.T5.1:** Fixtures for v1, v2, and v3 load to their expected worlds
         with status `clean`
-  - [ ] **P1.T5.2:** Property/fuzz test over hostile inputs asserts no throw and
+  - [x] **P1.T5.2:** Property/fuzz test over hostile inputs asserts no throw and
         a defined status
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 4c5540f
 **Evidence:** conductor/tracks/save-resilience_20261107/verification/phase-1.md
--->
 
 ## Phase 2: Two-slot atomic persistence
 
