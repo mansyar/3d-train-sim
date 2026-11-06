@@ -17,7 +17,7 @@
 - **Touches:** `src/core/security-headers.ts`, `src/core/security-headers.test.ts`,
   `src/core/no-external-urls.test.ts`, `vite.config.ts`
 - **Verification:** `pnpm build`
-- **Status:** in_progress
+- **Status:** verified
 
 - [x] **P1.T1: Export the single header source of truth** — covers: FR-2
   - [x] **P1.T1.1: Define the CSP directive list and the two extra headers in one
@@ -94,7 +94,7 @@ the precached fonts otherwise carried no cache header.
 - **Covers:** FR-6, FR-7, FR-8, AC-2, AC-4, AC-5, AC-6
 - **Touches:** `e2e/runtime-guarantees.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/runtime-guarantees.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Assert real headers on every asset class** — covers: AC-2
   - [ ] **P3.T1.1: Against the preview server on 5198, check `index.html`, a
