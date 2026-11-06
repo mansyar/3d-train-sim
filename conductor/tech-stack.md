@@ -9,10 +9,11 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | Language | TypeScript | ~7.0 | Native compiler. `strict: true`; typecheck gate: `tsc --noEmit` |
 | 3D rendering | three | ^0.185 | `GLTFLoader` from `three/addons/loaders/GLTFLoader.js` (as used by `src/scene/load-locomotive.ts`) |
 | Build tool | Vite | ^8 | Single entry, static `dist/` output |
-| PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8. `workbox-window` (devDependency) required for the production build — the `virtual:pwa-register` module imports it (`generateSW` mode); found missing on the first containerized build (2026-08-29, release-pipeline track). Self-update flow (pwa-self-update_20260905): `registerType: 'autoUpdate'` bakes `skipWaiting` into the SW, so `controllerchange` (on a page that already had a controller) is the update-adopted signal; probes run via `registration.update()` on visibility regain + hourly, gated by `src/core/update-state.ts` (`BOOT_GUARD_MS` 15 s reload guard, `PROBE_INTERVAL_MS` 1 h); the reload applies only while the ride is idle. `__APP_VERSION__` is injected from `package.json` via Vite `define` and shown in the parent-gate tray |
+| PWA | vite-plugin-pwa | ^1.3 | Workbox precache; installable on iPad/Android home screens; peer-supports Vite ^8. `workbox-window` (devDependency) required for the production build — the `virtual:pwa-register` module imports it (`generateSW` mode); found missing on the first containerized build (2026-08-29, release-pipeline track). Self-update flow (pwa-self-update_20260905): `registerType: 'autoUpdate'` bakes `skipWaiting` into the SW, so `controllerchange` (on a page that already had a controller) is the update-adopted signal; probes run via `registration.update()` on visibility regain + hourly, gated by `src/core/update-state.ts` (`BOOT_GUARD_MS` 15 s reload guard, `PROBE_INTERVAL_MS` 1 h); the reload applies only while the ride is idle. `__APP_VERSION__` is injected from `package.json` via Vite `define` and shown in the parent-gate tray. `globPatterns` includes `woff2` (not the legacy `woff`), so the four bundled Baloo 2 subsets are precached and an offline cold start keeps the toy font instead of falling back to a system face (2026-11-07, runtime-guarantees track) |
 | Font | @fontsource/baloo-2 | ^5.3 | Bundled variable font (Baloo 2, the kid-playful display face) — offline-safe, no runtime font download; imported in `src/main.ts` (added 2026-08-30, mobile-ux-polish track) |
 | Audio | howler | ^2.2.4 | Ride-synced chug loop, whistle, placement ding; handles iOS unlock |
 | Persistence | idb | ^8 | Thin promise wrapper over IndexedDB; one object store `worlds`, two slots (`current`, `previous`) for atomic recovery. `loadWorldRecovery()` reads `current`, falls back to `previous` when `current` is unreadable **or parses as a salvage that kept no pieces or scenery** (a clean empty world still loads), never promotes corrupt bytes, and reports `clean` / `salvaged` / `restored` / `fresh`; `saveWorldSnapshot()` promotes the prior payload inside one `readwrite` transaction (2026-11-07, save-resilience track). Parent-gated Save/Load in the tray writes and reads the same v3 snapshot as a plain JSON file (`tiny-tracks-YYYY-MM-DD.json`), world only — no `preferences` block, so a file cannot change the device mute or day phase (2026-11-07, world-portability track) |
+| Security headers | `src/core/security-headers.ts` + nginx | — | One dependency-free module holds the policy, and three layers serve it: a Vite plugin adds it in dev and preview, `nginx-security-headers.conf` mirrors it in the container (included by the server block **and** each of six locations, because a location with its own `add_header` drops an inherited policy), and `src/core/nginx-headers.test.ts` fails if the two copies drift. CSP is 13 directives, mostly `'self'`, with `connect-src 'self' blob:`, `object-src`/`base-uri`/`frame-ancestors`/`form-action` `'none'`; `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` ride along, all with `always`. The dev server relaxes `style-src` only, because Vite injects CSS through `<style>` (2026-11-07, runtime-guarantees track) |
 | UI | Vanilla TS + DOM overlay | — | No framework. Chunky toy UI as HTML/CSS over the canvas |
 | Styling | Hand-written CSS | — | Custom properties, no preprocessor, no CSS framework |
 
@@ -57,6 +58,10 @@ src/
     recovery.ts    #   parent-facing text for salvaged/restored boots (pure)
     portable.ts    #   world-only export JSON + import judgement (1 MB cap, salvage
                    #   skips, refuses empty salvage; pure)
+    security-headers.ts # one response policy: CSP + nosniff + no-referrer,
+                   #   dev style relaxation; the nginx include mirrors it
+    no-external-urls.test.ts # privacy guard: no http(s) literal in shipped sources
+    nginx-headers.test.ts    # fails if nginx-security-headers.conf drifts
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring; init-scene.ts is the thin assembler that
                    #   builds one SceneContext (scene-context.ts) and hands it to
@@ -259,6 +264,16 @@ git tag v1.2.3 && git push --tags
 - Repo secrets (Settings → Secrets and variables → Actions):
   `COOLIFY_WEBHOOK_URL` (deploy webhook) and `COOLIFY_TOKEN` (bearer token).
 - Rollback: redeploy the previous image digest (or re-tag) in Coolify.
+- Security headers: the nginx include is copied into the image next to
+  `default.conf`; `Dockerfile` must keep that `COPY` line or the container fails
+  at startup. `src/core/nginx-headers.test.ts` compares the include against
+  `headerLines()` and asserts every `location` includes it, so a drift or a
+  missing include fails `pnpm check` rather than production.
+- Offline proof: `e2e/runtime-guarantees.spec.ts` runs the built app from the
+  preview server on 5198, disables the network, and asserts the reloaded document
+  came from the service worker (`workerStart > 0`) before placing a toy and
+  riding. It runs on Chromium: Playwright's WebKit cannot emulate offline behind
+  a service worker. Preliminary real-iPad checks stay in the manual-device layer.
 - Runbook — cutting a release (full flow, bump to deploy):
   1. Bump the version in `package.json` (`pnpm version patch|minor|major`
      bumps, commits, and creates the `v` tag in one step — or edit the

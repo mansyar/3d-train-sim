@@ -130,17 +130,19 @@ synthetic entry and the real refusal is captured from the browser.
 - **Covers:** FR-10, AC-8
 - **Touches:** `conductor/tech-stack.md`, `conductor/product.md`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** verified
 
-- [ ] **P4.T1: Record the policy in the tech stack** — covers: FR-10
-  - [ ] **P4.T1.1: Document the single header module, the Vite plugin, the nginx
+- [x] **P4.T1: Record the policy in the tech stack** - covers: FR-10
+  - [x] **P4.T1.1: Document the single header module, the Vite plugin, the nginx
     include, the `woff2` precache and the two guards, with the date**
-- [ ] **P4.T2: Record the deviation on the roadmap** — covers: FR-10
-  - [ ] **P4.T2.1: Note in the roadmap row why `connect-src 'self'` replaced
+- [x] **P4.T2: Record the deviation on the roadmap** - covers: FR-10
+  - [x] **P4.T2.1: Note in the roadmap row why `connect-src 'self'` replaced
     `'none'` (Howler XHR) and that a request assertion now enforces the promise**
 
-<!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** pending-squash
 **Evidence:** conductor/tracks/runtime-guarantees_20261107/verification/phase-4.md
--->
+**Deviations:** performed by the primary agent, because the phase subagent is
+denied writes under `conductor/`. The roadmap row also gained the `blob:` reason
+(GLB textures) beyond the brief's Howler note, and the two earlier Phase 0 rows
+were marked shipped since they already are.
