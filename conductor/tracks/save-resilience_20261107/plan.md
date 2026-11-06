@@ -54,7 +54,7 @@
 - **Covers:** FR-3, FR-4, FR-5, NFR-2, NFR-3, NFR-4, NFR-5, AC-3, AC-4, AC-5
 - **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Write both slots in one transaction** — covers: FR-4
   - [ ] **P2.T1.1:** Read `current` inside a `readwrite` transaction, put it
