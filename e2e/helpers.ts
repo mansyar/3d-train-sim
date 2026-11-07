@@ -6,8 +6,18 @@ import type { Page } from '@playwright/test';
  * Fresh boots now seed a rideable starter railway (an ordinary autosaved
  * world), so specs that build their own fixed layout must clear the meadow
  * first instead of assuming empty grass.
+ *
+ * The boot read is asynchronous: `__tinyTracksWorld` exists before the stored
+ * world has been hydrated, so a reset that lands early is silently undone when
+ * hydration completes afterwards. Waiting for the readiness flag first makes
+ * the reset the last word on the world rather than a race with the snapshot.
  */
 export async function clearMeadow(page: Page): Promise<void> {
+  await page.waitForFunction(
+    () => (window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady === true,
+    undefined,
+    { timeout: 20_000 },
+  );
   await page.evaluate(() => {
     const world = (window as unknown as { __tinyTracksWorld?: { reset: () => void } })
       .__tinyTracksWorld;

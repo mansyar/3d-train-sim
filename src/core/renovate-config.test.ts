@@ -30,6 +30,7 @@ interface PackageRule {
   enabled?: boolean;
   /** Renovate accepts `true` or a string such as `"patch"`; both mean automerge. */
   automerge?: boolean | string;
+  platformAutomerge?: boolean;
 }
 
 interface RenovateConfig {
@@ -111,6 +112,33 @@ function groupsMatching(dependency: string, rules: PackageRule[]): string[] {
     .map((rule) => rule.groupName as string);
 }
 
+/**
+ * Everything in a policy that turns automerge on. Renovate accepts `true` or a
+ * string such as `"patch"`, and its platform toggle defaults to **true**, so the
+ * only safe assertions are "the key is exactly false" at the top level and "no
+ * rule names it at all" below. An explicit `false` in a rule is not an offender.
+ */
+function automergeOffenders(policy: RenovateConfig): string[] {
+  const offenders: string[] = [];
+
+  if (policy.automerge !== false) {
+    offenders.push(`the top-level automerge setting is ${JSON.stringify(policy.automerge)}`);
+  }
+  if (policy.platformAutomerge !== false) {
+    offenders.push(
+      `the platform toggle is ${policy.platformAutomerge === true ? 'on' : 'unset (defaults to on)'}`,
+    );
+  }
+
+  for (const rule of policy.packageRules ?? []) {
+    const name = rule.groupName ?? '(rule without a groupName)';
+    if (rule.automerge !== undefined && rule.automerge !== false) offenders.push(name);
+    if (rule.platformAutomerge === true) offenders.push(name);
+  }
+
+  return offenders;
+}
+
 describe('renovate.json', () => {
   it('declares the recommended preset, the dashboard, the weekly Sydney schedule and the soak', () => {
     const policy = config();
@@ -125,25 +153,32 @@ describe('renovate.json', () => {
   });
 
   it('never automerges, at the top level or in any rule', () => {
-    const policy = config();
-    // Renovate accepts a string (`"patch"`, `"minor"`) as well as `true`, and a
-    // platform-side toggle of its own, so assert the exact negative rather than
-    // the absence of `true`.
-    const automerged = (policy.packageRules ?? []).filter((rule) => rule.automerge !== undefined);
-
-    expect(policy.automerge, 'automerge is disabled').toBe(false);
-    expect(policy.platformAutomerge, 'the platform does not automerge either').not.toBe(true);
-    expect(automerged.map((rule) => rule.groupName ?? '(rule without a groupName)')).toEqual([]);
+    expect(automergeOffenders(config())).toEqual([]);
   });
 
-  it('treats a string-valued automerge as automerge', () => {
-    const policy: RenovateConfig = {
-      ...config(),
-      packageRules: [{ groupName: 'probe', matchPackageNames: ['three'], automerge: 'patch' }],
-    };
-    const automerged = (policy.packageRules ?? []).filter((rule) => rule.automerge !== undefined);
+  it('catches the shapes Renovate accepts besides a bare `true`', () => {
+    const base = config();
 
-    expect(automerged).toHaveLength(1);
+    // A string means "automerge updates of this type"; an explicit `false` is not
+    // an offender. Renovate's platform toggle defaults to true when omitted, which
+    // is why the shipped config sets it to `false` rather than leaving it out.
+    const offenders = automergeOffenders({
+      ...base,
+      automerge: 'patch',
+      platformAutomerge: true,
+      packageRules: [
+        { groupName: 'string', matchPackageNames: ['three'], automerge: 'minor' },
+        { groupName: 'platform', matchPackageNames: ['howler'], platformAutomerge: true },
+        { groupName: 'explicitly off', matchPackageNames: ['idb'], automerge: false },
+      ],
+    });
+
+    expect(offenders).toEqual([
+      'the top-level automerge setting is "patch"',
+      'the platform toggle is on',
+      'string',
+      'platform',
+    ]);
   });
 
   it('keeps every grouped rule to minor and patch, so a major cannot ride along', () => {

@@ -4,7 +4,7 @@
 |---|---|
 | Track | `deps-guardrails_20261107` |
 | Branch | `chore/deps-guardrails_20261107` |
-| Range | `b99999a..e8f6a1c` (round 1), `e8f6a1c..HEAD` (round 2) |
+| Range | `b99999a..b3193d0` (round 1), `b3193d0..HEAD` (round 2) |
 | Rounds | 2 |
 | Verdict | **PASS WITH FINDINGS** |
 
@@ -26,6 +26,14 @@ Dockerfile never copied `pnpm-workspace.yaml`, so the release image's frozen
 install would have failed with `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`. Both are
 fixed in Phase R1, each with a witness that fails without the fix.
 
+Round 2 accepted those fixes and attacked the witnesses instead: the new shape
+check skipped any minimatch major above 5 (and `minimatch@9` also calls the
+callable 2.x shape), and the new `platformAutomerge` assertion compared against a
+key the config did not have — while Renovate's documented default for that key is
+`true`. Phase R2 replaces the skip with a per-major table, sets
+`platformAutomerge: false` explicitly, and extracts the automerge predicate so
+the test can no longer assert its own copy of it.
+
 ## Verification
 
 | Check | Command | Result |
@@ -35,7 +43,8 @@ fixed in Phase R1, each with a witness that fails without the fix.
 | Unit | `pnpm test` | pass — 48 files / 866 tests |
 | Audit | `pnpm audit --audit-level=high` | pass — 0 high, 0 critical, 1.6 s |
 | Build | `pnpm build` | pass — 178 precache entries |
-| E2E (full) | `pnpm exec playwright test` | pass — 193 specs (tablet · phone · prod) |
+| E2E (full) | `pnpm exec playwright test` | 192 passed, 1 failed (tablet `cargo.spec.ts:36`); that spec passed 4/4 on an isolated rerun per the dev-server soak rule in `e2e/README.md` |
+| E2E (after round-2 fixes) | `pnpm exec playwright test` | see "Round 2" below |
 | Config | `renovate-config-validator renovate.json` | pass |
 
 ## Requirements coverage
@@ -141,6 +150,20 @@ so legitimately removing a dependency would fail with a misleading message.
 **Fix:** floor lowered to 10, with `toContain('three')` kept as the real
 non-triviality check.
 
+## Findings — round 2
+
+Round 2 confirmed every round-1 finding closed in substance, then found that the
+two new witnesses could pass having asserted nothing. Both are fixed.
+
+| ID | Severity | File | What | Fix |
+|---|---|---|---|---|
+| R2-F1 | Medium | `src/core/dependency-overrides.test.ts:52` | The shape check skipped every minimatch major ≥ 6 and never asserted that any copy was examined — `minimatch@9` also calls the callable 2.x shape, so a v9 consumer would be skipped silently | Replaced the skip with an explicit `SHAPE_BY_MAJOR` table (5 and 9 → callable, 10 → namespace); an unseen major fails loudly; `checked.length` must equal the copies found |
+| R2-F2 | Medium | `src/core/renovate-config.test.ts:135` | `platformAutomerge` was only compared against a literal `true` that the config omitted — and Renovate's default is **true**, so the assertion proved nothing; per-rule `platformAutomerge` was unexamined | `renovate.json` now sets `"platformAutomerge": false`; the guard asserts it is exactly `false`, and a rule-level toggle is an offender |
+| R2-F3 | Medium | `src/core/renovate-config.test.ts:139` | The string-automerge test built a fixture and re-used the guard's inline predicate, so it asserted its own copy of the expression | Extracted `automergeOffenders(policy)`, used by both tests, so a literal-only predicate fails |
+| R2-F4 | Low | `src/core/renovate-config.test.ts:132` | An explicit per-rule `automerge: false` counted as an offender | The predicate excludes it; a case asserts it |
+| R2-F5 | Low | `review.md:7` | The record cited a commit (`e8f6a1c`) that does not exist | Ranges now `b99999a..b3193d0` and `b3193d0..HEAD` |
+| R2-F6 | Low | `review.md:38` | The full suite was recorded as a clean 193 when the run was 192 + 1 tablet flake, green 4/4 on the isolated rerun; counts were stale | Recorded honestly; counts refreshed to 175 files / 48 test files / 866 tests |
+
 ## Overrides
 
 None.
@@ -148,8 +171,10 @@ None.
 ## Plan compliance
 
 Phases 1–3 verified at `0915650`, `691f4a7`, `9ad7f35`. Phase R1 (round-1
-fixes) verified at `e8f6a1c`. Deviations recorded in the plan: remediation moved
-into Phase 2 because the baseline was red; pnpm 11 settings live in
+fixes) verified at `b3193d0`. Phase R2 (round-2 fixes) is the commit that
+carries the per-major shape table, `platformAutomerge: false` and the extracted
+`automergeOffenders`. Deviations recorded in the plan: remediation moved into
+Phase 2 because the baseline was red; pnpm 11 settings live in
 `pnpm-workspace.yaml`; no dated ignore shipped.
 
 ## Out of scope
@@ -177,4 +202,4 @@ into Phase 2 because the baseline was red; pnpm 11 settings live in
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 |---|---|---|---|---|---|---|
 | 1 | BLOCK | 0 | 1 | 4 | 2 | 7 |
-| 2 | PASS WITH FINDINGS | 0 | 0 | 0 | 0 | — |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 3 | 3 | 6 |

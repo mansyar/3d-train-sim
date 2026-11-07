@@ -6,6 +6,7 @@
   "minimumReleaseAge": "3 days",
   "rebaseWhen": "conflicted",
   "automerge": false,
+  "platformAutomerge": false,
   "separateMajorMinor": true,
   "packageRules": [
     {

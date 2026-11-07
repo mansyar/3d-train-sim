@@ -103,6 +103,26 @@
 **Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-R1.md
 **Deviations:** the fixes were authored by the primary in one pass (four code files, with runtime checks against the installed tree), so they share one commit rather than one per finding. `docker build` was not run — no daemon locally or in CI — so the temp-directory frozen install is the witness.
 
+## Phase R2: Second-round review fixes
+
+- **Goal:** make the two new witnesses actually witness — a shape check that skips a major it should examine, and a `platformAutomerge` assertion that reads an absent key whose default is `true`.
+- **Depends on:** Phase R1
+- **Covers:** R2-F1, R2-F2, R2-F3, R2-F4, R2-F5, R2-F6
+- **Touches:** `src/core/dependency-overrides.test.ts`, `src/core/renovate-config.test.ts`, `renovate.json`, `conductor/tracks/deps-guardrails_20261107/review.md`
+- **Verification:** `pnpm check`, `pnpm audit --audit-level=high` and `pnpm exec playwright test`
+- **Status:** in_progress
+- [ ] **R2.T1: Table the brace-expansion shapes per major** — covers: R2-F1
+  - [ ] R2.T1.1: Replace the `major >= 6` skip with `SHAPE_BY_MAJOR` (5, 9 → callable; 10 → namespace) and fail loudly on an unknown major
+  - [ ] R2.T1.2: Assert the number of copies examined equals the number found
+  - [ ] R2.T1.3: Prove every `overrides` selector binds to a package the store holds, so a renamed or dropped consumer cannot leave a silent no-op
+- [ ] **R2.T2: Make automerge unfalsifiable-by-default** — covers: R2-F2, R2-F3, R2-F4
+  - [ ] R2.T2.1: Set `"platformAutomerge": false` in `renovate.json` and re-validate it
+  - [ ] R2.T2.2: Extract `automergeOffenders(policy)` used by both automerge tests, with cases for a string value, a per-rule platform toggle and an explicit per-rule `false`
+- [ ] **R2.T3: Correct the review record** — covers: R2-F5, R2-F6
+  - [ ] R2.T3.1: Use the real commit ranges and the honest full-suite result, and refresh the stale counts
+- [ ] **R2.T4: Wait for boot before clearing the meadow** — covers: R2-F6
+  - [ ] R2.T4.1: Make `clearMeadow` await the readiness flag, because a reset that lands before hydration is silently undone by the snapshot — the tablet `tabbed toybox walkthrough` failure was four scenery where two were placed
+
 <!-- When a phase is verified, the primary agent replaces the placeholders below
      with the Result, Checkpoint SHA and Evidence path.
 
