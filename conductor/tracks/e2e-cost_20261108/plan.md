@@ -79,14 +79,26 @@ pairing because `ride-motion` keeps its switch roads internal. River's consolida
 - **Covers:** FR-4, FR-5, FR-12
 - **Touches:** `e2e/smoke.spec.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Keep boot and console health as one test** — covers: FR-4, FR-12
-- [ ] **P3.T2: Merge the build journey** — covers: FR-4
-  - [ ] P3.T2.1: One test opens the drawer, walks the tabs, places a toy, rides, cycles the camera and undoes
-- [ ] **P3.T3: Merge the persistence round trip** — covers: FR-4
-  - [ ] P3.T3.1: One test asserts the chosen train, the chosen sound and the placed toys survive one reload
-- [ ] **P3.T4: Merge the parent gate with the day and mute toggles** — covers: FR-4, FR-12
+- [x] **P3.T1: Keep boot and console health as one test** — covers: FR-4, FR-12
+- [x] **P3.T2: Merge the build journey** — covers: FR-4
+  - [x] P3.T2.1: One test opens the drawer, walks the tabs, places a toy, rides, cycles the camera and undoes
+- [x] **P3.T3: Merge the persistence round trip** — covers: FR-4
+  - [x] P3.T3.1: One test asserts the chosen train, the chosen sound and the placed toys survive one reload
+- [x] **P3.T4: Merge the parent gate with the day and mute toggles** — covers: FR-4, FR-12
+
+**Result:** verified
+**Checkpoint:** c7c2195
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-3.md
+
+**Deviations:** the merge added two assertions no original had (a `.day-toggle` phase-advance check and
+an undo tail on the trash step); both assert real behaviour and are recorded rather than removed. Two
+merged steps restore a precondition the original's fresh page gave them — the drawer's remembered tab
+is reset before the lift step, and the ride test stops before laying the second layout. The console and
+external-request assertions now run once per journey over a superset window instead of once per old
+test, which is why the raw `expect(` count falls from 101 to 94; every distinctive assertion was traced
+and is present.
 
 ## Phase 4: New modules
 
