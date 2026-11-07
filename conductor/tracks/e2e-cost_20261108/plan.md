@@ -78,8 +78,8 @@ pairing because `ride-motion` keeps its switch roads internal. River's consolida
 - **Depends on:** Phase 2
 - **Covers:** FR-4, FR-5, FR-12
 - **Touches:** `e2e/smoke.spec.ts`
-- **Verification:** `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** pending
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
+- **Status:** in_progress
 
 - [ ] **P3.T1: Keep boot and console health as one test** — covers: FR-4, FR-12
 - [ ] **P3.T2: Merge the build journey** — covers: FR-4
