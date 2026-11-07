@@ -64,6 +64,10 @@ src/
     no-external-urls.test.ts # privacy guard: no http(s) literal in shipped ts,
                    #   css or index.html (public/ is exempt: vendored licence text)
     nginx-headers.test.ts    # fails if nginx-security-headers.conf drifts
+    meadow-grid.ts #   GROUND_SIZE, CELL_SIZE, cellToWorld, PickedItem - the shared
+                   #   meadow geometry the scene and the UI both speak (pure)
+    import-graph.test.ts # scene line budgets + the allowed import directions
+                   #   (ui never imports scene; core never imports three)
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring; init-scene.ts is the thin assembler that
                    #   builds one SceneContext (scene-context.ts) and hands it to
