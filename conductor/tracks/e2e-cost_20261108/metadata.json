@@ -1,0 +1,32 @@
+{
+  "id": "e2e-cost_20261108",
+  "title": "E2E Cost",
+  "type": "refactor",
+  "status": "new",
+  "priority": "high",
+  "depends_on": ["renderer-decomposition_20261108"],
+  "created_at": "2026-11-08T04:05:39+11:00",
+  "updated_at": "2026-11-08T04:05:39+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "refactor/e2e-cost_20261108",
+  "base_branch": "main",
+  "base_sha": "cb9a6c4ab1e2a3848b21d30eb886d94ca8a7d869",
+  "progress": {
+    "phases_total": 6,
+    "phases_verified": 0,
+    "tasks_total": 19,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "pr_state": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}

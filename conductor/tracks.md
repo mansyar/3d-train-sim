@@ -4,6 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [e2e-cost_20261108](tracks/e2e-cost_20261108/index.md) | E2E Cost | Refactor | new |
 | [renderer-decomposition_20261108](./archive/renderer-decomposition_20261108/index.md) | Renderer Decomposition | Refactor | archived |
 | [deps-guardrails_20261107](./archive/deps-guardrails_20261107/index.md) | Dependency Guardrails | Chore | archived |
 | [runtime-guarantees_20261107](./archive/runtime-guarantees_20261107/index.md) | Runtime Guarantees | Feature | archived |
