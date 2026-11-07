@@ -99,7 +99,13 @@ jobs:
 
   e2e:
     name: Gate · e2e shard ${{ matrix.shard }}
-    runs-on: ubuntu-latest
+    # Pinned, not `ubuntu-latest`: on 2026-11-08 `ubuntu-latest` moved to 26.04
+    # (resolute), whose ICU is no longer the one the cached WebKit build links
+    # against, so every launch died with `libicudata.so.74: cannot open shared
+    # object file` after restoring a browser cache that `install --with-deps`
+    # then considered complete. A pinned image plus an image-scoped cache key
+    # keeps a runner-image bump from poisoning the cache.
+    runs-on: ubuntu-24.04
     # Two shards, each its own runner and its own dev server. The suite is ~57
     # runs after the e2e-cost track (was 193), so a shard is minutes of WebGL in
     # software plus `playwright install --with-deps`, whose apt step is the
@@ -130,12 +136,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Browsers are pinned by the lockfile, so the lockfile hash is the
-      # cache key — a bumped Playwright version gets a fresh install.
+      # cache key — a bumped Playwright version gets a fresh install. The image
+      # is in the key too: a browser build is linked against the distro's
+      # libraries, so reusing a cache across an image bump is the failure this
+      # key exists to prevent.
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-ubuntu-24.04-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps

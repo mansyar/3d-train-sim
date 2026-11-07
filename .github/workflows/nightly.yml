@@ -22,7 +22,11 @@ permissions:
 jobs:
   nightly:
     name: Nightly · ${{ matrix.project }}
-    runs-on: ubuntu-latest
+    # Pinned for the same reason as the PR gate: `ubuntu-latest` moved to 26.04
+    # on 2026-11-08 and the cached WebKit build lost its ICU soname
+    # (`libicudata.so.74`). Nightly is the last thing that should fail for a
+    # reason that has nothing to do with the app.
+    runs-on: ubuntu-24.04
     # Same apt-step variance as the PR gate, plus the repeat pass.
     timeout-minutes: 60
     strategy:
@@ -49,7 +53,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-ubuntu-24.04-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
