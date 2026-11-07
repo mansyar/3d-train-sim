@@ -4,9 +4,9 @@
 |---|---|
 | **Track** | `frame-contract_20261109` |
 | **Branch** | `refactor/frame-contract_20261109` |
-| **Range** | `410a1c3..HEAD` (round 1 reviewed at `1ff4a2f`; round 2 reviewed at the Phase R1 commit) |
-| **Rounds** | 2 |
-| **Verdict** | **PASS WITH FINDINGS** — round 1 BLOCK (1 High), round 2 BLOCK (1 High: the first fix was incomplete); all findings fixed in Phases R1–R2 |
+| **Range** | `410a1c3..48927ad` (round 1 at `1ff4a2f`; round 2 at `fdb0626`; round 3 at `48927ad`) |
+| **Rounds** | 3 |
+| **Verdict** | **PASS** — rounds 1 and 2 each BLOCK (1 High); round 3 confirmed every finding closed with nothing new. All findings were fixed in Phases R1–R2 |
 
 ## Summary
 
@@ -89,6 +89,20 @@ pre-run fill in `onFrame`.
 | R2-F3 | Low | `verification/integrated.md:22,33-34` | Stale witness cells: 892 tests, "compares live names to the tuple", AC-2 without the duplicate case | Fixed: 893, literal-order witness, duplicate message |
 | R2-F4 | Low | `src/scene/frame-contract.test.ts:81` | The duplicate test asserted only the counts, not the named repeat | Fixed: asserts the whole message |
 
+## Findings — round 3
+
+Round 3 checked the committed blob rather than the summary, since round 2 had caught a report that was wrong about its
+own tree. Verdict **PASS**, no findings.
+
+- `git show HEAD:src/scene/init-scene.ts` — `onFrame` (432-437) is a four-line comment plus `frameRunner.run(frameInputs, dt)` at 436. No fill, no `fleet.primary()` call, no second comment claiming to publish.
+- `grep -n 'starSpot\s*[:=]' src` — the boot seed at `init-scene.ts:309` (overwritten before any consumer) and the one publish at `:335`, immediately after `fleet.update(dt)` at `:328`; the rest are the interface field and test locals. One write per frame, after the move, which is what base did.
+- Consumers `critters` (`:360`), `duck` (`:395`) and `portal-glow` (`:414`) all follow `fleet` (`:326`); `chug` (`:344`) still reads `fleet.primary()` after the move, as base did.
+- F2–F4 and `phase-R1.md`'s ownership paragraph verified line by line.
+
+One caveat carried into the PR: `integrated.md`'s "9.1 s" spec time and "+546 B" gzip delta were measured before the R1
+edits. Both still pass, and the gzip budget keeps 478 B of headroom, but they are not post-fix numbers and should not be
+quoted as such.
+
 ## Overrides
 
 None. Strict mode; nothing deferred.
@@ -123,3 +137,4 @@ marks the roadmap row shipped.
 |---|---|---|---|---|---|---|
 | 1 | BLOCK | 0 | 1 | 1 | 4 | 6 |
 | 2 | BLOCK | 0 | 1 | 1 | 2 | 4 |
+| 3 | PASS | 0 | 0 | 0 | 0 | — |
