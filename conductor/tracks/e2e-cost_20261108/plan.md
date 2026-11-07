@@ -50,15 +50,26 @@ suffixes: no assertion, fixture or timeout changed.
   `e2e/river-life.spec.ts`, `e2e/cargo.spec.ts`, `e2e/wagon-workshop.spec.ts`, `e2e/tunnel.spec.ts`,
   `e2e/crossing-gate.spec.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/switches.spec.ts e2e/switch-3way.spec.ts e2e/switch-slip.spec.ts e2e/switch-mirror.spec.ts e2e/hills.spec.ts e2e/hills-phase2.spec.ts e2e/river.spec.ts e2e/river-life.spec.ts e2e/cargo.spec.ts e2e/wagon-workshop.spec.ts e2e/tunnel.spec.ts e2e/crossing-gate.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Merge the switch cluster (10 → 3)** — covers: FR-4, FR-5, FR-12
-  - [ ] P2.T1.1: One spec places each switch kind, rides every road, and reloads to neutral
-  - [ ] P2.T1.2: Fold the reduced-motion and blade-pose assertions into the same file as named steps
-- [ ] **P2.T2: Merge the hill pair (5 → 2)** — covers: FR-4, FR-5
-- [ ] **P2.T3: Merge river and river life (6 → 2)** — covers: FR-4, FR-5
-- [ ] **P2.T4: Merge cargo and the wagon workshop (4 → 3)** — covers: FR-4, FR-5
-- [ ] **P2.T5: Merge tunnel and crossing gate (4 → 2)** — covers: FR-4, FR-5
+- [x] **P2.T1: Merge the switch cluster (10 → 3)** — covers: FR-4, FR-5, FR-12
+  - [x] P2.T1.1: One spec places each switch kind, rides every road, and reloads to neutral
+  - [x] P2.T1.2: Fold the reduced-motion and blade-pose assertions into the same file as named steps
+- [x] **P2.T2: Merge the hill pair (5 → 2)** — covers: FR-4, FR-5
+- [x] **P2.T3: Merge river and river life (6 → 2)** — covers: FR-4, FR-5
+- [x] **P2.T4: Merge cargo and the wagon workshop (4 → 3)** — covers: FR-4, FR-5
+- [x] **P2.T5: Merge tunnel and crossing gate (4 → 2)** — covers: FR-4, FR-5
+
+**Result:** verified
+**Checkpoint:** 81fc042
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-2.md
+
+**Deviations:** the six replaced spec files were deleted by the primary agent, because `git rm` was
+denied to the subagent; the post-deletion run and the `--list` totals were taken here. Two substitutions
+are judgement rather than mechanics and are recorded in the parity table: the two fixed 12-second rides
+became sampled loops plus `expectSceneChanging`, and per-road switch witnessing uses blade/lever pose
+pairing because `ride-motion` keeps its switch roads internal. River's consolidated test gained a
+`clearMeadow` before the trestle ride to restore the fresh-page precondition the original had.
 
 ## Phase 3: The smoke journey
 
