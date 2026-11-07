@@ -110,7 +110,7 @@ and is present.
   `e2e/runtime-guarantees.spec.ts`, `e2e/starter-railway.spec.ts`, `e2e/park-spot.spec.ts`,
   `e2e/ride-toybox-flow.spec.ts`, `e2e/delight-toys.spec.ts`, `e2e/sun-moon.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/world-portability.spec.ts e2e/save-recovery.spec.ts e2e/runtime-guarantees.spec.ts e2e/starter-railway.spec.ts e2e/park-spot.spec.ts e2e/delight-toys.spec.ts e2e/sun-moon.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Merge portability (12 → 5)** — covers: FR-4, FR-5
   - [ ] P4.T1.1: Keep one round trip, one salvage, one refusal, one undo and one mid-ride stop
