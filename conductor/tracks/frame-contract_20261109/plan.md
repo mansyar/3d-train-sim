@@ -45,7 +45,7 @@ unchanged. The `frameSystems()` probe is wired but unexercised until Phase 2.
 - **Covers:** FR-10, AC-4
 - **Touches:** `e2e/frame-contract.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/frame-contract.spec.ts` and `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Assert the contract in the running app** — covers: FR-10
   - [ ] **P2.T1.1: Assert `frameSystems()` names equal `FRAME_SYSTEM_ORDER`, with no console errors**
