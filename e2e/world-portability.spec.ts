@@ -260,7 +260,7 @@ test('saving writes the starter meadow as a dated v3 file', async ({ page }) => 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('a saved meadow re-imports byte for byte', async ({ page }) => {
+test('a saved meadow re-imports byte for byte @smoke', async ({ page }) => {
   test.setTimeout(90_000);
   const consoleErrors = watchConsoleErrors(page);
 

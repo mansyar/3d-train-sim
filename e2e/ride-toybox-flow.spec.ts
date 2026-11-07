@@ -47,7 +47,7 @@ const place = (
 
 const watchConsole = (page: import('@playwright/test').Page) => watchConsoleErrors(page);
 
-test('riding hides the build tools and stopping returns them', async ({ page }) => {
+test('riding hides the build tools and stopping returns them @smoke', async ({ page }) => {
   const consoleErrors = watchConsole(page);
   await page.goto('/');
   await ready(page);
@@ -92,7 +92,7 @@ test('riding hides the build tools and stopping returns them', async ({ page }) 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('five tabs hold their toys; the adventure row swipes on phones', async ({ page }) => {
+test('five tabs hold their toys; the adventure row swipes on phones @smoke', async ({ page }) => {
   const consoleErrors = watchConsole(page);
   await page.goto('/');
   await ready(page);

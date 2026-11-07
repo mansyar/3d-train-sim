@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import { clearMeadow, watchConsoleErrors } from './helpers';
 
-test('app boots on a tablet with a clean console and zero external requests', async ({ page }) => {
+test('app boots on a tablet with a clean console and zero external requests @smoke', async ({
+  page,
+}) => {
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -56,7 +58,7 @@ test('selected train survives a reload through local autosave', async ({ page, c
   );
 });
 
-test('drag-placing a track piece renders it in the world', async ({ page }) => {
+test('drag-placing a track piece renders it in the world @smoke', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -123,7 +125,7 @@ test('drag-placing scenery decorates the meadow', async ({ page }) => {
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('track and scenery survive a reload through local autosave', async ({ page }) => {
+test('track and scenery survive a reload through local autosave @smoke', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -192,7 +194,7 @@ test('the sound box mounts: toot, mute flip, silent console', async ({ page }) =
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('pressing play rides the train along the placed track', async ({ page }) => {
+test('pressing play rides the train along the placed track @smoke', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -311,7 +313,11 @@ test('ambient day/weather cycles keep the meadow alive with a clean console', as
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('tablet emulation keeps an ambient frame rate with a clean console', async ({ page }) => {
+test('tablet emulation keeps an ambient frame rate with a clean console @ci', async ({ page }) => {
+  test.skip(
+    !process.env.CI,
+    'throughput canary runs in CI, where software rendering is the baseline',
+  );
   const consoleErrors = watchConsoleErrors(page);
 
   // The measurement itself is short, but a contended machine (the second
@@ -539,7 +545,7 @@ test('drag-to-trash still deletes a lifted toy over the rail', async ({ page }) 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('the parent gate clears the world only after hold and confirm', async ({ page }) => {
+test('the parent gate clears the world only after hold and confirm @smoke', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];

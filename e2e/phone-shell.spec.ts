@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { watchConsoleErrors } from './helpers';
 
-test('phone viewport: shell fits without horizontal clipping', async ({ page }) => {
+test('phone viewport: shell fits without horizontal clipping @smoke', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
   // The phone project uses an iPhone viewport; pad it to assert the ≥360px floor.

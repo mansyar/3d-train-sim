@@ -226,7 +226,10 @@ test('the dev server sends the same policy, with only style-src relaxed', async 
   expect(widened[0], 'only style-src may widen').toMatch(/^style-src /);
 });
 
-test('the meadow boots, places a toy and rides with the network off', async ({ page, context }) => {
+test('the meadow boots, places a toy and rides with the network off @smoke', async ({
+  page,
+  context,
+}) => {
   test.setTimeout(120_000);
   const consoleErrors = watchConsoleErrors(page);
 

@@ -184,7 +184,9 @@ const tapOutside = async (page: Page): Promise<void> => {
   await page.mouse.click(viewport.width - 24, Math.round(viewport.height * 0.42));
 };
 
-test('a boot salvages the corrupt snapshot and keeps every valid piece', async ({ page }) => {
+test('a boot salvages the corrupt snapshot and keeps every valid piece @smoke', async ({
+  page,
+}) => {
   // The first test in each worker pays the dev server's cold transform of the
   // whole app (~40 s with both form factors booting at once); later boots are
   // warm. Give that one-off cost room without slowing the rest.
