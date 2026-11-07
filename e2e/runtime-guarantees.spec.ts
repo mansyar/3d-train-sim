@@ -105,10 +105,14 @@ async function placeBridge(page: Page): Promise<void> {
 }
 
 /**
- * Press ride, prove the label flipped and that frames advanced, then stop and
- * prove the label flipped back. The label alone is a state proxy: a stalled
- * render loop with the ride flag set would still flip it, so the canvas must
- * change while the train is supposed to be rolling.
+ * Press ride, prove the label flipped and that frames kept advancing, then stop
+ * and prove the label flipped back.
+ *
+ * Scope, stated precisely: the meadow animates on its own (the barge bobs, the
+ * critters breathe), so a changing canvas witnesses a live render loop during an
+ * offline ride — not the train's displacement, which `src/scene/ride-motion.test.ts`
+ * proves against the real controller. What this catches is the failure that
+ * matters offline: a boot that paints once and then freezes.
  */
 async function rideAndStop(page: Page): Promise<void> {
   const ride = page.locator('.ride-toggle');
@@ -120,7 +124,7 @@ async function rideAndStop(page: Page): Promise<void> {
   await expect
     .poll(async () => (await canvas.screenshot()).equals(before), {
       timeout: 15_000,
-      message: 'the scene should move while the ride is on',
+      message: 'frames should advance while the ride is on',
     })
     .toBe(false);
 
