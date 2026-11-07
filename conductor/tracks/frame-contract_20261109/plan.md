@@ -68,7 +68,7 @@ and in the evidence.
 - **Verification:** `pnpm check` and `pnpm build`
 - **Status:** verified
 - **Result:** verified
-- **Checkpoint:** pending-squash
+- **Checkpoint:** e22ad9d
 - **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-3.md`
 
 - [x] **P3.T1: Document the contract** — covers: FR-11
