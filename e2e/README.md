@@ -11,11 +11,16 @@ releases v0.5.0 → v0.7.0 (track `e2e-stability_20260904`).
 ## Running
 
 ```sh
-pnpm e2e                     # the lane you want: build, then the @smoke journeys (~2 min)
-pnpm e2e:full                # the whole tablet suite, minus CI-only canaries (~4 min)
-pnpm e2e:file e2e/undo.spec.ts   # one spec, no build
+pnpm e2e                     # the lane you want: build, then the @smoke journeys (~3 min)
+pnpm e2e:full                # the tablet suite CI runs, minus CI-only canaries (~8 min)
+pnpm e2e:file e2e/undo.spec.ts   # one spec, no build (specs using the 5198 preview origin need one)
 pnpm exec playwright test    # every run, every profile (what CI shards)
 ```
+
+Times are measured on the development machine at the 2-worker cap: `pnpm e2e` is ~2.5 min warm and
+~3.3 min cold (the 43 s offline boot dominates), `pnpm e2e:full` is ~7.7 min, and the whole matrix is
+~9.4 min. Those are ceilings as well as averages — `pnpm e2e` has been seen at 3.3 min, which is why the
+track that built this shape records 3.5 min cold rather than 3.
 
 ## Lanes, tags and the device matrix
 

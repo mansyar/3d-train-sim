@@ -103,23 +103,69 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
 
   await test.step('drag a tree from the Nature tab onto the meadow', async () => {
     await closeDrawer();
-
-    const before = await page.screenshot();
-
     await page.click('[data-drawer="toys"]');
     await page.click('.drawer-tab[data-tab="nature"]');
-    const slot = page.locator('.scenery-slot').first();
+
+    // The starter meadow already holds scenery, so the witness is "exactly one
+    // more toy, at the cell we aimed at" — not "the scenery list equals one".
+    const countScenery = () =>
+      page.evaluate(() => {
+        const world = (
+          window as unknown as {
+            __tinyTracksWorld?: { scenery: () => readonly unknown[] };
+          }
+        ).__tinyTracksWorld;
+        if (!world) throw new Error('dev world handle missing');
+        return world.scenery().length;
+      });
+    const beforeCount = await countScenery();
+
+    // Drop on a known free cell, not on the piece the last step just placed: a
+    // cell is held by either a piece or a scenery toy, so a second drop at the
+    // same point is refused and wobble-returns, which a screenshot cannot tell
+    // apart from a placement once the drawer has also opened.
+    const point = await page.evaluate(
+      (cell) => {
+        const sceneHandle = (
+          window as unknown as {
+            __tinyTracksScene?: {
+              cellToScreen: (c: { x: number; y: number }) => { x: number; y: number } | null;
+            };
+          }
+        ).__tinyTracksScene;
+        const projected = sceneHandle?.cellToScreen(cell) ?? null;
+        if (!projected) throw new Error('cell (2,2) not visible on screen');
+        return projected;
+      },
+      { x: 2, y: 2 },
+    );
+
+    const slot = page.locator('.drawer-panel[data-panel="nature"] .scenery-slot').first();
     const box = await slot.boundingBox();
     if (!box) throw new Error('drawer scenery slot visible');
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
-    await page.mouse.move(640, 380, { steps: 10 });
+    await page.mouse.move(point.x, point.y, { steps: 10 });
     await page.mouse.up();
     // Let the scene sync and the drop-ping animation finish.
     await page.waitForTimeout(600);
 
-    const after = await page.screenshot();
-    expect(Buffer.compare(before, after)).not.toBe(0);
+    const scenery = await page.evaluate(() => {
+      const world = (
+        window as unknown as {
+          __tinyTracksWorld?: {
+            scenery: () => { kind: string; cell: { x: number; y: number } }[];
+          };
+        }
+      ).__tinyTracksWorld;
+      if (!world) throw new Error('dev world handle missing');
+      return world.scenery().map((toy) => ({ kind: toy.kind, cell: toy.cell }));
+    });
+    // A refused drop leaves a wobbling chip and no toy, so this is the witness.
+    expect(scenery).toHaveLength(beforeCount + 1);
+    expect(scenery.filter((toy) => toy.cell.x === 2 && toy.cell.y === 2)).toEqual([
+      { kind: 'tree', cell: { x: 2, y: 2 } },
+    ]);
   });
 
   await test.step('a quick tap on a placed toy rotates it 90 degrees in place', async () => {

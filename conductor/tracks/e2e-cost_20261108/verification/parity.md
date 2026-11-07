@@ -60,7 +60,7 @@ same behaviour, and each witness was grepped in `src/` at the head (P6.T1.2).
 
 | Removed | Original | Witness | Found at |
 |---|---|---|---|
-| Oversized-file test: instrumented read counters, 1 048 577-byte file, `too big` note, zero reads, export unchanged | `world-portability` > an oversized file is refused and changes nothing | `readImport size guard > refuses a file one byte over the cap without carrying a world`; `readImport size guard > checks size before parsing`; `readImport refusal > leaves no world behind on a refusal` | `src/core/portable.test.ts:124`, `:130`, `:149` |
+| Oversized-file test: instrumented read counters, 1 048 577-byte file, `too big` note, zero reads, export unchanged | `world-portability` > an oversized file is refused and changes nothing | `readImport size guard > refuses a file one byte over the cap without carrying a world`; `readImport size guard > checks size before parsing`; `readImport refusal > leaves no world behind on a refusal` | `src/core/portable.test.ts:124`, `:130`, `:149` — and, **not** witnessed: the sentence a parent sees for a `too-large` import (`src/ui/parent-gate.ts:187`, used at `:270`) is no longer asserted in either suite |
 | `{"version": 99}` refusal | `world-portability` > unreadable files are refused and change nothing | `readImport refusal > refuses %j without carrying a world` (the version-99 case) | `src/core/portable.test.ts:137` (it.each) |
 | `[]` refusal | same | same case list | `src/core/portable.test.ts:137` |
 | Empty-salvage restore boot | `save-recovery` > a boot ignores an empty salvage and restores the previous save | `indexeddb storage > restores the previous world when current is only an empty salvage`; `never promotes an empty salvage over a good previous`; the note copy in `recoveryNotice > reports a restored backup calmly, without counts` | `src/state/persistence.test.ts:506`, `:520`; `src/core/recovery.test.ts:14` |
@@ -79,5 +79,8 @@ untouched world in a real browser. No test was removed whose subject existed onl
 - It does not claim 49 tests are as thorough as 96 *runs*: fewer boots means less repeated wiring proof.
   The claim is that each behaviour keeps a witness and each lock keeps its door — the sum of distinct
   behaviours is unchanged, the number of times each is re-proved is smaller by design.
+- It does not claim every *sentence* survived. The `too-large` note a parent reads is now unwitnessed
+  (the core refusal is not), because the browser test that asserted it was one of the six drops. That is
+  recorded as debt rather than glossed: a copy change there would ship unnoticed.
 - It does not claim the phone lane covers the whole suite. It covers three allowlisted files, which is
   what FR-3 asks for and what AC-4 measures.

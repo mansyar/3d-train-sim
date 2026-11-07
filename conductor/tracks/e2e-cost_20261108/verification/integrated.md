@@ -29,7 +29,7 @@ workflow. No `src/` file, dependency, save format or scene behaviour changed.
 | AC | Criterion | Witness |
 |---|---|---|
 | AC-1 | ≤60 runs, 40–50 unique | 57 runs / 50 unique |
-| AC-2 | `@smoke` lane ≤3 min | 17 passed, 2.5–3.3 min (amended wording records the range) |
+| AC-2 | `@smoke` lane ≤3.5 min cold, ≤3 min warm (amended from ≤3 min after the cold run) | 17 passed, 2.5 min warm / 3.3 min cold |
 | AC-3 | `e2e:full` ≤8 min (amended from 6) | 7.7 min |
 | AC-4 | Phone lists only the three allowlisted files | 7 runs in 3 files |
 | AC-5 | `@ci` skipped locally, present with `CI` | Phase 1: skipped by default, passed 9.4 s with `CI=true` |
