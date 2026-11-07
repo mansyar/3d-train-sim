@@ -49,8 +49,8 @@ suffixes: no assertion, fixture or timeout changed.
   `e2e/switch-mirror.spec.ts`, `e2e/hills.spec.ts`, `e2e/hills-phase2.spec.ts`, `e2e/river.spec.ts`,
   `e2e/river-life.spec.ts`, `e2e/cargo.spec.ts`, `e2e/wagon-workshop.spec.ts`, `e2e/tunnel.spec.ts`,
   `e2e/crossing-gate.spec.ts`
-- **Verification:** `pnpm exec playwright test e2e/switches.spec.ts e2e/hills.spec.ts e2e/river.spec.ts e2e/cargo.spec.ts e2e/tunnel.spec.ts e2e/crossing-gate.spec.ts`
-- **Status:** pending
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/switches.spec.ts e2e/switch-3way.spec.ts e2e/switch-slip.spec.ts e2e/switch-mirror.spec.ts e2e/hills.spec.ts e2e/hills-phase2.spec.ts e2e/river.spec.ts e2e/river-life.spec.ts e2e/cargo.spec.ts e2e/wagon-workshop.spec.ts e2e/tunnel.spec.ts e2e/crossing-gate.spec.ts`
+- **Status:** in_progress
 
 - [ ] **P2.T1: Merge the switch cluster (10 → 3)** — covers: FR-4, FR-5, FR-12
   - [ ] P2.T1.1: One spec places each switch kind, rides every road, and reloads to neutral
