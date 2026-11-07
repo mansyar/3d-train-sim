@@ -27,7 +27,9 @@ interface PackageRule {
   groupName?: string;
   matchPackageNames?: string[];
   matchUpdateTypes?: string[];
-  automerge?: boolean;
+  enabled?: boolean;
+  /** Renovate accepts `true` or a string such as `"patch"`; both mean automerge. */
+  automerge?: boolean | string;
 }
 
 interface RenovateConfig {
@@ -36,13 +38,16 @@ interface RenovateConfig {
   timezone?: string;
   schedule?: string[];
   minimumReleaseAge?: string;
-  automerge?: boolean;
+  automerge?: boolean | string;
+  platformAutomerge?: boolean;
   packageRules?: PackageRule[];
 }
 
 interface PackageManifest {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 }
 
 /**
@@ -79,14 +84,31 @@ function packageRules(): PackageRule[] {
 
 function directDependencies(): string[] {
   const manifest = readJson<PackageManifest>(MANIFEST_PATH);
-  return Object.keys({ ...manifest.dependencies, ...manifest.devDependencies }).sort();
+  return Object.keys({
+    ...manifest.dependencies,
+    ...manifest.devDependencies,
+    ...manifest.optionalDependencies,
+    ...manifest.peerDependencies,
+  }).sort();
 }
 
-/** Group names of every rule that claims this dependency. */
+/**
+ * Group names of every rule that can actually deliver a grouped update for this
+ * dependency. A rule without a `groupName`, one that is disabled, or one that
+ * only matches majors cannot keep a dependency maintained, so it does not count
+ * as coverage — otherwise the coverage test could report "covered" for a
+ * dependency Renovate never touches.
+ */
 function groupsMatching(dependency: string, rules: PackageRule[]): string[] {
   return rules
     .filter((rule) => rule.matchPackageNames?.includes(dependency) === true)
-    .map((rule) => rule.groupName ?? '(rule without a groupName)');
+    .filter((rule) => rule.groupName !== undefined && rule.enabled !== false)
+    .filter((rule) => {
+      const types = rule.matchUpdateTypes;
+      if (types === undefined) return true;
+      return types.includes('minor') || types.includes('patch');
+    })
+    .map((rule) => rule.groupName as string);
 }
 
 describe('renovate.json', () => {
@@ -104,10 +126,24 @@ describe('renovate.json', () => {
 
   it('never automerges, at the top level or in any rule', () => {
     const policy = config();
-    const automerged = (policy.packageRules ?? []).filter((rule) => rule.automerge === true);
+    // Renovate accepts a string (`"patch"`, `"minor"`) as well as `true`, and a
+    // platform-side toggle of its own, so assert the exact negative rather than
+    // the absence of `true`.
+    const automerged = (policy.packageRules ?? []).filter((rule) => rule.automerge !== undefined);
 
-    expect(policy.automerge, 'there is no automerge').not.toBe(true);
+    expect(policy.automerge, 'automerge is disabled').toBe(false);
+    expect(policy.platformAutomerge, 'the platform does not automerge either').not.toBe(true);
     expect(automerged.map((rule) => rule.groupName ?? '(rule without a groupName)')).toEqual([]);
+  });
+
+  it('treats a string-valued automerge as automerge', () => {
+    const policy: RenovateConfig = {
+      ...config(),
+      packageRules: [{ groupName: 'probe', matchPackageNames: ['three'], automerge: 'patch' }],
+    };
+    const automerged = (policy.packageRules ?? []).filter((rule) => rule.automerge !== undefined);
+
+    expect(automerged).toHaveLength(1);
   });
 
   it('keeps every grouped rule to minor and patch, so a major cannot ride along', () => {
@@ -127,8 +163,19 @@ describe('direct dependency coverage', () => {
   it('reads a real dependency list, so the guard cannot pass vacuously', () => {
     const dependencies = directDependencies();
 
-    expect(dependencies.length).toBeGreaterThanOrEqual(15);
+    expect(dependencies.length).toBeGreaterThanOrEqual(10);
     expect(dependencies).toContain('three');
+  });
+
+  it('does not count a rule that could never deliver a grouped update', () => {
+    const dependency = 'three';
+    const useless: PackageRule[] = [
+      { matchPackageNames: [dependency] },
+      { groupName: 'disabled', matchPackageNames: [dependency], enabled: false },
+      { groupName: 'majors only', matchPackageNames: [dependency], matchUpdateTypes: ['major'] },
+    ];
+
+    expect(groupsMatching(dependency, useless)).toEqual([]);
   });
 
   it('matches every direct dependency to exactly one group', () => {

@@ -36,13 +36,13 @@ the service worker the offline specs depend on.
 
 | AC | Criterion | Witness |
 |---|---|---|
-| AC-1 | `renovate.json` declares the preset, dashboard, weekly schedule, 3-day soak, no automerge, majors separate | `src/core/renovate-config.test.ts` shape tests |
-| AC-2 | Every direct dependency matches exactly one group; coupled pairs share one | coverage + pair tests, proven to bite with `left-pad` |
-| AC-3 | The validator passes | exit 0, command above |
-| AC-4 | The gate fails a tree carrying a high advisory | forced `undici@8.10.0` → 7 high, exit 1 (phase-2 evidence) |
-| AC-5 | No advisory is silenced | no `ignoreCves` entry exists; audit exits 0 on its own |
-| AC-6 | The policy is documented | `tech-stack.md` row + `CONTRIBUTING.md` section + roadmap row |
-| AC-7 | The job is independent and cheap | `Gate · audit`, no `needs:`, 5-minute ceiling |
+| AC-1 | Preset, dashboard, weekly Sydney schedule, three-day soak | `src/core/renovate-config.test.ts` shape test |
+| AC-2 | Coupled pairs resolve to one group; every direct dependency is matched | coverage + pair tests (now ignoring groupless, disabled and major-only rules) |
+| AC-3 | An unmatched dependency fails the guard, and passes again once removed | `left-pad` demonstration in `verification/phase-1.md` |
+| AC-4 | The gate exits non-zero on a vulnerable install and zero once reverted | forced `undici@8.10.0` → 7 high, exit 1; restored → 0 (phase-2 evidence) |
+| AC-5 | The audit job's measured duration is under 60 seconds | **1.6 s** measured locally (`pnpm audit --audit-level=high`, exit 0); CI step duration will confirm on the PR |
+| AC-6 | Docs describe the cadence, soak, gate and ignore rule | `tech-stack.md` row + CI section, `CONTRIBUTING.md`, roadmap row |
+| AC-7 | `pnpm check` green and the other gates still pass | `pnpm check`, `pnpm build`, 193-spec e2e suite |
 
 ## Deviations carried from the phases
 
