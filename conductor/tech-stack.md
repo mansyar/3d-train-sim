@@ -60,7 +60,8 @@ src/
                    #   skips, refuses empty salvage; pure)
     security-headers.ts # one response policy: CSP + nosniff + no-referrer,
                    #   dev style relaxation; the nginx include mirrors it
-    no-external-urls.test.ts # privacy guard: no http(s) literal in shipped sources
+    no-external-urls.test.ts # privacy guard: no http(s) literal in shipped ts,
+                   #   css or index.html (public/ is exempt: vendored licence text)
     nginx-headers.test.ts    # fails if nginx-security-headers.conf drifts
     perf-monitor.ts#   FPS probe ring buffer + quality-tier controller (guardrails)
   scene/           # three.js wiring; init-scene.ts is the thin assembler that

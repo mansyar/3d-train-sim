@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { SECURITY_HEADERS } from './security-headers';
+import { headerLines, SECURITY_HEADERS } from './security-headers';
 
 /**
  * Drift guard for the production half of the policy.
@@ -112,6 +112,21 @@ describe('nginx-security-headers.conf', () => {
     const declared = Object.fromEntries(parsed.map(({ name, value }) => [name, value]));
 
     expect(declared).toEqual(SECURITY_HEADERS);
+  });
+
+  it('carries every line `headerLines()` renders', () => {
+    const declared = Object.fromEntries(
+      parseAddHeaders(readText(INCLUDE_PATH)).map(({ name, value }) => [name, value]),
+    );
+
+    for (const line of headerLines()) {
+      const separator = line.indexOf(': ');
+      const name = line.slice(0, separator);
+
+      // The doc contract is that nginx mirrors the rendered lines, so compare
+      // the rendered value, not just "a header with that name exists".
+      expect(declared[name], line).toBe(line.slice(separator + 2));
+    }
   });
 
   it('parses every add_header line, so a malformed line cannot hide', () => {

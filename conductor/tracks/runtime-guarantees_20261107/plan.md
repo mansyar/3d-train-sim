@@ -146,3 +146,38 @@ synthetic entry and the real refusal is captured from the browser.
 denied writes under `conductor/`. The roadmap row also gained the `blob:` reason
 (GLB textures) beyond the brief's Howler note, and the two earlier Phase 0 rows
 were marked shipped since they already are.
+
+## Phase R1: Review Fixes
+
+- **Goal:** close the five findings from review round 1: assert the dev-server
+  policy, make the CSP control non-tautological, make `headerLines()` a real
+  contract, widen the privacy guard to the entry HTML and stylesheets, and prove
+  the scene moves while offline.
+- **Depends on:** Phase 4
+- **Covers:** F1, F2, F3, F4, F5
+- **Touches:** `e2e/runtime-guarantees.spec.ts`, `src/core/no-external-urls.test.ts`,
+  `src/core/nginx-headers.test.ts`, `conductor/tech-stack.md`
+- **Verification:** `pnpm check` and
+  `pnpm exec playwright test e2e/runtime-guarantees.spec.ts`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Assert the dev server's policy** — covers: F1
+  - [ ] **R1.T1.1: Request `localhost:5199/` and compare its CSP to
+    `securityHeadersFor({ dev: true })`, asserting exactly one directive differs
+    from the strict policy**
+- [ ] **R1.T2: Make the CSP control prove the injected script was refused** — covers: F2
+  - [ ] **R1.T2.1: Track every console message, snapshot the count before
+    injection, and require a new message naming `script-src`**
+- [ ] **R1.T3: Give `headerLines()` a consumer** — covers: F3
+  - [ ] **R1.T3.1: Assert each rendered line appears in the parsed nginx include,
+    keeping the extras check**
+- [ ] **R1.T4: Widen the privacy guard** — covers: F4
+  - [ ] **R1.T4.1: Scan `index.html` and `src/**/*.css`; document why `public/**`
+    is exempt (vendored attribution text)**
+- [ ] **R1.T5: Prove motion while riding offline** — covers: F5
+  - [ ] **R1.T5.1: Screenshot the canvas when the ride starts and poll until it
+    differs from the pre-ride frame**
+
+**Result:**
+**Checkpoint:**
+**Evidence:** conductor/tracks/runtime-guarantees_20261107/review.md

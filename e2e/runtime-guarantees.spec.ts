@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { CONTENT_SECURITY_POLICY } from '../src/core/security-headers';
+import { CONTENT_SECURITY_POLICY, securityHeadersFor } from '../src/core/security-headers';
 import { watchConsoleErrors } from './helpers';
 
 /**
@@ -23,6 +23,8 @@ import { watchConsoleErrors } from './helpers';
 test.use({ browserName: 'chromium' });
 
 const PREVIEW_ORIGIN = 'http://localhost:5198';
+/** The dev server `playwright.config.ts` starts for the tablet/phone projects. */
+const DEV_ORIGIN = 'http://localhost:5199';
 
 /** Schemes that never leave the device: object URLs for decoded textures and
  *  inline data the scene builds itself. Anything else must be same-origin. */
@@ -102,11 +104,26 @@ async function placeBridge(page: Page): Promise<void> {
   await expect(page.locator('.undo-toggle')).toBeVisible();
 }
 
-/** Press ride, prove the label flipped, then stop and prove it flipped back. */
+/**
+ * Press ride, prove the label flipped and that frames advanced, then stop and
+ * prove the label flipped back. The label alone is a state proxy: a stalled
+ * render loop with the ride flag set would still flip it, so the canvas must
+ * change while the train is supposed to be rolling.
+ */
 async function rideAndStop(page: Page): Promise<void> {
   const ride = page.locator('.ride-toggle');
+  const canvas = page.locator('.scene-canvas');
+  const before = await canvas.screenshot();
+
   await ride.click();
   await expect(ride).toHaveAttribute('aria-label', 'Stop the train');
+  await expect
+    .poll(async () => (await canvas.screenshot()).equals(before), {
+      timeout: 15_000,
+      message: 'the scene should move while the ride is on',
+    })
+    .toBe(false);
+
   await ride.click();
   await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
 }
@@ -159,6 +176,27 @@ test('the preview server sends the full policy on every asset class', async ({ p
   expect(worker.headers()['cache-control'], '/sw.js').toBe('no-cache');
   const script = await page.request.get(`${PREVIEW_ORIGIN}/${hashedScript}`);
   expect(script.headers()['cache-control'], hashedScript).toBe('no-cache');
+});
+
+test('the dev server sends the same policy, with only style-src relaxed', async ({ page }) => {
+  const response = await page.request.get(`${DEV_ORIGIN}/`);
+  expect(response.status(), 'the dev server should answer').toBe(200);
+
+  const headers = response.headers();
+  const devPolicy = securityHeadersFor({ dev: true })['Content-Security-Policy'] ?? '';
+  expect(headers['content-security-policy'], 'the dev document').toBe(devPolicy);
+  expect(headers['x-content-type-options'], 'the dev document').toBe('nosniff');
+  expect(headers['referrer-policy'], 'the dev document').toBe('no-referrer');
+
+  // The relaxation is allowed, so it must be exactly one directive wide: a
+  // second widened directive would mean the dev policy is quietly weaker than
+  // the one that ships.
+  const strict = CONTENT_SECURITY_POLICY.split('; ');
+  const relaxed = devPolicy.split('; ');
+  expect(relaxed).toHaveLength(strict.length);
+  const widened = relaxed.filter((directive, index) => directive !== strict[index]);
+  expect(widened, 'exactly one directive may differ in dev').toHaveLength(1);
+  expect(widened[0], 'only style-src may widen').toMatch(/^style-src /);
 });
 
 test('the meadow boots, places a toy and rides with the network off', async ({ page, context }) => {
@@ -216,32 +254,34 @@ test('nothing leaves the app origin during boot, placement and ride', async ({ p
 
 test('an injected inline script is refused while the app bundle runs', async ({ page }) => {
   test.setTimeout(60_000);
-  const refusals: string[] = [];
-  page.on('console', (message) => {
-    if (message.text().includes('Content Security Policy')) refusals.push(message.text());
-  });
+  const messages: string[] = [];
+  page.on('console', (message) => messages.push(message.text()));
 
   await page.goto(`${PREVIEW_ORIGIN}/`);
   // Same-origin code from the bundle still runs: the meadow mounted.
   await expect(page.locator('.scene-canvas')).toBeVisible();
   await expect(page.locator('.toybox-rail')).toBeVisible();
 
+  // Anything logged before the injection is unrelated to it, so only a message
+  // emitted after this point can witness *this* refusal.
+  const before = messages.length;
   await page.evaluate(() => {
     const script = document.createElement('script');
     script.textContent = 'window.__cspProbe = 1';
     document.head.append(script);
   });
 
-  // Wait for the browser's own refusal report, which proves `script-src 'self'`
-  // is doing work instead of merely being present on the response.
-  await expect.poll(() => refusals.length).toBeGreaterThan(0);
+  const refusals = () =>
+    messages.slice(before).filter((text) => text.includes('Content Security Policy'));
+
+  await expect.poll(() => refusals().length, { timeout: 15_000 }).toBeGreaterThan(0);
+
   const probe = await page.evaluate(
     () => (window as unknown as { __cspProbe?: number }).__cspProbe,
   );
-  expect(probe).toBeUndefined();
-  const refusal = refusals[0] ?? '';
-  expect(refusal, 'the refusal must come from the Content Security Policy').toContain(
-    'Content Security Policy',
-  );
+  expect(probe, 'the inline script must not run').toBeUndefined();
+
+  const refusal = refusals().find((text) => text.includes('script-src')) ?? '';
+  expect(refusal, 'the refusal must name the script-src directive').not.toBe('');
   test.info().annotations.push({ type: 'csp-refusal', description: refusal });
 });
