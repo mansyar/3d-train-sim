@@ -13,8 +13,8 @@ import type { SceneryKind } from '../core/scenery';
 import { isSwitchPiece, type SwitchPieceType } from '../core/switches';
 import type { Edge } from '../core/track-graph';
 import { GROUND_SIZE } from './ground';
-import { isPiece } from './track-catalog';
-import { advancedEdge, type TrackPlacement } from './track-placement';
+import { advancedEdge, isPiece } from './track-catalog';
+import type { TrackPlacement } from './track-placement';
 
 /** The crossing gates and the switch points, owned by one module. */
 export interface TrackCrossings {

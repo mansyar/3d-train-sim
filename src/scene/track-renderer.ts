@@ -97,26 +97,45 @@ export function startTrackRenderer(
   // Placement owns the store subscription and the render maps; everything
   // below reads the live maps through this handle. The hooks are the ambient
   // reactions (critters, delight, the music box) plus the crossing
-  // delegations, which only run after an asset has loaded — both modules
-  // below are constructed by then.
+  // delegations. They stay inert until `hooksReady` flips below: asset
+  // callbacks are asynchronous today, so both modules exist by the time a
+  // hook runs, but the latch keeps construction safe if a reconcile ever
+  // becomes synchronous instead of throwing on a still-unassigned binding.
+  let hooksReady = false;
+  let disposed = false;
   let ambience: TrackAmbience;
   const placement = startTrackPlacement(scene, world, reducedMotion, {
     onPieceTemplate: (type, model) => {
+      if (!hooksReady) return;
       ambience.pieceTemplate(type, model);
       crossings.pieceTemplate(type, model);
     },
-    onSceneryTemplate: (kind, model) => ambience.sceneryTemplate(kind, model),
+    onSceneryTemplate: (kind, model) => {
+      if (!hooksReady) return;
+      ambience.sceneryTemplate(kind, model);
+    },
     onModelReplaced: (id) => {
+      if (!hooksReady) return;
       crossings.modelReplaced(id);
       ambience.modelReplaced(id);
     },
     onModelRemoved: (id) => {
+      if (!hooksReady) return;
       crossings.modelRemoved(id);
       ambience.modelRemoved(id);
     },
-    onModelAdded: (id, model, kind) => crossings.modelAdded(id, model, kind),
-    onItemAttached: (id, model, item) => ambience.itemAttached(id, model, item),
-    afterSync: (wanted) => ambience.syncCritters(wanted),
+    onModelAdded: (id, model, kind) => {
+      if (!hooksReady) return;
+      crossings.modelAdded(id, model, kind);
+    },
+    onItemAttached: (id, model, item) => {
+      if (!hooksReady) return;
+      ambience.itemAttached(id, model, item);
+    },
+    afterSync: (wanted) => {
+      if (!hooksReady) return;
+      ambience.syncCritters(wanted);
+    },
   });
   ambience = startTrackAmbience(audio, reducedMotion, placement);
 
@@ -129,6 +148,9 @@ export function startTrackRenderer(
   const picking = startTrackPicking(camera, canvas, placement);
 
   const crossings = startTrackCrossings(placement, audio, reducedMotion);
+  // Every binding the hooks dereference now exists — ambient reactions may
+  // run from here on.
+  hooksReady = true;
 
   return {
     cellFromPoint: picking.cellFromPoint,
@@ -157,11 +179,15 @@ export function startTrackRenderer(
     musicBoxProbe: ambience.musicBoxProbe,
     setTunnelSnow: ambience.setTunnelSnow,
     dispose(): void {
-      placement.dispose();
-      ghost.endGhost();
+      if (disposed) return;
+      disposed = true;
+      // Reverse construction order: each module still reads the ones below
+      // it, so the last constructed goes first. `ghost.dispose()` ends the
+      // ghost itself (it drops the preview and its cloned materials).
       crossings.dispose();
       ambience.dispose();
       ghost.dispose();
+      placement.dispose();
     },
   };
 }

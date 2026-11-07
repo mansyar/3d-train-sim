@@ -5,7 +5,7 @@
  */
 import type { PieceType } from '../core/pieces';
 import type { PlacedScenery, SceneryKind } from '../core/scenery';
-import type { PlacedPiece } from '../core/track-graph';
+import { type Edge, nextEdge, type PlacedPiece } from '../core/track-graph';
 
 /** Toy snow-cap node names (windmill/carousel/balloon/music-box contracts). */
 export const DELIGHT_CAPS = [
@@ -63,6 +63,13 @@ export const baseYawOf = (kind: PieceType | SceneryKind): number =>
   kind in BASE_YAW ? BASE_YAW[kind as PieceType] : 0;
 
 export const isPiece = (item: MeadowItem): item is PlacedPiece => 'type' in item;
+
+/** The piece's endpoint labels, advanced by its yaw (the core convention). */
+export const advancedEdge = (edge: Edge, steps: number): Edge => {
+  let out = edge;
+  for (let i = 0; i < steps; i++) out = nextEdge(out);
+  return out;
+};
 
 /** Kit models are authored on a 4-unit module (straight length = corner diameter). */
 export const KIT_MODULE_UNITS = 4;

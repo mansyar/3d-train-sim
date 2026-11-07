@@ -42,6 +42,21 @@ describe('cellToWorld', () => {
     }
   });
 
+  it('maps every one of the 16 × 16 cells by the same formula', () => {
+    let checked = 0;
+    for (let y = 0; y < MEADOW_CELLS; y += 1) {
+      for (let x = 0; x < MEADOW_CELLS; x += 1) {
+        expect(cellToWorld({ x, y })).toEqual({
+          x: -HALF + (x + 0.5) * CELL_SIZE,
+          z: -HALF + (y + 0.5) * CELL_SIZE,
+        });
+        checked += 1;
+      }
+    }
+    // The exhaustive claim AC-3 asks for, not a sample of the grid.
+    expect(checked).toBe(MEADOW_CELLS ** 2);
+  });
+
   it('extrapolates to negative cells without clamping', () => {
     expect(cellToWorld({ x: -1, y: 0 })).toEqual({ x: -HALF - INSET, z: -HALF + INSET });
     expect(cellToWorld({ x: 0, y: -1 })).toEqual({ x: -HALF + INSET, z: -HALF - INSET });

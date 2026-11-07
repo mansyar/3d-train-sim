@@ -12,10 +12,30 @@ import { describe, expect, it } from 'vitest';
  */
 const SRC_DIR = fileURLToPath(new URL('..', import.meta.url));
 const ROOT_DIR = fileURLToPath(new URL('../..', import.meta.url));
+const SCENE_SOURCE_DIR = fileURLToPath(new URL('../scene/', import.meta.url));
 
 const SCENE_DIR = 'src/scene/';
 const UI_DIR = 'src/ui/';
 const CORE_DIR = 'src/core/';
+
+/**
+ * AC-1 budgets: the facade plus the six modules it delegates to. The metric is
+ * the file's lines as split by '\n' on a trimmed trailing newline —
+ * `content.replace(/\n$/, '').split('\n').length` — so the count is
+ * reproducible and does not depend on whether an editor wrote a final newline.
+ */
+const LINE_BUDGETS: Record<string, number> = {
+  'track-renderer': 200,
+  'track-placement': 400,
+  'track-crossings': 400,
+  'track-ambience': 400,
+  'track-ghost': 400,
+  'track-picking': 400,
+  'track-catalog': 400,
+};
+
+/** The line-budget metric, named so the measured numbers are reproducible. */
+const lineCount = (content: string): number => content.replace(/\n$/, '').split('\n').length;
 
 /** The seven modules the renderer split into (renderer plus six parts). */
 const TRACK_MODULES = [
@@ -37,9 +57,9 @@ const RENDERER_IMPORTERS: Record<string, string> = {
 /** Modules that may read the live placement handle, and why. */
 const PLACEMENT_READERS: Record<string, string> = {
   'src/scene/track-renderer': 'the facade constructs placement once and wires its hooks',
-  'src/scene/track-crossings': 'reads the live rendered/tracked maps for gate and switch poses',
-  'src/scene/track-picking':
-    'reads the live rendered/tracked maps for the tap hit test (type-only)',
+  'src/scene/track-crossings':
+    'reads the live rendered/tracked maps for gate and switch poses (type-only handle)',
+  'src/scene/track-picking': 'reads the live tracked map only, for the tap hit test (type-only)',
 };
 
 /** What placement itself may depend on among its sibling track modules. */
@@ -203,5 +223,26 @@ describe('source import graph', () => {
     expect(importers(`${SCENE_DIR}track-renderer`).sort()).toEqual(
       Object.keys(RENDERER_IMPORTERS).sort(),
     );
+  });
+});
+
+describe('scene module line budgets', () => {
+  it('holds the facade and its six modules to their AC-1 budgets', () => {
+    // The table must name exactly the seven split modules, so a rename cannot
+    // quietly drop a file out of the measurement.
+    expect(Object.keys(LINE_BUDGETS).sort()).toEqual([...TRACK_MODULES].sort());
+    const measured = Object.entries(LINE_BUDGETS).map(([name, budget]) => {
+      const content = readFileSync(join(SCENE_SOURCE_DIR, `${name}.ts`), 'utf8');
+      return { file: `${name}.ts`, count: lineCount(content), budget };
+    });
+    // One message per offender, naming the file, its count and its budget.
+    expect(
+      measured
+        .filter((module) => module.count > module.budget)
+        .map(
+          (module) =>
+            `${module.file} is ${module.count} lines, over its ${module.budget}-line budget`,
+        ),
+    ).toEqual([]);
   });
 });

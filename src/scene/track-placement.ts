@@ -15,7 +15,7 @@ import {
   sceneryScale,
   sceneryUrl,
 } from '../core/scenery';
-import { type Edge, nextEdge, type PlacedPiece } from '../core/track-graph';
+import type { PlacedPiece } from '../core/track-graph';
 import { tunnelRunsOf } from '../core/tunnels';
 import type { WorldStore } from '../state/world';
 import { createTrestleTemplate } from './bridge-model';
@@ -23,6 +23,7 @@ import { disposeObject } from './dispose-object';
 import { SURFACE_LIFT } from './river-water';
 import { enableCastShadows } from './shadows';
 import {
+  advancedEdge,
   baseYawOf,
   HILL_SNOW_URLS,
   isPiece,
@@ -60,13 +61,6 @@ export interface TrackPlacement {
   setHillSnow(visible: boolean): void;
   dispose(): void;
 }
-
-/** The piece's endpoint labels, advanced by its yaw (the core convention). */
-export const advancedEdge = (edge: Edge, steps: number): Edge => {
-  let out = edge;
-  for (let i = 0; i < steps; i++) out = nextEdge(out);
-  return out;
-};
 
 /** Owns the loader, the render maps, and the store→scene reconcile loop. */
 export function startTrackPlacement(

@@ -1,8 +1,8 @@
 /**
  * Raycast picking: the ground-plane hit test, the cell under a screen point,
  * the placed item tracked on that cell, and the screen projection of a cell.
- * The hit test reads placement's live `tracked`/`rendered` maps through the
- * placement handle; the projection is the frozen
+ * The hit test reads placement's live `tracked` map only, through a type-only
+ * import of the placement handle; the projection is the frozen
  * `cellToScreen(cell, camera, canvas)` the scene handle and the e2e probes use.
  */
 import { type PerspectiveCamera, Plane, Raycaster, Vector2, Vector3 } from 'three';

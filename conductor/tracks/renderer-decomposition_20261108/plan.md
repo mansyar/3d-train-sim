@@ -160,8 +160,9 @@ from the same path, and the handle member keeps its one-argument shape. The brie
 **Result:** verified
 **Checkpoint:** 84b62d7
 **Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-5.md
-**Deviations:** none. The new module measures 400 lines including its trailing newline (383 by the
-line counter), exactly at the AC-1 budget for a single file; the renderer is down to 272 lines. The
+**Deviations:** none. The new module is exactly at the 400-line budget (measured by the guard added
+in Phase R1, metric `content.replace(/\n$/, '').split('\n').length`; 394 lines after Phase R1). The
+renderer is down to 193 lines by the same metric. The
 four probes e2e reads are forwarded from the new module with unchanged names, arity and shapes, and
 the placement hooks are now delegations with no crossing state left in the facade.
 
