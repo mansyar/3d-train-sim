@@ -79,24 +79,29 @@
 - **Covers:** F1, F2, F3, F4, F5, F6, F7
 - **Touches:** `pnpm-workspace.yaml`, `Dockerfile`, `src/core/renovate-config.test.ts`, `src/core/dependency-overrides.test.ts`, `conductor/tracks/deps-guardrails_20261107/verification/integrated.md`
 - **Verification:** `pnpm check` and `pnpm audit --audit-level=high`
-- **Status:** in_progress
-- [ ] **R1.T1: Scope the brace-expansion override per consumer major** — covers: F1
-  - [ ] R1.T1.1: Replace the tree-wide range with `"minimatch@5>brace-expansion": ">=2.1.7 <3"` and `"minimatch@10>brace-expansion": ">=5.0.11"`
-  - [ ] R1.T1.2: Add `src/core/dependency-overrides.test.ts`, resolving each installed minimatch copy and asserting the brace-expansion it requires is callable
-  - [ ] R1.T1.3: Show the guard failing under the tree-wide override, then passing once scoped
-- [ ] **R1.T2: Copy the pnpm settings into the image** — covers: F2
-  - [ ] R1.T2.1: Add `pnpm-workspace.yaml` to the build stage's `COPY`
-  - [ ] R1.T2.2: Reproduce the frozen install in a temp directory with and without the file, and record both exit codes
-- [ ] **R1.T3: Make the automerge guard exact** — covers: F3
-  - [ ] R1.T3.1: Assert `automerge` is exactly `false`, reject any per-rule `automerge` and `platformAutomerge: true`, widen the types, and add a string-valued case
-- [ ] **R1.T4: Stop counting rules that cannot deliver an update** — covers: F4
-  - [ ] R1.T4.1: Require a `groupName`, `enabled !== false` and a minor-or-patch scope before a rule counts as coverage; read optional and peer dependencies; add a rejection case
-- [ ] **R1.T5: Measure the gate and fix the AC table** — covers: F5
-  - [ ] R1.T5.1: Time `pnpm audit --audit-level=high`, record the number, and renumber the integrated AC rows to the spec
-- [ ] **R1.T6: Cap `fast-uri` inside ajv's major** — covers: F6
-  - [ ] R1.T6.1: Change the override to `">=3.1.7 <4"` and record the resolved version
-- [ ] **R1.T7: Lower the anti-vacuity floor** — covers: F7
-  - [ ] R1.T7.1: Drop the floor from 15 to 10, keeping the `three` assertion
+- **Status:** verified
+- [x] **R1.T1: Scope the brace-expansion override per consumer major** — covers: F1
+  - [x] R1.T1.1: Replace the tree-wide range with `"minimatch@5>brace-expansion": ">=2.1.7 <3"` and `"minimatch@10>brace-expansion": ">=5.0.11"`
+  - [x] R1.T1.2: Add `src/core/dependency-overrides.test.ts`, resolving each installed minimatch copy and asserting the brace-expansion it requires is callable
+  - [x] R1.T1.3: Show the guard failing under the tree-wide override, then passing once scoped
+- [x] **R1.T2: Copy the pnpm settings into the image** — covers: F2
+  - [x] R1.T2.1: Add `pnpm-workspace.yaml` to the build stage's `COPY`
+  - [x] R1.T2.2: Reproduce the frozen install in a temp directory with and without the file, and record both exit codes
+- [x] **R1.T3: Make the automerge guard exact** — covers: F3
+  - [x] R1.T3.1: Assert `automerge` is exactly `false`, reject any per-rule `automerge` and `platformAutomerge: true`, widen the types, and add a string-valued case
+- [x] **R1.T4: Stop counting rules that cannot deliver an update** — covers: F4
+  - [x] R1.T4.1: Require a `groupName`, `enabled !== false` and a minor-or-patch scope before a rule counts as coverage; read optional and peer dependencies; add a rejection case
+- [x] **R1.T5: Measure the gate and fix the AC table** — covers: F5
+  - [x] R1.T5.1: Time `pnpm audit --audit-level=high`, record the number, and renumber the integrated AC rows to the spec
+- [x] **R1.T6: Cap `fast-uri` inside ajv's major** — covers: F6
+  - [x] R1.T6.1: Change the override to `">=3.1.7 <4"` and record the resolved version
+- [x] **R1.T7: Lower the anti-vacuity floor** — covers: F7
+  - [x] R1.T7.1: Drop the floor from 15 to 10, keeping the `three` assertion
+
+**Result:** verified
+**Checkpoint:** b3193d0
+**Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-R1.md
+**Deviations:** the fixes were authored by the primary in one pass (four code files, with runtime checks against the installed tree), so they share one commit rather than one per finding. `docker build` was not run — no daemon locally or in CI — so the temp-directory frozen install is the witness.
 
 <!-- When a phase is verified, the primary agent replaces the placeholders below
      with the Result, Checkpoint SHA and Evidence path.
