@@ -13,7 +13,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `renovate.json`, `src/core/renovate-config.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 - [ ] **P1.T1: Write the Renovate policy** — covers: FR-1, FR-2, FR-3, FR-4
   - [ ] P1.T1.1: Create `renovate.json` extending `config:recommended`, with `dependencyDashboard: true`, a weekly Monday schedule before the working day in `Australia/Sydney`, `minimumReleaseAge: "3 days"`, `rebaseWhen: "conflicted"` and no automerge
   - [ ] P1.T1.2: Add `packageRules` for the coupled pairs (`three` + `@types/three`, `vite-plugin-pwa` + `workbox-window`), a test-tooling group, a lint/type group, and a separate majors group
