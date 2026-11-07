@@ -81,3 +81,28 @@ recorded separately.
   before, which the guard now proves per consumer.
 - The validator was re-run because `platformAutomerge` is a policy key Renovate
   rejects when misspelled.
+
+## Full suite
+
+`pnpm exec playwright test`, three runs on a contended machine: 192 passed and 1
+failed each time, a different spec each run, and each passed on isolated repeats.
+
+| Run | Result | Failing spec | Isolated rerun |
+|---|---|---|---|
+| 1 | 192 passed, 1 failed | tablet `smoke.spec.ts:786` (tabbed toybox) | 3/3 passed, and the cause was found and fixed (below) |
+| 2 | 192 passed, 1 failed | tablet `smoke.spec.ts:314` (ambient FPS) | 3/3 passed alone |
+| 3 | 192 passed, 1 failed | phone `smoke.spec.ts:314` (ambient FPS) | passed alone on both profiles |
+
+The tabbed-toybox failure was real and is fixed (R2.T4): `clearMeadow()` reset the
+world before the boot snapshot had hydrated, so the reset was silently undone and
+the starter scenery reappeared — four toys where the test had placed two. It now
+waits for `__tinyTracksReady`, and the spec passes 3/3 on tablet where it had
+failed 3/3 before.
+
+The ambient-FPS spec is a throughput measurement (≥10 FPS locally, ≥2 with `CI`)
+run alongside a second WebGL worker; contention drops it below 10 without
+anything being wrong, and a starved evaluate used to surface as a 30 s "wedge".
+It now allows 90 s so the floor makes the judgement. CI is the authority for this
+suite (`e2e/README.md`), so the PR's `Gate · e2e` run is the check that counts;
+the local number is recorded as contention, not as a green claim.
+
