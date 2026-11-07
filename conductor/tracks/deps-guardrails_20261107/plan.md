@@ -60,12 +60,17 @@
 - **Covers:** FR-9, AC-6
 - **Touches:** `conductor/tech-stack.md`, `conductor/product.md`, `CONTRIBUTING.md`
 - **Verification:** `pnpm check`
-- **Status:** pending
-- [ ] **P3.T1: Document the maintenance policy** — covers: FR-9
-  - [ ] P3.T1.1: Add a dependency-maintenance row to `conductor/tech-stack.md` naming the config, the cadence, the soak, the audit gate and the dated-ignore rule, with today's date
-  - [ ] P3.T1.2: Add a short note to `CONTRIBUTING.md` telling a contributor what a Renovate PR is and that it merges only after all four gates are green
-- [ ] **P3.T2: Record the roadmap outcome** — covers: FR-9
-  - [ ] P3.T2.1: Mark `deps-guardrails_20261107` shipped in the `conductor/product.md` roadmap, and record that enabling the Renovate app on the repository is a manual step outside this track
+- **Status:** verified
+- [x] **P3.T1: Document the maintenance policy** — covers: FR-9
+  - [x] P3.T1.1: Add a dependency-maintenance row to `conductor/tech-stack.md` naming the config, the cadence, the soak, the audit gate and the dated-ignore rule, with today's date
+  - [x] P3.T1.2: Add a short note to `CONTRIBUTING.md` telling a contributor what a Renovate PR is and that it merges only after all four gates are green
+- [x] **P3.T2: Record the roadmap outcome** — covers: FR-9
+  - [x] P3.T2.1: Mark `deps-guardrails_20261107` shipped in the `conductor/product.md` roadmap, and record that enabling the Renovate app on the repository is a manual step outside this track
+
+**Result:** verified
+**Checkpoint:** 9ad7f35
+**Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-3.md
+**Deviations:** the tech-stack row documents the four `overrides` beside the policy, because they are what keeps the gate green and a future reader needs to know why they exist. Installing the Renovate GitHub app was not performed — it is a repository setting, recorded as the remaining manual step in the roadmap row.
 
 <!-- When a phase is verified, the primary agent replaces the placeholders below
      with the Result, Checkpoint SHA and Evidence path.
