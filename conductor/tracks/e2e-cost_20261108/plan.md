@@ -160,14 +160,23 @@ village (14/5) rather than the pristine oval (10/4), which is that test's own fi
 - **Touches:** `e2e/README.md`, `CONTRIBUTING.md`, `conductor/tech-stack.md`,
   `conductor/tracks/e2e-cost_20261108/verification/parity.md`
 - **Verification:** `pnpm check` and `pnpm e2e:full` and `pnpm exec playwright test --list`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P6.T1: Close the parity ledger** — covers: FR-5, AC-7
-  - [ ] P6.T1.1: Map every one of the 96 original tests to a merged step or a named unit test
-  - [ ] P6.T1.2: Prove each cited unit test exists and passes
-- [ ] **P6.T2: Document the vocabulary** — covers: FR-10, AC-9
-- [ ] **P6.T3: Measure the outcome** — covers: AC-1, AC-3, AC-8, AC-10
-  - [ ] P6.T3.1: Record run counts, both lane durations and the absence of `src/` changes
+- [x] **P6.T1: Close the parity ledger** - covers: FR-5, AC-7
+  - [x] P6.T1.1: Map every one of the 96 original tests to a merged step or a named unit test
+  - [x] P6.T1.2: Prove each cited unit test exists and passes
+- [x] **P6.T2: Document the vocabulary** - covers: FR-10, AC-9
+- [x] **P6.T3: Measure the outcome** - covers: AC-1, AC-3, AC-8, AC-10
+  - [x] P6.T3.1: Record run counts, both lane durations and the absence of `src/` changes
+
+**Result:** verified
+**Checkpoint:** a708d81
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-6.md
+
+**Deviations:** performed by the primary because the phase subagent is denied writes under `conductor/`.
+Two spec descriptors were amended after measurement at the user's direction: NFR-2 and AC-3 went from
+≤6 min to ≤8 min (measured 7.7 min at 47 runs; the ≤6 min claim that holds is per CI shard). The 3-worker
+experiment is recorded as a rejected option (7.2 min with a new flake).
 
 <!--
 The primary agent appends after verification:
