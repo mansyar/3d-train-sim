@@ -1,0 +1,62 @@
+# Dependency Guardrails — Implementation Plan
+
+> **Branch:** `chore/deps-guardrails_20261107`
+> **Base:** `main` @ `b99999abcaf8bad1200c194c524a7835c5681f63`
+>
+> **Phase states:** `pending`, `in_progress`, `verified`, `failed`, `blocked`.
+> Only the primary agent writes this file.
+
+## Phase 1: Renovate policy and its coverage guard
+
+- **Goal:** `renovate.json` declares the cadence, the soak and the groupings, and a unit test proves that no direct dependency escapes the config.
+- **Depends on:** none
+- **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-4, AC-1, AC-2, AC-3
+- **Touches:** `renovate.json`, `src/core/renovate-config.test.ts`
+- **Verification:** `pnpm check`
+- **Status:** pending
+- [ ] **P1.T1: Write the Renovate policy** — covers: FR-1, FR-2, FR-3, FR-4
+  - [ ] P1.T1.1: Create `renovate.json` extending `config:recommended`, with `dependencyDashboard: true`, a weekly Monday schedule before the working day in `Australia/Sydney`, `minimumReleaseAge: "3 days"`, `rebaseWhen: "conflicted"` and no automerge
+  - [ ] P1.T1.2: Add `packageRules` for the coupled pairs (`three` + `@types/three`, `vite-plugin-pwa` + `workbox-window`), a test-tooling group, a lint/type group, and a separate majors group
+  - [ ] P1.T1.3: Validate the config with `renovate-config-validator` and record the output; if the validator cannot run offline, record that plainly rather than claiming it passed
+- [ ] **P1.T2: Guard the config against drift** — covers: FR-5
+  - [ ] P1.T2.1: Read `package.json` and `renovate.json` in a test and assert every direct dependency is matched by at least one `packageRules` pattern
+  - [ ] P1.T2.2: Assert both members of each coupled pair resolve to the same group name, and that majors never share a group with minors
+  - [ ] P1.T2.3: Demonstrate the guard failing on a temporary unmatched dependency, then revert it and show the test green again
+
+## Phase 2: The audit gate
+
+- **Goal:** a fourth CI gate fails a pull request carrying a high or critical advisory, and runs in under a minute.
+- **Depends on:** Phase 1
+- **Covers:** FR-6, FR-7, FR-8, NFR-2, NFR-3, AC-4, AC-5, AC-7
+- **Touches:** `.github/workflows/ci.yml`, `package.json` (only if FR-8 needs a dated ignore)
+- **Verification:** `pnpm audit --audit-level=high` and `pnpm check`
+- **Status:** pending
+- [ ] **P2.T1: Add `Gate · audit` to CI** — covers: FR-6, FR-7, NFR-3
+  - [ ] P2.T1.1: Add an independent job running `pnpm audit --audit-level=high`, with a five-minute ceiling and no dependency on Playwright, the build or the other gates
+  - [ ] P2.T1.2: Keep the existing workflow filters intact, so the gate runs on every push and pull request that touches code
+- [ ] **P2.T2: Prove the gate bites** — covers: FR-6, FR-8, NFR-2, AC-4, AC-5
+  - [ ] P2.T2.1: Run the gate on the clean tree, record its exit code and measured duration
+  - [ ] P2.T2.2: Install a deliberately vulnerable devDependency, show the gate exiting non-zero, then revert and show `pnpm-lock.yaml` returning byte-identical
+  - [ ] P2.T2.3: If a dated ignore turns out to be required, add it to `pnpm.auditConfig` with a date and a reason; otherwise record that none was needed
+
+## Phase 3: Documentation
+
+- **Goal:** the cadence, soak, gate and ignore rule are written where the next contributor looks.
+- **Depends on:** Phase 2
+- **Covers:** FR-9, AC-6
+- **Touches:** `conductor/tech-stack.md`, `conductor/product.md`, `CONTRIBUTING.md`
+- **Verification:** `pnpm check`
+- **Status:** pending
+- [ ] **P3.T1: Document the maintenance policy** — covers: FR-9
+  - [ ] P3.T1.1: Add a dependency-maintenance row to `conductor/tech-stack.md` naming the config, the cadence, the soak, the audit gate and the dated-ignore rule, with today's date
+  - [ ] P3.T1.2: Add a short note to `CONTRIBUTING.md` telling a contributor what a Renovate PR is and that it merges only after all four gates are green
+- [ ] **P3.T2: Record the roadmap outcome** — covers: FR-9
+  - [ ] P3.T2.1: Mark `deps-guardrails_20261107` shipped in the `conductor/product.md` roadmap, and record that enabling the Renovate app on the repository is a manual step outside this track
+
+<!-- When a phase is verified, the primary agent replaces the placeholders below
+     with the Result, Checkpoint SHA and Evidence path.
+
+     **Result:** verified
+     **Checkpoint:** <short-sha>
+     **Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-1.md
+-->
