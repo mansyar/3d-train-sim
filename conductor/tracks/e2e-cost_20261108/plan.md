@@ -160,7 +160,7 @@ village (14/5) rather than the pristine oval (10/4), which is that test's own fi
 - **Touches:** `e2e/README.md`, `CONTRIBUTING.md`, `conductor/tech-stack.md`,
   `conductor/tracks/e2e-cost_20261108/verification/parity.md`
 - **Verification:** `pnpm check` and `pnpm e2e:full` and `pnpm exec playwright test --list`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P6.T1: Close the parity ledger** — covers: FR-5, AC-7
   - [ ] P6.T1.1: Map every one of the 96 original tests to a merged step or a named unit test

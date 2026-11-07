@@ -18,8 +18,12 @@ Before committing, run the full gate suite:
 
 ```bash
 pnpm check                      # biome + tsc --noEmit + vitest
-pnpm exec playwright test       # e2e smoke (boots the app, places pieces)
+pnpm e2e                        # the @smoke lane: build, then ten journeys (~2 min)
+pnpm e2e:full                   # the whole tablet suite before you push (~4 min)
 ```
+
+`pnpm e2e` is the loop you want while working; `pnpm e2e:full` is what a PR effectively runs, split into
+two shards. The tags, the `phone` allowlist and the shard/nightly shape are in `e2e/README.md`.
 
 CI runs the same gates on every PR. See the Windows note in
 `conductor/workflow.md` if `CI=true` prefixes misbehave under pnpm.
