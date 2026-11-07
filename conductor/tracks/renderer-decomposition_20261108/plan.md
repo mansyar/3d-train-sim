@@ -242,22 +242,29 @@ was weakened — two real edges are allowlisted with reasons. Pre-existing over-
 - **Touches:** `src/scene/track-renderer.ts`, `src/core/import-graph.test.ts`,
   `conductor/tech-stack.md`, `verification/integrated.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R2.T1: Say what the latch actually does** - covers: F7
-  - [ ] R2.T1.1: Reword the facade comment so it reads as a crash guard that drops an
+- [x] **R2.T1: Say what the latch actually does** - covers: F7
+  - [x] R2.T1.1: Reword the facade comment so it reads as a crash guard that drops an
         edge-triggered hook, not as ordering or a replay.
-- [ ] **R2.T2: Dispose in strict reverse construction order** - covers: F8
-  - [ ] R2.T2.1: Run crossings, then ghost, then ambience, then placement, and say so in the
+- [x] **R2.T2: Dispose in strict reverse construction order** - covers: F8
+  - [x] R2.T2.1: Run crossings, then ghost, then ambience, then placement, and say so in the
         comment (picking holds no scene state and has no dispose).
-- [ ] **R2.T3: Name the template the crossings module reads** - covers: F9
-  - [ ] R2.T3.1: Reword the allowlist reason so it includes the crossing-gate template used for
+- [x] **R2.T3: Name the template the crossings module reads** - covers: F9
+  - [x] R2.T3.1: Reword the allowlist reason so it includes the crossing-gate template used for
         the snow cap, not just the two maps.
-- [ ] **R2.T4: One canonical line count in every document** - covers: F10
-  - [ ] R2.T4.1: Replace the hand-counted 158/167/210 figures in the plan, the phase-6 evidence
+- [x] **R2.T4: One canonical line count in every document** - covers: F10
+  - [x] R2.T4.1: Replace the hand-counted 158/167/210 figures in the plan, the phase-6 evidence
         and the integrated record with the budget test's numbers, and note that R1 squashed its
         working commits into `3d78e13`.
-- [ ] **R2.T5: Measure the gzip delta** - covers: F11
-  - [ ] R2.T5.1: Build the base commit and HEAD, gzip the emitted JS bundle from each, and record
+- [x] **R2.T5: Measure the gzip delta** - covers: F11
+  - [x] R2.T5.1: Build the base commit and HEAD, gzip the emitted JS bundle from each, and record
         the difference against the 2 KB budget in the integrated record.
+
+**Result:** verified
+**Checkpoint:** 3041df8
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-R2.md
+**Deviations:** the phase ran in the primary agent because the findings are a comment, a teardown
+order and document figures. The gzip baseline needed a build of `f880530`, done in a throwaway
+worktree that was removed afterwards. The renderer is 195 lines, five under its 200-line budget.
 
