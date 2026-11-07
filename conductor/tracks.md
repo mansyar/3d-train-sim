@@ -4,7 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [renderer-decomposition_20261108](tracks/renderer-decomposition_20261108/index.md) | Renderer Decomposition | Refactor | in_progress |
+| [renderer-decomposition_20261108](./archive/renderer-decomposition_20261108/index.md) | Renderer Decomposition | Refactor | archived |
 | [deps-guardrails_20261107](./archive/deps-guardrails_20261107/index.md) | Dependency Guardrails | Chore | archived |
 | [runtime-guarantees_20261107](./archive/runtime-guarantees_20261107/index.md) | Runtime Guarantees | Feature | archived |
 | [world-portability_20261107](./archive/world-portability_20261107/index.md) | World Portability | Feature | archived |
