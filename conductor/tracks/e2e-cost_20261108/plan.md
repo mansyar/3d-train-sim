@@ -110,16 +110,26 @@ and is present.
   `e2e/runtime-guarantees.spec.ts`, `e2e/starter-railway.spec.ts`, `e2e/park-spot.spec.ts`,
   `e2e/ride-toybox-flow.spec.ts`, `e2e/delight-toys.spec.ts`, `e2e/sun-moon.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/world-portability.spec.ts e2e/save-recovery.spec.ts e2e/runtime-guarantees.spec.ts e2e/starter-railway.spec.ts e2e/park-spot.spec.ts e2e/delight-toys.spec.ts e2e/sun-moon.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P4.T1: Merge portability (12 → 5)** — covers: FR-4, FR-5
-  - [ ] P4.T1.1: Keep one round trip, one salvage, one refusal, one undo and one mid-ride stop
-  - [ ] P4.T1.2: Remove the refusal permutations already proven by `portable.test.ts` and cite them
-- [ ] **P4.T2: Merge save recovery (6 → 2)** — covers: FR-4, FR-5
-  - [ ] P4.T2.1: One test proves salvage and restore; one proves the parent-gate note and dismissal
-- [ ] **P4.T3: Merge runtime guarantees (5 → 4)** — covers: FR-4, FR-5
-- [ ] **P4.T4: Merge the two galleries (8 → 4)** — covers: FR-4, FR-5
-- [ ] **P4.T5: Merge the three small specs** — covers: FR-4, FR-5
+- [x] **P4.T1: Merge portability (12 → 5)** - covers: FR-4, FR-5
+  - [x] P4.T1.1: Keep one round trip, one salvage, one refusal, one undo and one mid-ride stop
+  - [x] P4.T1.2: Remove the refusal permutations already proven by `portable.test.ts` and cite them
+- [x] **P4.T2: Merge save recovery (6 → 2)** — covers: FR-4, FR-5
+  - [x] P4.T2.1: One test proves salvage and restore; one proves the parent-gate note and dismissal
+- [x] **P4.T3: Merge runtime guarantees (5 → 4)** — covers: FR-4, FR-5
+- [x] **P4.T4: Merge the two galleries (8 → 4)** — covers: FR-4, FR-5
+- [x] **P4.T5: Merge the three small specs** - covers: FR-4, FR-5
+
+**Result:** verified
+**Checkpoint:** 7377ce1
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-4.md
+
+**Deviations:** the `ride-toybox-flow` merge took `@smoke` from eleven to ten and the phone lane from
+eight to seven; the user chose to keep the merge and amend FR-2/AC-2/AC-4 rather than split the test or
+add a tag to pad the count. Portability's restored-boot case moved into `save-recovery.spec.ts` instead
+of becoming a sixth portability boot. `starter-railway`'s dressed-train undo now targets the reloaded
+village (14/5) rather than the pristine oval (10/4), which is that test's own first step.
 
 ## Phase 5: CI shape
 
