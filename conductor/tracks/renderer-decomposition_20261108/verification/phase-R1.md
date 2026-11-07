@@ -136,3 +136,36 @@ touched only for this evidence file.
   manual table in the phase-6 file; `plan.md`'s 158/210 should be corrected to
   193 and 221 (and the six-module table refreshed from the counts above) when
   the primary syncs Conductor state.
+
+## Primary verification
+
+Performed by the primary agent on the squashed R1 tree.
+
+| Check | Command | Exit | Result |
+|---|---|---|---|
+| Static + unit | `pnpm check` | 0 | Biome clean, `tsc --noEmit` clean, 50 files / **883 tests** |
+| Phone behaviour specs (the 7 failures from the mid-run suite) | `pnpm exec playwright test --project=phone e2e/smoke.spec.ts e2e/starter-railway.spec.ts e2e/switch-3way.spec.ts` | 0 | **27 passed**, 2.6 m, isolated |
+
+The canonical counts were re-checked by the new budget test, not by hand: renderer **193** (seven
+lines of headroom), placement 394, crossings 400 (at the cap), ambience 221, ghost 176, picking 119,
+catalogue 199.
+
+**Review of the diff:**
+
+- The latch is behavioural, not decorative: all seven hooks return early until `hooksReady` flips
+  after `crossings` is constructed, so a synchronous reconcile during construction is a no-op rather
+  than a TDZ throw. The trade-off is recorded in the evidence: in that hypothetical the snow-cap
+  settling would be skipped, which is a cosmetic miss instead of a crash.
+- `dispose()` now sets `disposed` first and tears down crossings → ambience → ghost → placement,
+  matching the spec's reverse-order edge case; `ghost.dispose()` ends the ghost, so the standalone
+  `endGhost()` is gone.
+- `advancedEdge` moved to `track-catalog.ts` as a pure helper over `nextEdge`, which lets the
+  crossings allowlist describe a type-only handle rather than an import of placement code.
+- The line-budget test names its metric in a comment, asserts the table covers exactly the seven
+  modules (so a rename cannot drop a file), and proved it bites at 100 lines before being restored.
+
+**On the full-suite run that overlapped this work:** it reported 180 passed / 7 failed, all in the
+phone project, while this phase's `pnpm check` and the primary's coverage/build ran concurrently.
+All 27 tests in those three spec files pass together when run alone on the R1 tree. The clean
+full-suite run for the integrated record is the one started after this phase closed.
+

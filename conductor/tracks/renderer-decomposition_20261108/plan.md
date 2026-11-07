@@ -216,15 +216,16 @@ was weakened — two real edges are allowlisted with reasons. Pre-existing over-
   `src/scene/track-crossings.ts`, `src/scene/track-picking.ts`, `src/scene/track-catalog.ts`,
   `src/scene/track-placement.ts`, `src/core/import-graph.test.ts`, `src/core/meadow-grid.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R1.T1: Latch the hooks so construction cannot depend on asset timing** — covers: F1
-- [ ] **R1.T2: Gate the line budget in the import-graph test** — covers: F2
-- [ ] **R1.T3: Sweep every meadow cell** — covers: F3
-- [ ] **R1.T4: Dispose in reverse construction order** — covers: F4
-- [ ] **R1.T5: Move the yaw helper and honest the allowlist** — covers: F5
-- [ ] **R1.T6: Record one canonical measurement** — covers: F6
+- [x] **R1.T1: Latch the hooks so construction cannot depend on asset timing** — covers: F1
+- [x] **R1.T2: Gate the line budget in the import-graph test** — covers: F2
+- [x] **R1.T3: Sweep every meadow cell** — covers: F3
+- [x] **R1.T4: Dispose in reverse construction order** — covers: F4
+- [x] **R1.T5: Move the yaw helper and honest the allowlist** — covers: F5
+- [x] **R1.T6: Record one canonical measurement** — covers: F6
 
-**Result:**
-**Checkpoint:**
+**Result:** verified
+**Checkpoint:** 3d78e13
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-R1.md
 **Evidence:** conductor/tracks/renderer-decomposition_20261108/review.md
