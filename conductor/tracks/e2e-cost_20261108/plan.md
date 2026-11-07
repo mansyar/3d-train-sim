@@ -140,7 +140,7 @@ village (14/5) rather than the pristine oval (10/4), which is that test's own fi
 - **Touches:** `.github/workflows/ci.yml`, `.github/workflows/nightly.yml`
 - **Verification:** `pnpm check` and a workflow parse asserting two shard values, the nightly schedule and no
   pull-request trigger on the nightly file
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Shard the e2e job into two matrix jobs** — covers: FR-8, NFR-6, NFR-7
   - [ ] P5.T1.1: Matrix over the two shard values, keeping 2 workers and the 45-minute ceiling per job
