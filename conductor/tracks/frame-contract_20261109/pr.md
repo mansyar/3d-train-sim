@@ -64,7 +64,7 @@ Merged: #69 (renderer decomposition), #70 (e2e cost).
 | Build | `pnpm build` | pass — 178 precache entries, 10,643.51 KiB |
 | Contract witness | `pnpm exec playwright test e2e/frame-contract.spec.ts` | pass — 1 test, two named steps |
 | Smoke | `pnpm exec playwright test e2e/smoke.spec.ts` | pass — 13 passed, 1 skipped |
-| Full matrix | `pnpm exec playwright test` | MATRIX_RESULT |
+| Full matrix | `pnpm exec playwright test` | pass — **57 passed, 1 skipped** (the `@ci` canary) in **8.6 min**; 58 runs, no retries, no page crashes |
 | Gzip delta vs base | base and HEAD builds, gzip -9 | **+546 B** (218,122 → 218,668 B) |
 
 ## Media

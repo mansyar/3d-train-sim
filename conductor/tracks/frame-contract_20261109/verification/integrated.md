@@ -24,7 +24,7 @@ rather than sampled by the orchestrator — `night`/`rain`/`snow` after `day-amb
 | Build | `pnpm build` | 0 | 178 precache entries, 10,643.46 KiB; gzip JS **+546 B** vs base |
 | Frame witness | `pnpm exec playwright test e2e/frame-contract.spec.ts` | 0 | 1 passed (9.1 s) — 30 frames, every system +30 ticks |
 | Smoke | `pnpm exec playwright test e2e/smoke.spec.ts` | 0 | 13 passed, 1 skipped (`@ci` canary) in 1.8 min |
-| Full matrix | `pnpm exec playwright test` | see below | tablet + phone + prod |
+| Full matrix | `pnpm exec playwright test` | 0 | **57 passed, 1 skipped** (`@ci` canary) in **8.6 min** — 58 runs, no retries, no page crashes |
 
 ## Acceptance criteria
 
@@ -72,4 +72,7 @@ rather than sampled by the orchestrator — `night`/`rain`/`snow` after `day-amb
 
 Three phases verified, every acceptance criterion has an automated witness, and the refactor is behaviour-neutral
 by construction (same systems, same order, each value still read in the same frame it was produced) and by
-measurement (smoke green, coverage flat, gzip +546 B). Ready for review.
+measurement (smoke green, coverage flat, gzip +546 B). The full matrix then ran green in one pass: 57 passed and one
+deliberately skipped canary in 8.6 minutes across 58 runs, up one run from before the track because
+`e2e/frame-contract.spec.ts` is a new tablet test. Review closed in three rounds — two blocks, then a pass.
+Ready for review.
