@@ -62,18 +62,27 @@ the phase ran. The local smoke run failed both ambient-FPS assertions once on th
 - **Covers:** FR-4, AC-5
 - **Touches:** `src/scene/track-placement.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/tunnel.spec.ts e2e/cargo.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Move loading and reconciliation** — covers: FR-4
-  - [ ] P2.T1.1: Create `track-placement.ts` as a factory taking the scene, world and audio; move
+- [x] **P2.T1: Move loading and reconciliation** — covers: FR-4
+  - [x] P2.T1.1: Create `track-placement.ts` as a factory taking the scene, world and audio; move
         `templates`, `rendered`, `tracked`, `loader`, `apply`, `reconcile` and the pop-in queue.
-  - [ ] P2.T1.2: Move the `world.subscribe` into the factory and return its unsubscribe for
+  - [x] P2.T1.2: Move the `world.subscribe` into the factory and return its unsubscribe for
         disposal; the facade must construct placement before anything that reads `tracked`.
-- [ ] **P2.T2: Move the piece-specific decoration** — covers: FR-4
-  - [ ] P2.T2.1: Move `syncTunnelPortals`, `syncStationCrates`, `attachHillSnow`/`setHillSnow` and
+- [x] **P2.T2: Move the piece-specific decoration** — covers: FR-4
+  - [x] P2.T2.1: Move `syncTunnelPortals`, `syncStationCrates`, `attachHillSnow`/`setHillSnow` and
         `setPieceVisible`.
-  - [ ] P2.T2.2: Prove ordering with the tunnel and cargo specs, which exercise portals, crates and
+  - [x] P2.T2.2: Prove ordering with the tunnel and cargo specs, which exercise portals, crates and
         reload restoration.
+
+**Result:** verified
+**Checkpoint:** cd7f804
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-2.md
+**Deviations:** the factory takes `scene`, `world`, `reducedMotion` and the hooks rather than `audio`,
+because no moved line touches audio; `advancedEdge` became a module-level export so the resident
+`setSwitchRoad` can share it; `onItemAttached` receives the model once instead of the original's two
+`rendered.get` reads, and `popOut` reads placement's own `disposed` flag because both were set by the
+same facade dispose. None of these change behaviour, and all are recorded in the evidence file.
 
 ## Phase 3: Ghost and grid
 
