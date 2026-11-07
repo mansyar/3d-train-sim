@@ -5,8 +5,8 @@
 | **Track** | `frame-contract_20261109` |
 | **Branch** | `refactor/frame-contract_20261109` |
 | **Range** | `410a1c3..HEAD` (round 1 reviewed at `1ff4a2f`; round 2 reviewed at the Phase R1 commit) |
-| **Rounds** | 1 |
-| **Verdict** | **BLOCK** — one High; all six findings fixed in Phase R1 |
+| **Rounds** | 2 |
+| **Verdict** | **PASS WITH FINDINGS** — round 1 BLOCK (1 High), round 2 BLOCK (1 High: the first fix was incomplete); all findings fixed in Phases R1–R2 |
 
 ## Summary
 
@@ -77,6 +77,18 @@ evidence text that overstated what changed.
 | F5 | Low | evidence | `integrated.md` claimed "same arguments"; `phase-1.md` over-claimed "no stale frame" and kept a superseded note; AC-6/AC-7 labels swapped in two files | Fixed in Phase R1 |
 | F6 | Low | `src/scene/frame-contract.ts:49-53` | `FrameInputs` JSDoc said the orchestrator computes the values, though `day-ambience` and `fleet` publish them | Fixed: JSDoc states the publish-from-the-owner rule |
 
+## Findings — round 2
+
+Round 2 confirmed F3 and F6 and refuted part of F1/F2: the fix had added the `fleet` publisher but left the
+pre-run fill in `onFrame`.
+
+| ID | Sev | File | What | Resolution |
+|---|---|---|---|---|
+| R2-F1 | **High** | `src/scene/init-scene.ts:433-439` | The pre-run `starSpot` fill survived, so the frame allocated a second, discarded spot per frame and a comment still named it as the publisher — the line whose deletion is the actual fix had no test guarding it | Fixed in Phase R2: `onFrame` is only `frameRunner.run(frameInputs, dt)` |
+| R2-F2 | Medium | `verification/integrated.md:45-64` | The promised residual-risk bullet was absent and deviation #2 still said "a unit test now proves the publish-then-read pattern" | Fixed: bullet added; wording scoped to "the runner permits publish-then-read" |
+| R2-F3 | Low | `verification/integrated.md:22,33-34` | Stale witness cells: 892 tests, "compares live names to the tuple", AC-2 without the duplicate case | Fixed: 893, literal-order witness, duplicate message |
+| R2-F4 | Low | `src/scene/frame-contract.test.ts:81` | The duplicate test asserted only the counts, not the named repeat | Fixed: asserts the whole message |
+
 ## Overrides
 
 None. Strict mode; nothing deferred.
@@ -110,3 +122,4 @@ marks the roadmap row shipped.
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 |---|---|---|---|---|---|---|
 | 1 | BLOCK | 0 | 1 | 1 | 4 | 6 |
+| 2 | BLOCK | 0 | 1 | 1 | 2 | 4 |

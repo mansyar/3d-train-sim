@@ -93,7 +93,7 @@ like-for-like against a detached worktree build of the base commit: **+546 B**.
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/frame-contract.spec.ts`
 - **Status:** verified
 - **Result:** verified
-- **Checkpoint:** pending-squash
+- **Checkpoint:** 9418483
 - **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-R1.md`
 
 - [x] **R1.T1: Publish `starSpot` from the system that owns it** — covers: F1
@@ -108,4 +108,33 @@ like-for-like against a detached worktree build of the base commit: **+546 B**.
   - [x] **R1.T5.1: Fix the "same arguments" claim, the superseded mood-lag note, the over-claim and the AC-6/AC-7 labels**
 - [x] **R1.T6: Document where each value comes from** — covers: F6
   - [x] **R1.T6.1: Reword the `FrameInputs` JSDoc to the publish-from-the-owner rule**
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** finish R1.T1.1 — the first attempt added the `fleet` publisher but left the pre-run fill alive, so the
+  frame allocated a discarded spot and two comments named different publishers; and correct the evidence that
+  claimed otherwise.
+- **Depends on:** Phase R1
+- **Covers:** R2-F1, R2-F2, R2-F3, R2-F4
+- **Touches:** `src/scene/init-scene.ts`, `src/scene/frame-contract.test.ts`,
+  `conductor/tracks/frame-contract_20261109/verification/integrated.md`,
+  `conductor/tracks/frame-contract_20261109/verification/phase-R1.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/frame-contract.spec.ts e2e/smoke.spec.ts`
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 9418483
+- **Evidence:** `conductor/tracks/frame-contract_20261109/review.md` (round 2) and `verification/integrated.md`
+
+- [x] **R2.T1: Delete the pre-run fill for real** — covers: R2-F1
+  - [x] **R2.T1.1: `onFrame` is only `frameRunner.run(frameInputs, dt)`; the ownership comment lives on `fleet` alone**
+- [x] **R2.T2: Record the wiring gap where the hand-off document can see it** — covers: R2-F2
+  - [x] **R2.T2.1: Add the residual-risk bullet and drop the "unit test proves the wiring" phrasing**
+- [x] **R2.T3: Refresh the stale witness cells** — covers: R2-F3
+  - [x] **R2.T3.1: 893 tests, literal-order witness, duplicate-message case**
+- [x] **R2.T4: Assert the whole duplicate message** — covers: R2-F4
+  - [x] **R2.T4.1: Expect the named repeat, not just the counts**
+
+**Deviations:** performed by the primary (findings live in `conductor/` state). The first R1 attempt was reported
+as verified while the pre-run fill survived; round 2 caught it, and this phase is the correction. No `src/core`,
+dependency or lockfile change.
 
