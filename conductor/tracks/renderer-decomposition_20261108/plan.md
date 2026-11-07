@@ -148,14 +148,22 @@ from the same path, and the handle member keeps its one-argument shape. The brie
 - **Touches:** `src/scene/track-crossings.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/crossing-gate.spec.ts e2e/switches.spec.ts e2e/switch-slip.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P5.T1: Move crossing choreography** — covers: FR-7
-  - [ ] P5.T1.1: Move `crossingMotions`, `crossingParts`, `trackCrossing`, `updateCrossings`,
+- [x] **P5.T1: Move crossing choreography** — covers: FR-7
+  - [x] P5.T1.1: Move `crossingMotions`, `crossingParts`, `trackCrossing`, `updateCrossings`,
         the train pool/view buffers, `crossingBell`, `setCrossingSnow` and the gate constants.
-- [ ] **P5.T2: Move switch poses** — covers: FR-7, AC-9
-  - [ ] P5.T2.1: Move `SWITCH_POSES`, `SLIP_BLADES`, `SLIP_LEVERS`, `LEVER_*_Y`, the blade tween
+- [x] **P5.T2: Move switch poses** — covers: FR-7, AC-9
+  - [x] P5.T2.1: Move `SWITCH_POSES`, `SLIP_BLADES`, `SLIP_LEVERS`, `LEVER_*_Y`, the blade tween
         queue and `setSwitchRoad`; keep `switchPose` and `crossingPhases` returning the same shapes.
+
+**Result:** verified
+**Checkpoint:** 84b62d7
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-5.md
+**Deviations:** none. The new module measures 400 lines including its trailing newline (383 by the
+line counter), exactly at the AC-1 budget for a single file; the renderer is down to 272 lines. The
+four probes e2e reads are forwarded from the new module with unchanged names, arity and shapes, and
+the placement hooks are now delegations with no crossing state left in the facade.
 
 ## Phase 6: Ambience, facade, docs
 
