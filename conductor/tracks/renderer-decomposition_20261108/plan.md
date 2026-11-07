@@ -18,7 +18,8 @@ no phase ends with that file larger than it started. `track-renderer.ts` appears
 - **Depends on:** none
 - **Covers:** FR-2, FR-3, FR-10, AC-3, AC-4
 - **Touches:** `src/core/meadow-grid.ts`, `src/core/meadow-grid.test.ts`,
-  `src/scene/track-catalog.ts`, `src/scene/track-renderer.ts`, `src/scene/park-pose.ts`,
+  `src/scene/track-catalog.ts`, `src/scene/track-renderer.ts`, `src/scene/ground.ts`,
+  `src/scene/init-scene.ts`, `src/scene/park-pose.ts`,
   `src/scene/ride-motion.ts`, `src/scene/train-fleet.ts`, `src/scene/scene-context.ts`,
   `src/ui/app.ts`, `src/ui/toy-drag.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
