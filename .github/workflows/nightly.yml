@@ -1,0 +1,71 @@
+name: Nightly e2e
+
+# The pull-request gate runs two shards of the full suite but only once. This
+# workflow exists for the failure that only shows up on the second or third run:
+# the two specs that have flaked under load (the ambient-FPS canary and the cargo
+# delivery journey) are repeated, and both device profiles run end to end.
+#
+# It is deliberately not part of the PR path: a PR waits for its shard, and a
+# nightly failure opens no gate on a merge.
+on:
+  schedule:
+    # 15:00 UTC is 01:00 in Sydney - the family tablets are asleep, and the
+    # result is waiting before the next working day.
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  nightly:
+    name: Nightly · ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    # Same apt-step variance as the PR gate, plus the repeat pass.
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [tablet, phone]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers (WebKit for the iPad profile)
+        run: pnpm exec playwright install --with-deps
+
+      # The `prod` project serves the static build through `vite preview`.
+      - name: Build for prod e2e project
+        run: pnpm build
+
+      # `@ci` tests only run when CI is set, so the canary is in this pass.
+      - name: Full suite for this profile
+        run: pnpm exec playwright test --project=${{ matrix.project }}
+
+      # Two extra attempts at the two specs that have flaked under contention.
+      # `--repeat-each` keeps the retry inside one test result line, so a real
+      # crash and a slow frame both show up rather than being retried away.
+      - name: Repeat the contention-sensitive specs
+        run: >-
+          pnpm exec playwright test
+          e2e/smoke.spec.ts e2e/cargo.spec.ts
+          --project=${{ matrix.project }}
+          --repeat-each=2

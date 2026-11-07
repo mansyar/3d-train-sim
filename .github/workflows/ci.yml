@@ -98,14 +98,21 @@ jobs:
         run: pnpm audit --audit-level=high
 
   e2e:
-    name: Gate · e2e (tablet · phone · prod)
+    name: Gate · e2e shard ${{ matrix.shard }}
     runs-on: ubuntu-latest
-    # 193 specs across three projects, WebGL rendered in software (~23 min), plus
-    # `playwright install --with-deps`, whose apt step is the variable: 1-2 min on
-    # a good day, 34 min when the Ubuntu mirror crawls. 45 minutes could not hold
-    # both; the offline specs were killed mid-test at the ceiling rather than
-    # failing on an assertion.
-    timeout-minutes: 60
+    # Two shards, each its own runner and its own dev server. The suite is ~57
+    # runs after the e2e-cost track (was 193), so a shard is minutes of WebGL in
+    # software plus `playwright install --with-deps`, whose apt step is the
+    # variable: 1-2 min on a good day, 34 min when the Ubuntu mirror crawls.
+    # The ceiling stays generous because it is the apt step that eats it, and a
+    # killed job looks like a test failure in the PR.
+    timeout-minutes: 45
+    strategy:
+      # One shard failing must not cancel the other: the point of the split is
+      # two independent verdicts.
+      fail-fast: false
+      matrix:
+        shard: ['1/2', '2/2']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -139,4 +146,4 @@ jobs:
         run: pnpm build
 
       - name: E2E suite
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}
