@@ -33,16 +33,25 @@
 - **Goal:** a fourth CI gate fails a pull request carrying a high or critical advisory, and runs in under a minute.
 - **Depends on:** Phase 1
 - **Covers:** FR-6, FR-7, FR-8, NFR-2, NFR-3, AC-4, AC-5, AC-7
-- **Touches:** `.github/workflows/ci.yml`, `package.json` (only if FR-8 needs a dated ignore)
+- **Touches:** `.github/workflows/ci.yml`, `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`
 - **Verification:** `pnpm audit --audit-level=high` and `pnpm check`
-- **Status:** pending
-- [ ] **P2.T1: Add `Gate · audit` to CI** — covers: FR-6, FR-7, NFR-3
-  - [ ] P2.T1.1: Add an independent job running `pnpm audit --audit-level=high`, with a five-minute ceiling and no dependency on Playwright, the build or the other gates
-  - [ ] P2.T1.2: Keep the existing workflow filters intact, so the gate runs on every push and pull request that touches code
-- [ ] **P2.T2: Prove the gate bites** — covers: FR-6, FR-8, NFR-2, AC-4, AC-5
-  - [ ] P2.T2.1: Run the gate on the clean tree, record its exit code and measured duration
-  - [ ] P2.T2.2: Install a deliberately vulnerable devDependency, show the gate exiting non-zero, then revert and show `pnpm-lock.yaml` returning byte-identical
-  - [ ] P2.T2.3: If a dated ignore turns out to be required, add it to `pnpm.auditConfig` with a date and a reason; otherwise record that none was needed
+- **Status:** verified
+- [x] **P2.T1: Add `Gate · audit` to CI** — covers: FR-6, FR-7, NFR-3
+  - [x] P2.T1.1: Add an independent job running `pnpm audit --audit-level=high`, with a five-minute ceiling and no dependency on Playwright, the build or the other gates
+  - [x] P2.T1.2: Keep the existing workflow filters intact, so the gate runs on every push and pull request that touches code
+- [x] **P2.T2: Prove the gate bites** — covers: FR-6, FR-8, NFR-2, AC-4, AC-5
+  - [x] P2.T2.1: Run the gate on the clean tree, record its exit code and measured duration
+  - [x] P2.T2.2: Force a vulnerable version back into the lockfile, show the gate exiting non-zero, then revert and show `pnpm-lock.yaml` returning byte-identical
+  - [x] P2.T2.3: If a dated ignore turns out to be required, add it to the pnpm settings with a date and a reason; otherwise record that none was needed
+- [x] **P2.T3: Clear the audit backlog first** — covers: FR-6, AC-4, AC-5
+  - [x] P2.T3.1: Record the pre-gate baseline (45 findings, 15 high) so the starting point is public
+  - [x] P2.T3.2: Bump `vite` inside its range, then override `source-map-js`, `undici`, `fast-uri` and `brace-expansion` in `pnpm-workspace.yaml` with the advisory id beside each
+  - [x] P2.T3.3: Prove the tree still ships — `pnpm check`, `pnpm build` and the full 193-spec suite green with the overrides in place
+
+**Result:** verified
+**Checkpoint:** 691f4a7
+**Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-2.md
+**Deviations:** the spec assumed a green baseline; it was red (15 high). Rather than ship the gate with five ignores, the phase clears the fixable advisories first, so `package.json`, `pnpm-workspace.yaml` and `pnpm-lock.yaml` are part of this diff. pnpm 11 ignores `pnpm.overrides` in `package.json` — the overrides live in `pnpm-workspace.yaml`. No dated ignore shipped: every high had a fixed version. Four moderate and two low advisories remain, below the agreed threshold and listed in the evidence.
 
 ## Phase 3: Documentation
 
