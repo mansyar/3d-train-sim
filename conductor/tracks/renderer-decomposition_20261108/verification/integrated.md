@@ -22,13 +22,13 @@ than merely intended.
 | Coverage gate | `pnpm test:coverage` | 0 | **97.36%** statements, **91.06%** branches, **98.10%** functions, **99.44%** lines on `src/core` + `src/state` (gate 80%) |
 | Build | `pnpm build` | 0 | PWA `generateSW`, 178 precache entries, 10,641.79 KiB |
 | E2E (track specs, per phase) | see each phase evidence | 0 | smoke 40, tunnel + cargo 8, smoke + undo 44 (one FPS rerun), smoke + undo + toybox 50, crossing + switches + slip 14, delight + music box 6 |
-| E2E (full) | `pnpm exec playwright test` | PENDING | pending |
+| E2E (full) | `pnpm exec playwright test` | 0 | **193 passed** (tablet, phone, prod) in 16.9 min, no retries, no page crashes — the same spec count as before the track |
 
 ## Line budget (AC-1)
 
 | File | Lines |
 |---|---|
-| `track-renderer.ts` | **158** (was 1,263) |
+| `track-renderer.ts` | **195** (was 1,263; 167 when Phase 6 closed, 193 after R1, 195 after R2) |
 | `track-catalog.ts` | 192 |
 | `track-placement.ts` | 400 |
 | `track-ghost.ts` | 176 |
@@ -50,7 +50,7 @@ likely place for the shape to erode.
 | AC-4 | `rg "from '\.\./scene/" src/ui` empty; `src/ui/app.ts` and `src/ui/toy-drag.ts` import `PickedItem` from `../core/meadow-grid` |
 | AC-5 | Behaviour specs green in every phase that touched behaviour: smoke, undo, crossings, switches, slip, delight, music box, tunnel, cargo |
 | AC-6 | No per-frame allocation introduced: the moved code is byte-for-byte the same bodies, only relocated |
-| AC-7 | Asset URLs live only in `track-catalog.ts`; the 28 `PIECE_URLS`/`BASE_YAW`/`KIT_ANCHORS` lines are unchanged |
+| AC-7 | `pnpm build` reports the same precache entry count (178) and a gzip delta of at most 2 KB — measured **+577 B (0.56 KiB)** of gzipped JS against `f880530` (218,322 → 218,899 B, level 9, all emitted `.js`) |
 | AC-8 | `src/core/import-graph.test.ts` pins UI→scene, core→scene/UI/`three`, placement→catalogue, facade importers |
 | AC-9 | Probe shapes (`crossingPhases`, `bellRinging`, `switchPose`, `setCrossingSnow`, `musicBoxProbe`, `delightBalloonDrift`) unchanged and forwarded |
 
@@ -78,6 +78,6 @@ likely place for the shape to erode.
 
 ## Verdict
 
-Integrated and ready for review. The facade is 158 lines, the interface is unchanged, every probe
+Integrated and ready for review. The facade is 195 lines, the interface is unchanged, every probe
 keeps its shape, the guards exist, and 881 unit tests plus the per-phase behaviour specs are green.
 The full-suite row is filled in after the run completes.

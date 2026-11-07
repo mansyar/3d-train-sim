@@ -58,7 +58,7 @@ const RENDERER_IMPORTERS: Record<string, string> = {
 const PLACEMENT_READERS: Record<string, string> = {
   'src/scene/track-renderer': 'the facade constructs placement once and wires its hooks',
   'src/scene/track-crossings':
-    'reads the live rendered/tracked maps for gate and switch poses (type-only handle)',
+    'reads the live rendered/tracked maps and the crossing-gate template for poses and the snow cap (type-only handle)',
   'src/scene/track-picking': 'reads the live tracked map only, for the tap hit test (type-only)',
 };
 

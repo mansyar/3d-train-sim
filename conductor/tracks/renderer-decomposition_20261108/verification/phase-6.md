@@ -146,12 +146,14 @@ it recorded above was applied here verbatim, which closes that task.
 |---|---|---|---|
 | Static + unit | `pnpm check` | 0 | Biome clean, `tsc --noEmit` clean, 50 files / **881 tests** |
 | Behaviour specs | `pnpm exec playwright test e2e/delight-toys.spec.ts e2e/music-box.spec.ts` | 0 | **6 passed**, 1.1 m |
-| Line budget | `Measure-Object -Line` | — | `track-renderer.ts` **158**, `track-ambience.ts` **210**, `import-graph.test.ts` 184 |
+| Line budget | budget test in `src/core/import-graph.test.ts` | 0 | `track-renderer.ts` **167**, `track-ambience.ts` **221**, `import-graph.test.ts` 184 lines |
 
-`track-renderer.ts` went 1,263 → **158** lines across the six phases
-(1,085 → 804 → 682 → 599 → 285 → 158 by the reviewers' counts, ±15 depending on
-whether the counter includes a trailing newline), so AC-1 holds with room to
-spare.
+`track-renderer.ts` went 1,263 → **167** lines across the six phases
+(1,085 → 804 → 682 → 599 → 285 → 167, one counter, trailing newline excluded),
+so AC-1 holds with room to spare. The review fixes that followed grew it to
+**195** (R1 latch and dispose order, R2 comments); the numbers are now pinned by
+the budget test rather than by hand, so every later count comes from
+`pnpm check`.
 
 **Interface parity.** Extracted the `export interface TrackRenderer { … }` block
 from `git show f880530:src/scene/track-renderer.ts` and from the working tree and

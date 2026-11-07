@@ -97,10 +97,11 @@ export function startTrackRenderer(
   // Placement owns the store subscription and the render maps; everything
   // below reads the live maps through this handle. The hooks are the ambient
   // reactions (critters, delight, the music box) plus the crossing
-  // delegations. They stay inert until `hooksReady` flips below: asset
-  // callbacks are asynchronous today, so both modules exist by the time a
-  // hook runs, but the latch keeps construction safe if a reconcile ever
-  // becomes synchronous instead of throwing on a still-unassigned binding.
+  // delegations. They stay inert until `hooksReady` flips below. That latch is
+  // a crash guard, not ordering: loaders are async today, but a synchronous
+  // reconcile would otherwise throw on an unassigned binding. It drops (does
+  // not replay) an edge-triggered hook; buffering is not worth it while the
+  // loaders stay async, and this note is here so nobody reads it as ordering.
   let hooksReady = false;
   let disposed = false;
   let ambience: TrackAmbience;
@@ -181,12 +182,13 @@ export function startTrackRenderer(
     dispose(): void {
       if (disposed) return;
       disposed = true;
-      // Reverse construction order: each module still reads the ones below
-      // it, so the last constructed goes first. `ghost.dispose()` ends the
+      // Strict reverse of construction (placement, ambience, ghost, picking,
+      // crossings): the last thing built goes first, so nothing tears down
+      // while a later module still refers to it. `ghost.dispose()` ends the
       // ghost itself (it drops the preview and its cloned materials).
       crossings.dispose();
-      ambience.dispose();
       ghost.dispose();
+      ambience.dispose();
       placement.dispose();
     },
   };

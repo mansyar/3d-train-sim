@@ -4,8 +4,8 @@
 |---|---|
 | **Track** | `renderer-decomposition_20261108` |
 | **Branch** | `refactor/renderer-decomposition_20261108` |
-| **Range** | `f880530..HEAD` (`f880530..2c8c1fc` at round 1) |
-| **Rounds** | 1 |
+| **Range** | `f880530..HEAD` (`f880530..2c8c1fc` at round 1, `2c8c1fc..3d78e13` at round 2) |
+| **Rounds** | 2 |
 | **Verdict** | **PASS WITH FINDINGS** |
 
 ## Summary
@@ -28,6 +28,13 @@ overstate the edges they sanction, and line counts that disagree between plan an
 
 Nothing here is a behavioural regression, and none of it affects the shipped child-facing product.
 
+Round 2 confirmed the six round-1 fixes and found five Lows, all precision rather than defect: the
+latch drops rather than replays an edge-triggered hook (now stated in the code), the dispose order was
+not strictly reversed (now it is), the crossings allowlist omitted the gate template it reads (now
+named), three renderer counts disagreed (one canonical figure from the budget test now appears
+everywhere), and AC-7's gzip delta was quoted as a raw size (measured at **+577 B**, inside the 2 KB
+budget). All five are fixed in Phase R2; nothing is deferred.
+
 ## Verification
 
 | Check | Command | Result |
@@ -37,7 +44,7 @@ Nothing here is a behavioural regression, and none of it affects the shipped chi
 | Build | `pnpm build` | pass — 178 precache entries, 10,641.79 KiB |
 | E2E (track specs) | per phase | pass — smoke 40, tunnel + cargo 8, undo 44, crossings 14, delight + music box 6 |
 | E2E (full) | `pnpm exec playwright test` | see round 2 |
-| Line budget | manual | renderer 167, catalogue 192, placement 400, ghost 176, picking 119, crossings 400, ambience 221 |
+| Line budget | `pnpm check` (budget test, after R1) | pass — renderer 195, catalogue 199, placement 394, ghost 176, picking 119, crossings 400, ambience 221 |
 
 ## Requirements coverage
 
@@ -125,17 +132,31 @@ as reading `rendered` when it only reads `tracked` (its import is type-only). *F
 both. *Fix:* replace the manual table with the automated assertion from F2 and record one canonical
 count.
 
+## Findings — round 2
+
+| ID | Severity | File | What | Resolution |
+|---|---|---|---|---|
+| F7 | Low | `src/scene/track-renderer.ts:104` | The latch drops an edge-triggered hook rather than replaying it; the R1 note described only a cosmetic snow-cap skip | Comment now states the drop and why buffering is not worth it |
+| F8 | Low | `src/scene/track-renderer.ts:188` | Dispose order crossings → ambience → ghost → placement is not strict reverse of construction (placement, ambience, ghost, picking, crossings) | Reordered to crossings → ghost → ambience → placement (picking has no dispose) |
+| F9 | Low | `src/core/import-graph.test.ts:60` | The crossings allowlist reason omits the `crossing-gate` template it reads at `track-crossings.ts:333` | Reason extended to name the template and the snow cap |
+| F10 | Low | `conductor/.../plan.md:202`, `verification/phase-6.md`, `verification/integrated.md` | Three different renderer counts (158/167/193) and an R1 commit list of squashed SHAs | One canonical count from the budget test in every document; R1 squashing recorded |
+| F11 | Low | `verification/integrated.md:23` | AC-7's gzip delta was unrecorded (raw precache only) | Base and HEAD built, JS gzipped: +577 B (0.56 KiB) against a 2 KB budget |
+
+No new defect was found and no regression was introduced by the round-1 fixes; the round-2 reviewer
+re-ran the counts against HEAD and confirmed F2/F3 closed, F1/F4/F5/F6 structurally closed.
+
 ## Overrides
 
 None. No finding was deferred, and no user override was needed.
 
 ## Plan compliance
 
-Phases 1–6 verified at `69e4d48`, `cd7f804`, `bff61e5`, `6ec338d`, `84b62d7`, `2f9a903`; the phase
-commits are all ancestors of HEAD. Recorded deviations: the `GROUND_SIZE` re-export from
+Phases 1–6 verified at `69e4d48`, `cd7f804`, `bff61e5`, `6ec338d`, `84b62d7`, `2f9a903`; Phase R1 at
+`3d78e13`; Phase R2 at this commit. The phase commits are all ancestors of HEAD. Recorded deviations:
+the `GROUND_SIZE` re-export from
 `src/scene/ground.ts`, the `init-scene.ts` repoint added to Phase 1's Touches, the placement factory
-signature, and the primary applying the Phase 6 `tech-stack.md` patch after the subagent was denied
-the write.
+signature, the primary applying the Phase 6 `tech-stack.md` patch after the subagent was denied
+the write, and R2 run by the primary (comments, a teardown order and document figures).
 
 ## Out of scope
 
@@ -148,7 +169,7 @@ the write.
 ## Debt
 
 Nothing deferred. F1–F6 are fixed in Phase R1 of the track, because each is a small, local change to
-this track's own files and an imported guard.
+this track's own files and an imported guard; F7–F11 are fixed in Phase R2.
 
 ## Doc sync
 
@@ -160,4 +181,5 @@ the 500-line goal is missed by `train-fleet.ts` (pre-existing).
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 |---|---|---|---|---|---|---|
-| 1 | PASS WITH FINDINGS | 0 | 0 | 3 | 3 | 0 |
+| 1 | PASS WITH FINDINGS | 0 | 0 | 3 | 3 | 6 |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 0 | 5 | 5 |

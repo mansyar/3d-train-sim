@@ -7,11 +7,10 @@ Date: 2026-11-07
 
 ## Commits
 
-- `aead57c` `refactor(scene): Latch the placement hooks until the facade is wired` (F1 / R1.T1)
-- `a9df236` `test(core): Hold the seven scene modules to their line budgets` (F2 / R1.T2)
-- `c636f52` `test(core): Sweep every meadow cell in the grid transform test` (F3 / R1.T3)
-- `b8e52a9` `refactor(scene): Dispose the renderer modules in reverse construction order` (F4 / R1.T4)
-- `3351db2` `refactor(scene): Move the yaw edge helper into the catalogue and state the real import edges` (F5 / R1.T5)
+The phase was squashed into one commit on the branch, `3d78e13 fix(scene): close the renderer
+decomposition review findings`; the working commits the subagent made (and the primary then squashed)
+were `aead57c` (F1), `a9df236` (F2), `c636f52` (F3), `b8e52a9` (F4), `3351db2` (F5) and the evidence
+commit. None of the short SHAs above resolves on the branch any more.
 
 ## Verification command (run exactly as briefed)
 
