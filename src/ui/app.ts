@@ -1,8 +1,8 @@
 import type { AudioController } from '../audio/audio-controller';
 import type { DayPhase } from '../core/day-clock';
+import type { PickedItem } from '../core/meadow-grid';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
-import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 import { createParentGate } from './parent-gate';
 import { createRideControls, RIDE_ICONS } from './ride-controls';

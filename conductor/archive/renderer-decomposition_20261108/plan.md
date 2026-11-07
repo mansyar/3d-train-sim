@@ -1,0 +1,270 @@
+# Renderer Decomposition — Implementation Plan
+
+> **Branch:** `refactor/renderer-decomposition_20261108`
+> **Base:** `main` @ `f880530d411420dd7077a0917c215a1a00d04d5f`
+>
+> **Phase state:** a phase is `pending`, `in_progress`, `verified`, `failed` or `blocked`.
+> Only the primary agent writes this file.
+
+Every phase removes code from `src/scene/track-renderer.ts`, so the facade shrinks continuously and
+no phase ends with that file larger than it started. `track-renderer.ts` appears in every phase's
+`Touches` by design: the phases are sequential and every other file belongs to exactly one phase.
+
+## Phase 1: Core grid and the catalogue
+
+- **Goal:** `cellToWorld`, `cellSize` and `PickedItem` are pure and unit-tested in
+  `src/core/meadow-grid.ts`; no file under `src/ui` imports from `src/scene`; the data tables live
+  in `src/scene/track-catalog.ts` with no loader and no scene mutation.
+- **Depends on:** none
+- **Covers:** FR-2, FR-3, FR-10, AC-3, AC-4
+- **Touches:** `src/core/meadow-grid.ts`, `src/core/meadow-grid.test.ts`,
+  `src/scene/track-catalog.ts`, `src/scene/track-renderer.ts`, `src/scene/ground.ts`,
+  `src/scene/init-scene.ts`, `src/scene/park-pose.ts`,
+  `src/scene/ride-motion.ts`, `src/scene/train-fleet.ts`, `src/scene/scene-context.ts`,
+  `src/ui/app.ts`, `src/ui/toy-drag.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
+- **Status:** verified
+
+- [x] **P1.T1: Move the grid math into core, test first** — covers: FR-3, AC-3
+  - [x] P1.T1.1: Write `src/core/meadow-grid.test.ts` first: cell to world for the four corners and
+        the centre, every cell in one axis, negative and out-of-range cells, and `PickedItem`
+        construction for both kinds. Confirm it fails because the module does not exist.
+  - [x] P1.T1.2: Move `cellToWorld`, the `CELL_SIZE` derivation and `PickedItem` into
+        `src/core/meadow-grid.ts`, importing only `GROUND_SIZE`, `MEADOW_CELLS` and the core types.
+        Re-export nothing from `src/scene`.
+- [x] **P1.T2: Repoint every importer** — covers: FR-10, AC-4
+  - [x] P1.T2.1: Point `park-pose.ts`, `ride-motion.ts`, `train-fleet.ts`, `scene-context.ts` and
+        the two UI files at the new home; keep `cellToScreen` exported from the renderer for now.
+  - [x] P1.T2.2: Show `rg "from '../scene/" src/ui` returns nothing, and that `tsc --noEmit` still
+        accepts the unchanged `init-scene.ts`.
+- [x] **P1.T3: Extract the catalogue** — covers: FR-2
+  - [x] P1.T3.1: Create `src/scene/track-catalog.ts` holding `PIECE_URLS`, `HILL_SNOW_URLS`,
+        `KIT_ANCHORS`, `KIT_MODULE_UNITS`, `BASE_YAW`/`baseYawOf`, `DELIGHT_CAPS` and `isPiece`,
+        moved verbatim.
+  - [x] P1.T3.2: Import them in `track-renderer.ts`; assert nothing was reordered or renamed by
+        diffing the moved blocks against the base commit.
+
+**Result:** verified
+**Checkpoint:** 69e4d48
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-1.md
+**Deviations:** `src/scene/ground.ts` had to import and re-export `GROUND_SIZE`, because the value
+lived in a three.js module and core may not import scene code; `src/scene/init-scene.ts` also had to
+be repointed because it imported `cellToWorld` and `PickedItem`; both were added to `Touches` before
+the phase ran. The local smoke run failed both ambient-FPS assertions once on throughput and passed
+40/40 on the identical rerun, which is the documented verdict in `e2e/README.md`.
+
+## Phase 2: Placement
+
+- **Goal:** the loader, the placement maps, `apply`, `reconcile`, pop-in, tunnel portals, station
+  crates, hill snow and `setPieceVisible` live in `src/scene/track-placement.ts`, and the single
+  `world.subscribe` moved with them.
+- **Depends on:** Phase 1
+- **Covers:** FR-4, AC-5
+- **Touches:** `src/scene/track-placement.ts`, `src/scene/track-renderer.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/tunnel.spec.ts e2e/cargo.spec.ts`
+- **Status:** verified
+
+- [x] **P2.T1: Move loading and reconciliation** — covers: FR-4
+  - [x] P2.T1.1: Create `track-placement.ts` as a factory taking the scene, world and audio; move
+        `templates`, `rendered`, `tracked`, `loader`, `apply`, `reconcile` and the pop-in queue.
+  - [x] P2.T1.2: Move the `world.subscribe` into the factory and return its unsubscribe for
+        disposal; the facade must construct placement before anything that reads `tracked`.
+- [x] **P2.T2: Move the piece-specific decoration** — covers: FR-4
+  - [x] P2.T2.1: Move `syncTunnelPortals`, `syncStationCrates`, `attachHillSnow`/`setHillSnow` and
+        `setPieceVisible`.
+  - [x] P2.T2.2: Prove ordering with the tunnel and cargo specs, which exercise portals, crates and
+        reload restoration.
+
+**Result:** verified
+**Checkpoint:** cd7f804
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-2.md
+**Deviations:** the factory takes `scene`, `world`, `reducedMotion` and the hooks rather than `audio`,
+because no moved line touches audio; `advancedEdge` became a module-level export so the resident
+`setSwitchRoad` can share it; `onItemAttached` receives the model once instead of the original's two
+`rendered.get` reads, and `popOut` reads placement's own `disposed` flag because both were set by the
+same facade dispose. None of these change behaviour, and all are recorded in the evidence file.
+
+## Phase 3: Ghost and grid
+
+- **Goal:** the drag preview, its tinting, its pop animation and the grid lines live in
+  `src/scene/track-ghost.ts`.
+- **Depends on:** Phase 2
+- **Covers:** FR-5, AC-5
+- **Touches:** `src/scene/track-ghost.ts`, `src/scene/track-renderer.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts`
+- **Status:** verified
+
+- [x] **P3.T1: Move the grid lines** — covers: FR-5
+  - [x] P3.T1.1: Move `gridLines`, its material and geometries, and `setGridVisible`; keep the
+        dev-only visibility default identical.
+- [x] **P3.T2: Move the ghost preview** — covers: FR-5
+  - [x] P3.T2.1: Move `ghost`, `ghostTint`, the valid/blocked colours, `spawnGhost`, `tintGhost`,
+        `beginGhost`, `moveGhost` and `endGhost`.
+  - [x] P3.T2.2: Confirm the ghost still reads the catalogue through its own import, not through
+        placement.
+
+**Result:** verified
+**Checkpoint:** bff61e5
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-3.md
+**Deviations:** none. The dev-only grid default was already owned by `src/ui/app.ts` and
+`src/main.ts`, so the phase only had to preserve `gridLines.visible = false`; the ghost takes
+placement's `templates` as a `ReadonlyMap` and still yields no preview for a kind that has not
+loaded. The AC-5 specs failed once on the ambient-FPS throughput sample (phone) and passed 2/2 when
+run alone.
+
+## Phase 4: Picking
+
+- **Goal:** raycasting, the ground plane, `cellFromPoint`, `pickPiece` and the `cellToScreen`
+  projection wrapper live in `src/scene/track-picking.ts`.
+- **Depends on:** Phase 3
+- **Covers:** FR-6, AC-5
+- **Touches:** `src/scene/track-picking.ts`, `src/scene/track-renderer.ts`
+- **Verification:** `pnpm check` and
+  `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts e2e/ride-toybox-flow.spec.ts`
+- **Status:** verified
+
+- [x] **P4.T1: Move the raycast picking** — covers: FR-6
+  - [x] P4.T1.1: Move `raycaster`, `pointerNdc`, `groundPlane`, `groundHit`, `cellFromPoint` and
+        `pickPiece`; the hit test must keep reading `rendered`/`tracked` through the placement
+        handle rather than a copy.
+- [x] **P4.T2: Move the screen projection** — covers: FR-6
+  - [x] P4.T2.1: Move `cellToScreen` as a thin wrapper that projects the core world point through
+        the camera passed at construction.
+
+**Result:** verified
+**Checkpoint:** 6ec338d
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-4.md
+**Deviations:** none. The frozen export is preserved with `export { cellToScreen } from
+'./track-picking'` in the renderer, so `init-scene.ts` and the e2e probes import the same symbol
+from the same path, and the handle member keeps its one-argument shape. The brief was wrong about
+`pickPiece` reading `rendered`; it only reads `tracked`, and the phase followed the code.
+
+## Phase 5: Crossings and switches
+
+- **Goal:** gate choreography, the bell flag, crossing snow, switch blade and lever state, their
+  tweens and `setSwitchRoad` live in `src/scene/track-crossings.ts`, with probe values unchanged.
+- **Depends on:** Phase 4
+- **Covers:** FR-7, AC-5, AC-9
+- **Touches:** `src/scene/track-crossings.ts`, `src/scene/track-renderer.ts`
+- **Verification:** `pnpm check` and
+  `pnpm exec playwright test e2e/crossing-gate.spec.ts e2e/switches.spec.ts e2e/switch-slip.spec.ts`
+- **Status:** verified
+
+- [x] **P5.T1: Move crossing choreography** — covers: FR-7
+  - [x] P5.T1.1: Move `crossingMotions`, `crossingParts`, `trackCrossing`, `updateCrossings`,
+        the train pool/view buffers, `crossingBell`, `setCrossingSnow` and the gate constants.
+- [x] **P5.T2: Move switch poses** — covers: FR-7, AC-9
+  - [x] P5.T2.1: Move `SWITCH_POSES`, `SLIP_BLADES`, `SLIP_LEVERS`, `LEVER_*_Y`, the blade tween
+        queue and `setSwitchRoad`; keep `switchPose` and `crossingPhases` returning the same shapes.
+
+**Result:** verified
+**Checkpoint:** 84b62d7
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-5.md
+**Deviations:** none. The new module is exactly at the 400-line budget (measured by the guard added
+in Phase R1, metric `content.replace(/\n$/, '').split('\n').length`; 394 lines after Phase R1). The
+renderer is down to 193 lines by the same metric. The
+four probes e2e reads are forwarded from the new module with unchanged names, arity and shapes, and
+the placement hooks are now delegations with no crossing state left in the facade.
+
+## Phase 6: Ambience, facade, docs
+
+- **Goal:** critters, delight toys, the music box and the three snow toggles live in
+  `src/scene/track-ambience.ts`; `track-renderer.ts` is a facade within its line budget; the folder
+  map records the new module layout.
+- **Depends on:** Phase 5
+- **Covers:** FR-1, FR-8, FR-9, FR-12, AC-1, AC-2, AC-8
+- **Touches:** `src/scene/track-ambience.ts`, `src/scene/track-renderer.ts`,
+  `src/core/import-graph.test.ts`, `conductor/tech-stack.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/delight-toys.spec.ts e2e/music-box.spec.ts`
+- **Status:** verified
+
+- [x] **P6.T1: Move critters** — covers: FR-8
+  - [x] P6.T1.1: Move `critterLife`, `animatedCritters`, `syncCritterAnimations`, `updateCritters`
+        and `hopCritter`.
+- [x] **P6.T2: Move delight and the music box** — covers: FR-8
+  - [x] P6.T2.1: Move the delight motion, `delightSnow`/`setDelightSnow`/`delightBalloonDrift`, the
+        music box scene and voice, `updateMusicBox`, `suspendMusicBox`/`resumeMusicBox` and
+        `musicBoxProbe`, plus `tunnelSnow`/`setTunnelSnow` with placement's owner noted.
+- [x] **P6.T3: Prove the shape and record it** — covers: FR-1, FR-9, FR-12, AC-1, AC-2, AC-8
+  - [x] P6.T3.1: Record line counts and diff the `TrackRenderer` interface block against `f880530`,
+        proving the member set and types are unchanged.
+  - [x] P6.T3.2: Add `src/core/import-graph.test.ts` asserting the allowed import directions: UI
+        imports no scene module, ambience imports no placement internals, no module reaches another
+        module's private state.
+  - [x] P6.T3.3: Update the folder map in `conductor/tech-stack.md` with the seven files and their
+        ownership.
+
+**Result:** verified
+**Checkpoint:** 2f9a903
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-6.md
+**Deviations:** the subagent reported `blocked` on P6.T3.3 because `edit conductor/tech-stack.md` is
+denied to phase subagents; the primary applied the patch it recorded, which closes the task.
+`track-renderer.ts` measured 158 lines and `track-ambience.ts` 210 when the phase closed (counters
+disagreed by a few lines; the numbers are now enforced and measured at HEAD instead — see Phase R1
+and R2 evidence). The `TrackRenderer`
+interface block is byte-identical to `f880530` (66 lines), and no rule in the new import-graph test
+was weakened — two real edges are allowlisted with reasons. Pre-existing over-budget files
+(`init-scene.ts` 450, `train-fleet.ts` 552) were left alone as out of scope.
+
+<!-- If `conductor-review` finds issues it appends a phase with its own contract: -->
+## Phase R1: Review Fixes
+
+- **Goal:** make the facade's hook wiring independent of asset timing, put the line budget and the
+  grid sweep under test, dispose in reverse construction order, and make the import allowlist state
+  the edges it actually sanctions.
+- **Depends on:** Phase 6
+- **Covers:** F1, F2, F3, F4, F5, F6
+- **Touches:** `src/scene/track-renderer.ts`, `src/scene/track-ambience.ts`,
+  `src/scene/track-crossings.ts`, `src/scene/track-picking.ts`, `src/scene/track-catalog.ts`,
+  `src/scene/track-placement.ts`, `src/core/import-graph.test.ts`, `src/core/meadow-grid.test.ts`
+- **Verification:** `pnpm check`
+- **Status:** verified
+
+- [x] **R1.T1: Latch the hooks so construction cannot depend on asset timing** — covers: F1
+- [x] **R1.T2: Gate the line budget in the import-graph test** — covers: F2
+- [x] **R1.T3: Sweep every meadow cell** — covers: F3
+- [x] **R1.T4: Dispose in reverse construction order** — covers: F4
+- [x] **R1.T5: Move the yaw helper and honest the allowlist** — covers: F5
+- [x] **R1.T6: Record one canonical measurement** — covers: F6
+
+**Result:** verified
+**Checkpoint:** 3d78e13
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-R1.md
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/review.md
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** state the latch's real limit, dispose in strict reverse order, make the crossings
+  allowlist name the template it reads, give every document one canonical line count, and measure
+  the gzip delta AC-7 asks for instead of the raw byte count.
+- **Depends on:** Phase R1
+- **Covers:** F7, F8, F9, F10, F11
+- **Touches:** `src/scene/track-renderer.ts`, `src/core/import-graph.test.ts`,
+  `conductor/tech-stack.md`, `verification/integrated.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test`
+- **Status:** verified
+
+- [x] **R2.T1: Say what the latch actually does** - covers: F7
+  - [x] R2.T1.1: Reword the facade comment so it reads as a crash guard that drops an
+        edge-triggered hook, not as ordering or a replay.
+- [x] **R2.T2: Dispose in strict reverse construction order** - covers: F8
+  - [x] R2.T2.1: Run crossings, then ghost, then ambience, then placement, and say so in the
+        comment (picking holds no scene state and has no dispose).
+- [x] **R2.T3: Name the template the crossings module reads** - covers: F9
+  - [x] R2.T3.1: Reword the allowlist reason so it includes the crossing-gate template used for
+        the snow cap, not just the two maps.
+- [x] **R2.T4: One canonical line count in every document** - covers: F10
+  - [x] R2.T4.1: Replace the hand-counted 158/167/210 figures in the plan, the phase-6 evidence
+        and the integrated record with the budget test's numbers, and note that R1 squashed its
+        working commits into `3d78e13`.
+- [x] **R2.T5: Measure the gzip delta** - covers: F11
+  - [x] R2.T5.1: Build the base commit and HEAD, gzip the emitted JS bundle from each, and record
+        the difference against the 2 KB budget in the integrated record.
+
+**Result:** verified
+**Checkpoint:** 3041df8
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-R2.md
+**Deviations:** the phase ran in the primary agent because the findings are a comment, a teardown
+order and document figures. The gzip baseline needed a build of `f880530`, done in a throwaway
+worktree that was removed afterwards. The renderer is 195 lines, five under its 200-line budget.
+

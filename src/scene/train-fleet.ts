@@ -1,6 +1,7 @@
 import type { Object3D } from 'three';
 import type { RideAudioBinding } from '../audio/ride-audio';
 import type { CargoLoad } from '../core/cargo';
+import { cellToWorld } from '../core/meadow-grid';
 import type { Edge } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
@@ -14,7 +15,6 @@ import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-m
 import type { RigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
-import { cellToWorld } from './track-renderer';
 
 /** One chug-beat at full voice — per-train puff accumulators spend this. */
 const CHUG_BEAT_SECONDS = 0.5;

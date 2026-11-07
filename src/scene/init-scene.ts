@@ -12,6 +12,7 @@ import { bindRideAudio } from '../audio/ride-audio';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import type { DayPhase } from '../core/day-clock';
+import { cellToWorld, type PickedItem } from '../core/meadow-grid';
 import { createPerfMonitor, createQualityController } from '../core/perf-monitor';
 import type { Edge } from '../core/pieces';
 import type { SceneryKind } from '../core/scenery';
@@ -34,7 +35,7 @@ import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
 import { createRigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
-import { cellToWorld, type PickedItem, startTrackRenderer } from './track-renderer';
+import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */

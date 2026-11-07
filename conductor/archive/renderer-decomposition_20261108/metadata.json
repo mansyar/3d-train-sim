@@ -1,0 +1,32 @@
+{
+  "id": "renderer-decomposition_20261108",
+  "title": "Renderer Decomposition",
+  "type": "refactor",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-07T20:34:44+11:00",
+  "updated_at": "2026-11-08T00:20:00+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "refactor/renderer-decomposition_20261108",
+  "base_branch": "main",
+  "base_sha": "f880530d411420dd7077a0917c215a1a00d04d5f",
+  "progress": {
+    "phases_total": 8,
+    "phases_verified": 8,
+    "tasks_total": 27,
+    "tasks_done": 27
+  },
+  "last_checkpoint": "3041df8",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 2,
+  "doc_sync": "synced",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/69",
+  "pr_state": "open",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-08T00:30:00+11:00",
+  "archive_path": "conductor/archive/renderer-decomposition_20261108"
+}

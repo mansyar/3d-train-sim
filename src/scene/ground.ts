@@ -1,8 +1,9 @@
 import type { Scene } from 'three';
 import { Color, Mesh, MeshStandardMaterial, PlaneGeometry } from 'three';
+import { GROUND_SIZE } from '../core/meadow-grid';
 
 /** The "table surface" the toy world sits on — soft play-mat green. */
-export const GROUND_SIZE = 60;
+export { GROUND_SIZE };
 
 /** Summer green and settled-snow white for the weather lerp. */
 const GRASS = new Color(0x8fce8f);
