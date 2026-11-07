@@ -203,7 +203,27 @@ interface block is byte-identical to `f880530` (66 lines), and no rule in the ne
 was weakened — two real edges are allowlisted with reasons. Pre-existing over-budget files
 (`init-scene.ts` 450, `train-fleet.ts` 552) were left alone as out of scope.
 
-<!-- If `conductor-review` finds issues it appends a phase with its own contract:
+<!-- If `conductor-review` finds issues it appends a phase with its own contract: -->
 ## Phase R1: Review Fixes
-- [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
--->
+
+- **Goal:** make the facade's hook wiring independent of asset timing, put the line budget and the
+  grid sweep under test, dispose in reverse construction order, and make the import allowlist state
+  the edges it actually sanctions.
+- **Depends on:** Phase 6
+- **Covers:** F1, F2, F3, F4, F5, F6
+- **Touches:** `src/scene/track-renderer.ts`, `src/scene/track-ambience.ts`,
+  `src/scene/track-crossings.ts`, `src/scene/track-picking.ts`, `src/scene/track-catalog.ts`,
+  `src/scene/track-placement.ts`, `src/core/import-graph.test.ts`, `src/core/meadow-grid.test.ts`
+- **Verification:** `pnpm check`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Latch the hooks so construction cannot depend on asset timing** — covers: F1
+- [ ] **R1.T2: Gate the line budget in the import-graph test** — covers: F2
+- [ ] **R1.T3: Sweep every meadow cell** — covers: F3
+- [ ] **R1.T4: Dispose in reverse construction order** — covers: F4
+- [ ] **R1.T5: Move the yaw helper and honest the allowlist** — covers: F5
+- [ ] **R1.T6: Record one canonical measurement** — covers: F6
+
+**Result:**
+**Checkpoint:**
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/review.md
