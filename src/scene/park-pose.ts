@@ -1,8 +1,8 @@
+import { cellToWorld } from '../core/meadow-grid';
 import { findParkSpot } from '../core/park-spot';
 import { rideComponentsOf, selectRideComponents } from '../core/pathing';
 import type { PlacedPiece } from '../core/track-graph';
 import { stepEntryPose } from './ride-motion';
-import { cellToWorld } from './track-renderer';
 
 /** A world-space resting pose: the pre-ride opener and its loading crate. */
 export interface ParkPose {

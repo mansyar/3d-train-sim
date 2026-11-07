@@ -1,5 +1,6 @@
 import type { Object3D } from 'three';
 import { easedHeightAt, HILL_HALF_HEIGHT, type RideSpan } from '../core/elevation';
+import { cellToWorld } from '../core/meadow-grid';
 import { easePaceRamp, gradePaceFactor, PACE_EASE_SECONDS, personalityPace } from '../core/pace';
 import type { PathStep } from '../core/pathing';
 import { isBumpPiece, isCornerPiece } from '../core/pieces';
@@ -12,7 +13,6 @@ import { tunnelFlagsForPath } from '../core/tunnels';
 import type { RideState } from '../state/ride';
 import type { WorldStore } from '../state/world';
 import { GROUND_SIZE } from './ground';
-import { cellToWorld } from './track-renderer';
 
 const CELL_SIZE = GROUND_SIZE / MEADOW_CELLS;
 

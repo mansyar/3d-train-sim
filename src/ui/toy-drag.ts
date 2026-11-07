@@ -1,8 +1,8 @@
 import type { AudioController } from '../audio/audio-controller';
+import type { PickedItem } from '../core/meadow-grid';
 import { isWater } from '../core/river';
 import { type SceneryKind, sceneryFloats } from '../core/scenery';
 import { type Cell, type PieceType, type Rotation, terrainErrorFor } from '../core/track-graph';
-import type { PickedItem } from '../scene/track-renderer';
 import type { WorldStore } from '../state/world';
 import { isPieceKind } from './toy-icons';
 
