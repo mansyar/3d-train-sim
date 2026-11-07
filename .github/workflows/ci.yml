@@ -72,11 +72,12 @@ jobs:
   e2e:
     name: Gate · e2e (tablet · phone · prod)
     runs-on: ubuntu-latest
-    # The suite is 191 specs across three projects and WebGL renders in software
-    # on CI. The offline specs warm a service worker and then reload with the
-    # network off, which is the slowest pair in the run; 30 minutes left no
-    # headroom once they were added.
-    timeout-minutes: 45
+    # 193 specs across three projects, WebGL rendered in software (~23 min), plus
+    # `playwright install --with-deps`, whose apt step is the variable: 1-2 min on
+    # a good day, 34 min when the Ubuntu mirror crawls. 45 minutes could not hold
+    # both; the offline specs were killed mid-test at the ceiling rather than
+    # failing on an assertion.
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4

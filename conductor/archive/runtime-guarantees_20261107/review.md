@@ -203,9 +203,13 @@ Error: browserContext.setOffline: Target page, context or browser has been close
   one, which is exactly the narrowed claim ("frames advance") and costs no
   readback. Ceilings went to 120 s, and `setOffline(false)` is now
   `.catch(() => undefined)` so a teardown failure can never mask a real one.
-- **Also:** the e2e job ceiling went from 30 to 45 minutes. The suite is 191 specs
-  across three projects with software rendering, and the run that failed spent
-  26m48s before reaching the failure; there was no headroom left.
+- **Also:** the e2e job ceiling went from 30 to 45 to 60 minutes. The suite is now
+  193 specs across three projects with software rendering (~23 min of test time on
+  CI), and the job also runs `playwright install --with-deps`, whose `apt-get` step
+  is the real variable: 1–2 minutes normally, **33m46s** on the third CI attempt
+  (00:49:06 → 01:22:52), which left 11 minutes for the suite and got the offline
+  spec killed mid-test at the ceiling rather than failing an assertion. That run is
+  infrastructure, not code: `biome + typecheck` and `vitest` passed both times.
 
 This is a CI-environment fix, not a product change: no `src/` file moved, and the
 assertions stayed as strict (`frames > 0` during the ride, zero console errors,
