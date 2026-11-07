@@ -62,7 +62,7 @@ the phase ran. The local smoke run failed both ambient-FPS assertions once on th
 - **Covers:** FR-4, AC-5
 - **Touches:** `src/scene/track-placement.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/tunnel.spec.ts e2e/cargo.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Move loading and reconciliation** — covers: FR-4
   - [ ] P2.T1.1: Create `track-placement.ts` as a factory taking the scene, world and audio; move
