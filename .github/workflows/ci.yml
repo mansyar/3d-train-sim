@@ -1,9 +1,10 @@
 name: CI
 
-# Three parallel gate jobs (tech-stack.md "CI (ci.yml)"): style+types,
-# unit/integration, and the full e2e suite (tablet · phone · prod profiles).
-# PR e2e is an upstream tripwire — the release pipeline's ubuntu e2e run
-# stays the release authority. Docs-only commits run no jobs.
+# Four parallel gate jobs (tech-stack.md "CI (ci.yml)"): style+types,
+# unit/integration, the full e2e suite (tablet · phone · prod profiles), and
+# the dependency audit. PR e2e is an upstream tripwire — the release
+# pipeline's ubuntu e2e run stays the release authority. Docs-only commits run
+# no jobs.
 on:
   push:
     branches: [main, master]
@@ -68,6 +69,33 @@ jobs:
       # thresholds live in vite.config.ts, so a regression fails this job.
       - name: Unit & integration suite + coverage gate
         run: pnpm test:coverage
+
+  audit:
+    name: Gate · audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm (version from packageManager field)
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Red on a high or critical advisory anywhere in the tree. An advisory
+      # with no fixed version yet gets a dated `auditConfig.ignoreCves` entry in
+      # pnpm-workspace.yaml beside the advisory id and the track that clears it —
+      # never a broad path or a dev-only exemption.
+      - name: Audit gate
+        run: pnpm audit --audit-level=high
 
   e2e:
     name: Gate · e2e (tablet · phone · prod)

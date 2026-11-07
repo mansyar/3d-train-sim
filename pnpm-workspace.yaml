@@ -1,0 +1,13 @@
+# pnpm settings (pnpm 11 reads these here; the `pnpm` field in package.json is
+# ignored). Overrides exist only where an advisory is fixed upstream but the
+# parent package still pins the vulnerable range; each one carries the advisory
+# it closes and is removed as soon as the parent catches up.
+overrides:
+  # GHSA-68fv-2mgg-jv7q — patched 1.2.2, reached through jsdom, postcss and magicast
+  source-map-js: ">=1.2.2"
+  # GHSA-rfgv-xxqx-mfg5 and six siblings — patched 8.12.2, reached through vitest > jsdom
+  undici: ">=8.12.4"
+  # GHSA-qw65-cvwx-89v3, GHSA-58mr-gqgx-xq4g — patched 3.1.7, reached through workbox-build > ajv
+  fast-uri: ">=3.1.7"
+  # GHSA-qhr7-859c-m2p7, GHSA-6j4f-fj2g-mc7p — patched 5.0.11, reached through workbox-build > jake
+  brace-expansion: ">=5.0.11"
