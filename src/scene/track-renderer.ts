@@ -1,14 +1,4 @@
-import {
-  type Mesh,
-  type MeshStandardMaterial,
-  type Object3D,
-  type PerspectiveCamera,
-  Plane,
-  Raycaster,
-  type Scene,
-  Vector2,
-  Vector3,
-} from 'three';
+import type { Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, Scene } from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { createMusicBoxVoice } from '../audio/music-box-audio';
 import { advanceCrossing, type CrossingMotion, idleCrossing } from '../core/crossings';
@@ -16,7 +6,7 @@ import { CELL_SIZE, cellToWorld, type PickedItem } from '../core/meadow-grid';
 import type { PieceType } from '../core/pieces';
 import { type SceneryKind, sceneryCategory, sceneryVoice } from '../core/scenery';
 import { isSwitchPiece, type SwitchPieceType } from '../core/switches';
-import { type Cell, type Edge, MEADOW_CELLS, type Rotation } from '../core/track-graph';
+import type { Cell, Edge, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { type CritterMood, createCritterLife } from './critter-life';
 import { createDelightMotion, isDelightKind } from './delight-motion';
@@ -24,37 +14,12 @@ import { GROUND_SIZE } from './ground';
 import { createMusicBoxScene, type MusicBoxScene } from './music-box';
 import { DELIGHT_CAPS, isPiece, type MeadowItem } from './track-catalog';
 import { startTrackGhost } from './track-ghost';
+import { startTrackPicking } from './track-picking';
 import { advancedEdge, startTrackPlacement } from './track-placement';
 
-/** Screen-space center of a meadow cell, or null when it is off-camera. */
-export function cellToScreen(
-  cell: Cell,
-  camera: PerspectiveCamera,
-  canvas: HTMLCanvasElement,
-): { x: number; y: number } | null {
-  // The projection depends on fresh camera matrices, which the render loop
-  // does not refresh when the camera is not a scene child — ask first.
-  camera.updateMatrixWorld();
-  const { x, z } = cellToWorld(cell);
-  const ndc = new Vector3(x, 0, z).project(camera);
-  // The meadow sits near this camera's far plane, so its NDC z hovers around
-  // 1 — only a non-finite projection, or a point outside the view frustum,
-  // means the cell is not usable on screen.
-  if (
-    !Number.isFinite(ndc.x) ||
-    !Number.isFinite(ndc.y) ||
-    ndc.x < -1.2 ||
-    ndc.x > 1.2 ||
-    ndc.y < -1.2 ||
-    ndc.y > 1.2
-  ) {
-    return null;
-  }
-  return {
-    x: ((ndc.x + 1) / 2) * canvas.clientWidth,
-    y: ((1 - ndc.y) / 2) * canvas.clientHeight,
-  };
-}
+// The frozen projection export: `init-scene` and the e2e probes reach
+// `cellToScreen` through this module, so the wrapper stays exported here.
+export { cellToScreen } from './track-picking';
 
 export interface TrackRenderer {
   dispose(): void;
@@ -140,10 +105,6 @@ export function startTrackRenderer(
   /** Music boxes: winding state, figurine twirl, and the synthesized voice. */
   const musicBoxVoice = createMusicBoxVoice(audio);
   const musicBox = createMusicBoxScene(musicBoxVoice);
-  const raycaster = new Raycaster();
-  const pointerNdc = new Vector2();
-  const groundPlane = new Plane(new Vector3(0, 1, 0), 0);
-  const groundHit = new Vector3();
   let disposed = false;
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -365,53 +326,9 @@ export function startTrackRenderer(
   // template map, so an asset still in flight yields no preview.
   const ghost = startTrackGhost(scene, placement.templates);
 
-  /** The meadow cell under a screen point, or null off-meadow. */
-  function cellFromPoint(clientX: number, clientY: number): Cell | null {
-    const rect = canvas.getBoundingClientRect();
-    pointerNdc.set(
-      ((clientX - rect.left) / rect.width) * 2 - 1,
-      -((clientY - rect.top) / rect.height) * 2 + 1,
-    );
-    raycaster.setFromCamera(pointerNdc, camera);
-    const hit = raycaster.ray.intersectPlane(groundPlane, groundHit);
-    if (!hit) return null;
-    const x = Math.floor((hit.x + GROUND_SIZE / 2) / CELL_SIZE);
-    const y = Math.floor((hit.z + GROUND_SIZE / 2) / CELL_SIZE);
-    if (x < 0 || x >= MEADOW_CELLS || y < 0 || y >= MEADOW_CELLS) return null;
-    return { x, y };
-  }
-
-  /**
-   * The placed meadow item (piece or scenery) whose cell is under a screen
-   * point. The store keeps at most one toy per cell, so the cell itself is
-   * the tap target — far more forgiving for small fingers than raycasting
-   * thin rail geometry.
-   */
-  function pickPiece(clientX: number, clientY: number): PickedItem | null {
-    const cell = cellFromPoint(clientX, clientY);
-    if (!cell) return null;
-    for (const item of placement.tracked.values()) {
-      if (item.cell.x === cell.x && item.cell.y === cell.y) {
-        if (isPiece(item)) {
-          return {
-            kind: 'piece',
-            id: item.id,
-            type: item.type,
-            rotation: item.rotation,
-            cell: item.cell,
-          };
-        }
-        return {
-          kind: 'scenery',
-          id: item.id,
-          scenery: item.kind,
-          rotation: item.rotation,
-          cell: item.cell,
-        };
-      }
-    }
-    return null;
-  }
+  // Picking reads the live maps through the placement handle: the hit test
+  // resolves the cell first, then the item tracked on it.
+  const picking = startTrackPicking(camera, canvas, placement);
 
   let tunnelSnow = false;
   // ── Railway crossing gates ──────────────────────────────────────────────
@@ -607,8 +524,8 @@ export function startTrackRenderer(
   }
 
   return {
-    cellFromPoint,
-    cellToScreen: (cell) => cellToScreen(cell, camera, canvas),
+    cellFromPoint: picking.cellFromPoint,
+    cellToScreen: picking.cellToScreen,
     updateCritters(dt, trainX, trainZ, mood): void {
       if (disposed) return;
       critterLife.update(dt, trainX, trainZ, mood);
@@ -620,7 +537,7 @@ export function startTrackRenderer(
     beginGhost: ghost.beginGhost,
     moveGhost: ghost.moveGhost,
     endGhost: ghost.endGhost,
-    pickPiece,
+    pickPiece: picking.pickPiece,
     setPieceVisible: (id, visible): void => placement.setPieceVisible(id, visible),
     setGridVisible: ghost.setGridVisible,
     setTunnelSnow,
