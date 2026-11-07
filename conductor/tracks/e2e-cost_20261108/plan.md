@@ -15,18 +15,29 @@
   `e2e/world-portability.spec.ts`, `e2e/save-recovery.spec.ts`, `e2e/runtime-guarantees.spec.ts`,
   `e2e/prod.spec.ts`, `e2e/phone-shell.spec.ts`, `e2e/ride-toybox-flow.spec.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test --list` and `pnpm e2e`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Declare the tag vocabulary and mark the smoke set** — covers: FR-1, FR-2
-  - [ ] P1.T1.1: Add `@smoke` to the eleven chosen tests, spread across the five files that own them
-  - [ ] P1.T1.2: Add `@ci` to the ambient frame-rate test and skip it unless `CI` is set
-- [ ] **P1.T2: Restrict the phone project to three files** — covers: FR-3
-  - [ ] P1.T2.1: Allowlist the smoke boot test, `phone-shell` and `ride-toybox-flow` in the project config
-  - [ ] P1.T2.2: Prove `--list --project=phone` reports four runs and not eleven
-- [ ] **P1.T3: Add the lane scripts** — covers: FR-6
-- [ ] **P1.T4: Prove the lane and the CI gate** — covers: AC-2, AC-5
-  - [ ] P1.T4.1: Run `pnpm e2e` three times and record the wall time and the test count
-  - [ ] P1.T4.2: Demonstrate the frame-rate test skipped locally and selected when `CI` is set
+- [x] **P1.T1: Declare the tag vocabulary and mark the smoke set** - covers: FR-1, FR-2
+  - [x] P1.T1.1: Add `@smoke` to the eleven chosen tests, spread across the five files that own them
+  - [x] P1.T1.2: Add `@ci` to the ambient frame-rate test and skip it unless `CI` is set
+- [x] **P1.T2: Restrict the phone project to three files** - covers: FR-3
+  - [x] P1.T2.1: Allowlist the smoke boot test, `phone-shell` and `ride-toybox-flow` in the project config
+  - [x] P1.T2.2: Prove `--list --project=phone` selects only the allowlisted files, and record the count it actually reports
+- [x] **P1.T3: Add the lane scripts** - covers: FR-6
+- [x] **P1.T4: Prove the lane and the CI gate** - covers: AC-2, AC-5
+  - [x] P1.T4.1: Run `pnpm e2e` three times and record the wall time and the test count
+  - [x] P1.T4.2: Demonstrate the frame-rate test skipped locally and selected when `CI` is set
+
+**Result:** verified
+**Checkpoint:** c970f13
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-1.md
+
+**Deviations:** the phone project selects **8** runs, not the 4 the spec first asked for, because five
+`@smoke` tests live inside the allowlisted `smoke.spec.ts`; the user chose to amend AC-4 rather than
+add a third tag or split the file, and the amendment is dated in `spec.md`. The phone `testIgnore` for
+`prod.spec.ts` was dropped as redundant once `testMatch` became exhaustive. The `pnpm e2e` runs were
+performed by the primary agent because the subagent's shell denied the script. Tags are title
+suffixes: no assertion, fixture or timeout changed.
 
 ## Phase 2: Mechanical clusters
 

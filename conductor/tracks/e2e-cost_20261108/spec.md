@@ -104,7 +104,7 @@ file names.
 | AC-1 | `playwright test --list` reports ≤60 runs and between 40 and 50 unique tests. | FR-4, NFR-1 |
 | AC-2 | `pnpm e2e` passes 11 tests in ≤3 min. | FR-2, NFR-3 |
 | AC-3 | `pnpm e2e:full` passes the complete tablet suite in ≤6 min. | FR-4, NFR-2 |
-| AC-4 | `playwright test --list --project=phone` lists exactly the runs from the three allowlisted files (4 runs), not 11 and not 48. | FR-3 |
+| AC-4 | `playwright test --list --project=phone` lists only the runs from the three allowlisted files — 8 runs (5 from `smoke.spec.ts`, 1 `phone-shell`, 2 `ride-toybox-flow`), not the whole suite. Amended 2026-11-08: the original wording said 4, which could not be reached without a third tag, because five `@smoke` tests live inside the allowlisted `smoke.spec.ts`. | FR-3 |
 | AC-5 | The frame-rate test is skipped locally and present when `CI` is set (demonstrated in both modes). | FR-7 |
 | AC-6 | Both CI shards are green on this track's pull request, each finishing in ≤6 min. | FR-8 |
 | AC-7 | The parity ledger accounts for every one of the 96 original tests; each removal names the unit test that replaces it; there are zero unexplained entries. | FR-5, FR-12 |
