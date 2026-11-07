@@ -22,7 +22,7 @@ workflow. No `src/` file, dependency, save format or scene behaviour changed.
 | Full tablet lane | `pnpm e2e:full` | 1 → rerun | 7.7 min; one contention flake (steam puffs) that passes 8/8 alone |
 | Shard split | `--list --shard=1/2`, `--shard=2/2` | 0 | 31 + 26 = 57, exhaustive |
 | Workflow shape | YAML parse of both workflows | 0 | matrix `['1/2','2/2']`, `fail-fast: false`, 45 min; nightly `schedule` + `workflow_dispatch` only |
-| Full matrix | `pnpm exec playwright test` | — | see "Full suite" below |
+| Full matrix | `pnpm exec playwright test` | 0 | **56 passed, 1 skipped** (the `@ci` canary) in **9.4 min** — 57 runs, no retries, no page crashes; down from 193 runs / 16.9 min before the track |
 
 ## Acceptance criteria
 
@@ -64,4 +64,6 @@ workflow. No `src/` file, dependency, save format or scene behaviour changed.
 ## Verdict
 
 Every acceptance criterion has a witness except AC-6, which is by definition a CI observation on this
-PR. The track is integrated and ready for review.
+PR. The full matrix ran green in one pass (56 passed, 1 deliberately skipped) in 9.4 minutes against
+16.9 minutes for 193 runs before the track, so the merged journeys hang together as a suite and not just
+phase by phase. The track is integrated and ready for review.
