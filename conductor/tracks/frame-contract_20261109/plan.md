@@ -135,6 +135,7 @@ like-for-like against a detached worktree build of the base commit: **+546 B**.
   - [x] **R2.T4.1: Expect the named repeat, not just the counts**
 
 **Deviations:** performed by the primary (findings live in `conductor/` state). The first R1 attempt was reported
-as verified while the pre-run fill survived; round 2 caught it, and this phase is the correction. No `src/core`,
-dependency or lockfile change.
+as verified while the pre-run fill survived; round 2 caught it, and this phase is the correction. Because the
+correction rewrote the same lines, R1 and R2 landed as one commit — `9418483` is both checkpoints. Round 3 confirmed
+the tree with no findings. No `src/core`, dependency or lockfile change.
 
