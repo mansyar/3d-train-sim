@@ -121,15 +121,23 @@ run alone.
 - **Touches:** `src/scene/track-picking.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts e2e/ride-toybox-flow.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P4.T1: Move the raycast picking** — covers: FR-6
-  - [ ] P4.T1.1: Move `raycaster`, `pointerNdc`, `groundPlane`, `groundHit`, `cellFromPoint` and
+- [x] **P4.T1: Move the raycast picking** — covers: FR-6
+  - [x] P4.T1.1: Move `raycaster`, `pointerNdc`, `groundPlane`, `groundHit`, `cellFromPoint` and
         `pickPiece`; the hit test must keep reading `rendered`/`tracked` through the placement
         handle rather than a copy.
-- [ ] **P4.T2: Move the screen projection** — covers: FR-6
-  - [ ] P4.T2.1: Move `cellToScreen` as a thin wrapper that projects the core world point through
+- [x] **P4.T2: Move the screen projection** — covers: FR-6
+  - [x] P4.T2.1: Move `cellToScreen` as a thin wrapper that projects the core world point through
         the camera passed at construction.
+
+**Result:** verified
+**Checkpoint:** 6ec338d
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-4.md
+**Deviations:** none. The frozen export is preserved with `export { cellToScreen } from
+'./track-picking'` in the renderer, so `init-scene.ts` and the e2e probes import the same symbol
+from the same path, and the handle member keeps its one-argument shape. The brief was wrong about
+`pickPiece` reading `rendered`; it only reads `tracked`, and the phase followed the code.
 
 ## Phase 5: Crossings and switches
 
