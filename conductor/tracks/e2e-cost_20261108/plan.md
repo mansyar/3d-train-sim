@@ -140,12 +140,16 @@ village (14/5) rather than the pristine oval (10/4), which is that test's own fi
 - **Touches:** `.github/workflows/ci.yml`, `.github/workflows/nightly.yml`
 - **Verification:** `pnpm check` and a workflow parse asserting two shard values, the nightly schedule and no
   pull-request trigger on the nightly file
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P5.T1: Shard the e2e job into two matrix jobs** — covers: FR-8, NFR-6, NFR-7
-  - [ ] P5.T1.1: Matrix over the two shard values, keeping 2 workers and the 45-minute ceiling per job
-- [ ] **P5.T2: Add the nightly workflow** — covers: FR-9
-  - [ ] P5.T2.1: Schedule the full suite on both profiles, with repetition only for the two noisy specs
+- [x] **P5.T1: Shard the e2e job into two matrix jobs** - covers: FR-8, NFR-6, NFR-7
+  - [x] P5.T1.1: Matrix over the two shard values, keeping 2 workers and the 45-minute ceiling per job
+- [x] **P5.T2: Add the nightly workflow** - covers: FR-9
+  - [x] P5.T2.1: Schedule the full suite on both profiles, with repetition only for the two noisy specs
+
+**Result:** verified
+**Checkpoint:** c8668ce
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-5.md
 
 ## Phase 6: Ledger, docs and final measurement
 
