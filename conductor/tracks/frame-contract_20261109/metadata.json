@@ -1,0 +1,32 @@
+{
+  "id": "frame-contract_20261109",
+  "title": "Frame Contract",
+  "type": "refactor",
+  "status": "new",
+  "priority": "medium",
+  "depends_on": ["renderer-decomposition_20261108", "e2e-cost_20261108"],
+  "created_at": "2026-11-08T08:26:59+11:00",
+  "updated_at": "2026-11-08T08:26:59+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "refactor/frame-contract_20261109",
+  "base_branch": "main",
+  "base_sha": "410a1c38531321d5e9e7b5304b3819e9af62c9b8",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 0,
+    "tasks_total": 7,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "pr_state": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
