@@ -178,9 +178,27 @@ Two spec descriptors were amended after measurement at the user's direction: NFR
 ≤6 min to ≤8 min (measured 7.7 min at 47 runs; the ≤6 min claim that holds is per CI shard). The 3-worker
 experiment is recorded as a rejected option (7.2 min with a new flake).
 
-<!--
-The primary agent appends after verification:
+## Phase R1: Review Fixes
+
+- **Goal:** Close the seven round-1 findings — the false-pass scenery drop first, then the doc times, the AC-2 bound, the overstated witness, and the three descriptions of commands and workflows.
+- **Depends on:** Phase 6
+- **Covers:** F1, F2, F3, F4, F5, F6, F7
+- **Touches:** `e2e/smoke.spec.ts`, `e2e/README.md`, `CONTRIBUTING.md`, `.github/workflows/nightly.yml`, `conductor/tracks/e2e-cost_20261108/spec.md`, `verification/parity.md`, `verification/integrated.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts --project=tablet --project=phone`
+- **Status:** verified
+
+- [x] **R1.T1: Make the scenery drop a real witness** — covers: F1
+  - [x] R1.T1.1: Drop on a free cell resolved through `cellToScreen`, and assert the scenery delta and cell
+  - [x] R1.T1.2: Prove the assertion bites by reverting the drop target to the old point
+- [x] **R1.T2: Correct the documented lane times** — covers: F2, F6, F7
+- [x] **R1.T3: Record the measured bound in AC-2 and NFR-3** — covers: F3
+- [x] **R1.T4: Disclose the unwitnessed note copy in the ledger** — covers: F4
+- [x] **R1.T5: Stop the nightly repeating a spec the phone project cannot select** — covers: F5
+
 **Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-1.md
--->
+**Checkpoint:** cfc7b08
+**Evidence:** conductor/tracks/e2e-cost_20261108/review.md
+
+**Deviations:** performed by the primary (the findings touch `conductor/` state). The same-point drop was
+kept only long enough to record the red proof; the ledger's "does not claim" section now names the
+`too-large` note copy as debt rather than implying a witness that does not exist.

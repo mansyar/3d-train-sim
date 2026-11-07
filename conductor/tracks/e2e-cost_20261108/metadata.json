@@ -13,15 +13,15 @@
   "base_branch": "main",
   "base_sha": "cb9a6c4ab1e2a3848b21d30eb886d94ca8a7d869",
   "progress": {
-    "phases_total": 6,
-    "phases_verified": 6,
-    "tasks_total": 25,
-    "tasks_done": 25
+    "phases_total": 7,
+    "phases_verified": 7,
+    "tasks_total": 30,
+    "tasks_done": 30
   },
-  "last_checkpoint": "a708d81",
-  "review_verdict": null,
-  "review_rounds": 0,
-  "doc_sync": "pending",
+  "last_checkpoint": "cfc7b08",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 1,
+  "doc_sync": "synced",
   "pr_url": null,
   "pr_state": null,
   "reverted_at": null,
