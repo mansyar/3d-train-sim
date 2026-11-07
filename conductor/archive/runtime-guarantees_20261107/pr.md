@@ -84,6 +84,7 @@ under WebKit during exploration). Real iPad checks stay in the manual-device lay
 | `pnpm build` | pass — 178 precache entries, 10,639.88 KiB, four `woff2`, zero `woff` |
 | `pnpm exec playwright test e2e/runtime-guarantees.spec.ts` | pass — 10 (tablet + phone) |
 | `pnpm exec playwright test` (full) | pass — 191 (tablet, phone, prod), no retries |
+| CI `Gate · e2e` | first run failed on the two offline specs at the tablet profile; fixed by replacing the screenshot poll with a frame counter and raising the ceilings — see `review.md` § Post-review CI stabilization |
 | Negative control: dev middleware switched to the strict map | the dev-header test fails, then reverted |
 | Negative control: `blob:` removed from the nginx include | the drift guard fails, then reverted |
 

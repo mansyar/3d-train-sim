@@ -72,7 +72,11 @@ jobs:
   e2e:
     name: Gate · e2e (tablet · phone · prod)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The suite is 191 specs across three projects and WebGL renders in software
+    # on CI. The offline specs warm a service worker and then reload with the
+    # network off, which is the slowest pair in the run; 30 minutes left no
+    # headroom once they were added.
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4

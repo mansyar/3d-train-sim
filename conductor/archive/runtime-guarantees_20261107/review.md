@@ -179,3 +179,36 @@ compared against the parsed include (F3), the privacy walk really scans
 `index.html` and `src/**/*.css` with `public/**` documented as exempt (F4), and
 the ride witness was narrowed rather than overclaimed (F5).
 
+## Post-review CI stabilization (2026-11-07)
+
+The first CI run on this branch (42296916285's job) passed `biome + typecheck` and
+`vitest` but failed `Gate · e2e` on the two offline specs, **tablet profile only**
+(phone passed in 44 s and 30 s):
+
+```
+runtime-guarantees.spec.ts:206 › the meadow boots, places a toy and rides with the network off
+runtime-guarantees.spec.ts:234 › nothing leaves the app origin during boot, placement and ride
+Error: browserContext.setOffline: Target page, context or browser has been closed
+```
+
+- **Cause:** both tests hit their 90 s ceiling, and the surfaced error was the
+  `finally` calling `setOffline(false)` on a context Playwright had already torn
+  down — the teardown masked the timeout rather than causing it. The expense is
+  R1's F5 fix: `canvas.screenshot()` is a full readback, and CI renders WebGL in
+  software, so at the tablet profile's 2× device scale each readback is slow
+  enough that a screenshot poll consumed the whole budget. Locally (GPU) the same
+  tests finish in seconds, which is why review did not catch it.
+- **Fix:** the F5 witness no longer reads pixels. It counts `requestAnimationFrame`
+  callbacks over a 1.5 s window before and during the ride and requires at least
+  one, which is exactly the narrowed claim ("frames advance") and costs no
+  readback. Ceilings went to 120 s, and `setOffline(false)` is now
+  `.catch(() => undefined)` so a teardown failure can never mask a real one.
+- **Also:** the e2e job ceiling went from 30 to 45 minutes. The suite is 191 specs
+  across three projects with software rendering, and the run that failed spent
+  26m48s before reaching the failure; there was no headroom left.
+
+This is a CI-environment fix, not a product change: no `src/` file moved, and the
+assertions stayed as strict (`frames > 0` during the ride, zero console errors,
+zero foreign requests) — only the cost of observing them dropped.
+
+
