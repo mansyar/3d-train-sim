@@ -148,7 +148,7 @@ from the same path, and the handle member keeps its one-argument shape. The brie
 - **Touches:** `src/scene/track-crossings.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/crossing-gate.spec.ts e2e/switches.spec.ts e2e/switch-slip.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Move crossing choreography** — covers: FR-7
   - [ ] P5.T1.1: Move `crossingMotions`, `crossingParts`, `trackCrossing`, `updateCrossings`,
