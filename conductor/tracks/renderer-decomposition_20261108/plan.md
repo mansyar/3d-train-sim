@@ -199,7 +199,9 @@ the placement hooks are now delegations with no crossing state left in the facad
 **Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-6.md
 **Deviations:** the subagent reported `blocked` on P6.T3.3 because `edit conductor/tech-stack.md` is
 denied to phase subagents; the primary applied the patch it recorded, which closes the task.
-`track-renderer.ts` is 158 lines and `track-ambience.ts` 210, both inside AC-1. The `TrackRenderer`
+`track-renderer.ts` measured 158 lines and `track-ambience.ts` 210 when the phase closed (counters
+disagreed by a few lines; the numbers are now enforced and measured at HEAD instead — see Phase R1
+and R2 evidence). The `TrackRenderer`
 interface block is byte-identical to `f880530` (66 lines), and no rule in the new import-graph test
 was weakened — two real edges are allowlisted with reasons. Pre-existing over-budget files
 (`init-scene.ts` 450, `train-fleet.ts` 552) were left alone as out of scope.
@@ -229,3 +231,33 @@ was weakened — two real edges are allowlisted with reasons. Pre-existing over-
 **Checkpoint:** 3d78e13
 **Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-R1.md
 **Evidence:** conductor/tracks/renderer-decomposition_20261108/review.md
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** state the latch's real limit, dispose in strict reverse order, make the crossings
+  allowlist name the template it reads, give every document one canonical line count, and measure
+  the gzip delta AC-7 asks for instead of the raw byte count.
+- **Depends on:** Phase R1
+- **Covers:** F7, F8, F9, F10, F11
+- **Touches:** `src/scene/track-renderer.ts`, `src/core/import-graph.test.ts`,
+  `conductor/tech-stack.md`, `verification/integrated.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test`
+- **Status:** in_progress
+
+- [ ] **R2.T1: Say what the latch actually does** - covers: F7
+  - [ ] R2.T1.1: Reword the facade comment so it reads as a crash guard that drops an
+        edge-triggered hook, not as ordering or a replay.
+- [ ] **R2.T2: Dispose in strict reverse construction order** - covers: F8
+  - [ ] R2.T2.1: Run crossings, then ghost, then ambience, then placement, and say so in the
+        comment (picking holds no scene state and has no dispose).
+- [ ] **R2.T3: Name the template the crossings module reads** - covers: F9
+  - [ ] R2.T3.1: Reword the allowlist reason so it includes the crossing-gate template used for
+        the snow cap, not just the two maps.
+- [ ] **R2.T4: One canonical line count in every document** - covers: F10
+  - [ ] R2.T4.1: Replace the hand-counted 158/167/210 figures in the plan, the phase-6 evidence
+        and the integrated record with the budget test's numbers, and note that R1 squashed its
+        working commits into `3d78e13`.
+- [ ] **R2.T5: Measure the gzip delta** - covers: F11
+  - [ ] R2.T5.1: Build the base commit and HEAD, gzip the emitted JS bundle from each, and record
+        the difference against the 2 KB budget in the integrated record.
+
