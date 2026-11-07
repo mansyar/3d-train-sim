@@ -2,7 +2,7 @@
   "id": "runtime-guarantees_20261107",
   "title": "Runtime Guarantees",
   "type": "feature",
-  "status": "in_progress",
+  "status": "complete",
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-07T09:17:09+11:00",
@@ -27,6 +27,6 @@
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
-  "archived_at": null,
-  "archive_path": null
+  "archived_at": "2026-11-07T11:40:00+11:00",
+  "archive_path": "conductor/archive/runtime-guarantees_20261107"
 }

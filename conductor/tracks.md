@@ -4,7 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [runtime-guarantees_20261107](tracks/runtime-guarantees_20261107/index.md) | Runtime Guarantees | Feature | in_progress |
+| [runtime-guarantees_20261107](./archive/runtime-guarantees_20261107/index.md) | Runtime Guarantees | Feature | archived |
 | [world-portability_20261107](./archive/world-portability_20261107/index.md) | World Portability | Feature | archived |
 | [save-resilience_20261107](./archive/save-resilience_20261107/index.md) | Save Resilience | Bug | archived |
 | [sun-moon_20260930](archive/sun-moon_20260930/index.md) | Sun & Moon - Child-Controlled Time of Day | Feature | archived |
