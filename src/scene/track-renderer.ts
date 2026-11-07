@@ -1,15 +1,13 @@
-import type { Object3D, PerspectiveCamera, Scene } from 'three';
+import type { PerspectiveCamera, Scene } from 'three';
 import type { AudioController } from '../audio/audio-controller';
-import { createMusicBoxVoice } from '../audio/music-box-audio';
-import { cellToWorld, type PickedItem } from '../core/meadow-grid';
+import type { PickedItem } from '../core/meadow-grid';
 import type { PieceType } from '../core/pieces';
-import { type SceneryKind, sceneryCategory, sceneryVoice } from '../core/scenery';
+import type { SceneryKind } from '../core/scenery';
 import type { Cell, Edge, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
-import { type CritterMood, createCritterLife } from './critter-life';
-import { createDelightMotion, isDelightKind } from './delight-motion';
-import { createMusicBoxScene, type MusicBoxScene } from './music-box';
-import { DELIGHT_CAPS, isPiece, type MeadowItem } from './track-catalog';
+import type { CritterMood } from './critter-life';
+import type { MusicBoxScene } from './music-box';
+import { startTrackAmbience, type TrackAmbience } from './track-ambience';
 import { startTrackCrossings } from './track-crossings';
 import { startTrackGhost } from './track-ghost';
 import { startTrackPicking } from './track-picking';
@@ -94,88 +92,33 @@ export function startTrackRenderer(
   world: WorldStore,
   audio: AudioController,
 ): TrackRenderer {
-  /** Placed critter ids with live idle/hop animation (see critter-life). */
-  const animatedCritters = new Set<string>();
-  const critterLife = createCritterLife((voice) => audio.chirp(voice));
-  /** Delight toys (windmill/carousel/balloon) with live motion appliers. */
-  const delight = createDelightMotion();
-  let delightSnow = false;
-  /** Music boxes: winding state, figurine twirl, and the synthesized voice. */
-  const musicBoxVoice = createMusicBoxVoice(audio);
-  const musicBox = createMusicBoxScene(musicBoxVoice);
-  let disposed = false;
-
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /** Keeps the critter animator's roster matched to the placed critters. */
-  function syncCritterAnimations(wanted: ReadonlyMap<string, MeadowItem>): void {
-    const next = new Set<string>();
-    for (const [id, item] of wanted) {
-      if (!isPiece(item) && sceneryCategory(item.kind) === 'critter') next.add(id);
-    }
-    for (const id of next) {
-      if (animatedCritters.has(id)) continue;
-      const model = placement.rendered.get(id);
-      const item = wanted.get(id);
-      if (model && item && !isPiece(item)) {
-        critterLife.track(model, id, sceneryVoice(item.kind) ?? undefined);
-        animatedCritters.add(id);
-      }
-    }
-    for (const id of animatedCritters) {
-      if (!next.has(id)) {
-        critterLife.forget(id);
-        animatedCritters.delete(id);
-      }
-    }
-  }
-
   // Placement owns the store subscription and the render maps; everything
-  // below reads the live maps through this handle. The hooks are the resident
-  // reactions (delight, critters, the music box) plus the crossing delegations,
-  // which only run after an asset has loaded — the crossings module below is
-  // constructed by then.
+  // below reads the live maps through this handle. The hooks are the ambient
+  // reactions (critters, delight, the music box) plus the crossing
+  // delegations, which only run after an asset has loaded — both modules
+  // below are constructed by then.
+  let ambience: TrackAmbience;
   const placement = startTrackPlacement(scene, world, reducedMotion, {
     onPieceTemplate: (type, model) => {
-      if (type === 'tunnel') {
-        // The snow cap is a winter-only tell — hidden unless snow already
-        // settled while the asset was in flight (setTunnelSnow is
-        // change-driven, so the template must honor the live state).
-        // Clones inherit the template's state.
-        const cap = model.getObjectByName('tunnel_snow_cap');
-        if (cap) cap.visible = tunnelSnow;
-      }
+      ambience.pieceTemplate(type, model);
       crossings.pieceTemplate(type, model);
     },
-    onSceneryTemplate: (kind, model) => {
-      if (isDelightKind(kind) || kind === 'music-box') {
-        // Snow caps author visible; settle them to the winter state known
-        // at load time (the asset race, as in syncTunnelPortals).
-        const capName = kind === 'music-box' ? 'musicbox_snow_cap' : `${kind}_snow_cap`;
-        const cap = model.getObjectByName(capName);
-        if (cap) cap.visible = delightSnow;
-      }
-    },
+    onSceneryTemplate: (kind, model) => ambience.sceneryTemplate(kind, model),
     onModelReplaced: (id) => {
       crossings.modelReplaced(id);
-      delight.detach(id);
-      musicBox.detach(id);
+      ambience.modelReplaced(id);
     },
     onModelRemoved: (id) => {
       crossings.modelRemoved(id);
-      delight.detach(id);
-      musicBox.detach(id);
+      ambience.modelRemoved(id);
     },
     onModelAdded: (id, model, kind) => crossings.modelAdded(id, model, kind),
-    onItemAttached: (id, model, item) => {
-      if (!isPiece(item) && isDelightKind(item.kind)) delight.attach(id, item.kind, model);
-      if (!isPiece(item) && item.kind === 'music-box') {
-        const spot = cellToWorld(item.cell);
-        musicBox.attach(id, model, spot.x, spot.z);
-      }
-    },
-    afterSync: (wanted) => syncCritterAnimations(wanted),
+    onItemAttached: (id, model, item) => ambience.itemAttached(id, model, item),
+    afterSync: (wanted) => ambience.syncCritters(wanted),
   });
+  ambience = startTrackAmbience(audio, reducedMotion, placement);
 
   // Ghost and grid own their scene objects; the ghost reads the live
   // template map, so an asset still in flight yields no preview.
@@ -185,100 +128,39 @@ export function startTrackRenderer(
   // resolves the cell first, then the item tracked on it.
   const picking = startTrackPicking(camera, canvas, placement);
 
-  let tunnelSnow = false;
   const crossings = startTrackCrossings(placement, audio, reducedMotion);
-
-  function setTunnelSnow(visible: boolean): void {
-    if (visible === tunnelSnow) return;
-    tunnelSnow = visible;
-    const setCap = (model: Object3D): void => {
-      const cap = model.getObjectByName('tunnel_snow_cap');
-      if (cap) cap.visible = visible;
-    };
-    const template = placement.templates.get('tunnel');
-    if (template) setCap(template);
-    for (const [id, model] of placement.rendered) {
-      const item = placement.tracked.get(id);
-      if (item && isPiece(item) && item.type === 'tunnel') setCap(model);
-    }
-  }
-
-  /** Winter tell: the toys wear snow caps like the tunnel domes. */
-  function setDelightSnow(visible: boolean): void {
-    if (visible === delightSnow) return;
-    delightSnow = visible;
-    const setCap = (model: Object3D): void => {
-      for (const name of DELIGHT_CAPS) {
-        const cap = model.getObjectByName(name);
-        if (cap) cap.visible = visible;
-      }
-    };
-    for (const kind of ['windmill', 'carousel', 'balloon', 'music-box'] as const) {
-      const template = placement.templates.get(kind);
-      if (template) setCap(template);
-    }
-    for (const [id, model] of placement.rendered) {
-      const item = placement.tracked.get(id);
-      if (item && !isPiece(item) && (isDelightKind(item.kind) || item.kind === 'music-box')) {
-        setCap(model);
-      }
-    }
-  }
 
   return {
     cellFromPoint: picking.cellFromPoint,
     cellToScreen: picking.cellToScreen,
-    updateCritters(dt, trainX, trainZ, mood): void {
-      if (disposed) return;
-      critterLife.update(dt, trainX, trainZ, mood);
-    },
-    hopCritter(voice): void {
-      if (disposed) return;
-      critterLife.hopByVoice(voice);
-    },
     beginGhost: ghost.beginGhost,
     moveGhost: ghost.moveGhost,
     endGhost: ghost.endGhost,
     pickPiece: picking.pickPiece,
-    setPieceVisible: (id, visible): void => placement.setPieceVisible(id, visible),
+    setPieceVisible: placement.setPieceVisible,
     setGridVisible: ghost.setGridVisible,
-    setTunnelSnow,
-    setHillSnow: (visible): void => placement.setHillSnow(visible),
+    setHillSnow: placement.setHillSnow,
     setSwitchRoad: crossings.setSwitchRoad,
     updateCrossings: crossings.updateCrossings,
     setCrossingSnow: crossings.setCrossingSnow,
-    updateDelight: (dt: number): void => {
-      if (disposed) return;
-      delight.update(dt, reducedMotion);
-    },
-    setDelightSnow,
-    delightBalloonDrift: () => delight.probe(),
-    updateMusicBox: (dt: number, trains: ReadonlyArray<{ x: number; z: number }>): void => {
-      if (disposed) return;
-      musicBox.update(dt, trains, reducedMotion);
-    },
-    suspendMusicBox: (): void => {
-      musicBoxVoice.suspend();
-    },
-    resumeMusicBox: (): void => {
-      musicBoxVoice.resume();
-    },
-    musicBoxProbe: () => musicBox.probe(),
-    // Dev/e2e witnesses: live crossing phases and the bell edge state.
     crossingPhases: crossings.crossingPhases,
     bellRinging: crossings.bellRinging,
-    // Dev/e2e witness: the rendered switch's live pose.
     switchPose: crossings.switchPose,
+    updateCritters: ambience.updateCritters,
+    hopCritter: ambience.hopCritter,
+    updateDelight: ambience.updateDelight,
+    setDelightSnow: ambience.setDelightSnow,
+    delightBalloonDrift: ambience.delightBalloonDrift,
+    updateMusicBox: ambience.updateMusicBox,
+    suspendMusicBox: ambience.suspendMusicBox,
+    resumeMusicBox: ambience.resumeMusicBox,
+    musicBoxProbe: ambience.musicBoxProbe,
+    setTunnelSnow: ambience.setTunnelSnow,
     dispose(): void {
-      disposed = true;
       placement.dispose();
       ghost.endGhost();
       crossings.dispose();
-      critterLife.dispose();
-      animatedCritters.clear();
-      delight.dispose();
-      musicBox.dispose();
-      musicBoxVoice.dispose();
+      ambience.dispose();
       ghost.dispose();
     },
   };

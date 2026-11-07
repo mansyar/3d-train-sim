@@ -71,6 +71,18 @@ src/
     scene-context.ts # shared refs bundle (renderer/scene/camera/world/audio/
                      #   tracks/lights/quality/render-scale/reduced-motion);
                      #   built once, passed explicitly, no singletons
+    # Track stack decomposed 2026-11-07 — one facade plus six owned parts:
+    track-renderer.ts #  facade: the TrackRenderer interface, wiring of the parts
+                     #   below, and dispose (at most 200 lines)
+    track-catalog.ts #   data only: piece/scenery tables, base yaw, kit anchors,
+                     #   asset URLs, the meadow-item discriminator
+    track-placement.ts # store subscription, asset loading, per-id reconcile/
+                     #   apply/pop, tunnel portals, hill snow, station crates
+    track-ghost.ts   #   snap-grid overlay + the translucent drag ghost
+    track-picking.ts #   raycast cell hit, placed-item tap target, cell projection
+    track-crossings.ts # gate choreography (arms, lantern, bell), switch blade
+                     #   and lever poses/tweens, crossing snow cap
+    track-ambience.ts #   critters, delight toys, music-box voice, tunnel snow
     day-ambience.ts  # day/weather clocks + repaint (sky, water, snow, fireflies,
                      #   window glow, portal glow); also the child-facing
                      #   dayPhase()/advanceDay()/setDayPhase()/subscribeDayPhase()
@@ -174,7 +186,7 @@ Rules of the house (learned the hard way on the tunnel):
 
 1. **Measure the mount first.** The kit module is 4 units long (rail bed
    1.0 wide, rails crowns 0.1 above the mat). New pieces must register in
-   `track-renderer.ts` — `PIECE_URLS`, `BASE_YAW`, `KIT_ANCHORS` — and be
+   `track-catalog.ts` — `PIECE_URLS`, `BASE_YAW`, `KIT_ANCHORS` — and be
    authored on those measurements so rails meet neighbours flush (same
    convention as the trestle bridge).
 2. **Author z-up; export with `export_yup=True`.** Track runs along Blender
