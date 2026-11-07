@@ -175,7 +175,7 @@ the placement hooks are now delegations with no crossing state left in the facad
 - **Touches:** `src/scene/track-ambience.ts`, `src/scene/track-renderer.ts`,
   `src/core/import-graph.test.ts`, `conductor/tech-stack.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/delight-toys.spec.ts e2e/music-box.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P6.T1: Move critters** — covers: FR-8
   - [ ] P6.T1.1: Move `critterLife`, `animatedCritters`, `syncCritterAnimations`, `updateCritters`
