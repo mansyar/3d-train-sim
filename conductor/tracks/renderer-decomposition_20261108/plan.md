@@ -22,7 +22,7 @@ no phase ends with that file larger than it started. `track-renderer.ts` appears
   `src/scene/ride-motion.ts`, `src/scene/train-fleet.ts`, `src/scene/scene-context.ts`,
   `src/ui/app.ts`, `src/ui/toy-drag.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Move the grid math into core, test first** — covers: FR-3, AC-3
   - [ ] P1.T1.1: Write `src/core/meadow-grid.test.ts` first: cell to world for the four corners and
