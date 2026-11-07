@@ -184,3 +184,23 @@ were marked shipped since they already are.
 **Deviations:** performed by the primary agent (test-only fixes with a browser
 proof each). The dev-header negative control was run by flipping the dev
 middleware to the strict map and observing the red test, then reverting.
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** State the ride assertion's real scope — frames advance during an
+  offline ride — and point displacement at the unit test that proves it, so no
+  test claims more than it witnesses.
+- **Depends on:** Phase R1
+- **Covers:** review round 2, finding F1 (Low)
+- **Touches:** `e2e/runtime-guarantees.spec.ts`
+- **Verification:** `pnpm check`, `pnpm exec playwright test e2e/runtime-guarantees.spec.ts`
+- **Status:** verified
+
+- [x] **R2.T1: Narrow the ride witness** — covers: round-2 F1
+  - [x] **R2.T1.1: Reword the helper's doc comment and poll message to the frames
+    it can witness, and name `src/scene/ride-motion.test.ts` as the displacement
+    proof**
+
+**Result:** verified
+**Checkpoint:** ec271d3
+**Evidence:** conductor/tracks/runtime-guarantees_20261107/review.md

@@ -4,8 +4,8 @@
 | --- | --- |
 | **Track** | `runtime-guarantees_20261107` |
 | **Branch** | `feat/runtime-guarantees_20261107` |
-| **Range** | `22870c6..d4d814e` (`22870c6..HEAD` at review time) |
-| **Rounds** | 1 |
+| **Range** | `22870c6..d4d814e` (round 1), `d4d814e..ec271d3` (round 2) |
+| **Rounds** | 2 |
 | **Verdict** | **PASS WITH FINDINGS** |
 
 ## Summary
@@ -132,10 +132,12 @@ None. No Critical or High findings.
 
 ## Plan compliance
 
-All four phases are `verified` with checkpoints `2f855e0`, `1bb7bf5`, `2971f18`,
-`f610a3b`. Recorded deviations: `connect-src 'self' blob:`, the dev-only style
-relaxation, the Chromium offline engine, the AC-5 rewording, and Phase 4 being
-written by the primary (the phase subagent is denied writes under `conductor/`).
+All phases are `verified` with checkpoints `2f855e0`, `1bb7bf5`, `2971f18`,
+`f610a3b`, and the review-fix checkpoints `ea626b2` (R1) and `ec271d3` (R2).
+Recorded deviations: `connect-src 'self' blob:`, the dev-only style relaxation,
+the Chromium offline engine, the AC-5 rewording, Phase 4 being written by the
+primary (the phase subagent is denied writes under `conductor/`), and R1/R2
+being test-only fixes applied by the primary.
 
 ## Out of scope
 
@@ -144,9 +146,12 @@ auditing (`deps-guardrails_20261107`).
 
 ## Debt
 
-- The dev-server policy has no automated witness (F1) — carried into Phase R1.
-- `public/**` remains outside the privacy guard by design; the reason is recorded
-  in the test's doc comment (F4).
+- `public/**` remains outside the privacy guard by design, because the vendored
+  `CREDITS.md` and `License.txt` files must name upstream URLs. Recorded in the
+  test's doc comment (F4, round 1).
+- HMR connectivity is not asserted automatically: the dev server is proven to
+  serve the policy and the tablet smoke suite (20/20) drives the real dev server,
+  but no spec opens a websocket. Manual-device layer (NFR-3).
 
 ## Doc sync
 
@@ -158,4 +163,19 @@ auditing (`deps-guardrails_20261107`).
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | PASS WITH FINDINGS | 0 | 0 | 1 | 4 | 0 |
+| 1 | PASS WITH FINDINGS | 0 | 0 | 1 | 4 | 5 |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 0 | 1 | 1 |
+
+## Round 2 findings and resolution
+
+| Finding | Severity | Resolution |
+| --- | --- | --- |
+| The canvas poll is satisfied by ambient animation (the barge bobs, the critters breathe), so it proves a live loop, not the train's motion | Low | R2 accepted the reviewer's first option and narrowed the claim: the helper's doc comment and poll message now say "frames should advance while the ride is on" and name `src/scene/ride-motion.test.ts` as the displacement proof. Chasing a pixel-difference baseline was rejected as noise-prone without an image library, and the assertion's offline value — catching a boot that paints once and freezes — is unchanged |
+
+Round-2 confirmation of the round-1 fixes: the dev policy is asserted verbatim
+plus a one-directive relaxation diff (F1), the refusal test only counts messages
+after the injection and requires `script-src` (F2), `headerLines()` values are
+compared against the parsed include (F3), the privacy walk really scans
+`index.html` and `src/**/*.css` with `public/**` documented as exempt (F4), and
+the ride witness was narrowed rather than overclaimed (F5).
+
