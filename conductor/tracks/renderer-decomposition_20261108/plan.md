@@ -121,7 +121,7 @@ run alone.
 - **Touches:** `src/scene/track-picking.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and
   `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts e2e/ride-toybox-flow.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Move the raycast picking** — covers: FR-6
   - [ ] P4.T1.1: Move `raycaster`, `pointerNdc`, `groundPlane`, `groundHit`, `cellFromPoint` and
