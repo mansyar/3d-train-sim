@@ -13,20 +13,30 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-2, NFR-3, NFR-6, AC-1, AC-2, AC-3, AC-5
 - **Touches:** `src/scene/frame-contract.ts`, `src/scene/frame-contract.test.ts`, `src/scene/init-scene.ts`, `src/scene/train-fleet.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 292d685
+- **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-1.md`
 
-- [ ] **P1.T1: Write the contract module** — covers: FR-1
-  - [ ] **P1.T1.1: Declare `FRAME_SYSTEM_ORDER` with one reason per entry, plus the `FrameSystemName`, `FrameInputs` and `FrameSystem` types**
-  - [ ] **P1.T1.2: Implement `createFrameRunner` with fail-fast name validation and in-place tick counters**
-- [ ] **P1.T2: Test the runner headlessly** — covers: FR-4, FR-5
-  - [ ] **P1.T2.1: Prove the order, the counts and the error messages for a missing, extra and swapped system**
-  - [ ] **P1.T2.2: Prove one tick per `run()` and that the snapshot never allocates per frame**
-- [ ] **P1.T3: Give the fleet a void update** — covers: FR-8
-  - [ ] **P1.T3.1: Make `fleet.update(dt)` return `void` and add `steamPuffCount()`**
-  - [ ] **P1.T3.2: Point the existing steam-puff witness at the new accessor**
-- [ ] **P1.T4: Drive the loop from the runner** — covers: FR-6, FR-9
-  - [ ] **P1.T4.1: Build the thirteen systems in `init-scene.ts`, fill one `FrameInputs` per frame, and replace the `onFrame` body**
-  - [ ] **P1.T4.2: Add the `frameSystems()` probe to `SceneHandle` behind the existing dev handle**
+- [x] **P1.T1: Write the contract module** — covers: FR-1
+  - [x] **P1.T1.1: Declare `FRAME_SYSTEM_ORDER` with one reason per entry, plus the `FrameSystemName`, `FrameInputs` and `FrameSystem` types**
+  - [x] **P1.T1.2: Implement `createFrameRunner` with fail-fast name validation and in-place tick counters**
+- [x] **P1.T2: Test the runner headlessly** — covers: FR-4, FR-5
+  - [x] **P1.T2.1: Prove the order, the counts and the error messages for a missing, extra and swapped system**
+  - [x] **P1.T2.2: Prove one tick per `run()` and that the snapshot never allocates per frame**
+- [x] **P1.T3: Give the fleet a void update** — covers: FR-8
+  - [x] **P1.T3.1: Make `fleet.update(dt)` return `void` and add `steamPuffCount()`**
+  - [x] **P1.T3.2: Point the existing steam-puff witness at the new accessor**
+- [x] **P1.T4: Drive the loop from the runner** — covers: FR-6, FR-9
+  - [x] **P1.T4.1: Build the twelve systems in `init-scene.ts`, fill one `FrameInputs` per frame, and replace the `onFrame` body**
+  - [x] **P1.T4.2: Add the `frameSystems()` probe to `SceneHandle` behind the existing dev handle**
+
+**Deviations:** `FrameInputs.rain`/`.snow` are `0..1` intensities, not the brief's booleans, because
+weather eases between states and those values feed `CritterMood`/`DuckMood` — coercing them would change
+behaviour. The primary closed a one-frame lag the subagent flagged: `night`/`rain`/`snow` are now published
+by the `day-ambience` system right after `tick()`/`paint(dt)`, so downstream systems read the frame just
+painted, exactly as before this phase. `starSpot` remains one object literal per frame, deliberately
+unchanged. The `frameSystems()` probe is wired but unexercised until Phase 2.
 
 ## Phase 2: Browser proof
 
