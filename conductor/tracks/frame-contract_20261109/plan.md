@@ -66,12 +66,20 @@ and in the evidence.
 - **Covers:** FR-11, FR-12, NFR-1, NFR-4, NFR-5, AC-6, AC-7
 - **Touches:** `conductor/tech-stack.md`
 - **Verification:** `pnpm check` and `pnpm build`
-- **Status:** pending
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** pending-squash
+- **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-3.md`
 
-- [ ] **P3.T1: Document the contract** — covers: FR-11
-  - [ ] **P3.T1.1: Record the module, the thirteen-name order, the fail-fast rule and the e2e proof in the scene folder map and a short note**
-- [ ] **P3.T2: Measure what it cost** — covers: FR-12, NFR-4, NFR-5
-  - [ ] **P3.T2.1: Record precache entries, the gzipped JS delta against the base build, the unit-test count and the absence of `src/core`/dependency changes**
+- [x] **P3.T1: Document the contract** — covers: FR-11
+  - [x] **P3.T1.1: Record the module, the twelve-name order, the fail-fast rule and the e2e proof in the scene folder map and a short note**
+- [x] **P3.T2: Measure what it cost** — covers: FR-12, NFR-4, NFR-5
+  - [x] **P3.T2.1: Record precache entries, the gzipped JS delta against the base build, the unit-test count and the absence of `src/core`/dependency changes**
+
+**Deviations:** performed by the primary, because the phase subagent is denied writes under `conductor/` and
+this phase's only file is `conductor/tech-stack.md`. The order is twelve names, not the thirteen an early draft
+of the spec listed — corrected before implementation and noted in the spec's edge cases. Gzip delta measured
+like-for-like against a detached worktree build of the base commit: **+546 B**.
 
 <!--
 The primary agent appends after verification, per phase:
