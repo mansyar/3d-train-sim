@@ -108,6 +108,23 @@ and any change to what the tests assert beyond the one fixed step.
 `synced` — `e2e/README.md`, `CONTRIBUTING.md` and `conductor/tech-stack.md` describe the tags, lanes, matrix,
 shards and nightly, and the spec carries the amended bounds with dates.
 
+## Post-review CI repair (2026-11-08)
+
+The first sharded run went red within a minute on both shards, and the reason had nothing to do with the suite:
+
+```
+/home/runner/.cache/ms-playwright/webkit-2336/minibrowser-wpe/bin/MiniBrowser:
+error while loading shared libraries: libicudata.so.74: cannot open shared object file
+```
+
+`ubuntu-latest` moved to **26.04 (resolute)** the same day. The browser cache (keyed only on `runner.os` and
+the lockfile) restored a WebKit build linked against the older ICU, `playwright install --with-deps` saw the
+directory and skipped the download, and every launch died before a test could run. Fixed by pinning
+`runs-on: ubuntu-24.04` in both the PR gate and the nightly, and by putting the image in the cache key
+(`playwright-ubuntu-24.04-<lockfile hash>`) so an image bump can never again reuse a browser the image cannot
+load. Re-run: **shard 1/2 7m46s, shard 2/2 8m14s**, both green, and `audit` / `vitest` / `biome + typecheck`
+green throughout.
+
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |

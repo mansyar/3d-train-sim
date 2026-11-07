@@ -256,7 +256,7 @@ Every PR and push to `main` runs four parallel gate jobs:
 | check | `pnpm exec biome check .` + `pnpm exec tsc --noEmit` |
 | vitest | `pnpm test` — the unit/integration suite |
 | audit | `pnpm audit --audit-level=high` — red on any high or critical advisory in the whole tree |
-| e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml`) + `pnpm build` + the full e2e matrix, split into two shards (`--shard=1/2`, `--shard=2/2`) as independent jobs with `fail-fast: false` and a 45-minute ceiling each; tablet, phone-allowlist and prod projects |
+| e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml` **and** the runner image) + `pnpm build` + the full e2e matrix, split into two shards (`--shard=1/2`, `--shard=2/2`) as independent jobs with `fail-fast: false` and a 45-minute ceiling each; tablet, phone-allowlist and prod projects. Both e2e jobs and the nightly pin `ubuntu-24.04`: on 2026-11-08 `ubuntu-latest` moved to 26.04 (resolute), whose ICU no longer matched the cached WebKit build (`libicudata.so.74` missing at launch) |
 
 - Docs-only commits (markdown, `conductor/**`, `.gitignore`) trigger no jobs.
 - `nightly.yml` runs the full suite per profile (`tablet`, `phone`) at 01:00 Sydney and repeats the two

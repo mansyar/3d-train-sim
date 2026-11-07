@@ -61,6 +61,7 @@ No `src/` file changed. 883 unit tests and the coverage thresholds are untouched
 | Full tablet lane | `pnpm e2e:full` | 7.7 min |
 | Full matrix | `pnpm exec playwright test` | 56 passed, 1 skipped in 9.4 min |
 | Shards | `--list --shard=1/2` / `2/2` | 31 + 26 = 57 |
+| CI shards (after the runner-image repair) | `gh pr checks 70` | pass — shard 1/2 7m46s, shard 2/2 8m14s |
 
 The parity ledger is `conductor/archive/e2e-cost_20261108/verification/parity.md`: all 96 originals, 29 → 12
 in the mechanical clusters, 20 → 9 in smoke, 38 → 19 in the newest modules, 9 untouched, and six outright
@@ -95,6 +96,8 @@ delta, then proved to bite by reverting the drop target (expected 5 scenery, rec
 
 - Give the `too-large` parent-facing sentence a test (export the constant or assert the rendered note).
 - Watch the first sharded CI run for wall time; the 45-minute ceilings assume `playwright install` variance.
+  The runner image is pinned (`ubuntu-24.04`) and the browser cache is keyed to it, because `ubuntu-latest`
+  moved to 26.04 on the day this shipped and a cross-image cache reuse broke every launch on `libicudata.so.74`.
 
 ## Rollback
 
