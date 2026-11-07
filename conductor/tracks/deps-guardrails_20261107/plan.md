@@ -13,15 +13,20 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `renovate.json`, `src/core/renovate-config.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
-- [ ] **P1.T1: Write the Renovate policy** — covers: FR-1, FR-2, FR-3, FR-4
-  - [ ] P1.T1.1: Create `renovate.json` extending `config:recommended`, with `dependencyDashboard: true`, a weekly Monday schedule before the working day in `Australia/Sydney`, `minimumReleaseAge: "3 days"`, `rebaseWhen: "conflicted"` and no automerge
-  - [ ] P1.T1.2: Add `packageRules` for the coupled pairs (`three` + `@types/three`, `vite-plugin-pwa` + `workbox-window`), a test-tooling group, a lint/type group, and a separate majors group
-  - [ ] P1.T1.3: Validate the config with `renovate-config-validator` and record the output; if the validator cannot run offline, record that plainly rather than claiming it passed
-- [ ] **P1.T2: Guard the config against drift** — covers: FR-5
-  - [ ] P1.T2.1: Read `package.json` and `renovate.json` in a test and assert every direct dependency is matched by at least one `packageRules` pattern
-  - [ ] P1.T2.2: Assert both members of each coupled pair resolve to the same group name, and that majors never share a group with minors
-  - [ ] P1.T2.3: Demonstrate the guard failing on a temporary unmatched dependency, then revert it and show the test green again
+- **Status:** verified
+- [x] **P1.T1: Write the Renovate policy** — covers: FR-1, FR-2, FR-3, FR-4
+  - [x] P1.T1.1: Create `renovate.json` extending `config:recommended`, with `dependencyDashboard: true`, a weekly Monday schedule before the working day in `Australia/Sydney`, `minimumReleaseAge: "3 days"`, `rebaseWhen: "conflicted"` and no automerge
+  - [x] P1.T1.2: Add `packageRules` for the coupled pairs (`three` + `@types/three`, `vite-plugin-pwa` + `workbox-window`), a test-tooling group, a lint/type group, and a separate majors group
+  - [x] P1.T1.3: Validate the config with `renovate-config-validator` and record the output; if the validator cannot run offline, record that plainly rather than claiming it passed
+- [x] **P1.T2: Guard the config against drift** — covers: FR-5
+  - [x] P1.T2.1: Read `package.json` and `renovate.json` in a test and assert every direct dependency is matched by at least one `packageRules` pattern
+  - [x] P1.T2.2: Assert both members of each coupled pair resolve to the same group name, and that majors never share a group with minors
+  - [x] P1.T2.3: Demonstrate the guard failing on a temporary unmatched dependency, then revert it and show the test green again
+
+**Result:** verified
+**Checkpoint:** 0915650
+**Evidence:** conductor/tracks/deps-guardrails_20261107/verification/phase-1.md
+**Deviations:** the phase agent's sandbox denied the validator, so the primary ran it (`npx --yes --package renovate@latest renovate-config-validator renovate.json`, exit 0, "Config validated successfully against 1 file(s)"). Seven groups ship rather than the brief's four-plus-two: `howler`/`@types/howler` turned out to be a third coupled pair, and `idb`/`@fontsource/baloo-2` needed a home for the coverage test to pass.
 
 ## Phase 2: The audit gate
 
