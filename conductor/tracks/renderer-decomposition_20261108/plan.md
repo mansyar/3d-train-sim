@@ -92,16 +92,25 @@ same facade dispose. None of these change behaviour, and all are recorded in the
 - **Covers:** FR-5, AC-5
 - **Touches:** `src/scene/track-ghost.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Move the grid lines** — covers: FR-5
-  - [ ] P3.T1.1: Move `gridLines`, its material and geometries, and `setGridVisible`; keep the
+- [x] **P3.T1: Move the grid lines** — covers: FR-5
+  - [x] P3.T1.1: Move `gridLines`, its material and geometries, and `setGridVisible`; keep the
         dev-only visibility default identical.
-- [ ] **P3.T2: Move the ghost preview** — covers: FR-5
-  - [ ] P3.T2.1: Move `ghost`, `ghostTint`, the valid/blocked colours, `spawnGhost`, `tintGhost`,
+- [x] **P3.T2: Move the ghost preview** — covers: FR-5
+  - [x] P3.T2.1: Move `ghost`, `ghostTint`, the valid/blocked colours, `spawnGhost`, `tintGhost`,
         `beginGhost`, `moveGhost` and `endGhost`.
-  - [ ] P3.T2.2: Confirm the ghost still reads the catalogue through its own import, not through
+  - [x] P3.T2.2: Confirm the ghost still reads the catalogue through its own import, not through
         placement.
+
+**Result:** verified
+**Checkpoint:** bff61e5
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-3.md
+**Deviations:** none. The dev-only grid default was already owned by `src/ui/app.ts` and
+`src/main.ts`, so the phase only had to preserve `gridLines.visible = false`; the ghost takes
+placement's `templates` as a `ReadonlyMap` and still yields no preview for a kind that has not
+loaded. The AC-5 specs failed once on the ambient-FPS throughput sample (phone) and passed 2/2 when
+run alone.
 
 ## Phase 4: Picking
 
