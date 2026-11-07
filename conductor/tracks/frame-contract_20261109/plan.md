@@ -45,11 +45,19 @@ unchanged. The `frameSystems()` probe is wired but unexercised until Phase 2.
 - **Covers:** FR-10, AC-4
 - **Touches:** `e2e/frame-contract.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/frame-contract.spec.ts` and `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 1013811
+- **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-2.md`
 
-- [ ] **P2.T1: Assert the contract in the running app** — covers: FR-10
-  - [ ] **P2.T1.1: Assert `frameSystems()` names equal `FRAME_SYSTEM_ORDER`, with no console errors**
-  - [ ] **P2.T1.2: Compare tick deltas against an in-page animation-frame counter so a slow frame cannot look like a skipped system**
+- [x] **P2.T1: Assert the contract in the running app** — covers: FR-10
+  - [x] **P2.T1.1: Assert `frameSystems()` names equal `FRAME_SYSTEM_ORDER`, with no console errors**
+  - [x] **P2.T1.2: Compare tick deltas against an in-page animation-frame counter so a slow frame cannot look like a skipped system**
+
+**Deviations:** none. The spec runs on the `tablet` project only — the phone project's three-file `testMatch`
+allowlist excludes it (verified: `--project=phone` reports no tests) and `prod` cannot see `__tinyTracksScene`. The
+caveat that `prefers-reduced-motion` would make the frame floor fail rather than pass falsely is recorded here
+and in the evidence.
 
 ## Phase 3: Documentation and measurement
 
