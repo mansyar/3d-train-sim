@@ -1,9 +1,4 @@
 import {
-  BufferGeometry,
-  Color,
-  Group,
-  Line,
-  LineBasicMaterial,
   type Mesh,
   type MeshStandardMaterial,
   type Object3D,
@@ -27,8 +22,8 @@ import { type CritterMood, createCritterLife } from './critter-life';
 import { createDelightMotion, isDelightKind } from './delight-motion';
 import { GROUND_SIZE } from './ground';
 import { createMusicBoxScene, type MusicBoxScene } from './music-box';
-import { disableShadows } from './shadows';
-import { baseYawOf, DELIGHT_CAPS, isPiece, type MeadowItem } from './track-catalog';
+import { DELIGHT_CAPS, isPiece, type MeadowItem } from './track-catalog';
+import { startTrackGhost } from './track-ghost';
 import { advancedEdge, startTrackPlacement } from './track-placement';
 
 /** Screen-space center of a meadow cell, or null when it is off-camera. */
@@ -366,120 +361,9 @@ export function startTrackRenderer(
     afterSync: (wanted) => syncCritterAnimations(wanted),
   });
 
-  // ---- Meadow grid: a debug overlay of the snap-cell boundaries -----------
-  // One cell = CELL_SIZE world units starting at the meadow's north-west
-  // corner, so the lines land exactly on the lattice pieces snap to.
-  const gridLines = new Group();
-  gridLines.visible = false;
-  const gridMaterial = new LineBasicMaterial({
-    color: 0x2d5a2d,
-    transparent: true,
-    opacity: 0.35,
-    depthWrite: false,
-  });
-  const gridGeometries: BufferGeometry[] = [];
-  {
-    const half = GROUND_SIZE / 2;
-    for (let i = 0; i <= MEADOW_CELLS; i += 1) {
-      const t = -half + i * CELL_SIZE;
-      const westEast = new BufferGeometry().setFromPoints([
-        new Vector3(-half, 0.05, t),
-        new Vector3(half, 0.05, t),
-      ]);
-      const northSouth = new BufferGeometry().setFromPoints([
-        new Vector3(t, 0.05, -half),
-        new Vector3(t, 0.05, half),
-      ]);
-      gridGeometries.push(westEast, northSouth);
-      gridLines.add(new Line(westEast, gridMaterial), new Line(northSouth, gridMaterial));
-    }
-  }
-  scene.add(gridLines);
-
-  // ---- Drag ghost: a translucent clone of the real template --------------
-  let ghost: Object3D | null = null;
-  let ghostType: PieceType | SceneryKind | null = null;
-  const ghostTint = new Color();
-  const TINT_VALID = new Color(1, 0.75, 0.35); // Warm amber glow while placeable.
-  const TINT_BLOCKED = new Color(0.5, 0.5, 0.5); // Desaturated while blocked.
-
-  const ghostMaterials = (model: Object3D): MeshStandardMaterial[] => {
-    const found: MeshStandardMaterial[] = [];
-    model.traverse((node) => {
-      const mesh = node as Mesh;
-      if (!mesh.isMesh) return;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (const mat of mats) found.push(mat as MeshStandardMaterial);
-    });
-    return found;
-  };
-
-  const spawnGhost = (): void => {
-    if (!ghostType) return;
-    const template = placement.templates.get(ghostType);
-    if (!template) return; // Asset not loaded yet — retried on the next move.
-    const model = template.clone(true);
-    // Ghosts never cast or receive shadows — they are previews, not toys —
-    // and clone(true) copies the shared template's casting flag.
-    disableShadows(model);
-    // Clone materials per ghost so tint/dispose never touch the shared
-    // template materials (three.js clones share material references).
-    model.traverse((node) => {
-      const mesh = node as Mesh;
-      if (!mesh.isMesh) return;
-      mesh.material = Array.isArray(mesh.material)
-        ? mesh.material.map((mat) => mat.clone())
-        : mesh.material.clone();
-    });
-    for (const mat of ghostMaterials(model)) {
-      mat.transparent = true;
-      mat.depthWrite = false;
-      mat.userData.baseColor = mat.color.clone();
-    }
-    model.visible = false;
-    scene.add(model);
-    ghost = model;
-  };
-
-  const tintGhost = (valid: boolean): void => {
-    if (!ghost) return;
-    ghostTint.copy(valid ? TINT_VALID : TINT_BLOCKED);
-    for (const mat of ghostMaterials(ghost)) {
-      const base = mat.userData.baseColor as Color | undefined;
-      if (base) mat.color.copy(base).multiply(ghostTint);
-      mat.opacity = valid ? 0.8 : 0.35;
-    }
-  };
-
-  function beginGhost(kind: PieceType | SceneryKind): void {
-    endGhost();
-    ghostType = kind;
-    spawnGhost();
-  }
-
-  function moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void {
-    if (!ghostType) return;
-    if (!ghost) spawnGhost();
-    if (!ghost) return;
-    if (!cell) {
-      ghost.visible = false;
-      return;
-    }
-    const yaw = -(rotation * Math.PI) / 180 + baseYawOf(ghostType);
-    const { x, z } = cellToWorld(cell);
-    ghost.position.set(x, 0, z);
-    ghost.rotation.y = yaw;
-    ghost.visible = true;
-    tintGhost(valid);
-  }
-
-  function endGhost(): void {
-    ghostType = null;
-    if (!ghost) return;
-    scene.remove(ghost);
-    for (const mat of ghostMaterials(ghost)) mat.dispose(); // Clones share geometry.
-    ghost = null;
-  }
+  // Ghost and grid own their scene objects; the ghost reads the live
+  // template map, so an asset still in flight yields no preview.
+  const ghost = startTrackGhost(scene, placement.templates);
 
   /** The meadow cell under a screen point, or null off-meadow. */
   function cellFromPoint(clientX: number, clientY: number): Cell | null {
@@ -527,10 +411,6 @@ export function startTrackRenderer(
       }
     }
     return null;
-  }
-
-  function setGridVisible(visible: boolean): void {
-    gridLines.visible = visible;
   }
 
   let tunnelSnow = false;
@@ -737,12 +617,12 @@ export function startTrackRenderer(
       if (disposed) return;
       critterLife.hopByVoice(voice);
     },
-    beginGhost,
-    moveGhost,
-    endGhost,
+    beginGhost: ghost.beginGhost,
+    moveGhost: ghost.moveGhost,
+    endGhost: ghost.endGhost,
     pickPiece,
     setPieceVisible: (id, visible): void => placement.setPieceVisible(id, visible),
-    setGridVisible,
+    setGridVisible: ghost.setGridVisible,
     setTunnelSnow,
     setHillSnow: (visible): void => placement.setHillSnow(visible),
     setSwitchRoad,
@@ -785,7 +665,7 @@ export function startTrackRenderer(
     dispose(): void {
       disposed = true;
       placement.dispose();
-      endGhost();
+      ghost.endGhost();
       if (bladeRaf !== null) cancelAnimationFrame(bladeRaf);
       bladeRaf = null;
       bladeTweens.clear();
@@ -796,9 +676,7 @@ export function startTrackRenderer(
       delight.dispose();
       musicBox.dispose();
       musicBoxVoice.dispose();
-      scene.remove(gridLines);
-      for (const geometry of gridGeometries) geometry.dispose();
-      gridMaterial.dispose();
+      ghost.dispose();
     },
   };
 }
