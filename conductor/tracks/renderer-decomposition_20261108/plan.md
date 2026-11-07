@@ -175,29 +175,33 @@ the placement hooks are now delegations with no crossing state left in the facad
 - **Touches:** `src/scene/track-ambience.ts`, `src/scene/track-renderer.ts`,
   `src/core/import-graph.test.ts`, `conductor/tech-stack.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/delight-toys.spec.ts e2e/music-box.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P6.T1: Move critters** — covers: FR-8
-  - [ ] P6.T1.1: Move `critterLife`, `animatedCritters`, `syncCritterAnimations`, `updateCritters`
+- [x] **P6.T1: Move critters** — covers: FR-8
+  - [x] P6.T1.1: Move `critterLife`, `animatedCritters`, `syncCritterAnimations`, `updateCritters`
         and `hopCritter`.
-- [ ] **P6.T2: Move delight and the music box** — covers: FR-8
-  - [ ] P6.T2.1: Move the delight motion, `delightSnow`/`setDelightSnow`/`delightBalloonDrift`, the
+- [x] **P6.T2: Move delight and the music box** — covers: FR-8
+  - [x] P6.T2.1: Move the delight motion, `delightSnow`/`setDelightSnow`/`delightBalloonDrift`, the
         music box scene and voice, `updateMusicBox`, `suspendMusicBox`/`resumeMusicBox` and
         `musicBoxProbe`, plus `tunnelSnow`/`setTunnelSnow` with placement's owner noted.
-- [ ] **P6.T3: Prove the shape and record it** — covers: FR-1, FR-9, FR-12, AC-1, AC-2, AC-8
-  - [ ] P6.T3.1: Record line counts and diff the `TrackRenderer` interface block against `f880530`,
+- [x] **P6.T3: Prove the shape and record it** — covers: FR-1, FR-9, FR-12, AC-1, AC-2, AC-8
+  - [x] P6.T3.1: Record line counts and diff the `TrackRenderer` interface block against `f880530`,
         proving the member set and types are unchanged.
-  - [ ] P6.T3.2: Add `src/core/import-graph.test.ts` asserting the allowed import directions: UI
+  - [x] P6.T3.2: Add `src/core/import-graph.test.ts` asserting the allowed import directions: UI
         imports no scene module, ambience imports no placement internals, no module reaches another
         module's private state.
-  - [ ] P6.T3.3: Update the folder map in `conductor/tech-stack.md` with the seven files and their
+  - [x] P6.T3.3: Update the folder map in `conductor/tech-stack.md` with the seven files and their
         ownership.
 
-<!-- The primary agent appends, in place of this comment:
-**Result:** verified | failed | blocked
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-<n>.md
--->
+**Result:** verified
+**Checkpoint:** 2f9a903
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-6.md
+**Deviations:** the subagent reported `blocked` on P6.T3.3 because `edit conductor/tech-stack.md` is
+denied to phase subagents; the primary applied the patch it recorded, which closes the task.
+`track-renderer.ts` is 158 lines and `track-ambience.ts` 210, both inside AC-1. The `TrackRenderer`
+interface block is byte-identical to `f880530` (66 lines), and no rule in the new import-graph test
+was weakened — two real edges are allowlisted with reasons. Pre-existing over-budget files
+(`init-scene.ts` 450, `train-fleet.ts` 552) were left alone as out of scope.
 
 <!-- If `conductor-review` finds issues it appends a phase with its own contract:
 ## Phase R1: Review Fixes
