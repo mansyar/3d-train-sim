@@ -1,0 +1,47 @@
+{
+  "extends": ["config:recommended"],
+  "dependencyDashboard": true,
+  "timezone": "Australia/Sydney",
+  "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "3 days",
+  "rebaseWhen": "conflicted",
+  "automerge": false,
+  "separateMajorMinor": true,
+  "packageRules": [
+    {
+      "groupName": "three and its types",
+      "matchPackageNames": ["three", "@types/three"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "howler and its types",
+      "matchPackageNames": ["howler", "@types/howler"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "pwa tooling",
+      "matchPackageNames": ["vite-plugin-pwa", "workbox-window"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "test tooling",
+      "matchPackageNames": ["vitest", "@vitest/coverage-v8", "@playwright/test"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "lint and types",
+      "matchPackageNames": ["@biomejs/biome", "typescript", "@types/node"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "build tooling",
+      "matchPackageNames": ["vite"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "runtime data and fonts",
+      "matchPackageNames": ["idb", "@fontsource/baloo-2"],
+      "matchUpdateTypes": ["minor", "patch"]
+    }
+  ]
+}
