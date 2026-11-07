@@ -51,8 +51,10 @@ export interface TrainFleet {
   /** Steam on/off across the fleet with the ride mode. */
   setEmitting(riding: boolean): void;
   /** Per-frame tick: motion, puffs, cargo pops, chug beats, crossing spots.
-   *  Returns the number of currently visible steam puffs (HUD witness). */
-  update(dt: number): number;
+   *  The visible puff count is read back through steamPuffCount(). */
+  update(dt: number): void;
+  /** The steam puffs visible after the last update (HUD/e2e witness). */
+  steamPuffCount(): number;
   /** The riding trains' spots this frame — a view into a preallocated pool. */
   crossingSpots(): Array<{ x: number; z: number }>;
   /** The rig serving the primary (largest) active ride, or null. */
@@ -477,6 +479,9 @@ export function createTrainFleet({
     { x: 0, z: 0 },
   ];
   const crossingTrainView: Array<{ x: number; z: number }> = [];
+  // Published by the last update for steamPuffCount() — a read-back witness,
+  // not a return value, so no frame system carries a value forward (FR-8).
+  let lastSteamPuffCount = 0;
 
   return {
     sync: syncRigs,
@@ -484,7 +489,7 @@ export function createTrainFleet({
     setEmitting(riding) {
       for (const rig of rigs.values()) rig.puffs.setEmitting(riding);
     },
-    update(dt: number): number {
+    update(dt: number): void {
       let visibleSteamPuffs = 0;
       let crossingTrainCount = 0;
       // Every little train ticks — parked spares too, so a pre-ride whistle
@@ -520,8 +525,9 @@ export function createTrainFleet({
       for (let i = 0; i < crossingTrainCount; i++) {
         crossingTrainView[i] = crossingTrainPool[i] as { x: number; z: number };
       }
-      return visibleSteamPuffs;
+      lastSteamPuffCount = visibleSteamPuffs;
     },
+    steamPuffCount: () => lastSteamPuffCount,
     crossingSpots: () => crossingTrainView,
     primary,
     rigFor: (anchor) => rigs.get(anchor) ?? null,

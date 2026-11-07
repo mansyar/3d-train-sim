@@ -42,7 +42,7 @@ pnpm ^11 — strict, fast, workspace-ready if tracks ever split.
 | Layer | Tool | Scope |
 |---|---|---|
 | Unit/integration | Vitest ^4 | Colocated `*.test.ts` next to modules. **TDD enforced for pure logic**: track graph, snap resolution, path following, save/load |
-| E2E smoke | Playwright ^1.62 | `e2e/` - boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors. Two tags: `@smoke` (ten journeys, `pnpm e2e`, ~2 min) and `@ci` (measurements that need a slow runner). `pnpm e2e:full` runs the tablet suite without canaries. The `phone` project runs three allowlisted files only; CI shards the full matrix into `--shard=1/2` and `2/2` and a nightly workflow repeats the two contention-sensitive specs. Stability conventions (allowlisted WebKit `blob:` noise, 2-worker cap, rerun rule, ubuntu release authority): `e2e/README.md` |
+| E2E smoke | Playwright ^1.62 | `e2e/` - boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors. Two tags: `@smoke` (ten journeys, `pnpm e2e`, ~2 min) and `@ci` (measurements that need a slow runner). `pnpm e2e:full` runs the tablet suite without canaries. The `phone` project runs three allowlisted files only; CI shards the full matrix into `--shard=1/2` and `2/2` and a nightly workflow repeats the two contention-sensitive specs. Stability conventions (allowlisted WebKit `blob:` noise, 2-worker cap, rerun rule, ubuntu release authority): `e2e/README.md`. `e2e/frame-contract.spec.ts` is the frame-contract witness: it asserts `frameSystems()` equals `FRAME_SYSTEM_ORDER`, and that every system advances exactly one tick per animation frame (tablet only — the phone allowlist excludes it, and under `prefers-reduced-motion` the loop renders one static frame, so it fails at its frame floor rather than passing falsely) |
 
 ## Folder structure
 
@@ -87,6 +87,15 @@ src/
     track-crossings.ts # gate choreography (arms, lantern, bell), switch blade
                      #   and lever poses/tweens, crossing snow cap
     track-ambience.ts #   critters, delight toys, music-box voice, tunnel snow
+    # Frame contract (2026-11-08): every per-frame subsystem is a named entry in
+    # one documented order, validated at boot. Moving a system is a behaviour
+    # change, not a refactor.
+    frame-contract.ts #   FRAME_SYSTEM_ORDER (twelve names, one reason each),
+                     #   FrameInputs/FrameSystem types, createFrameRunner
+                     #   (fail-fast order check, in-place tick counters);
+                     #   no three.js import, so its test runs headless
+    frame-contract.test.ts # order, error messages, one tick per run, and
+                     #   publish-then-read across systems
     day-ambience.ts  # day/weather clocks + repaint (sky, water, snow, fireflies,
                      #   window glow, portal glow); also the child-facing
                      #   dayPhase()/advanceDay()/setDayPhase()/subscribeDayPhase()

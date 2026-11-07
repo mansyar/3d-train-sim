@@ -24,6 +24,12 @@ import { createConfetti } from './confetti';
 import { createDayAmbience } from './day-ambience';
 import { createDuck } from './duck';
 import { createFilmCamera } from './film-camera';
+import {
+  createFrameRunner,
+  type FrameInputs,
+  type FrameSystem,
+  type FrameSystemName,
+} from './frame-contract';
 import { createGround } from './ground';
 import type { Headlight } from './headlight';
 import { createSceneLifecycle } from './lifecycle';
@@ -65,6 +71,8 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
+  /** Dev/e2e witness: the frame contract's order with per-system tick counts. */
+  frameSystems(): Array<{ name: FrameSystemName; ticks: number }>;
   /** Debug aid: the filmed (or primary) train's live pace factor. */
   trainPace(): number;
   /** Debug aid: the opener's resting spot before the first ride, or null. */
@@ -294,58 +302,138 @@ export function initScene(
   resize();
   window.addEventListener('resize', resize);
 
-  let visibleSteamPuffs = 0;
+  // The frame contract: every per-frame subsystem is a named entry in the
+  // documented order (`frame-contract.ts`). The runner validates the wiring at
+  // construction — an order that drifts from the documentation throws here, at
+  // boot, instead of quietly swapping what a system sees on the first frame.
+  const frameInputs: FrameInputs = { starSpot: null, night: 1, rain: 0, snow: 0 };
+  const systems: FrameSystem[] = [
+    {
+      name: 'day-ambience',
+      update(inputs, dt) {
+        dayAmbience.tick();
+        dayAmbience.paint(dt);
+        // The clock just advanced, so publish this frame's mood here rather
+        // than before the run: downstream systems read the night factor and
+        // weather the paint produced, never last frame's.
+        inputs.night = dayAmbience.nightFactor();
+        const weather = dayAmbience.weather();
+        inputs.rain = weather.rain;
+        inputs.snow = weather.snow;
+      },
+    },
+    {
+      name: 'fleet',
+      update(inputs, dt) {
+        fleet.update(dt);
+        // Publish the spot here, after the move: critters, the duck and the
+        // portal glow read the primary train's position as of this frame, not
+        // last frame's. One object per frame is the deliberate exception to
+        // "the frame path allocates nothing" — systems need a snapshot, and a
+        // reused mutable spot would alias across them.
+        const star = fleet.primary();
+        inputs.starSpot = star ? { x: star.model.position.x, z: star.model.position.z } : null;
+      },
+    },
+    {
+      name: 'chug',
+      update() {
+        // One capped chug loop, riding the filmed train's live pace — the
+        // camera's train sets the tempo. The rate glides with the pace ramp
+        // (never a jump) and waits silently while muted or parked.
+        const voice = filmCamera.filmedRig() ?? fleet.primary();
+        audio.setChugRate(voice?.motion.pace() ?? 1);
+      },
+    },
+    {
+      name: 'confetti',
+      update(_inputs, dt) {
+        confetti.update(dt);
+      },
+    },
+    {
+      name: 'critters',
+      update(inputs, dt) {
+        // Critters idle always and hop while a riding train passes close.
+        // Parked spares report null — hops read as passing, not presence.
+        // Mood: rain shrinks their excitement radius, night is bedtime.
+        tracks.updateCritters(dt, inputs.starSpot?.x ?? null, inputs.starSpot?.z ?? null, {
+          rain: inputs.rain,
+          night: inputs.night,
+        });
+      },
+    },
+    {
+      name: 'crossings',
+      update(inputs, dt) {
+        // The gates watch every riding train: arms swing, lanterns blink, the
+        // bell rings while any crossing is awake.
+        tracks.updateCrossings(dt, fleet.crossingSpots(), inputs.night);
+      },
+    },
+    {
+      name: 'delight',
+      update(_inputs, dt) {
+        // The delight toys keep their charm loop: sails turn, the carousel
+        // spins, balloons wander their neighborhood (frozen in reduced motion).
+        tracks.updateDelight(dt);
+      },
+    },
+    {
+      name: 'music-box',
+      update(_inputs, dt) {
+        // Music boxes wind when a riding train passes within reach — the tune
+        // plays out while the figurine twirls (muted boxes keep twirling).
+        tracks.updateMusicBox(dt, fleet.crossingSpots());
+      },
+    },
+    {
+      name: 'duck',
+      update(inputs, dt) {
+        // The duck drifts the S-curve and wiggles for passing trains; night is
+        // bedtime, and a frozen river (snow) parks it on the ice.
+        duck.update(dt, inputs.starSpot?.x ?? null, inputs.starSpot?.z ?? null, {
+          night: inputs.night,
+          snow: inputs.snow,
+        });
+      },
+    },
+    {
+      name: 'barge',
+      update(inputs, dt) {
+        // The barge drifts the same S-curve, slower and heavier — night is
+        // bedtime and a frozen river ices it in; the swell never stops.
+        barge.update(dt, { night: inputs.night, snow: inputs.snow });
+      },
+    },
+    {
+      name: 'portal-glow',
+      update(inputs) {
+        // The headlight catches the portals at night: a warm glow at the open
+        // arch mouth nearest the engine, keyed to night factor and proximity.
+        dayAmbience.updatePortalGlow(inputs.starSpot);
+      },
+    },
+    {
+      name: 'film-camera',
+      update(_inputs, dt) {
+        filmCamera.update(dt);
+      },
+    },
+  ];
+  const frameRunner = createFrameRunner(systems);
 
   // The frame loop lives in the lifecycle module — quality tiers, visibility
-  // suspend/resume, and the render-scale blit. The orchestrator only
-  // choreographs the subsystem updates, in this exact order.
+  // suspend/resume, and the render-scale blit. The orchestrator computes one
+  // `FrameInputs` and lets the runner tick every system in the contract order.
   const lifecycle = createSceneLifecycle({
     context,
     spinTarget: () => spinTarget,
     onFrame: (dt) => {
-      dayAmbience.tick();
-      dayAmbience.paint(dt);
-      visibleSteamPuffs = fleet.update(dt);
-      // One capped chug loop, riding the filmed train's live pace — the
-      // camera's train sets the tempo. The rate glides with the pace ramp
-      // (never a jump) and waits silently while muted or parked.
-      const voice = filmCamera.filmedRig() ?? fleet.primary();
-      audio.setChugRate(voice?.motion.pace() ?? 1);
-      confetti.update(dt);
-      // Critters idle always and hop while a riding train passes close.
-      // Parked spares report null — hops read as passing, not presence.
-      // Mood: rain shrinks their excitement radius, night is bedtime.
-      // Critters, the duck, and the portal glow all read this one spot.
-      const star = fleet.primary();
-      const starSpot = star ? { x: star.model.position.x, z: star.model.position.z } : null;
-      const night = dayAmbience.nightFactor();
-      const weatherNow = dayAmbience.weather();
-      tracks.updateCritters(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
-        rain: weatherNow.rain,
-        night,
-      });
-      // The gates watch every riding train: arms swing, lanterns blink, the
-      // bell rings while any crossing is awake.
-      tracks.updateCrossings(dt, fleet.crossingSpots(), night);
-      // The delight toys keep their charm loop: sails turn, the carousel
-      // spins, balloons wander their neighborhood (frozen in reduced motion).
-      tracks.updateDelight(dt);
-      // Music boxes wind when a riding train passes within reach — the tune
-      // plays out while the figurine twirls (muted boxes keep twirling).
-      tracks.updateMusicBox(dt, fleet.crossingSpots());
-      // The duck drifts the S-curve and wiggles for passing trains; night is
-      // bedtime, and a frozen river (snow) parks it on the ice.
-      duck.update(dt, starSpot?.x ?? null, starSpot?.z ?? null, {
-        night,
-        snow: weatherNow.snow,
-      });
-      // The barge drifts the same S-curve, slower and heavier — night is
-      // bedtime and a frozen river ices it in; the swell never stops.
-      barge.update(dt, { night, snow: weatherNow.snow });
-      // The headlight catches the portals at night: a warm glow at the open
-      // arch mouth nearest the engine, keyed to night factor and proximity.
-      dayAmbience.updatePortalGlow(starSpot);
-      filmCamera.update(dt);
+      // `night`/weather are published by `day-ambience` after it paints, and
+      // `starSpot` by `fleet` after it moves, so every later system reads this
+      // frame's values. The orchestrator only owns the object.
+      frameRunner.run(frameInputs, dt);
     },
     perfMonitor,
     qualityController,
@@ -379,7 +467,9 @@ export function initScene(
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => fleet.wagonCount(),
-    steamPuffCount: () => visibleSteamPuffs,
+    steamPuffCount: () => fleet.steamPuffCount(),
+    // Dev/e2e witness: the frame contract's order with per-system tick counts.
+    frameSystems: () => frameRunner.snapshot(),
     // Dev/e2e witness: the filmed (or primary) train's live pace factor —
     // personality × grade, eased. Lets specs prove labor/breeze directly.
     trainPace: () => (filmCamera.filmedRig() ?? fleet.primary())?.motion.pace() ?? 1,
