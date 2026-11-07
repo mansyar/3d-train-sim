@@ -2,7 +2,7 @@
   "id": "frame-contract_20261109",
   "title": "Frame Contract",
   "type": "refactor",
-  "status": "in_progress",
+  "status": "complete",
   "priority": "medium",
   "depends_on": [
     "renderer-decomposition_20261108",
@@ -30,6 +30,6 @@
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
-  "archived_at": null,
-  "archive_path": null
+  "archived_at": "2026-11-08T09:40:00+11:00",
+  "archive_path": "conductor/archive/frame-contract_20261109"
 }

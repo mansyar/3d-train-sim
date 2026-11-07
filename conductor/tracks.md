@@ -4,7 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [frame-contract_20261109](tracks/frame-contract_20261109/index.md) | Frame Contract | Refactor | in_progress |
+| [frame-contract_20261109](./archive/frame-contract_20261109/index.md) | Frame Contract | Refactor | archived |
 | [e2e-cost_20261108](./archive/e2e-cost_20261108/index.md) | E2E Cost | Refactor | archived |
 | [renderer-decomposition_20261108](./archive/renderer-decomposition_20261108/index.md) | Renderer Decomposition | Refactor | archived |
 | [deps-guardrails_20261107](./archive/deps-guardrails_20261107/index.md) | Dependency Guardrails | Chore | archived |
