@@ -68,7 +68,7 @@ browser test that proves every system ticks exactly once per frame.
 
 | ID | Requirement | Priority |
 |---|---|---|
-| FR-1 | `src/scene/frame-contract.ts` exports `FRAME_SYSTEM_ORDER`, a `readonly` tuple of the thirteen system names in the shipping order, and a `FrameSystemName` type derived from it. | must |
+| FR-1 | `src/scene/frame-contract.ts` exports `FRAME_SYSTEM_ORDER`, a `readonly` tuple of the twelve system names in the shipping order, and a `FrameSystemName` type derived from it. | must |
 | FR-2 | The module exports `FrameInputs` — `starSpot`, `night`, `rain`, `snow` — as one object the orchestrator fills before the systems run. | must |
 | FR-3 | The module exports `FrameSystem` — `{ name: FrameSystemName; update(inputs: FrameInputs, dt: number): void }` — so every system has the same shape and none returns a value. | must |
 | FR-4 | `createFrameRunner(systems)` validates that the wired names equal `FRAME_SYSTEM_ORDER` exactly (same length, same order) and throws an error naming the first missing, extra or misplaced system. | must |
@@ -96,7 +96,7 @@ browser test that proves every system ticks exactly once per frame.
 
 | ID | Criterion | Verifies |
 |---|---|---|
-| AC-1 | `FRAME_SYSTEM_ORDER` lists all thirteen systems: `day-ambience`, `air`, `fleet`, `chug`, `confetti`, `critters`, `crossings`, `delight`, `music-box`, `duck`, `barge`, `portal-glow`, `film-camera`. | FR-1 |
+| AC-1 | `FRAME_SYSTEM_ORDER` lists all twelve systems: `day-ambience`, `fleet`, `chug`, `confetti`, `critters`, `crossings`, `delight`, `music-box`, `duck`, `barge`, `portal-glow`, `film-camera`. | FR-1 |
 | AC-2 | A runner built with a wrong length, a wrong name or a swapped pair throws, and the message names the offending system. | FR-4, NFR-6 |
 | AC-3 | The runner ticks every system once per `run()` and its snapshot matches the documented order. | FR-5 |
 | AC-4 | In the browser, `frameSystems()` returns the documented names in order and every `ticks` value advances by exactly the number of animation frames observed. | FR-9, FR-10 |
@@ -112,9 +112,13 @@ browser test that proves every system ticks exactly once per frame.
   loop's frame, not wall-clock time; the e2e test runs visible.
 - **Systems array built once:** the array and the runner are constructed at boot, not per frame. Validation runs
   once, at construction.
-- **Ordering that looks arbitrary:** `air` before `fleet` (the chug rate reads the filmed voice, which the fleet
-  updates), `portal-glow` after `day-ambience` (night factor). Where the current order looks arbitrary and no
+- **Ordering that looks arbitrary:** `chug` follows `fleet` (the chug rate reads the filmed voice's pace, which the
+  fleet just updated); `portal-glow` follows `day-ambience` (night factor) and `chug`/`confetti`/`critters` keep
+  their historical slots because nothing depends on moving them. Where the current order looks arbitrary and no
   reason exists, the reason line says so honestly rather than inventing a dependency.
+- **Granularity correction (pre-implementation):** an earlier draft of this spec listed a thirteenth system,
+  `air`, which does not exist. The frame body has eleven update calls plus the chug-rate write, so the contract
+  documents twelve systems. No requirement, criterion or scope changed.
 - **Adding a system later:** a new name in `FRAME_SYSTEM_ORDER` without a wired system throws at construction;
   a wired system with an undocumented name fails the type and the runtime check. Both failure modes are covered
   by AC-2.
@@ -130,7 +134,7 @@ browser test that proves every system ticks exactly once per frame.
 
 ## Open Questions & Assumptions
 
-- **Assumption:** thirteen systems is the right granularity. `day-ambience` covers `tick()` then `paint(dt)`, and
+- **Assumption:** twelve systems is the right granularity. `day-ambience` covers `tick()` then `paint(dt)`, and
   `chug` covers the audio-rate write, because splitting them would invent sub-order no subsystem needs.
 - **Assumption:** tick counters live in the runner rather than in each system, so instrumenting a system cannot
   drift from instrumenting the loop. The cost is one integer increment per system per frame.
