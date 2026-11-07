@@ -1,0 +1,21 @@
+# pnpm settings (pnpm 11 reads these here; the `pnpm` field in package.json is
+# ignored). Overrides exist only where an advisory is fixed upstream but the
+# parent package still pins the vulnerable range; each one carries the advisory
+# it closes and is removed as soon as the parent catches up.
+#
+# Keep every override inside the major its consumer declares. A tree-wide
+# `brace-expansion: ">=5"` looks green here and breaks `minimatch@5` at runtime
+# (`TypeError: expand is not a function`) because minimatch@5 `require`s the
+# module and expects the callable 2.x shape. See `src/core/dependency-overrides.test.ts`.
+overrides:
+  # GHSA-68fv-2mgg-jv7q — patched 1.2.2, reached through jsdom, postcss and magicast
+  source-map-js: ">=1.2.2"
+  # GHSA-rfgv-xxqx-mfg5 and six siblings — patched 8.12.2, reached through vitest > jsdom
+  undici: ">=8.12.4"
+  # GHSA-qw65-cvwx-89v3, GHSA-58mr-gqgx-xq4g — patched 3.1.7, reached through workbox-build > ajv
+  # Capped below 4: ajv@8 declares fast-uri ^3, and a major drift there is untested.
+  fast-uri: ">=3.1.7 <4"
+  # GHSA-qhr7-859c-m2p7, GHSA-6j4f-fj2g-mc7p — both patched per major:
+  # minimatch@5 requires the callable 2.x shape, minimatch@10 uses the 5.x namespace.
+  "minimatch@5>brace-expansion": ">=2.1.7 <3"
+  "minimatch@10>brace-expansion": ">=5.0.11"

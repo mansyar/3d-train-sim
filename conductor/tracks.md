@@ -4,6 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [deps-guardrails_20261107](./archive/deps-guardrails_20261107/index.md) | Dependency Guardrails | Chore | archived |
 | [runtime-guarantees_20261107](./archive/runtime-guarantees_20261107/index.md) | Runtime Guarantees | Feature | archived |
 | [world-portability_20261107](./archive/world-portability_20261107/index.md) | World Portability | Feature | archived |
 | [save-resilience_20261107](./archive/save-resilience_20261107/index.md) | Save Resilience | Bug | archived |

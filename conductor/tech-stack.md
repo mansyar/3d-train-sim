@@ -16,6 +16,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 | Security headers | `src/core/security-headers.ts` + nginx | — | One dependency-free module holds the policy, and three layers serve it: a Vite plugin adds it in dev and preview, `nginx-security-headers.conf` mirrors it in the container (included by the server block **and** each of six locations, because a location with its own `add_header` drops an inherited policy), and `src/core/nginx-headers.test.ts` fails if the two copies drift. CSP is 13 directives, mostly `'self'`, with `connect-src 'self' blob:`, `object-src`/`base-uri`/`frame-ancestors`/`form-action` `'none'`; `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` ride along, all with `always`. The dev server relaxes `style-src` only, because Vite injects CSS through `<style>` (2026-11-07, runtime-guarantees track) |
 | UI | Vanilla TS + DOM overlay | — | No framework. Chunky toy UI as HTML/CSS over the canvas |
 | Styling | Hand-written CSS | — | Custom properties, no preprocessor, no CSS framework |
+| Dependency maintenance | Renovate + `pnpm audit` | — | `renovate.json` extends `config:recommended` with the dependency dashboard, runs weekly (Monday before 06:00, Australia/Sydney), waits 3 days after a release before proposing it, never automerges (both `automerge` and `platformAutomerge` are explicitly `false`, because the platform toggle defaults to on), and keeps majors in their own PRs. Coherent pairs move together through `packageRules` (`three` + `@types/three`, `howler` + `@types/howler`, `vite-plugin-pwa` + `workbox-window`); dev tooling, lint/types, build tooling and runtime data/fonts each get one grouped minor+patch PR. `src/core/renovate-config.test.ts` fails when a direct dependency matches no rule or a coupled pair lands in different groups, so adding a dependency forces a policy decision. `Gate · audit` in CI runs `pnpm audit --audit-level=high`; an advisory with no fixed version may only be silenced by a dated `auditConfig.ignoreCves` entry in `pnpm-workspace.yaml` naming the advisory and the track that clears it — never a broad path or a dev-only exemption. Advisory *fixes* that the parent still pins go in `overrides` in the same file (pnpm 11 ignores `pnpm.overrides` in `package.json`); source-map-js, undici, fast-uri and brace-expansion carry one today, each commented with the GHSA it closes and scoped so it cannot cross into a major that expects the other module shape (`minimatch@5` and `@9` need the callable `brace-expansion@2`; only `minimatch@10` takes the 5.x namespace — `src/core/dependency-overrides.test.ts` proves both bindings against the installed tree. The `Dockerfile` must copy `pnpm-workspace.yaml` too: the frozen install compares its overrides to the lockfile and refuses to build without it) (2026-11-07, deps-guardrails track) |
 
 ## Code quality & dev tools
 
@@ -232,15 +233,21 @@ Rules of the house (learned the hard way on the tunnel):
 
 ## CI (ci.yml)
 
-Every PR and push to `main` runs three parallel gate jobs:
+Every PR and push to `main` runs four parallel gate jobs:
 
 | Job | What it runs |
 |---|---|
 | check | `pnpm exec biome check .` + `pnpm exec tsc --noEmit` |
 | vitest | `pnpm test` — the unit/integration suite |
+| audit | `pnpm audit --audit-level=high` — red on any high or critical advisory in the whole tree |
 | e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml`) + `pnpm build` + the full e2e suite (tablet · phone · prod profiles) |
 
 - Docs-only commits (markdown, `conductor/**`, `.gitignore`) trigger no jobs.
+- The audit job is deliberately independent and cheap (five-minute ceiling), so a
+  dependency advisory fails in seconds instead of waiting on the e2e suite.
+- `pnpm audit` reads the npm registry: an outage fails the gate rather than
+  passing it. Silence an unfixable advisory with a dated `auditConfig.ignoreCves`
+  entry in `pnpm-workspace.yaml`, never by lowering the level.
 - PR e2e is an upstream tripwire for the release gates — the ubuntu e2e run
   in the release pipeline remains the release authority (stability
   conventions live in `e2e/README.md`).

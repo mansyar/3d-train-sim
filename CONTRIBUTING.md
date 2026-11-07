@@ -24,6 +24,19 @@ pnpm exec playwright test       # e2e smoke (boots the app, places pieces)
 CI runs the same gates on every PR. See the Windows note in
 `conductor/workflow.md` if `CI=true` prefixes misbehave under pnpm.
 
+### Dependency PRs
+
+Renovate opens its batch on Monday morning (Sydney), holding a version back for
+three days after release. A bot PR is reviewed like any other: read the diff,
+merge only once all four gates are green (biome+types, vitest, audit, e2e), and
+never automerge a major. `three` travels with `@types/three`, and
+`vite-plugin-pwa` with `workbox-window` — a split pair is a broken build waiting
+to happen, and the guard test in `src/core/renovate-config.test.ts` refuses it.
+
+If `pnpm audit` fails on an advisory with no fixed version yet, the only allowed
+silence is a dated `auditConfig.ignoreCves` entry in `pnpm-workspace.yaml`
+naming the advisory id and the track that will clear it.
+
 ## The conductor workflow
 
 Work is organized into **tracks** — short-lived branches, one concern

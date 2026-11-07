@@ -314,6 +314,13 @@ test('ambient day/weather cycles keep the meadow alive with a clean console', as
 test('tablet emulation keeps an ambient frame rate with a clean console', async ({ page }) => {
   const consoleErrors = watchConsoleErrors(page);
 
+  // The measurement itself is short, but a contended machine (the second
+  // worker loading GLBs) can starve the page's main thread long enough that the
+  // evaluate call never returns inside the default 30 s. That reported "wedge"
+  // says nothing about the render loop, so give the sample room and let the FPS
+  // floor be the judge.
+  test.setTimeout(90_000);
+
   await page.goto('/');
   await page.waitForFunction(() =>
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
