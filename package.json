@@ -15,7 +15,10 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "check": "pnpm exec biome check . && pnpm exec tsc --noEmit && pnpm test",
-    "check:fix": "pnpm exec biome check . --write"
+    "check:fix": "pnpm exec biome check . --write",
+    "e2e": "pnpm build && playwright test --grep @smoke",
+    "e2e:full": "pnpm build && playwright test --project=tablet --grep-invert @ci",
+    "e2e:file": "playwright test"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.10",

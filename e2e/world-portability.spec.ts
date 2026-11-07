@@ -7,12 +7,16 @@ import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * World portability end-to-end: the round trip through a real file input, the
- * three refusal paths, undo, a mid-ride import, and the hold-to-arm gate that
- * keeps both file controls out of a toddler's reach.
+ * salvaged and empty worlds, the refusal path, undo, and a mid-ride import.
  *
  * The file is a plain JSON snapshot. The DEV-only `__tinyTracksExport()` builds
  * the same payload the Save button downloads, so the spec can assert the exact
  * bytes without depending on the browser's download plumbing.
+ *
+ * The refusal permutations themselves (oversized, malformed JSON, `[]`, version
+ * 99) are proven by `src/core/portable.test.ts`; what only a browser can show —
+ * the pre-gate reach, the report-only tray after a dismissal, and the world
+ * surviving untouched — stays here.
  */
 
 /** The world-store surface this spec reads (DEV-only handle). */
@@ -43,7 +47,6 @@ interface Snapshot {
 /** The exact outcome lines `src/ui/parent-gate.ts` writes. */
 const NOTE = {
   imported: 'Loaded the meadow.',
-  tooLarge: 'That file is too big to be a meadow. Tiny Tracks saves stay under 1 MB.',
   unreadable: 'That file is not a Tiny Tracks meadow, so nothing changed.',
 } as const;
 
@@ -73,6 +76,13 @@ const holdParentGate = async (page: Page): Promise<void> => {
   // ceiling is generous because a dev-server boot can throttle the timer.
   await expect(page.locator('.parent-gate')).toHaveClass(/is-confirm/, { timeout: 20_000 });
   await page.mouse.up();
+};
+
+/** Taps empty meadow, away from the gate, tray, grid toggle, and bottom rail. */
+const tapOutside = async (page: Page): Promise<void> => {
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error('viewport size missing');
+  await page.mouse.click(viewport.width - 24, Math.round(viewport.height * 0.42));
 };
 
 /** Arms the gate and waits for the tray the two file controls live in. */
@@ -108,98 +118,125 @@ const toyShapeOf = (toys: readonly SnapshotToy[]): ToyShape[] =>
   toys.map((toy) => ({ id: toy.id, cell: { x: toy.cell.x, y: toy.cell.y } }));
 
 /** Picks a file on the hidden input — no visible click is needed. */
-const importFile = async (
-  page: Page,
-  payload: string | Buffer,
-  fileName = 'world.json',
-): Promise<void> => {
+const importFile = async (page: Page, payload: string): Promise<void> => {
   await page.locator('.portable-import-input').setInputFiles({
-    name: fileName,
+    name: 'world.json',
     mimeType: 'application/json',
-    buffer: typeof payload === 'string' ? Buffer.from(payload, 'utf8') : payload,
+    buffer: Buffer.from(payload, 'utf8'),
   });
 };
 
 const noteText = (page: Page) => page.locator('.portable-note-text');
 
-/** The line the loader's recovery path produces after falling back to `previous`. */
-const RESTORED_LINE = 'Your meadow was restored from the last good save.';
+test('a saved meadow stays out of reach, saves, and re-imports byte for byte @smoke', async ({
+  page,
+}) => {
+  test.setTimeout(150_000); // the save and round-trip budgets, summed
+  const consoleErrors = watchConsoleErrors(page);
 
-/** The last good save a restored boot falls back to: two dry-land rails. */
-const restoredSnapshot = {
-  version: 3,
-  pieces: [
-    { id: 'piece-10', type: 'straight', cell: { x: 1, y: 6 }, rotation: 0 },
-    { id: 'piece-11', type: 'corner', cell: { x: 1, y: 7 }, rotation: 90 },
-  ],
-  scenery: [],
-};
+  await page.goto('/');
+  await waitForReady(page);
 
-/**
- * Waits until the boot's autosave has committed a `current` snapshot.
- *
- * A first boot seeds the starter railway and saves it asynchronously; writing
- * the seed before that transaction commits lets the save overwrite it. Once
- * the key exists, the boot's persistence has no pending writes left.
- */
-const waitForStoredCurrent = async (page: Page): Promise<void> => {
-  await page.waitForFunction(
-    () =>
-      new Promise<boolean>((resolve) => {
-        const open = indexedDB.open('tiny-tracks');
-        open.onerror = () => resolve(false);
-        open.onsuccess = () => {
-          const db = open.result;
-          const read = db.transaction('worlds', 'readonly').objectStore('worlds').get('current');
-          read.onsuccess = () => {
-            db.close();
-            resolve(read.result !== undefined);
-          };
-          read.onerror = () => {
-            db.close();
-            resolve(false);
-          };
-        };
-      }),
-  );
-};
+  const exported = await exportWorld(page);
 
-/**
- * Writes raw payloads into the autosave slots.
- *
- * The app owns store creation, so this opens without an upgrade handler: a
- * missing store is a test bug, not something to paper over by racing the
- * app's own schema.
- */
-const writeSlots = (page: Page, slots: Record<string, unknown>): Promise<void> =>
-  page.evaluate(
-    (payloads) =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('tiny-tracks');
-        open.onerror = () => reject(open.error);
-        open.onsuccess = () => {
-          const db = open.result;
-          const tx = db.transaction('worlds', 'readwrite');
-          const store = tx.objectStore('worlds');
-          for (const [key, value] of Object.entries(payloads)) {
-            store.put(value, key);
-          }
-          tx.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          tx.onerror = () => reject(tx.error);
-          tx.onabort = () => reject(tx.error);
-        };
-      }),
-    slots,
-  );
+  await test.step('the export is a dated v3 world file with no device preferences', async () => {
+    expect(exported.name).toMatch(/^tiny-tracks-\d{4}-\d{2}-\d{2}\.json$/);
 
-test('save and load stay out of reach until the parent gate is held', async ({ page }) => {
-  // The first test in each worker pays the dev server's cold transform of the
-  // whole app (~40 s with both form factors booting at once); later boots are
-  // warm. Give that one-off cost room without slowing the rest.
-  test.setTimeout(120_000);
+    const snapshot = parseExported(exported.json);
+    expect(snapshot.version).toBe(3);
+    expect(Array.isArray(snapshot.pieces)).toBe(true);
+    expect(Array.isArray(snapshot.scenery)).toBe(true);
+    // There is a real starter meadow to round-trip, not an empty file.
+    expect(snapshot.pieces.length).toBeGreaterThan(0);
+    // A world file, not a device backup: no mute/day-phase preferences.
+    expect('preferences' in snapshot).toBe(false);
+    expect(snapshot.pieces.map((piece) => piece.id)).toEqual(
+      (await readMeadow(page)).pieces.map((piece) => piece.id),
+    );
+  });
+
+  await test.step('the Save control downloads exactly those bytes', async () => {
+    await openTray(page);
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.locator('.portable-export').click(),
+    ]);
+    expect(download.suggestedFilename()).toBe(exported.name);
+    expect(await readFile(await download.path(), 'utf8')).toBe(exported.json);
+    await expect(noteText(page)).toHaveText(`Saved ${exported.name}`);
+  });
+
+  await test.step('clearing the meadow empties it', async () => {
+    await clearMeadow(page);
+    expect((await readMeadow(page)).pieces).toEqual([]);
+  });
+
+  await test.step('re-importing the file is lossless, byte for byte', async () => {
+    const captured = parseExported(exported.json);
+    await importFile(page, exported.json);
+    await expect(noteText(page)).toHaveText(NOTE.imported);
+
+    // Every id and cell came back, in the same order.
+    const meadow = await readMeadow(page);
+    expect(meadow.pieces).toEqual(toyShapeOf(captured.pieces));
+    expect(meadow.scenery).toEqual(toyShapeOf(captured.scenery));
+
+    // The round trip is lossless: the re-export is the same string, byte for byte.
+    const second = await exportWorld(page);
+    expect(second.json).toBe(exported.json);
+  });
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('an empty meadow is a world, and a salvage keeps its toys and names the broken one', async ({
+  page,
+}) => {
+  test.setTimeout(120_000); // the empty and salvage journeys' budgets, summed
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await waitForReady(page);
+
+  const starter = parseExported((await exportWorld(page)).json);
+  const starterIds = starter.pieces.map((piece) => piece.id);
+
+  await test.step('an empty meadow exports and re-imports empty', async () => {
+    await clearMeadow(page);
+    const emptyExport = await exportWorld(page);
+    const emptySnapshot = parseExported(emptyExport.json);
+    expect(emptySnapshot.pieces).toEqual([]);
+    expect(emptySnapshot.scenery).toEqual([]);
+
+    // A clean empty world is a world: it imports with no skip sentence.
+    await openTray(page);
+    await importFile(page, emptyExport.json);
+    await expect(noteText(page)).toHaveText(NOTE.imported);
+
+    expect(await readMeadow(page)).toEqual({ pieces: [], scenery: [] });
+    // No pieces means no ride to start.
+    await expect(page.locator('.ride-toggle')).toBeDisabled();
+  });
+
+  await test.step('one unknown toy is skipped, named, and the rest lands', async () => {
+    const brokenToy = { id: 'piece-broken', type: 'not-a-toy', cell: { x: 7, y: 7 }, rotation: 0 };
+    await importFile(page, JSON.stringify({ ...starter, pieces: [...starter.pieces, brokenToy] }));
+
+    // One unknown toy is skipped; the note says so, and the rest lands.
+    await expect(noteText(page)).toHaveText('Loaded the meadow. Skipped 1 broken toy.');
+    const meadow = await readMeadow(page);
+    expect(meadow.pieces.map((piece) => piece.id)).toEqual(starterIds);
+    expect(meadow.pieces).toEqual(toyShapeOf(starter.pieces));
+    expect(meadow.scenery).toEqual(toyShapeOf(starter.scenery));
+  });
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+test('save and load stay out of reach until the hold, and a refusal is reported, not trusted', async ({
+  page,
+}) => {
+  test.setTimeout(270_000); // the gate, refusal and dismissal budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -209,293 +246,58 @@ test('save and load stay out of reach until the parent gate is held', async ({ p
   const save = page.locator('.portable-export');
   const load = page.locator('.portable-import');
 
-  // Neither the tray nor either control is on screen before the hold.
-  await expect(tray).toBeHidden();
-  await expect(save).toBeHidden();
-  await expect(load).toBeHidden();
-
-  await holdParentGate(page);
-
-  // The two-second hold is the only door: both controls appear with the tray.
-  await expect(tray).toBeVisible();
-  // The tray holds presets, Save/Load, both notes and the version line now.
-  await expect(tray).toHaveAccessibleName('Parent controls');
-  await expect(save).toBeVisible();
-  await expect(load).toBeVisible();
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('saving writes the starter meadow as a dated v3 file', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-
-  const exported = await exportWorld(page);
-  expect(exported.name).toMatch(/^tiny-tracks-\d{4}-\d{2}-\d{2}\.json$/);
-
-  const snapshot = parseExported(exported.json);
-  expect(snapshot.version).toBe(3);
-  expect(Array.isArray(snapshot.pieces)).toBe(true);
-  expect(Array.isArray(snapshot.scenery)).toBe(true);
-  // A world file, not a device backup: no mute/day-phase preferences.
-  expect('preferences' in snapshot).toBe(false);
-  expect(snapshot.pieces.map((piece) => piece.id)).toEqual(
-    (await readMeadow(page)).pieces.map((piece) => piece.id),
-  );
-
-  // The button's note names the same file the payload carries, and the
-  // browser really starts a download whose bytes match the dev handle.
-  await openTray(page);
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('.portable-export').click(),
-  ]);
-  expect(download.suggestedFilename()).toBe(exported.name);
-  expect(await readFile(await download.path(), 'utf8')).toBe(exported.json);
-  await expect(noteText(page)).toHaveText(`Saved ${exported.name}`);
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('a saved meadow re-imports byte for byte', async ({ page }) => {
-  test.setTimeout(90_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-
-  const first = await exportWorld(page);
-  const captured = parseExported(first.json);
-  expect(captured.pieces.length).toBeGreaterThan(0);
-
-  await clearMeadow(page);
-  expect((await readMeadow(page)).pieces).toEqual([]);
-
-  await openTray(page);
-  await importFile(page, first.json);
-  await expect(noteText(page)).toHaveText(NOTE.imported);
-
-  // Every id and cell came back, in the same order.
-  const meadow = await readMeadow(page);
-  expect(meadow.pieces).toEqual(toyShapeOf(captured.pieces));
-  expect(meadow.scenery).toEqual(toyShapeOf(captured.scenery));
-
-  // The round trip is lossless: the re-export is the same string, byte for byte.
-  const second = await exportWorld(page);
-  expect(second.json).toBe(first.json);
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('a salvaged file keeps its valid toys and names the broken one', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-
-  const starter = parseExported((await exportWorld(page)).json);
-  const starterIds = starter.pieces.map((piece) => piece.id);
-  const brokenToy = { id: 'piece-broken', type: 'not-a-toy', cell: { x: 7, y: 7 }, rotation: 0 };
-
-  await clearMeadow(page);
-  await openTray(page);
-  await importFile(page, JSON.stringify({ ...starter, pieces: [...starter.pieces, brokenToy] }));
-
-  // One unknown toy is skipped; the note says so, and the rest lands.
-  await expect(noteText(page)).toHaveText('Loaded the meadow. Skipped 1 broken toy.');
-  const meadow = await readMeadow(page);
-  expect(meadow.pieces.map((piece) => piece.id)).toEqual(starterIds);
-  expect(meadow.pieces).toEqual(toyShapeOf(starter.pieces));
-  expect(meadow.scenery).toEqual(toyShapeOf(starter.scenery));
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('an empty meadow saves and re-imports empty', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-
-  await clearMeadow(page);
-  const emptyExport = await exportWorld(page);
-  const emptySnapshot = parseExported(emptyExport.json);
-  expect(emptySnapshot.pieces).toEqual([]);
-  expect(emptySnapshot.scenery).toEqual([]);
-
-  // A clean empty world is a world: it imports with no skip sentence.
-  await openTray(page);
-  await importFile(page, emptyExport.json);
-  await expect(noteText(page)).toHaveText(NOTE.imported);
-
-  expect(await readMeadow(page)).toEqual({ pieces: [], scenery: [] });
-  // No pieces means no ride to start.
-  await expect(page.locator('.ride-toggle')).toBeDisabled();
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('an oversized file is refused and changes nothing', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-  const before = (await exportWorld(page)).json;
-
-  await openTray(page);
-  // Count every decode entry point the helper could plausibly use — File.text,
-  // Blob.text and FileReader.readAsText — against one counter, so this proves
-  // the refusal happens on the size before any bytes are read. Without the
-  // pre-read guard at least one of them still fires (the note would pass), so
-  // the zero-read assertion is the witness.
-  await page.evaluate(() => {
-    const counter = { reads: 0 };
-    (window as unknown as { __fileReads?: { reads: number } }).__fileReads = counter;
-    const count = () => {
-      counter.reads += 1;
-    };
-    // Capture all three first: a File read must be counted once, not twice.
-    const fileText = File.prototype.text;
-    const blobText = Blob.prototype.text;
-    const readAsText = FileReader.prototype.readAsText;
-    File.prototype.text = function (this: File) {
-      count();
-      return fileText.call(this);
-    };
-    Blob.prototype.text = function (this: Blob) {
-      count();
-      return blobText.call(this);
-    };
-    FileReader.prototype.readAsText = function (this: FileReader, blob: Blob, encoding?: string) {
-      count();
-      return readAsText.call(this, blob, encoding);
-    };
+  await test.step('neither the tray nor either file control is on screen', async () => {
+    await expect(tray).toBeHidden();
+    await expect(save).toBeHidden();
+    await expect(load).toBeHidden();
   });
-  await importFile(page, Buffer.alloc(1_048_577, 0x20));
 
-  await expect(noteText(page)).toHaveText(NOTE.tooLarge);
-  expect(
-    await page.evaluate(
-      () => (window as unknown as { __fileReads?: { reads: number } }).__fileReads?.reads,
-    ),
-  ).toBe(0);
-  // Refused before parsing: the meadow is byte-identical.
-  expect((await exportWorld(page)).json).toBe(before);
+  await test.step('the two-second hold is the only door to the file controls', async () => {
+    await holdParentGate(page);
+    await expect(tray).toBeVisible();
+    // The tray holds presets, Save/Load, both notes and the version line now.
+    await expect(tray).toHaveAccessibleName('Parent controls');
+    await expect(save).toBeVisible();
+    await expect(load).toBeVisible();
+  });
 
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
+  await test.step('an unreadable file is refused and changes nothing', async () => {
+    const before = (await exportWorld(page)).json;
+    await importFile(page, "{'not a meadow'");
+    await expect(noteText(page)).toHaveText(NOTE.unreadable);
+    expect((await exportWorld(page)).json).toBe(before);
+  });
 
-test('unreadable files are refused and change nothing', async ({ page }) => {
-  test.setTimeout(90_000);
-  const consoleErrors = watchConsoleErrors(page);
+  await test.step('a rail tap dismisses the armed tray', async () => {
+    // A rail control, not the meadow: a stray tap there can rotate a placed toy.
+    await page.locator('.mute-toggle').click();
+    await expect(tray).toBeHidden();
+  });
 
-  await page.goto('/');
-  await waitForReady(page);
-  const before = (await exportWorld(page)).json;
+  await test.step('re-arming opens the tray with no stale note', async () => {
+    await openTray(page);
+    await expect(page.locator('.portable-note')).toBeHidden();
+    await page.locator('.mute-toggle').click();
+    await expect(tray).toBeHidden();
+  });
 
-  await openTray(page);
-  await importFile(page, "{'not a meadow'");
-  await expect(noteText(page)).toHaveText(NOTE.unreadable);
-  expect((await exportWorld(page)).json).toBe(before);
+  await test.step('a refusal after the dismissal reopens the tray report-only', async () => {
+    const before = (await exportWorld(page)).json;
+    // The hidden input still accepts a programmatic file, so the refusal lands
+    // after the dismissal — where a note written into the hidden tray would be
+    // invisible. The tray must come back just to report.
+    await importFile(page, "{'not a meadow'");
 
-  // Dismiss the armed tray on a rail control (not the meadow: a stray tap
-  // there can rotate a placed toy), then prove the version check and a
-  // non-record JSON array refuse too.
-  await page.locator('.mute-toggle').click();
-  await expect(page.locator('.preset-tray')).toBeHidden();
+    await expect(tray).toBeVisible();
+    await expect(tray).toHaveClass(/is-reporting/);
+    await expect(page.locator('.portable-note')).toBeVisible();
+    await expect(noteText(page)).toHaveText(NOTE.unreadable);
+    // Reporting only: no tray button comes back within reach.
+    await expect(save).toBeHidden();
+    await expect(load).toBeHidden();
+    expect((await exportWorld(page)).json).toBe(before);
+  });
 
-  await openTray(page);
-  await expect(page.locator('.portable-note')).toBeHidden();
-  await importFile(page, JSON.stringify({ version: 99, pieces: [], scenery: [] }));
-  await expect(noteText(page)).toHaveText(NOTE.unreadable);
-  expect((await exportWorld(page)).json).toBe(before);
-
-  // Valid JSON, still not a meadow: an array parses but is not a snapshot.
-  await page.locator('.mute-toggle').click();
-  await expect(page.locator('.preset-tray')).toBeHidden();
-
-  await openTray(page);
-  await expect(page.locator('.portable-note')).toBeHidden();
-  await importFile(page, '[]');
-  await expect(noteText(page)).toHaveText(NOTE.unreadable);
-  expect((await exportWorld(page)).json).toBe(before);
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('a refusal after the tray is dismissed stays visible', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-  const before = (await exportWorld(page)).json;
-
-  // Arm the gate, then dismiss the tray with a tap outside it. The hidden input
-  // still accepts a programmatic file, so the refusal lands after the
-  // dismissal — where a note written into the hidden tray would be invisible.
-  await openTray(page);
-  await page.locator('.mute-toggle').click();
-  await expect(page.locator('.preset-tray')).toBeHidden();
-
-  await importFile(page, "{'not a meadow'");
-
-  await expect(page.locator('.preset-tray')).toBeVisible();
-  await expect(page.locator('.preset-tray')).toHaveClass(/is-reporting/);
-  await expect(page.locator('.portable-note')).toBeVisible();
-  await expect(noteText(page)).toHaveText(NOTE.unreadable);
-  // Reporting only: no tray button comes back within reach.
-  await expect(page.locator('.portable-export')).toBeHidden();
-  await expect(page.locator('.portable-import')).toBeHidden();
-
-  expect((await exportWorld(page)).json).toBe(before);
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('a refusal replaces the recovery note, and re-arming restores it', async ({ page }) => {
-  test.setTimeout(120_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-  // The boot's own autosave must commit before the seed, or it lands after it.
-  await waitForStoredCurrent(page);
-  await writeSlots(page, { current: 'garbage', previous: restoredSnapshot });
-
-  await page.reload();
-  await waitForReady(page);
-
-  const tray = page.locator('.preset-tray');
-  const recovery = page.locator('.recovery-note');
-  await openTray(page);
-  await expect(recovery).toBeVisible();
-  await expect(recovery.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
-
-  const before = (await exportWorld(page)).json;
-
-  // A refusal inside the open tray replaces the grown-up line: the two notes
-  // never stack, because a stale "restored" beside "nothing changed" misleads.
-  await importFile(page, "{'not a meadow'");
-  await expect(noteText(page)).toHaveText(NOTE.unreadable);
-  await expect(recovery).toBeHidden();
-
-  // The armed tray closes on a tap outside it; the mute toggle is on the rail.
-  await page.locator('.mute-toggle').click();
-  await expect(tray).toBeHidden();
-
-  // Re-arming recomputes the note from the session state, so it comes back.
-  await openTray(page);
-  await expect(recovery).toBeVisible();
-  await expect(recovery.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
-
-  // Refused before parsing: the restored meadow is byte-identical.
-  expect((await exportWorld(page)).json).toBe(before);
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
@@ -508,68 +310,74 @@ test('undo puts the pre-import meadow back', async ({ page }) => {
 
   const starterIds = (await readMeadow(page)).pieces.map((piece) => piece.id);
 
-  await openTray(page);
-  await importFile(page, JSON.stringify(alternateSnapshot));
-  await expect(noteText(page)).toHaveText(NOTE.imported);
-  expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual(['piece-1', 'piece-2']);
+  await test.step('an import lands as one undoable change', async () => {
+    await openTray(page);
+    await importFile(page, JSON.stringify(alternateSnapshot));
+    await expect(noteText(page)).toHaveText(NOTE.imported);
+    expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual([
+      'piece-1',
+      'piece-2',
+    ]);
+  });
 
-  // One import is one undoable change, exactly like a preset pick.
-  const undo = page.locator('.undo-toggle');
-  await expect(undo).toBeVisible();
-  await undo.click();
-  expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual(starterIds);
+  await test.step('one take-back restores the meadow that was there', async () => {
+    const undo = page.locator('.undo-toggle');
+    await expect(undo).toBeVisible();
+    await undo.click();
+    expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual(starterIds);
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('importing mid-ride stops the train before the meadow changes', async ({ page }) => {
-  test.setTimeout(90_000);
+test('importing mid-ride stops the train before the meadow changes, even for the same meadow', async ({
+  page,
+}) => {
+  test.setTimeout(180_000); // the two mid-ride journeys' budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await waitForReady(page);
 
-  const ride = page.locator('.ride-toggle');
-  await ride.click();
-  await expect(ride).toHaveClass(/is-riding/, { timeout: 15_000 });
-  await expect(ride).toHaveAttribute('aria-label', 'Stop the train');
+  await test.step('a different meadow lands only after the ride has stopped', async () => {
+    const ride = page.locator('.ride-toggle');
+    await ride.click();
+    await expect(ride).toHaveClass(/is-riding/, { timeout: 15_000 });
+    await expect(ride).toHaveAttribute('aria-label', 'Stop the train');
 
-  // The gate stays on the rail mid-ride, so the tray is reachable.
-  await openTray(page);
-  await importFile(page, JSON.stringify(alternateSnapshot));
-  await expect(noteText(page)).toHaveText(NOTE.imported);
+    // The gate stays on the rail mid-ride, so the tray is reachable.
+    await openTray(page);
+    await importFile(page, JSON.stringify(alternateSnapshot));
+    await expect(noteText(page)).toHaveText(NOTE.imported);
 
-  // The ride stopped (the ▶ face is back) and the imported world is in place.
-  await expect(ride).not.toHaveClass(/is-riding/);
-  await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
-  expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual(['piece-1', 'piece-2']);
+    // The ride stopped (the ▶ face is back) and the imported world is in place.
+    await expect(ride).not.toHaveClass(/is-riding/);
+    await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
+    expect((await readMeadow(page)).pieces.map((piece) => piece.id)).toEqual([
+      'piece-1',
+      'piece-2',
+    ]);
+  });
 
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
+  await test.step('the very same meadow still stops the ride explicitly', async () => {
+    const ride = page.locator('.ride-toggle');
+    // Dismiss the report-only tray the first import left on screen.
+    await tapOutside(page);
+    await ride.click();
+    await expect(ride).toHaveClass(/is-riding/, { timeout: 15_000 });
 
-test('importing the very same meadow still stops the ride explicitly', async ({ page }) => {
-  test.setTimeout(90_000);
-  const consoleErrors = watchConsoleErrors(page);
+    // Identical pieces: the ride controller's own subscription sees no edit, so
+    // only `deps.isRiding() → deps.stopRide()` can end the ride before the import.
+    const riding = await exportWorld(page);
 
-  await page.goto('/');
-  await waitForReady(page);
+    await importFile(page, riding.json);
+    await expect(noteText(page)).toHaveText(NOTE.imported);
 
-  const ride = page.locator('.ride-toggle');
-  await ride.click();
-  await expect(ride).toHaveClass(/is-riding/, { timeout: 15_000 });
-
-  // Identical pieces: the ride controller's own subscription sees no edit, so
-  // only `deps.isRiding() → deps.stopRide()` can end the ride before the import.
-  const riding = await exportWorld(page);
-
-  await openTray(page);
-  await importFile(page, riding.json);
-  await expect(noteText(page)).toHaveText(NOTE.imported);
-
-  await expect(ride).not.toHaveClass(/is-riding/);
-  await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
-  // The world did not change into something else — it is the same meadow.
-  expect((await exportWorld(page)).json).toBe(riding.json);
+    await expect(ride).not.toHaveClass(/is-riding/);
+    await expect(ride).toHaveAttribute('aria-label', 'Ride the train');
+    // The world did not change into something else — it is the same meadow.
+    expect((await exportWorld(page)).json).toBe(riding.json);
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });

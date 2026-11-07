@@ -1,0 +1,32 @@
+{
+  "id": "e2e-cost_20261108",
+  "title": "E2E Cost",
+  "type": "refactor",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": ["renderer-decomposition_20261108"],
+  "created_at": "2026-11-08T04:05:39+11:00",
+  "updated_at": "2026-11-08T07:40:00+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "refactor/e2e-cost_20261108",
+  "base_branch": "main",
+  "base_sha": "cb9a6c4ab1e2a3848b21d30eb886d94ca8a7d869",
+  "progress": {
+    "phases_total": 7,
+    "phases_verified": 7,
+    "tasks_total": 30,
+    "tasks_done": 30
+  },
+  "last_checkpoint": "cfc7b08",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 1,
+  "doc_sync": "synced",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/70",
+  "pr_state": "open",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-08T08:05:00+11:00",
+  "archive_path": "conductor/archive/e2e-cost_20261108"
+}

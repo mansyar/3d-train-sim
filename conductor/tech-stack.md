@@ -42,7 +42,7 @@ pnpm ^11 — strict, fast, workspace-ready if tracks ever split.
 | Layer | Tool | Scope |
 |---|---|---|
 | Unit/integration | Vitest ^4 | Colocated `*.test.ts` next to modules. **TDD enforced for pure logic**: track graph, snap resolution, path following, save/load |
-| E2E smoke | Playwright ^1.62 | `e2e/` — boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors. Stability conventions (allowlisted WebKit `blob:` noise, 2-worker cap, rerun rule, ubuntu release authority): `e2e/README.md` |
+| E2E smoke | Playwright ^1.62 | `e2e/` - boots the app, places pieces, starts the train (dev builds expose `window.__tinyTracksWorld` for programmatic placement), asserts no console errors. Two tags: `@smoke` (ten journeys, `pnpm e2e`, ~2 min) and `@ci` (measurements that need a slow runner). `pnpm e2e:full` runs the tablet suite without canaries. The `phone` project runs three allowlisted files only; CI shards the full matrix into `--shard=1/2` and `2/2` and a nightly workflow repeats the two contention-sensitive specs. Stability conventions (allowlisted WebKit `blob:` noise, 2-worker cap, rerun rule, ubuntu release authority): `e2e/README.md` |
 
 ## Folder structure
 
@@ -256,9 +256,12 @@ Every PR and push to `main` runs four parallel gate jobs:
 | check | `pnpm exec biome check .` + `pnpm exec tsc --noEmit` |
 | vitest | `pnpm test` — the unit/integration suite |
 | audit | `pnpm audit --audit-level=high` — red on any high or critical advisory in the whole tree |
-| e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml`) + `pnpm build` + the full e2e suite (tablet · phone · prod profiles) |
+| e2e | Playwright browsers (cached, key derived from `pnpm-lock.yaml` **and** the runner image) + `pnpm build` + the full e2e matrix, split into two shards (`--shard=1/2`, `--shard=2/2`) as independent jobs with `fail-fast: false` and a 45-minute ceiling each; tablet, phone-allowlist and prod projects. Both e2e jobs and the nightly pin `ubuntu-24.04`: on 2026-11-08 `ubuntu-latest` moved to 26.04 (resolute), whose ICU no longer matched the cached WebKit build (`libicudata.so.74` missing at launch) |
 
 - Docs-only commits (markdown, `conductor/**`, `.gitignore`) trigger no jobs.
+- `nightly.yml` runs the full suite per profile (`tablet`, `phone`) at 01:00 Sydney and repeats the two
+  contention-sensitive specs (`smoke`, `cargo`) with `--repeat-each=2`. It is `schedule` +
+  `workflow_dispatch` only, so no pull request can trigger it.
 - The audit job is deliberately independent and cheap (five-minute ceiling), so a
   dependency advisory fails in seconds instead of waiting on the e2e suite.
 - `pnpm audit` reads the npm registry: an outage fails the gate rather than

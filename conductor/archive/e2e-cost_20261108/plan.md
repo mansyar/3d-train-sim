@@ -1,0 +1,204 @@
+# E2E Cost — Implementation Plan
+
+> **Branch:** `refactor/e2e-cost_20261108`
+> **Base:** `main` @ `cb9a6c4ab1e2a3848b21d30eb886d94ca8a7d869`
+> **Phase state:** `pending` · `in_progress` · `verified` · `failed` · `blocked` — only the primary agent
+> writes this file.
+
+## Phase 1: Lanes and tags
+
+- **Goal:** the two tags, the phone allowlist and the three scripts exist and select the right tests, proven
+  by `--list` and by a timed smoke run — before any existing spec body is rewritten.
+- **Depends on:** none
+- **Covers:** FR-1, FR-2, FR-3, FR-6, FR-7, NFR-4, AC-2, AC-4, AC-5
+- **Touches:** `playwright.config.ts`, `package.json`, `e2e/smoke.spec.ts`,
+  `e2e/world-portability.spec.ts`, `e2e/save-recovery.spec.ts`, `e2e/runtime-guarantees.spec.ts`,
+  `e2e/prod.spec.ts`, `e2e/phone-shell.spec.ts`, `e2e/ride-toybox-flow.spec.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test --list` and `pnpm e2e`
+- **Status:** verified
+
+- [x] **P1.T1: Declare the tag vocabulary and mark the smoke set** - covers: FR-1, FR-2
+  - [x] P1.T1.1: Add `@smoke` to the eleven chosen tests, spread across the five files that own them
+  - [x] P1.T1.2: Add `@ci` to the ambient frame-rate test and skip it unless `CI` is set
+- [x] **P1.T2: Restrict the phone project to three files** - covers: FR-3
+  - [x] P1.T2.1: Allowlist the smoke boot test, `phone-shell` and `ride-toybox-flow` in the project config
+  - [x] P1.T2.2: Prove `--list --project=phone` selects only the allowlisted files, and record the count it actually reports
+- [x] **P1.T3: Add the lane scripts** - covers: FR-6
+- [x] **P1.T4: Prove the lane and the CI gate** - covers: AC-2, AC-5
+  - [x] P1.T4.1: Run `pnpm e2e` three times and record the wall time and the test count
+  - [x] P1.T4.2: Demonstrate the frame-rate test skipped locally and selected when `CI` is set
+
+**Result:** verified
+**Checkpoint:** c970f13
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-1.md
+
+**Deviations:** the phone project selects **8** runs, not the 4 the spec first asked for, because five
+`@smoke` tests live inside the allowlisted `smoke.spec.ts`; the user chose to amend AC-4 rather than
+add a third tag or split the file, and the amendment is dated in `spec.md`. The phone `testIgnore` for
+`prod.spec.ts` was dropped as redundant once `testMatch` became exhaustive. The `pnpm e2e` runs were
+performed by the primary agent because the subagent's shell denied the script. Tags are title
+suffixes: no assertion, fixture or timeout changed.
+
+## Phase 2: Mechanical clusters
+
+- **Goal:** the five same-feature clusters that share fixtures and layouts collapse from 29 tests to 12,
+  each merged test naming its steps, with no assertion lost.
+- **Depends on:** Phase 1
+- **Covers:** FR-4, FR-5, FR-12
+- **Touches:** `e2e/switches.spec.ts`, `e2e/switch-3way.spec.ts`, `e2e/switch-slip.spec.ts`,
+  `e2e/switch-mirror.spec.ts`, `e2e/hills.spec.ts`, `e2e/hills-phase2.spec.ts`, `e2e/river.spec.ts`,
+  `e2e/river-life.spec.ts`, `e2e/cargo.spec.ts`, `e2e/wagon-workshop.spec.ts`, `e2e/tunnel.spec.ts`,
+  `e2e/crossing-gate.spec.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/switches.spec.ts e2e/switch-3way.spec.ts e2e/switch-slip.spec.ts e2e/switch-mirror.spec.ts e2e/hills.spec.ts e2e/hills-phase2.spec.ts e2e/river.spec.ts e2e/river-life.spec.ts e2e/cargo.spec.ts e2e/wagon-workshop.spec.ts e2e/tunnel.spec.ts e2e/crossing-gate.spec.ts`
+- **Status:** verified
+
+- [x] **P2.T1: Merge the switch cluster (10 → 3)** — covers: FR-4, FR-5, FR-12
+  - [x] P2.T1.1: One spec places each switch kind, rides every road, and reloads to neutral
+  - [x] P2.T1.2: Fold the reduced-motion and blade-pose assertions into the same file as named steps
+- [x] **P2.T2: Merge the hill pair (5 → 2)** — covers: FR-4, FR-5
+- [x] **P2.T3: Merge river and river life (6 → 2)** — covers: FR-4, FR-5
+- [x] **P2.T4: Merge cargo and the wagon workshop (4 → 3)** — covers: FR-4, FR-5
+- [x] **P2.T5: Merge tunnel and crossing gate (4 → 2)** — covers: FR-4, FR-5
+
+**Result:** verified
+**Checkpoint:** 81fc042
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-2.md
+
+**Deviations:** the six replaced spec files were deleted by the primary agent, because `git rm` was
+denied to the subagent; the post-deletion run and the `--list` totals were taken here. Two substitutions
+are judgement rather than mechanics and are recorded in the parity table: the two fixed 12-second rides
+became sampled loops plus `expectSceneChanging`, and per-road switch witnessing uses blade/lever pose
+pairing because `ride-motion` keeps its switch roads internal. River's consolidated test gained a
+`clearMeadow` before the trestle ride to restore the fresh-page precondition the original had.
+
+## Phase 3: The smoke journey
+
+- **Goal:** `smoke.spec.ts` drops from 20 tests to 9 while keeping boot health, the build journey, the three
+  persistence facts and the parent gate, each as a named step.
+- **Depends on:** Phase 2
+- **Covers:** FR-4, FR-5, FR-12
+- **Touches:** `e2e/smoke.spec.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
+- **Status:** verified
+
+- [x] **P3.T1: Keep boot and console health as one test** — covers: FR-4, FR-12
+- [x] **P3.T2: Merge the build journey** — covers: FR-4
+  - [x] P3.T2.1: One test opens the drawer, walks the tabs, places a toy, rides, cycles the camera and undoes
+- [x] **P3.T3: Merge the persistence round trip** — covers: FR-4
+  - [x] P3.T3.1: One test asserts the chosen train, the chosen sound and the placed toys survive one reload
+- [x] **P3.T4: Merge the parent gate with the day and mute toggles** — covers: FR-4, FR-12
+
+**Result:** verified
+**Checkpoint:** c7c2195
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-3.md
+
+**Deviations:** the merge added two assertions no original had (a `.day-toggle` phase-advance check and
+an undo tail on the trash step); both assert real behaviour and are recorded rather than removed. Two
+merged steps restore a precondition the original's fresh page gave them — the drawer's remembered tab
+is reset before the lift step, and the ride test stops before laying the second layout. The console and
+external-request assertions now run once per journey over a superset window instead of once per old
+test, which is why the raw `expect(` count falls from 101 to 94; every distinctive assertion was traced
+and is present.
+
+## Phase 4: New modules
+
+- **Goal:** the four newest modules and the three small specs collapse to their target counts, dropping
+  assertions only where a named unit test already proves the same behaviour.
+- **Depends on:** Phase 3
+- **Covers:** FR-4, FR-5, FR-12
+- **Touches:** `e2e/world-portability.spec.ts`, `e2e/save-recovery.spec.ts`,
+  `e2e/runtime-guarantees.spec.ts`, `e2e/starter-railway.spec.ts`, `e2e/park-spot.spec.ts`,
+  `e2e/ride-toybox-flow.spec.ts`, `e2e/delight-toys.spec.ts`, `e2e/sun-moon.spec.ts`
+- **Verification:** `pnpm exec playwright test e2e/world-portability.spec.ts e2e/save-recovery.spec.ts e2e/runtime-guarantees.spec.ts e2e/starter-railway.spec.ts e2e/park-spot.spec.ts e2e/delight-toys.spec.ts e2e/sun-moon.spec.ts`
+- **Status:** verified
+
+- [x] **P4.T1: Merge portability (12 → 5)** - covers: FR-4, FR-5
+  - [x] P4.T1.1: Keep one round trip, one salvage, one refusal, one undo and one mid-ride stop
+  - [x] P4.T1.2: Remove the refusal permutations already proven by `portable.test.ts` and cite them
+- [x] **P4.T2: Merge save recovery (6 → 2)** — covers: FR-4, FR-5
+  - [x] P4.T2.1: One test proves salvage and restore; one proves the parent-gate note and dismissal
+- [x] **P4.T3: Merge runtime guarantees (5 → 4)** — covers: FR-4, FR-5
+- [x] **P4.T4: Merge the two galleries (8 → 4)** — covers: FR-4, FR-5
+- [x] **P4.T5: Merge the three small specs** - covers: FR-4, FR-5
+
+**Result:** verified
+**Checkpoint:** 7377ce1
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-4.md
+
+**Deviations:** the `ride-toybox-flow` merge took `@smoke` from eleven to ten and the phone lane from
+eight to seven; the user chose to keep the merge and amend FR-2/AC-2/AC-4 rather than split the test or
+add a tag to pad the count. Portability's restored-boot case moved into `save-recovery.spec.ts` instead
+of becoming a sixth portability boot. `starter-railway`'s dressed-train undo now targets the reloaded
+village (14/5) rather than the pristine oval (10/4), which is that test's own first step.
+
+## Phase 5: CI shape
+
+- **Goal:** the pull-request e2e job is two parallel shards and a nightly workflow runs both profiles, with
+  no change to what a PR must pass.
+- **Depends on:** Phase 4
+- **Covers:** FR-8, FR-9, NFR-6, NFR-7, AC-6
+- **Touches:** `.github/workflows/ci.yml`, `.github/workflows/nightly.yml`
+- **Verification:** `pnpm check` and a workflow parse asserting two shard values, the nightly schedule and no
+  pull-request trigger on the nightly file
+- **Status:** verified
+
+- [x] **P5.T1: Shard the e2e job into two matrix jobs** - covers: FR-8, NFR-6, NFR-7
+  - [x] P5.T1.1: Matrix over the two shard values, keeping 2 workers and the 45-minute ceiling per job
+- [x] **P5.T2: Add the nightly workflow** - covers: FR-9
+  - [x] P5.T2.1: Schedule the full suite on both profiles, with repetition only for the two noisy specs
+
+**Result:** verified
+**Checkpoint:** c8668ce
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-5.md
+
+## Phase 6: Ledger, docs and final measurement
+
+- **Goal:** the parity ledger accounts for every original test, the three documents describe the shipped
+  vocabulary, and the projected runtimes are measured rather than asserted.
+- **Depends on:** Phase 5
+- **Covers:** FR-5, FR-10, AC-1, AC-3, AC-7, AC-8, AC-9, AC-10
+- **Touches:** `e2e/README.md`, `CONTRIBUTING.md`, `conductor/tech-stack.md`,
+  `conductor/tracks/e2e-cost_20261108/verification/parity.md`
+- **Verification:** `pnpm check` and `pnpm e2e:full` and `pnpm exec playwright test --list`
+- **Status:** verified
+
+- [x] **P6.T1: Close the parity ledger** - covers: FR-5, AC-7
+  - [x] P6.T1.1: Map every one of the 96 original tests to a merged step or a named unit test
+  - [x] P6.T1.2: Prove each cited unit test exists and passes
+- [x] **P6.T2: Document the vocabulary** - covers: FR-10, AC-9
+- [x] **P6.T3: Measure the outcome** - covers: AC-1, AC-3, AC-8, AC-10
+  - [x] P6.T3.1: Record run counts, both lane durations and the absence of `src/` changes
+
+**Result:** verified
+**Checkpoint:** a708d81
+**Evidence:** conductor/tracks/e2e-cost_20261108/verification/phase-6.md
+
+**Deviations:** performed by the primary because the phase subagent is denied writes under `conductor/`.
+Two spec descriptors were amended after measurement at the user's direction: NFR-2 and AC-3 went from
+≤6 min to ≤8 min (measured 7.7 min at 47 runs; the ≤6 min claim that holds is per CI shard). The 3-worker
+experiment is recorded as a rejected option (7.2 min with a new flake).
+
+## Phase R1: Review Fixes
+
+- **Goal:** Close the seven round-1 findings — the false-pass scenery drop first, then the doc times, the AC-2 bound, the overstated witness, and the three descriptions of commands and workflows.
+- **Depends on:** Phase 6
+- **Covers:** F1, F2, F3, F4, F5, F6, F7
+- **Touches:** `e2e/smoke.spec.ts`, `e2e/README.md`, `CONTRIBUTING.md`, `.github/workflows/nightly.yml`, `conductor/tracks/e2e-cost_20261108/spec.md`, `verification/parity.md`, `verification/integrated.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts --project=tablet --project=phone`
+- **Status:** verified
+
+- [x] **R1.T1: Make the scenery drop a real witness** — covers: F1
+  - [x] R1.T1.1: Drop on a free cell resolved through `cellToScreen`, and assert the scenery delta and cell
+  - [x] R1.T1.2: Prove the assertion bites by reverting the drop target to the old point
+- [x] **R1.T2: Correct the documented lane times** — covers: F2, F6, F7
+- [x] **R1.T3: Record the measured bound in AC-2 and NFR-3** — covers: F3
+- [x] **R1.T4: Disclose the unwitnessed note copy in the ledger** — covers: F4
+- [x] **R1.T5: Stop the nightly repeating a spec the phone project cannot select** — covers: F5
+
+**Result:** verified
+**Checkpoint:** cfc7b08
+**Evidence:** conductor/tracks/e2e-cost_20261108/review.md
+
+**Deviations:** performed by the primary (the findings touch `conductor/` state). The same-point drop was
+kept only long enough to record the red proof; the ledger's "does not claim" section now names the
+`too-large` note copy as debt rather than implying a witness that does not exist.

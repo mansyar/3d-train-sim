@@ -11,9 +11,39 @@ releases v0.5.0 → v0.7.0 (track `e2e-stability_20260904`).
 ## Running
 
 ```sh
-pnpm exec playwright test                          # full suite, 2 workers (config default)
-pnpm exec playwright test e2e/wagon-workshop.spec.ts   # one spec
+pnpm e2e                     # the lane you want: build, then the @smoke journeys (~3 min)
+pnpm e2e:full                # the tablet suite CI runs, minus CI-only canaries (~8 min)
+pnpm e2e:file e2e/undo.spec.ts   # one spec, no build (specs using the 5198 preview origin need one)
+pnpm exec playwright test    # every run, every profile (what CI shards)
 ```
+
+Times are measured on the development machine at the 2-worker cap: `pnpm e2e` is ~2.5 min warm and
+~3.3 min cold (the 43 s offline boot dominates), `pnpm e2e:full` is ~7.7 min, and the whole matrix is
+~9.4 min. Those are ceilings as well as averages — `pnpm e2e` has been seen at 3.3 min, which is why the
+track that built this shape records 3.5 min cold rather than 3.
+
+## Lanes, tags and the device matrix
+
+Two tags, and nothing else:
+
+- **`@smoke`** - ten journeys that answer "did we break the toy?". Boot with a clean console and zero
+  external requests, drag-place, ride and stop, an autosave round trip, the parent gate, save salvage, an
+  import round trip, the production shell, the phone layout, and the offline boot. This is `pnpm e2e`.
+- **`@ci`** - measurements that only mean something on a slow runner. Currently the ambient-FPS canary,
+  which skips itself unless `CI` is set. `pnpm e2e:full` inverts the filter so a laptop run does not
+  measure its own GPU.
+
+The **phone** project runs three allowlisted files (`smoke`, `phone-shell`, `ride-toybox-flow`), not the
+suite: the phone risks are layout and ride-mode toolbars, and everything else is identical code paths
+already proven on the tablet profile. The **prod** project runs one test against `vite preview`.
+
+The full matrix is ~57 runs (49 tablet + 7 phone + 1 prod). CI splits it into two shards
+(`--shard=1/2`, `--shard=2/2`) on separate runners; a nightly workflow runs both profiles and repeats the
+two contention-sensitive specs. `--shard` splits *after* `--grep` and project filters, so a lane and a
+shard compose.
+
+**When a merged journey fails, the step name is the diagnosis.** Every former test is now a `test.step`
+with the old test's name, so the failed step points at the behaviour, not at a 40-line body.
 
 - **Workers are capped at 2** in `playwright.config.ts`. This is not a
   suggestion: higher worker counts hammer the single shared dev server

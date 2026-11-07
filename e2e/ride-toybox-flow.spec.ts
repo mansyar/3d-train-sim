@@ -47,7 +47,10 @@ const place = (
 
 const watchConsole = (page: import('@playwright/test').Page) => watchConsoleErrors(page);
 
-test('riding hides the build tools and stopping returns them', async ({ page }) => {
+test('riding hides the build tools, and stopping returns them with the five tabs intact @smoke', async ({
+  page,
+}) => {
+  test.setTimeout(60_000); // the ride and drawer journeys' budgets, summed
   const consoleErrors = watchConsole(page);
   await page.goto('/');
   await ready(page);
@@ -57,78 +60,74 @@ test('riding hides the build tools and stopping returns them', async ({ page }) 
   await place(page, 'straight', { x: 2, y: 1 }, 0);
   await place(page, 'straight', { x: 2, y: 2 }, 0);
 
-  // The dev placements arm the undo, so it starts visible.
-  const ride = page.locator('.ride-toggle');
-  const toys = page.locator('[data-drawer="toys"]');
-  const trains = page.locator('[data-drawer="trains"]');
-  const trash = page.locator('.trash-slot');
-  const undo = page.locator('.undo-toggle');
-  await expect(undo).toBeVisible();
+  await test.step('the ride hides the build tools and stopping returns them', async () => {
+    // The dev placements arm the undo, so it starts visible.
+    const ride = page.locator('.ride-toggle');
+    const toys = page.locator('[data-drawer="toys"]');
+    const trains = page.locator('[data-drawer="trains"]');
+    const trash = page.locator('.trash-slot');
+    const undo = page.locator('.undo-toggle');
+    await expect(undo).toBeVisible();
 
-  await ride.click();
-  await expect(ride).toHaveClass(/is-riding/);
-  // Build tools hide; the whistle, mute, and gate stay for the ride.
-  await expect(toys).toBeHidden();
-  await expect(trains).toBeHidden();
-  await expect(trash).toBeHidden();
-  await expect(undo).toBeHidden();
-  await expect(page.locator('.whistle-toot')).toBeVisible();
-  await expect(page.locator('.mute-toggle')).toBeVisible();
+    await ride.click();
+    await expect(ride).toHaveClass(/is-riding/);
+    // Build tools hide; the whistle, mute, and gate stay for the ride.
+    await expect(toys).toBeHidden();
+    await expect(trains).toBeHidden();
+    await expect(trash).toBeHidden();
+    await expect(undo).toBeHidden();
+    await expect(page.locator('.whistle-toot')).toBeVisible();
+    await expect(page.locator('.mute-toggle')).toBeVisible();
 
-  await ride.click();
-  await expect(ride).not.toHaveClass(/is-riding/);
-  // Everything returns and the world is exact.
-  await expect(toys).toBeVisible();
-  await expect(trains).toBeVisible();
-  await expect(trash).toBeVisible();
-  await expect(undo).toBeVisible();
-  const count = await page.evaluate(
-    () =>
-      (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld?.pieces()
-        .length ?? -1,
-  );
-  expect(count).toBe(2);
+    await ride.click();
+    await expect(ride).not.toHaveClass(/is-riding/);
+    // Everything returns and the world is exact.
+    await expect(toys).toBeVisible();
+    await expect(trains).toBeVisible();
+    await expect(trash).toBeVisible();
+    await expect(undo).toBeVisible();
+    const count = await page.evaluate(
+      () =>
+        (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld?.pieces()
+          .length ?? -1,
+    );
+    expect(count).toBe(2);
+  });
 
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
+  await test.step('five tabs hold their toys; the adventure row swipes on phones', async () => {
+    await page.locator('[data-drawer="toys"]').click();
+    const tabs = page.locator('.drawer-tab');
+    await expect(tabs).toHaveCount(5);
 
-test('five tabs hold their toys; the adventure row swipes on phones', async ({ page }) => {
-  const consoleErrors = watchConsole(page);
-  await page.goto('/');
-  await ready(page);
-
-  await page.locator('[data-drawer="toys"]').click();
-  const tabs = page.locator('.drawer-tab');
-  await expect(tabs).toHaveCount(5);
-
-  const counts: Record<string, number> = {
-    rails: 10,
-    adventure: 9,
-    nature: 3,
-    town: 7,
-    critter: 4,
-  };
-  for (const [tab, count] of Object.entries(counts)) {
-    const panel = page.locator(`.drawer-panel[data-panel="${tab}"]`);
-    // Re-tapping the open tab closes it, so only tap when it is shut —
-    // the drawer wakes on Rails, making the first tap a close.
-    if (await panel.isHidden()) {
-      await page.locator(`.drawer-tab[data-tab="${tab}"]`).click();
+    const counts: Record<string, number> = {
+      rails: 10,
+      adventure: 9,
+      nature: 3,
+      town: 7,
+      critter: 4,
+    };
+    for (const [tab, count] of Object.entries(counts)) {
+      const panel = page.locator(`.drawer-panel[data-panel="${tab}"]`);
+      // Re-tapping the open tab closes it, so only tap when it is shut —
+      // the drawer wakes on Rails, making the first tap a close.
+      if (await panel.isHidden()) {
+        await page.locator(`.drawer-tab[data-tab="${tab}"]`).click();
+      }
+      await expect(panel).toBeVisible();
+      await expect(panel.locator('.piece-slot, .scenery-slot')).toHaveCount(count);
     }
-    await expect(panel).toBeVisible();
-    await expect(panel.locator('.piece-slot, .scenery-slot')).toHaveCount(count);
-  }
 
-  // Toy rows are single scrollable rows by design (Rails already holds 10
-  // toys), so the 9-toy Adventure row swipes on phones and tablets alike
-  // instead of wrapping over the meadow.
-  await page.locator('.drawer-tab[data-tab="adventure"]').click();
-  const adventure = page.locator('.drawer-panel[data-panel="adventure"]');
-  await expect(adventure).toBeVisible();
-  const overflow = await page
-    .locator('.drawer-panel[data-panel="adventure"]')
-    .evaluate((panel) => panel.scrollWidth > panel.clientWidth + 1);
-  expect(overflow).toBe(true);
+    // Toy rows are single scrollable rows by design (Rails already holds 10
+    // toys), so the 9-toy Adventure row swipes on phones and tablets alike
+    // instead of wrapping over the meadow.
+    await page.locator('.drawer-tab[data-tab="adventure"]').click();
+    const adventure = page.locator('.drawer-panel[data-panel="adventure"]');
+    await expect(adventure).toBeVisible();
+    const overflow = await page
+      .locator('.drawer-panel[data-panel="adventure"]')
+      .evaluate((panel) => panel.scrollWidth > panel.clientWidth + 1);
+    expect(overflow).toBe(true);
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });

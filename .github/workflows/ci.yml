@@ -98,14 +98,27 @@ jobs:
         run: pnpm audit --audit-level=high
 
   e2e:
-    name: Gate · e2e (tablet · phone · prod)
-    runs-on: ubuntu-latest
-    # 193 specs across three projects, WebGL rendered in software (~23 min), plus
-    # `playwright install --with-deps`, whose apt step is the variable: 1-2 min on
-    # a good day, 34 min when the Ubuntu mirror crawls. 45 minutes could not hold
-    # both; the offline specs were killed mid-test at the ceiling rather than
-    # failing on an assertion.
-    timeout-minutes: 60
+    name: Gate · e2e shard ${{ matrix.shard }}
+    # Pinned, not `ubuntu-latest`: on 2026-11-08 `ubuntu-latest` moved to 26.04
+    # (resolute), whose ICU is no longer the one the cached WebKit build links
+    # against, so every launch died with `libicudata.so.74: cannot open shared
+    # object file` after restoring a browser cache that `install --with-deps`
+    # then considered complete. A pinned image plus an image-scoped cache key
+    # keeps a runner-image bump from poisoning the cache.
+    runs-on: ubuntu-24.04
+    # Two shards, each its own runner and its own dev server. The suite is ~57
+    # runs after the e2e-cost track (was 193), so a shard is minutes of WebGL in
+    # software plus `playwright install --with-deps`, whose apt step is the
+    # variable: 1-2 min on a good day, 34 min when the Ubuntu mirror crawls.
+    # The ceiling stays generous because it is the apt step that eats it, and a
+    # killed job looks like a test failure in the PR.
+    timeout-minutes: 45
+    strategy:
+      # One shard failing must not cancel the other: the point of the split is
+      # two independent verdicts.
+      fail-fast: false
+      matrix:
+        shard: ['1/2', '2/2']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -123,12 +136,15 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Browsers are pinned by the lockfile, so the lockfile hash is the
-      # cache key — a bumped Playwright version gets a fresh install.
+      # cache key — a bumped Playwright version gets a fresh install. The image
+      # is in the key too: a browser build is linked against the distro's
+      # libraries, so reusing a cache across an image bump is the failure this
+      # key exists to prevent.
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-ubuntu-24.04-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
@@ -139,4 +155,4 @@ jobs:
         run: pnpm build
 
       - name: E2E suite
-        run: pnpm exec playwright test
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}

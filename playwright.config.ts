@@ -22,7 +22,12 @@ export default defineConfig({
     {
       name: 'phone',
       use: { ...devices['iPhone 13'] },
-      testIgnore: /prod\.spec\.ts/,
+      // The phone profile in the PR lane is deliberately narrow: only these
+      // three files, and only their @smoke tests. testMatch alone would take
+      // every test in the smoke file; the project-level grep keeps the lane to
+      // the tagged ones.
+      testMatch: ['**/smoke.spec.ts', '**/phone-shell.spec.ts', '**/ride-toybox-flow.spec.ts'],
+      grep: /@smoke/,
     },
     {
       name: 'prod',
