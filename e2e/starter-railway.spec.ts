@@ -13,6 +13,16 @@ type DevWorld = {
 };
 
 /**
+ * Waits for the loaded world: the canvas, the readiness flag, and the beat the
+ * starter GLB clones need to land and the first frame to settle.
+ */
+async function waitForWorld(page: Page): Promise<void> {
+  await page.waitForSelector('canvas');
+  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
+  await page.waitForTimeout(2000); // Starter GLB clones land + first frame settles.
+}
+
+/**
  * Fresh boot: wipe the saved world so the first-run seed path runs.
  *
  * `afterReload` runs once the post-wipe load reports ready. Tests asserting
@@ -42,6 +52,17 @@ async function counts(page: Page): Promise<{ pieces: number; scenery: number }> 
   });
 }
 
+/** The currently chosen engine and its consist, through the dev handle. */
+const dressed = (page: Page, train: string) =>
+  page.evaluate(
+    ([name]) => {
+      const handle = (window as unknown as DevWorld).__tinyTracksWorld;
+      if (!handle) throw new Error('dev world handle missing');
+      return { train: handle.train(), consist: handle.consistFor(name) };
+    },
+    [train] as const,
+  );
+
 /** Press-and-hold the parent gate until the armed-confirm step opens. */
 async function openGallery(page: Page): Promise<void> {
   const gate = page.locator('.parent-gate');
@@ -68,7 +89,10 @@ async function rideForAWhile(page: Page): Promise<void> {
   await page.locator('.ride-toggle').click();
 }
 
-test('fresh boot shows the cozy oval and rides with a clean console', async ({ page }) => {
+test('fresh boot shows the cozy oval and rides, and each gallery preset applies and rides', async ({
+  page,
+}) => {
+  test.setTimeout(180_000); // the boot journey and the preset tour, summed
   const errors = watchConsoleErrors(page);
   const external: string[] = [];
   page.on('request', (req) => {
@@ -79,91 +103,57 @@ test('fresh boot shows the cozy oval and rides with a clean console', async ({ p
   await boot(page, () => {
     errors.length = 0;
   });
-  // Cozy oval: 10 rails + station, 2 trees, 1 house.
-  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
-  await rideForAWhile(page);
+
+  await test.step('the fresh meadow is the cozy oval', async () => {
+    // Cozy oval: 10 rails + station, 2 trees, 1 house.
+    expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
+  });
+
+  await test.step('the seeded oval rides', async () => {
+    await rideForAWhile(page);
+  });
+
+  await test.step('the boot stayed silent', async () => {
+    expect(errors).toEqual([]);
+  });
+
+  await test.step('each gallery preset applies behind the gate and rides', async () => {
+    const presets = [
+      { id: 'cozy-oval', pieces: 10, scenery: 4 },
+      { id: 'station-village', pieces: 14, scenery: 5 },
+      { id: 'river-crossing', pieces: 18, scenery: 2 },
+      { id: 'hilltop-junction', pieces: 17, scenery: 3 },
+    ];
+    for (const preset of presets) {
+      await openGallery(page);
+      await page.locator(`.preset-pick[data-preset="${preset.id}"]`).click();
+      await page.waitForTimeout(2500); // Old-kind meshes leave, new clones land.
+      expect(await counts(page)).toEqual({
+        pieces: preset.pieces,
+        scenery: preset.scenery,
+      });
+      await expect(page.locator('.undo-toggle')).toBeVisible();
+      await rideForAWhile(page);
+    }
+  });
+
   expect(errors).toEqual([]);
+  // The whole journey — boot, ride, all four presets — stayed on-origin.
   expect(external).toEqual([]);
 });
 
-test('each gallery preset applies behind the gate and rides', async ({ page }) => {
-  test.setTimeout(150_000);
-  const errors = watchConsoleErrors(page);
-  await boot(page, () => {
-    errors.length = 0;
-  });
-
-  const presets = [
-    { id: 'cozy-oval', pieces: 10, scenery: 4 },
-    { id: 'station-village', pieces: 14, scenery: 5 },
-    { id: 'river-crossing', pieces: 18, scenery: 2 },
-    { id: 'hilltop-junction', pieces: 17, scenery: 3 },
-  ];
-  for (const preset of presets) {
-    await openGallery(page);
-    await page.locator(`.preset-pick[data-preset="${preset.id}"]`).click();
-    await page.waitForTimeout(2500); // Old-kind meshes leave, new clones land.
-    expect(await counts(page)).toEqual({
-      pieces: preset.pieces,
-      scenery: preset.scenery,
-    });
-    await expect(page.locator('.undo-toggle')).toBeVisible();
-    await rideForAWhile(page);
-  }
-  expect(errors).toEqual([]);
-});
-
-test('apply, undo, reload, reset round-trip', async ({ page }) => {
-  test.setTimeout(120_000);
-  await boot(page);
-  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
-
-  // Apply the village over the seeded oval, then take it back with one ↩️.
-  await openGallery(page);
-  await page.locator('.preset-pick[data-preset="station-village"]').click();
-  await page.waitForTimeout(2500);
-  expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
-  await page.locator('.undo-toggle').click();
-  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
-
-  // Re-apply, reload: the applied world persists.
-  await openGallery(page);
-  await page.locator('.preset-pick[data-preset="station-village"]').click();
-  await page.waitForTimeout(2500);
-  await page.reload();
-  await page.waitForSelector('canvas');
-  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
-  await page.waitForTimeout(2000);
-  expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
-
-  // The parent gate reset still clears to an empty meadow.
-  await openGallery(page);
-  // The armed gate pulses (by design) — a real finger taps right through it.
-  await page.locator('.parent-gate').click({ force: true });
-  await page.waitForTimeout(1500);
-  expect(await counts(page)).toEqual({ pieces: 0, scenery: 0 });
-});
-
-test('gallery apply preserves the train and wagon picks across undo and reload', async ({
+test('presets round-trip through undo and reload, and the dressed train survives with them', async ({
   page,
 }) => {
-  test.setTimeout(150_000);
+  test.setTimeout(270_000); // the round-trip and dressed-train journeys, summed
   const errors = watchConsoleErrors(page);
   await boot(page, () => {
     errors.length = 0;
   });
 
-  const dressed = (train: string) =>
-    page.evaluate(
-      ([name]) => {
-        const handle = (window as unknown as DevWorld).__tinyTracksWorld;
-        if (!handle) throw new Error('dev world handle missing');
-        return { train: handle.train(), consist: handle.consistFor(name) };
-      },
-      [train] as const,
-    );
+  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
 
-  // Dress diesel in coal through the train drawer, then apply Hilltop Junction.
+  // Dress diesel in coal through the train drawer before any preset is applied.
   await page.click('[data-drawer="trains"]');
   await page.locator('.train-slot[data-train="diesel"]').click();
   await page.locator('.wagon-slot[data-wagon="coal"]').click();
@@ -172,26 +162,55 @@ test('gallery apply preserves the train and wagon picks across undo and reload',
     'true',
   );
 
-  await openGallery(page);
-  await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
-  await page.waitForTimeout(2500);
-  expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
-  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  await test.step('a preset applies over the seeded oval and one ↩️ takes it back', async () => {
+    await openGallery(page);
+    await page.locator('.preset-pick[data-preset="station-village"]').click();
+    await page.waitForTimeout(2500);
+    expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
+    await page.locator('.undo-toggle').click();
+    expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
+  });
 
-  // One ↩️ restores the prior build; the dressed diesel was already selected.
-  await page.locator('.undo-toggle').click();
-  expect(await counts(page)).toEqual({ pieces: 10, scenery: 4 });
-  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  await test.step('the applied world persists across a reload', async () => {
+    await openGallery(page);
+    await page.locator('.preset-pick[data-preset="station-village"]').click();
+    await page.waitForTimeout(2500);
+    await page.reload();
+    await waitForWorld(page);
+    expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
+  });
 
-  // Re-apply, reload: the junction persists with its dressed diesel.
-  await openGallery(page);
-  await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
-  await page.waitForTimeout(2500);
-  await page.reload();
-  await page.waitForSelector('canvas');
-  await page.waitForFunction(() => (window as unknown as DevWorld).__tinyTracksReady === true);
-  await page.waitForTimeout(2000);
-  expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
-  expect(await dressed('diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  await test.step('a gallery apply preserves the dressed train across undo', async () => {
+    await openGallery(page);
+    await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
+    await page.waitForTimeout(2500);
+    expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
+    expect(await dressed(page, 'diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+
+    // One ↩️ restores the build this reload brought back — the village, not
+    // the seeded oval (the seeded-oval undo is the first step's witness).
+    await page.locator('.undo-toggle').click();
+    expect(await counts(page)).toEqual({ pieces: 14, scenery: 5 });
+    expect(await dressed(page, 'diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  });
+
+  await test.step('the junction and its dressed diesel persist across a reload', async () => {
+    await openGallery(page);
+    await page.locator('.preset-pick[data-preset="hilltop-junction"]').click();
+    await page.waitForTimeout(2500);
+    await page.reload();
+    await waitForWorld(page);
+    expect(await counts(page)).toEqual({ pieces: 17, scenery: 3 });
+    expect(await dressed(page, 'diesel')).toEqual({ train: 'diesel', consist: 'coal' });
+  });
+
+  await test.step('the parent gate reset still clears to an empty meadow', async () => {
+    await openGallery(page);
+    // The armed gate pulses (by design) — a real finger taps right through it.
+    await page.locator('.parent-gate').click({ force: true });
+    await page.waitForTimeout(1500);
+    expect(await counts(page)).toEqual({ pieces: 0, scenery: 0 });
+  });
+
   expect(errors).toEqual([]);
 });

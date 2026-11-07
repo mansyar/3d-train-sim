@@ -40,7 +40,7 @@ file names.
 - **Goal:** pull-request feedback is under 6 minutes of wall time on GitHub Actions.
   **Metric:** both e2e shards finish in ≤6 min each, measured on this track's own PR.
 - **Goal:** the local default loop is under 3 minutes.
-  **Metric:** `pnpm e2e` runs 11 tests in ≤3 min on the development machine.
+  **Metric:** `pnpm e2e` runs the `@smoke` lane (17 runs: ten unique tests across tablet and phone) in ≤3 min on the development machine.
 - **Goal:** no architectural risk loses its witness.
   **Metric:** a parity ledger maps all 96 existing tests to either a merged step or a named unit test, with
   zero unexplained removals.
@@ -73,7 +73,7 @@ file names.
 | ID | Requirement | Priority |
 | --- | --- | --- |
 | FR-1 | Exactly two tags exist: `@smoke` (selects the fast lane) and `@ci` (runs only when `CI` is set). No third tag vocabulary is introduced. | must |
-| FR-2 | `@smoke` covers eleven tests: boot with a clean console and zero external requests, drag-place a piece, ride and stop, an autosave round trip, the parent gate, save salvage, an import round trip, the production shell, phone layout, and offline boot. | must |
+| FR-2 | `@smoke` covers ten tests (eleven before Phase 4 merged the two toybox journeys) spanning eleven behaviours: boot with a clean console and zero external requests, drag-place a piece, ride and stop, an autosave round trip, the parent gate, save salvage, an import round trip, the production shell, phone layout, and offline boot. | must |
 | FR-3 | The phone project runs only three files: the smoke boot test, `phone-shell.spec.ts` and `ride-toybox-flow.spec.ts`. The restriction lives in `playwright.config.ts`, not in comments or naming convention. | must |
 | FR-4 | The suite is merged to at most 50 unique tests. Every merged body wraps its phases in `test.step` whose name describes the action, so a failure identifies the step that failed. | must |
 | FR-5 | Parity: every assertion in the 96 existing tests is either carried into a merged step or removed alongside a named unit test that proves the same behaviour. The parity ledger in the track's verification directory records each removed assertion and its replacement. | must |
@@ -102,9 +102,9 @@ file names.
 | ID | Criterion | Verifies |
 | --- | --- | --- |
 | AC-1 | `playwright test --list` reports ≤60 runs and between 40 and 50 unique tests. | FR-4, NFR-1 |
-| AC-2 | `pnpm e2e` passes 11 tests in ≤3 min. | FR-2, NFR-3 |
+| AC-2 | `pnpm e2e` passes the `@smoke` lane (17 runs, ten unique tests) in ≤3 min. Amended 2026-11-08: eleven became ten when Phase 4 merged `ride-toybox-flow`'s two tagged tests into one journey carrying both behaviours. | FR-2, NFR-3 |
 | AC-3 | `pnpm e2e:full` passes the complete tablet suite in ≤6 min. | FR-4, NFR-2 |
-| AC-4 | `playwright test --list --project=phone` lists only the runs from the three allowlisted files — 8 runs (5 from `smoke.spec.ts`, 1 `phone-shell`, 2 `ride-toybox-flow`), not the whole suite. Amended 2026-11-08: the original wording said 4, which could not be reached without a third tag, because five `@smoke` tests live inside the allowlisted `smoke.spec.ts`. | FR-3 |
+| AC-4 | `playwright test --list --project=phone` lists only the runs from the three allowlisted files - 7 runs (5 from `smoke.spec.ts`, 1 `phone-shell`, 1 `ride-toybox-flow`), not the whole suite. Amended 2026-11-08 twice: the original wording said 4, which could not be reached without a third tag, because five `@smoke` tests live inside the allowlisted `smoke.spec.ts`; the count then fell from 8 to 7 when Phase 4 merged the two toybox tests into one. | FR-3 |
 | AC-5 | The frame-rate test is skipped locally and present when `CI` is set (demonstrated in both modes). | FR-7 |
 | AC-6 | Both CI shards are green on this track's pull request, each finishing in ≤6 min. | FR-8 |
 | AC-7 | The parity ledger accounts for every one of the 96 original tests; each removal names the unit test that replaces it; there are zero unexplained entries. | FR-5, FR-12 |

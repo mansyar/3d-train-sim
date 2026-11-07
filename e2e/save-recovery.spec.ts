@@ -5,8 +5,13 @@ import { watchConsoleErrors } from './helpers';
 
 /**
  * Save-resilience end-to-end: a real browser boots against a hand-seeded
- * IndexedDB (`tiny-tracks` / `worlds`), so the salvage, restore, and very
- * fresh paths are proven through the same loader a family device runs.
+ * IndexedDB (`tiny-tracks` / `worlds`), so the salvage and restore paths are
+ * proven through the same loader a family device runs.
+ *
+ * What a *corrupt* payload can look like — unreadable JSON, an empty salvage, a
+ * duplicate-only salvage, both slots broken — is proven by `save.test.ts`,
+ * `recovery.test.ts` and `persistence.test.ts`; here only the two boot outcomes
+ * a parent sees remain, plus the note that reports them.
  *
  * Seeding happens from the page context after the app has created the store:
  * the boot's own autosave must commit first, or it can land after our write
@@ -19,6 +24,10 @@ interface WorldHandle {
 }
 
 const HOLD_LABEL = 'Parent gate — press and hold to reset the world';
+
+/** The exact outcome lines `src/ui/parent-gate.ts` writes. */
+const RESTORED_LINE = 'Your meadow was restored from the last good save.';
+const UNREADABLE_NOTE = 'That file is not a Tiny Tracks meadow, so nothing changed.';
 
 /** Three dry-land pieces to keep, plus one structurally invalid piece. */
 const VALID_PIECES = [
@@ -43,27 +52,6 @@ const previousSnapshot = {
   pieces: [
     { id: 'piece-10', type: 'straight', cell: { x: 1, y: 6 }, rotation: 0 },
     { id: 'piece-11', type: 'corner', cell: { x: 1, y: 7 }, rotation: 90 },
-  ],
-  scenery: [],
-};
-
-/** A readable v3 snapshot whose every entry is invalid: the salvage keeps nothing. */
-const emptySalvageSnapshot = {
-  version: 3,
-  pieces: [
-    { id: 'piece-97', type: 'hovercraft', cell: { x: 5, y: 5 }, rotation: 0 },
-    { id: 'piece-98', type: 'not-a-piece', cell: { x: 6, y: 6 }, rotation: 0 },
-  ],
-  scenery: [],
-};
-
-/** Three pieces, two of them claiming the same cell: one duplicate is dropped. */
-const duplicateSnapshot = {
-  version: 3,
-  pieces: [
-    { id: 'piece-1', type: 'straight', cell: { x: 2, y: 6 }, rotation: 0 },
-    { id: 'piece-2', type: 'corner', cell: { x: 2, y: 6 }, rotation: 90 },
-    { id: 'piece-3', type: 'straight', cell: { x: 2, y: 7 }, rotation: 0 },
   ],
   scenery: [],
 };
@@ -165,6 +153,25 @@ const worldPieceIds = (page: Page): Promise<string[]> =>
     return handle.pieces().map((piece) => piece.id);
   });
 
+/** The file payload the Save control would write, without touching the download. */
+const exportedJson = (page: Page): Promise<string> =>
+  page.evaluate(() => {
+    const handle = (
+      window as unknown as { __tinyTracksExport?: () => { name: string; json: string } }
+    ).__tinyTracksExport;
+    if (!handle) throw new Error('dev export handle missing');
+    return handle().json;
+  });
+
+/** Picks a file on the hidden input inside the (armed or report-only) tray. */
+const importFile = async (page: Page, payload: string): Promise<void> => {
+  await page.locator('.portable-import-input').setInputFiles({
+    name: 'world.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(payload, 'utf8'),
+  });
+};
+
 /** Holds the corner gate until it arms, then releases. */
 const holdParentGate = async (page: Page): Promise<void> => {
   const box = await page.locator('.parent-gate').boundingBox();
@@ -184,13 +191,13 @@ const tapOutside = async (page: Page): Promise<void> => {
   await page.mouse.click(viewport.width - 24, Math.round(viewport.height * 0.42));
 };
 
-test('a boot salvages the corrupt snapshot and keeps every valid piece @smoke', async ({
+test('a boot salvages the corrupt snapshot, keeps every valid piece and tells a grown-up @smoke', async ({
   page,
 }) => {
   // The first test in each worker pays the dev server's cold transform of the
   // whole app (~40 s with both form factors booting at once); later boots are
   // warm. Give that one-off cost room without slowing the rest.
-  test.setTimeout(120_000);
+  test.setTimeout(180_000); // the salvage and notice budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -202,13 +209,49 @@ test('a boot salvages the corrupt snapshot and keeps every valid piece @smoke', 
   await page.reload();
   await waitForReady(page);
 
-  // Only the three readable toys made it; the unknown type is skipped.
-  expect((await worldPieceIds(page)).sort()).toEqual(['piece-1', 'piece-2', 'piece-3']);
+  await test.step('only the three readable toys survive the salvage', async () => {
+    // The unknown type is skipped; the rest is kept in order.
+    expect((await worldPieceIds(page)).sort()).toEqual(['piece-1', 'piece-2', 'piece-3']);
+  });
+
+  await test.step('the gate reports the salvage with an exact singular count', async () => {
+    const tray = page.locator('.preset-tray');
+    const note = page.locator('.recovery-note');
+    await holdParentGate(page);
+    await expect(tray).toBeVisible();
+    await expect(note).toBeVisible();
+    // Exact singular: one broken toy was skipped in the seeded payload.
+    await expect(note.locator('.recovery-note-text')).toHaveText(
+      'We saved your meadow and skipped 1 broken toy.',
+    );
+  });
+
+  await test.step('the dismissal lasts the session, and the tray still arms', async () => {
+    const tray = page.locator('.preset-tray');
+    const note = page.locator('.recovery-note');
+
+    await page.locator('.recovery-dismiss').click();
+    await expect(note).toBeHidden();
+
+    // A tap outside disarms the gate; the note's dismissal outlives the tray.
+    await tapOutside(page);
+    await expect(tray).toBeHidden();
+    await expect(page.locator('.parent-gate')).toHaveAttribute('aria-label', HOLD_LABEL);
+
+    await holdParentGate(page);
+    await expect(tray).toBeVisible();
+    await expect(note).toBeHidden();
+
+    await tapOutside(page);
+  });
+
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('a boot restores the previous save when current is unreadable', async ({ page }) => {
-  test.setTimeout(60_000);
+test('a boot restores the last good save, and a refusal replaces the note it writes', async ({
+  page,
+}) => {
+  test.setTimeout(180_000); // the restore and refusal budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -219,121 +262,36 @@ test('a boot restores the previous save when current is unreadable', async ({ pa
   await page.reload();
   await waitForReady(page);
 
-  expect((await worldPieceIds(page)).sort()).toEqual(['piece-10', 'piece-11']);
+  await test.step('the backup world comes back whole', async () => {
+    expect((await worldPieceIds(page)).sort()).toEqual(['piece-10', 'piece-11']);
+  });
 
-  // The restored status is only visible to a grown-up through the gate's note.
-  await holdParentGate(page);
-  const noteText = page.locator('.recovery-note-text');
-  await expect(noteText).toHaveText('Your meadow was restored from the last good save.');
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
+  await test.step('the restored status is only visible to a grown-up', async () => {
+    await holdParentGate(page);
+    await expect(page.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
+  });
 
-test('a boot ignores an empty salvage and restores the previous save', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
+  await test.step('a refusal replaces the note, and re-arming restores it', async () => {
+    const before = await exportedJson(page);
 
-  await page.goto('/');
-  await waitForReady(page);
-  await waitForStoredCurrent(page);
-  await writeSlots(page, { current: emptySalvageSnapshot, previous: previousSnapshot });
+    // A refusal inside the open tray replaces the grown-up line: the two notes
+    // never stack, because a stale "restored" beside "nothing changed" misleads.
+    await importFile(page, "{'not a meadow'");
+    await expect(page.locator('.portable-note-text')).toHaveText(UNREADABLE_NOTE);
+    await expect(page.locator('.recovery-note')).toBeHidden();
 
-  await page.reload();
-  await waitForReady(page);
+    // The armed tray closes on a tap outside it; the mute toggle is on the rail.
+    await page.locator('.mute-toggle').click();
+    await expect(page.locator('.preset-tray')).toBeHidden();
 
-  // The salvage kept nothing, so the backup is the better world.
-  expect((await worldPieceIds(page)).sort()).toEqual(['piece-10', 'piece-11']);
+    // Re-arming recomputes the note from the session state, so it comes back.
+    await holdParentGate(page);
+    await expect(page.locator('.recovery-note')).toBeVisible();
+    await expect(page.locator('.recovery-note-text')).toHaveText(RESTORED_LINE);
 
-  await holdParentGate(page);
-  await expect(page.locator('.recovery-note-text')).toHaveText(
-    'Your meadow was restored from the last good save.',
-  );
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
+    // Refused before parsing: the restored meadow is byte-identical.
+    expect(await exportedJson(page)).toBe(before);
+  });
 
-test('a duplicate-only salvage still tells a grown-up', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-  await waitForStoredCurrent(page);
-  await clearSlots(page);
-  await writeSlots(page, { current: duplicateSnapshot });
-
-  await page.reload();
-  await waitForReady(page);
-
-  expect((await worldPieceIds(page)).sort()).toEqual(['piece-1', 'piece-3']);
-
-  await holdParentGate(page);
-  const note = page.locator('.recovery-note');
-  await expect(note).toBeVisible();
-  await expect(note.locator('.recovery-note-text')).toHaveText(
-    'We saved your meadow and skipped 1 broken toy.',
-  );
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('the salvage notice shows once and its dismissal lasts the session', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-  await waitForStoredCurrent(page);
-  await clearSlots(page);
-  await writeSlots(page, { current: salvagedSnapshot });
-
-  await page.reload();
-  await waitForReady(page);
-
-  const tray = page.locator('.preset-tray');
-  const note = page.locator('.recovery-note');
-
-  await holdParentGate(page);
-  await expect(tray).toBeVisible();
-  await expect(note).toBeVisible();
-  // Exact singular: one broken toy was skipped in the seeded payload.
-  await expect(note.locator('.recovery-note-text')).toHaveText(
-    'We saved your meadow and skipped 1 broken toy.',
-  );
-
-  await page.locator('.recovery-dismiss').click();
-  await expect(note).toBeHidden();
-
-  // A tap outside disarms the gate; the note's dismissal outlives the tray.
-  await tapOutside(page);
-  await expect(tray).toBeHidden();
-  await expect(page.locator('.parent-gate')).toHaveAttribute('aria-label', HOLD_LABEL);
-
-  await holdParentGate(page);
-  await expect(tray).toBeVisible();
-  await expect(note).toBeHidden();
-
-  await tapOutside(page);
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('both unreadable slots seed the starter meadow without a console error', async ({ page }) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForReady(page);
-
-  // Record what a genuinely fresh meadow looks like before the disaster.
-  await clearSlots(page);
-  await page.reload();
-  await waitForReady(page);
-  const starterPieces = await worldPieceIds(page);
-  expect(starterPieces.length).toBeGreaterThan(0);
-
-  // Corrupt both slots: the boot must land on the same starter, not a crash.
-  await waitForStoredCurrent(page);
-  await writeSlots(page, { current: 'garbage', previous: 'garbage' });
-  await page.reload();
-  await waitForReady(page);
-
-  expect((await worldPieceIds(page)).sort()).toEqual([...starterPieces].sort());
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });

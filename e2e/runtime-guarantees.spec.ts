@@ -171,59 +171,65 @@ function assertPolicy(headers: Record<string, string>, subject: string): void {
 
 // The first test pays the cold transform for the file; the rest follow the
 // house budget for real-time specs.
-test('the preview server sends the full policy on every asset class', async ({ page }) => {
-  test.setTimeout(120_000);
+test('the preview and dev servers send the full policy, relaxing only style-src in dev', async ({
+  page,
+}) => {
+  test.setTimeout(150_000); // the two header journeys' budgets, summed
 
-  const response = await page.goto(`${PREVIEW_ORIGIN}/`);
-  if (!response) throw new Error('the preview navigation returned no response');
-  assertPolicy(response.headers(), 'the document');
+  await test.step('the preview document carries the policy', async () => {
+    const response = await page.goto(`${PREVIEW_ORIGIN}/`);
+    if (!response) throw new Error('the preview navigation returned no response');
+    assertPolicy(response.headers(), 'the document');
+  });
 
-  const worker = await page.request.get(`${PREVIEW_ORIGIN}/sw.js`);
-  expect(worker.status(), '/sw.js').toBe(200);
-  const manifest = await worker.text();
+  await test.step('every asset class carries the same policy', async () => {
+    const worker = await page.request.get(`${PREVIEW_ORIGIN}/sw.js`);
+    expect(worker.status(), '/sw.js').toBe(200);
+    const manifest = await worker.text();
 
-  // Pull one of each class out of the precache manifest, so the test never
-  // hardcodes a content hash.
-  const hashedScript = firstPrecachedUrl(manifest, /url:"(assets\/index-[^"]+\.js)"/);
-  const glb = firstPrecachedUrl(manifest, /url:"([^"]+\.glb)"/);
-  const woff2 = firstPrecachedUrl(manifest, /url:"([^"]+\.woff2)"/);
+    // Pull one of each class out of the precache manifest, so the test never
+    // hardcodes a content hash.
+    const hashedScript = firstPrecachedUrl(manifest, /url:"(assets\/index-[^"]+\.js)"/);
+    const glb = firstPrecachedUrl(manifest, /url:"([^"]+\.glb)"/);
+    const woff2 = firstPrecachedUrl(manifest, /url:"([^"]+\.woff2)"/);
 
-  for (const assetUrl of [hashedScript, glb, woff2]) {
-    const asset = await page.request.get(`${PREVIEW_ORIGIN}/${assetUrl}`);
-    expect(asset.status(), assetUrl).toBe(200);
-    assertPolicy(asset.headers(), assetUrl);
-  }
+    for (const assetUrl of [hashedScript, glb, woff2]) {
+      const asset = await page.request.get(`${PREVIEW_ORIGIN}/${assetUrl}`);
+      expect(asset.status(), assetUrl).toBe(200);
+      assertPolicy(asset.headers(), assetUrl);
+    }
 
-  // The security include must not have clobbered the cache rules. `vite
-  // preview` (sirv in etag mode) answers `no-cache` for every static file; the
-  // hashed-immutable rule is nginx-only and lives in `nginx.conf`, guarded by
-  // `src/core/nginx-headers.test.ts` because preview cannot serve it.
-  const indexHtml = await page.request.get(`${PREVIEW_ORIGIN}/index.html`);
-  expect(indexHtml.headers()['cache-control'], '/index.html').toBe('no-cache');
-  expect(worker.headers()['cache-control'], '/sw.js').toBe('no-cache');
-  const script = await page.request.get(`${PREVIEW_ORIGIN}/${hashedScript}`);
-  expect(script.headers()['cache-control'], hashedScript).toBe('no-cache');
-});
+    // The security include must not have clobbered the cache rules. `vite
+    // preview` (sirv in etag mode) answers `no-cache` for every static file; the
+    // hashed-immutable rule is nginx-only and lives in `nginx.conf`, guarded by
+    // `src/core/nginx-headers.test.ts` because preview cannot serve it.
+    const indexHtml = await page.request.get(`${PREVIEW_ORIGIN}/index.html`);
+    expect(indexHtml.headers()['cache-control'], '/index.html').toBe('no-cache');
+    expect(worker.headers()['cache-control'], '/sw.js').toBe('no-cache');
+    const script = await page.request.get(`${PREVIEW_ORIGIN}/${hashedScript}`);
+    expect(script.headers()['cache-control'], hashedScript).toBe('no-cache');
+  });
 
-test('the dev server sends the same policy, with only style-src relaxed', async ({ page }) => {
-  const response = await page.request.get(`${DEV_ORIGIN}/`);
-  expect(response.status(), 'the dev server should answer').toBe(200);
+  await test.step('the dev server relaxes exactly one directive, style-src', async () => {
+    const response = await page.request.get(`${DEV_ORIGIN}/`);
+    expect(response.status(), 'the dev server should answer').toBe(200);
 
-  const headers = response.headers();
-  const devPolicy = securityHeadersFor({ dev: true })['Content-Security-Policy'] ?? '';
-  expect(headers['content-security-policy'], 'the dev document').toBe(devPolicy);
-  expect(headers['x-content-type-options'], 'the dev document').toBe('nosniff');
-  expect(headers['referrer-policy'], 'the dev document').toBe('no-referrer');
+    const headers = response.headers();
+    const devPolicy = securityHeadersFor({ dev: true })['Content-Security-Policy'] ?? '';
+    expect(headers['content-security-policy'], 'the dev document').toBe(devPolicy);
+    expect(headers['x-content-type-options'], 'the dev document').toBe('nosniff');
+    expect(headers['referrer-policy'], 'the dev document').toBe('no-referrer');
 
-  // The relaxation is allowed, so it must be exactly one directive wide: a
-  // second widened directive would mean the dev policy is quietly weaker than
-  // the one that ships.
-  const strict = CONTENT_SECURITY_POLICY.split('; ');
-  const relaxed = devPolicy.split('; ');
-  expect(relaxed).toHaveLength(strict.length);
-  const widened = relaxed.filter((directive, index) => directive !== strict[index]);
-  expect(widened, 'exactly one directive may differ in dev').toHaveLength(1);
-  expect(widened[0], 'only style-src may widen').toMatch(/^style-src /);
+    // The relaxation is allowed, so it must be exactly one directive wide: a
+    // second widened directive would mean the dev policy is quietly weaker than
+    // the one that ships.
+    const strict = CONTENT_SECURITY_POLICY.split('; ');
+    const relaxed = devPolicy.split('; ');
+    expect(relaxed).toHaveLength(strict.length);
+    const widened = relaxed.filter((directive, index) => directive !== strict[index]);
+    expect(widened, 'exactly one directive may differ in dev').toHaveLength(1);
+    expect(widened[0], 'only style-src may widen').toMatch(/^style-src /);
+  });
 });
 
 test('the meadow boots, places a toy and rides with the network off @smoke', async ({

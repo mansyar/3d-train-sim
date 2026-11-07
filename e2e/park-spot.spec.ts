@@ -9,6 +9,10 @@ import { clearMeadow, watchConsoleErrors } from './helpers';
  * the dry cell nearest the meadow heart — instead of world origin, which sits
  * in the river band. The wart was recorded in the starter-railway_20260903
  * track: "the parked spare train sits at world origin, which is river water".
+ *
+ * The chooser's arithmetic is proven by `src/core/park-spot.test.ts`; here the
+ * boot wiring, the ride adopting the spot, and every shipped starter are
+ * witnessed in a real scene.
  */
 
 interface Spot {
@@ -92,75 +96,53 @@ async function openGallery(page: Page): Promise<void> {
   await expect(tray).toBeVisible();
 }
 
-test('fresh boot parks the opener on dry rails of the largest loop', async ({ page }) => {
+test('fresh boot parks the opener on dry rails, and pressing play adopts it without a jump', async ({
+  page,
+}) => {
+  test.setTimeout(60_000); // the parking and adoption budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await waitForParked(page);
-  const spot = await readSpot(page, 'parkedSpot');
 
-  // First-run starter (cozy oval): the dry corner cell (3,7) is nearest the
-  // meadow heart on the loop, and the engine waits at its entry-edge
-  // midpoint — the spot rounds back to that cell.
-  expect(cellOf(spot)).toEqual({ x: 3, y: 7 });
+  await test.step('the opener rests on dry rails, not at world origin', async () => {
+    const spot = await readSpot(page, 'parkedSpot');
 
-  // The old bug parked at world origin — the middle of the river band.
-  expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(4);
+    // First-run starter (cozy oval): the dry corner cell (3,7) is nearest the
+    // meadow heart on the loop, and the engine waits at its entry-edge
+    // midpoint — the spot rounds back to that cell.
+    expect(cellOf(spot)).toEqual({ x: 3, y: 7 });
 
-  // Both wagons rest right behind the engine rather than at origin.
-  const wagons = await page.evaluate(() => {
-    const handle = (window as unknown as { __tinyTracksScene?: { wagonCount(): number } })
-      .__tinyTracksScene;
-    return handle?.wagonCount() ?? -1;
+    // The old bug parked at world origin — the middle of the river band.
+    expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(4);
+
+    // Both wagons rest right behind the engine rather than at origin.
+    const wagons = await page.evaluate(() => {
+      const handle = (window as unknown as { __tinyTracksScene?: { wagonCount(): number } })
+        .__tinyTracksScene;
+      return handle?.wagonCount() ?? -1;
+    });
+    expect(wagons).toBe(2);
   });
-  expect(wagons).toBe(2);
+
+  await test.step('pressing play continues from exactly that spot', async () => {
+    const before = await readSpot(page, 'parkedSpot');
+
+    await startRide(page);
+    const after = await readSpot(page, 'primarySpot');
+
+    // The ride reuses the spare from exactly its parked spot, so the first
+    // frame is continuous; the pre-fix ride began from origin, ~17 units away.
+    expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(1);
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
 
-test('pressing play adopts the parked opener without a jump', async ({ page }) => {
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await waitForParked(page);
-  const before = await readSpot(page, 'parkedSpot');
-
-  await startRide(page);
-  const after = await readSpot(page, 'primarySpot');
-
-  // The ride reuses the spare from exactly its parked spot, so the first
-  // frame is continuous; the pre-fix ride began from origin, ~17 units away.
-  expect(Math.hypot(after.x - before.x, after.z - before.z)).toBeLessThan(1);
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('an empty saved world parks the opener on dry land near the heart', async ({ page }) => {
-  const consoleErrors = watchConsoleErrors(page);
-
-  await page.goto('/');
-  await page.waitForFunction(() =>
-    Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
-  );
-  // Empty the meadow (the same store call the parent gate uses) so the
-  // autosave persists an empty world, then boot from it.
-  await clearMeadow(page);
-  await page.waitForTimeout(300);
-  await page.reload();
-  await waitForParked(page);
-
-  const spot = await readSpot(page, 'parkedSpot');
-
-  // No rails to rest on: the nearest dry cell to the meadow heart is (6,7),
-  // just west of the river band — the engine sits at its centre.
-  expect(cellOf(spot)).toEqual({ x: 6, y: 7 });
-  expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(4);
-
-  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
-
-test('every gallery starter parks the opener on its nearest dry rail cell', async ({ page }) => {
-  test.setTimeout(150_000);
+test('every gallery starter, and an empty meadow, parks the opener on its nearest dry cell', async ({
+  page,
+}) => {
+  test.setTimeout(180_000); // the starter tour and the empty-world budget, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
@@ -169,31 +151,49 @@ test('every gallery starter parks the opener on its nearest dry rail cell', asyn
   );
   await page.waitForTimeout(1500);
 
-  // The dry cell nearest the meadow heart on each starter's largest loop —
-  // the unit-locked chooser spots, confirmed here boot-to-boot.
-  const starters = [
-    { id: 'station-village', cell: { x: 4, y: 7 } },
-    { id: 'river-crossing', cell: { x: 6, y: 8 } },
-    { id: 'hilltop-junction', cell: { x: 4, y: 7 } },
-  ];
-  for (const starter of starters) {
-    // Swap through the parent gate, then reload so the opener is born from
-    // that starter (parking is boot-time only, per spec FR4).
-    await openGallery(page);
-    await page.locator(`.preset-pick[data-preset="${starter.id}"]`).click();
-    await page.waitForTimeout(2500);
+  await test.step('each starter parks on the dry rail cell nearest the heart', async () => {
+    // The dry cell nearest the meadow heart on each starter's largest loop —
+    // the unit-locked chooser spots, confirmed here boot-to-boot.
+    const starters = [
+      { id: 'station-village', cell: { x: 4, y: 7 } },
+      { id: 'river-crossing', cell: { x: 6, y: 8 } },
+      { id: 'hilltop-junction', cell: { x: 4, y: 7 } },
+    ];
+    for (const starter of starters) {
+      // Swap through the parent gate, then reload so the opener is born from
+      // that starter (parking is boot-time only, per spec FR4).
+      await openGallery(page);
+      await page.locator(`.preset-pick[data-preset="${starter.id}"]`).click();
+      await page.waitForTimeout(2500);
+      await page.reload();
+      await waitForParked(page);
+      // A reload drops the doomed WebGL context; its fetch fallout is known
+      // noise (starter-railway boot pattern) — clear it once boot settles.
+      consoleErrors.length = 0;
+
+      const spot = await readSpot(page, 'parkedSpot');
+      // The engine waits at a rail edge midpoint — half a cell from the centre
+      // of the dry piece cell nearest the heart; never at the river's origin.
+      expect(distanceToCell(spot, starter.cell)).toBeCloseTo(CELL_SIZE / 2, 1);
+      expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(2);
+    }
+  });
+
+  await test.step('an empty saved world parks on dry land near the heart', async () => {
+    // Empty the meadow (the same store call the parent gate uses) so the
+    // autosave persists an empty world, then boot from it.
+    await clearMeadow(page);
+    await page.waitForTimeout(300);
     await page.reload();
     await waitForParked(page);
-    // A reload drops the doomed WebGL context; its fetch fallout is known
-    // noise (starter-railway boot pattern) — clear it once boot settles.
-    consoleErrors.length = 0;
 
     const spot = await readSpot(page, 'parkedSpot');
-    // The engine waits at a rail edge midpoint — half a cell from the centre
-    // of the dry piece cell nearest the heart; never at the river's origin.
-    expect(distanceToCell(spot, starter.cell)).toBeCloseTo(CELL_SIZE / 2, 1);
-    expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(2);
-  }
+
+    // No rails to rest on: the nearest dry cell to the meadow heart is (6,7),
+    // just west of the river band — the engine sits at its centre.
+    expect(cellOf(spot)).toEqual({ x: 6, y: 7 });
+    expect(Math.hypot(spot.x, spot.z)).toBeGreaterThan(4);
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });

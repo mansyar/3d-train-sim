@@ -73,91 +73,91 @@ const storedPhase = (page: import('@playwright/test').Page) =>
       }),
   );
 
-test('the sun/moon button turns the day, and its icon previews the phase a tap brings', async ({
+test('the sun/moon button turns the day, previews the next phase, and survives a reload', async ({
   page,
 }) => {
-  test.setTimeout(60_000);
+  test.setTimeout(120_000); // the tap and persistence budgets, summed
   const consoleErrors = watchConsoleErrors(page);
 
   await page.goto('/');
   await ready(page);
 
   const dayToggle = page.locator('.day-toggle');
-  await expect(dayToggle).toBeVisible();
-  // Toddler-proof: the target clears the 64px minimum the guidelines ask for.
-  const box = await dayToggle.boundingBox();
-  expect(box?.width ?? 0).toBeGreaterThanOrEqual(64);
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
 
-  // The icon and the phase agree, right now, on the button's first showing.
-  await expect(dayToggle).toHaveText(
-    MOON_AHEAD.includes((await phase(page)) as string) ? '🌙' : '☀️',
-  );
+  await test.step('the button is toddler-sized and its icon agrees with the sky', async () => {
+    await expect(dayToggle).toBeVisible();
+    // Toddler-proof: the target clears the 64px minimum the guidelines ask for.
+    const box = await dayToggle.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(64);
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(64);
 
-  // Every tap turns the page, and the icon keeps previewing the next phase —
-  // whatever phase the drift had reached when the test started.
-  for (let turn = 0; turn < 4; turn++) {
-    const landed = await turnDay(page);
-    const icon = await dayToggle.textContent();
-    expect(icon, `icon after turning into ${landed}`).toBe(
-      MOON_AHEAD.includes(landed) ? '🌙' : '☀️',
+    // The icon and the phase agree, right now, on the button's first showing.
+    await expect(dayToggle).toHaveText(
+      MOON_AHEAD.includes((await phase(page)) as string) ? '🌙' : '☀️',
     );
-  }
+  });
 
+  await test.step('every tap turns the page and previews the phase it brings', async () => {
+    // Whatever phase the drift had reached when the test started.
+    for (let turn = 0; turn < 4; turn++) {
+      const landed = await turnDay(page);
+      const icon = await dayToggle.textContent();
+      expect(icon, `icon after turning into ${landed}`).toBe(
+        MOON_AHEAD.includes(landed) ? '🌙' : '☀️',
+      );
+    }
+  });
+
+  // The tap journey's own clean-console witness, kept where it was: before the
+  // reload below resets the log.
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
-});
 
-test('the chosen time of day survives a reload, and a legacy save still boots to morning', async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
-  const consoleErrors = watchConsoleErrors(page);
+  await test.step('the chosen time of day survives a reload', async () => {
+    // Park on night: the longest phase, so the drift cannot outrun the reload.
+    for (let turn = 0; turn < 5 && (await phase(page)) !== 'night'; turn++) {
+      await turnDay(page);
+    }
+    expect(await phase(page)).toBe('night');
+    expect(await storedPhase(page)).toBe('night');
 
-  await page.goto('/');
-  await ready(page);
+    await page.waitForTimeout(1000); // let the change-gated save land
+    consoleErrors.length = 0; // the reload's own boot is the next witness
 
-  // Park on night: the longest phase, so the drift cannot outrun the reload.
-  for (let turn = 0; turn < 5 && (await phase(page)) !== 'night'; turn++) {
-    await turnDay(page);
-  }
-  expect(await phase(page)).toBe('night');
-  expect(await storedPhase(page)).toBe('night');
+    await page.reload();
+    await ready(page);
+    expect(await phase(page), 'the child finds the night they left behind').toBe('night');
+    // Night previews the sun — dawn is what a tap brings.
+    await expect(page.locator('.day-toggle')).toHaveText('☀️');
+  });
 
-  await page.waitForTimeout(1000); // let the change-gated save land
-  consoleErrors.length = 0; // the reload's own boot is the next witness
-
-  await page.reload();
-  await ready(page);
-  expect(await phase(page), 'the child finds the night they left behind').toBe('night');
-  // Night previews the sun — dawn is what a tap brings.
-  await expect(page.locator('.day-toggle')).toHaveText('☀️');
-
-  // A save from before the sun/moon existed carries no phase at all: it must
-  // boot to mid-morning, with the world itself untouched.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('tiny-tracks', 1);
-        open.onerror = () => reject(new Error('storage open failed'));
-        open.onsuccess = () => {
-          const store = open.result.transaction('worlds', 'readwrite').objectStore('worlds');
-          const read = store.get('current');
-          read.onerror = () => reject(new Error('storage read failed'));
-          read.onsuccess = () => {
-            const snapshot = read.result as Record<string, unknown>;
-            delete snapshot.preferences;
-            store.put(snapshot, 'current');
-            store.transaction.oncomplete = () => resolve();
+  await test.step('a legacy save from before the button still boots to morning', async () => {
+    // A save from before the sun/moon existed carries no phase at all: it must
+    // boot to mid-morning, with the world itself untouched.
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve, reject) => {
+          const open = indexedDB.open('tiny-tracks', 1);
+          open.onerror = () => reject(new Error('storage open failed'));
+          open.onsuccess = () => {
+            const store = open.result.transaction('worlds', 'readwrite').objectStore('worlds');
+            const read = store.get('current');
+            read.onerror = () => reject(new Error('storage read failed'));
+            read.onsuccess = () => {
+              const snapshot = read.result as Record<string, unknown>;
+              delete snapshot.preferences;
+              store.put(snapshot, 'current');
+              store.transaction.oncomplete = () => resolve();
+            };
           };
-        };
-      }),
-  );
+        }),
+    );
 
-  await page.reload();
-  await ready(page);
-  expect(await phase(page), 'a legacy save falls back to mid-morning').toBe('morning');
-  // Morning previews the sun — noon, the middle of the day, is what a tap brings.
-  await expect(page.locator('.day-toggle')).toHaveText('☀️');
+    await page.reload();
+    await ready(page);
+    expect(await phase(page), 'a legacy save falls back to mid-morning').toBe('morning');
+    // Morning previews the sun — noon, the middle of the day, is what a tap brings.
+    await expect(page.locator('.day-toggle')).toHaveText('☀️');
+  });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
 });
