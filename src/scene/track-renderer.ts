@@ -1,21 +1,19 @@
-import type { Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera, Scene } from 'three';
+import type { Object3D, PerspectiveCamera, Scene } from 'three';
 import type { AudioController } from '../audio/audio-controller';
 import { createMusicBoxVoice } from '../audio/music-box-audio';
-import { advanceCrossing, type CrossingMotion, idleCrossing } from '../core/crossings';
-import { CELL_SIZE, cellToWorld, type PickedItem } from '../core/meadow-grid';
+import { cellToWorld, type PickedItem } from '../core/meadow-grid';
 import type { PieceType } from '../core/pieces';
 import { type SceneryKind, sceneryCategory, sceneryVoice } from '../core/scenery';
-import { isSwitchPiece, type SwitchPieceType } from '../core/switches';
 import type { Cell, Edge, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { type CritterMood, createCritterLife } from './critter-life';
 import { createDelightMotion, isDelightKind } from './delight-motion';
-import { GROUND_SIZE } from './ground';
 import { createMusicBoxScene, type MusicBoxScene } from './music-box';
 import { DELIGHT_CAPS, isPiece, type MeadowItem } from './track-catalog';
+import { startTrackCrossings } from './track-crossings';
 import { startTrackGhost } from './track-ghost';
 import { startTrackPicking } from './track-picking';
-import { advancedEdge, startTrackPlacement } from './track-placement';
+import { startTrackPlacement } from './track-placement';
 
 // The frozen projection export: `init-scene` and the e2e probes reach
 // `cellToScreen` through this module, so the wrapper stays exported here.
@@ -109,140 +107,6 @@ export function startTrackRenderer(
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /**
-   * The switch points flip to the road the train will take — the point
-   * blades (0 = through, ±0.21 rad toward the diverge) and the signal
-   * lever (0 = arm north, ±90° swung to the diverge side) move together
-   * in one tween. Angles are about each node's local Y — the Blender +z
-   * angles from the recipes arrive as glTF +y via export_yup (verified:
-   * -0.21 blades and -90° lever read as the east diverge in the render
-   * checks). Stem merges (world exit = stem) keep the last road — only
-   * stem entries alternate, so only model north/diverge exits move the
-   * points. Pose tables: two roads per Y switch, three for the three-way.
-   * The double slip has no stem: its blade groups live on the ENTRY edge
-   * (the entry's blades set for the road being taken — 0 = straight
-   * through, ±0.21 toward the diagonals per the recipe's pose contract,
-   * bar tops leaning toward the chosen road's tangent), while the lever
-   * follows the exit. Event-driven (ride-motion onSwitchRoad): a short
-   * ease-out tween, instant snap under prefers-reduced-motion, no
-   * per-frame cost outside the tween, and a missing `switch_lever` fails
-   * soft (the blades still animate as before).
-   */
-  const LEVER_FORWARD_Y = 0; // arm north, along the through road
-  const LEVER_EAST_Y = -Math.PI / 2;
-  const LEVER_WEST_Y = Math.PI / 2;
-  const LEVER_BACK_Y = Math.PI; // arm south — the slip's fourth road
-  /** Model-frame road edge -> point blades + lever angles per piece type. */
-  const SWITCH_POSES: Record<
-    SwitchPieceType,
-    Partial<Record<Edge, { blade: number; lever: number }>>
-  > = {
-    switch: {
-      north: { blade: 0, lever: LEVER_FORWARD_Y },
-      east: { blade: -0.21, lever: LEVER_EAST_Y },
-    },
-    'switch-mirror': {
-      north: { blade: 0, lever: LEVER_FORWARD_Y },
-      west: { blade: 0.21, lever: LEVER_WEST_Y },
-    },
-    'switch-3way': {
-      north: { blade: 0, lever: LEVER_FORWARD_Y },
-      east: { blade: -0.21, lever: LEVER_EAST_Y },
-      west: { blade: 0.21, lever: LEVER_WEST_Y },
-    },
-    // The double slip is entry-aware: poses come from SLIP_BLADES +
-    // SLIP_LEVERS below, keyed by the entry the engine arrived by.
-    'switch-slip': {},
-  };
-  /**
-   * Slip blades, model frame: per ENTRY edge, the blade angle for each
-   * road the engine may take (0 = straight through; ±0.21 toward the
-   * diagonals — the 3-way convention rotated into each group's frame per
-   * the recipe's pose contract). The south group keeps the legacy
-   * `switch_blades` node name; its siblings are `switch_blades_<edge>`.
-   */
-  const SLIP_BLADES: Record<Edge, Partial<Record<Edge, number>>> = {
-    south: { north: 0, east: -0.21, west: 0.21 },
-    north: { south: 0, west: -0.21, east: 0.21 },
-    east: { west: 0, north: -0.21, south: 0.21 },
-    west: { east: 0, south: -0.21, north: 0.21 },
-  };
-  /** Slip lever, model frame: the arm points along the chosen exit. */
-  const SLIP_LEVERS: Record<Edge, number> = {
-    north: LEVER_FORWARD_Y,
-    east: LEVER_EAST_Y,
-    south: LEVER_BACK_Y,
-    west: LEVER_WEST_Y,
-  };
-  const BLADE_TWEEN_MS = 180;
-  const bladeTweens = new Map<
-    string,
-    { targets: { node: Object3D; from: number; to: number }[]; start: number }
-  >();
-  let bladeRaf: number | null = null;
-
-  const runBladeTweens = (now: number): void => {
-    for (const [id, tween] of [...bladeTweens]) {
-      const t = (now - tween.start) / BLADE_TWEEN_MS;
-      if (t >= 1) {
-        for (const target of tween.targets) target.node.rotation.y = target.to;
-        bladeTweens.delete(id);
-      } else {
-        const eased = 1 - (1 - t) * (1 - t) * (1 - t);
-        for (const target of tween.targets) {
-          target.node.rotation.y = target.from + (target.to - target.from) * eased;
-        }
-      }
-    }
-    bladeRaf = bladeTweens.size > 0 ? requestAnimationFrame(runBladeTweens) : null;
-  };
-
-  function setSwitchRoad(pieceId: string, exit: Edge, entry?: Edge): void {
-    const item = placement.tracked.get(pieceId);
-    if (!item || !isPiece(item) || !isSwitchPiece(item.type)) return;
-    const model = placement.rendered.get(pieceId);
-    if (!model) return;
-    // World exit/entry -> model frame (yaw 0): model north = through,
-    // model east/west = the diverge sides per the pose table. Invert the
-    // yaw advance applied at mount.
-    const steps = item.rotation / 90;
-    const modelExit = advancedEdge(exit, (4 - steps) % 4);
-    let bladeNode: Object3D;
-    let bladeAngle: number;
-    let leverAngle: number;
-    if (item.type === 'switch-slip') {
-      if (!entry) return; // the slip's poses are entry-aware by contract
-      const modelEntry = advancedEdge(entry, (4 - steps) % 4);
-      const group = modelEntry === 'south' ? 'switch_blades' : `switch_blades_${modelEntry}`;
-      const groupNode = model.getObjectByName(group);
-      const angle = SLIP_BLADES[modelEntry]?.[modelExit];
-      if (!groupNode || angle === undefined) return;
-      bladeNode = groupNode;
-      bladeAngle = angle;
-      leverAngle = SLIP_LEVERS[modelExit];
-    } else {
-      const blades = model.getObjectByName('switch_blades');
-      if (!blades) return;
-      const pose = SWITCH_POSES[item.type][modelExit];
-      if (!pose) return; // a branch→stem merge keeps the last road
-      bladeNode = blades;
-      bladeAngle = pose.blade;
-      leverAngle = pose.lever;
-    }
-    const targets = [{ node: bladeNode, from: bladeNode.rotation.y, to: bladeAngle }];
-    const lever = model.getObjectByName('switch_lever');
-    if (lever) targets.push({ node: lever, from: lever.rotation.y, to: leverAngle });
-    const settled = targets.every((t) => Math.abs(t.from - t.to) < 1e-4);
-    if (settled && !bladeTweens.has(pieceId)) return;
-    if (reducedMotion || disposed) {
-      for (const target of targets) target.node.rotation.y = target.to;
-      bladeTweens.delete(pieceId);
-      return;
-    }
-    bladeTweens.set(pieceId, { targets, start: performance.now() });
-    if (bladeRaf === null) bladeRaf = requestAnimationFrame(runBladeTweens);
-  }
-
   /** Keeps the critter animator's roster matched to the placed critters. */
   function syncCritterAnimations(wanted: ReadonlyMap<string, MeadowItem>): void {
     const next = new Set<string>();
@@ -267,8 +131,10 @@ export function startTrackRenderer(
   }
 
   // Placement owns the store subscription and the render maps; everything
-  // below reads the live maps through this handle. The hooks are the
-  // still-resident reactions (crossings, delight, critters, the music box).
+  // below reads the live maps through this handle. The hooks are the resident
+  // reactions (delight, critters, the music box) plus the crossing delegations,
+  // which only run after an asset has loaded — the crossings module below is
+  // constructed by then.
   const placement = startTrackPlacement(scene, world, reducedMotion, {
     onPieceTemplate: (type, model) => {
       if (type === 'tunnel') {
@@ -279,13 +145,7 @@ export function startTrackRenderer(
         const cap = model.getObjectByName('tunnel_snow_cap');
         if (cap) cap.visible = tunnelSnow;
       }
-      if (type === 'crossing-gate') {
-        // The snow cap is a winter-only tell — hidden unless snow already
-        // settled while the asset was in flight (setCrossingSnow is
-        // change-driven, so the template must honor the live state).
-        const cap = model.getObjectByName('crossing_snow_cap');
-        if (cap) cap.visible = crossingSnow;
-      }
+      crossings.pieceTemplate(type, model);
     },
     onSceneryTemplate: (kind, model) => {
       if (isDelightKind(kind) || kind === 'music-box') {
@@ -297,21 +157,16 @@ export function startTrackRenderer(
       }
     },
     onModelReplaced: (id) => {
-      bladeTweens.delete(id);
-      crossingParts.delete(id);
-      crossingMotions.delete(id);
+      crossings.modelReplaced(id);
       delight.detach(id);
       musicBox.detach(id);
     },
     onModelRemoved: (id) => {
-      crossingParts.delete(id);
-      crossingMotions.delete(id);
+      crossings.modelRemoved(id);
       delight.detach(id);
       musicBox.detach(id);
     },
-    onModelAdded: (id, model, kind) => {
-      if (kind === 'crossing-gate') trackCrossing(id, model);
-    },
+    onModelAdded: (id, model, kind) => crossings.modelAdded(id, model, kind),
     onItemAttached: (id, model, item) => {
       if (!isPiece(item) && isDelightKind(item.kind)) delight.attach(id, item.kind, model);
       if (!isPiece(item) && item.kind === 'music-box') {
@@ -331,160 +186,7 @@ export function startTrackRenderer(
   const picking = startTrackPicking(camera, canvas, placement);
 
   let tunnelSnow = false;
-  // ── Railway crossing gates ──────────────────────────────────────────────
-  // The Phase 1 core machine (advanceCrossing) owns each gate's phase; this
-  // layer only poses the arm pivots, the lantern glow, and the bell ask.
-  // Cost is a few transforms + emissive writes per frame while a gate is
-  // awake — no allocations, no rAF of its own.
-
-  const GATE_OPEN_Y = Math.PI / 2; // The authored open pose arrives as +y via export_yup.
-  const CROSSING_BLINK_HZ = 2; // Classic alternating warn blink.
-  const CROSSING_ACTIVE_GLOW = 3;
-  const CROSSING_IDLE_BLINK_HZ = 0.8; // A slow night-light waltz.
-  const CROSSING_IDLE_GLOW = 0.9;
-  const CROSSING_NIGHT_THRESHOLD = 0.35;
-  const CROSSING_SQUASH = 0.3; // Arms flatten mid-swing, spring back at rest.
-  const CROSSING_STRETCH = 0.14;
-  const easeOut = (t: number): number => 1 - (1 - t) * (1 - t) * (1 - t);
-
-  let crossingSnow = false;
-  let crossingBell = false;
-  /** Runtime gate state per crossing — derived from the trains, never saved. */
-  const crossingMotions = new Map<string, CrossingMotion>();
-  /** Cached pose targets + per-clone lamp materials, so each gate's lantern
-   *  blinks alone (placed clones share template materials otherwise). */
-  const crossingParts = new Map<
-    string,
-    {
-      east: Object3D | null;
-      west: Object3D | null;
-      lampA: MeshStandardMaterial | null;
-      lampB: MeshStandardMaterial | null;
-    }
-  >();
-
-  /** Cache a crossing clone's arm pivots and give it its own lamp materials. */
-  function trackCrossing(id: string, model: Object3D): void {
-    const east = model.getObjectByName('crossing_gate_east') ?? null;
-    const west = model.getObjectByName('crossing_gate_west') ?? null;
-    let lampA: MeshStandardMaterial | null = null;
-    let lampB: MeshStandardMaterial | null = null;
-    model.traverse((node) => {
-      const mesh = node as Mesh;
-      if (!mesh.isMesh) return;
-      const slots = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      for (let i = 0; i < slots.length; i++) {
-        const material = slots[i] as MeshStandardMaterial;
-        if (material.name !== 'crossing_lamp_0' && material.name !== 'crossing_lamp_1') continue;
-        const glow = material.clone();
-        glow.emissive.setRGB(0.9, 0.08, 0.05); // Red warn light, dark until told.
-        glow.emissiveIntensity = 0;
-        if (material.name === 'crossing_lamp_0') lampA = glow;
-        else lampB = glow;
-        if (Array.isArray(mesh.material)) mesh.material[i] = glow;
-        else mesh.material = glow;
-      }
-    });
-    crossingParts.set(id, { east, west, lampA, lampB });
-  }
-
-  /** Scratch cell-space train spots — filled per frame, never reallocated. */
-  const trainPool: Array<{ x: number; y: number }> = [];
-  const trainView: Array<{ x: number; y: number }> = [];
-
-  function updateCrossings(
-    dt: number,
-    trains: ReadonlyArray<{ x: number; z: number }>,
-    night: number,
-  ): void {
-    if (disposed) return;
-    // Trains ride in world units; the core reasons in cell space.
-    trainView.length = trains.length;
-    for (let i = 0; i < trains.length; i++) {
-      const spot = trains[i];
-      if (!spot) continue;
-      let cell = trainPool[i];
-      if (!cell) {
-        cell = { x: 0, y: 0 };
-        trainPool[i] = cell;
-      }
-      cell.x = (spot.x + GROUND_SIZE / 2) / CELL_SIZE - 0.5;
-      cell.y = (spot.z + GROUND_SIZE / 2) / CELL_SIZE - 0.5;
-      trainView[i] = cell;
-    }
-    const seconds = performance.now() / 1000;
-    const beat = Math.floor(seconds * CROSSING_BLINK_HZ * 2) % 2 === 0;
-    const breathe = 0.5 + 0.5 * Math.sin(seconds * Math.PI * 2 * CROSSING_IDLE_BLINK_HZ);
-    const idleGlow = night > CROSSING_NIGHT_THRESHOLD ? CROSSING_IDLE_GLOW * breathe * night : 0;
-    let anyAwake = false;
-    for (const [id, item] of placement.tracked) {
-      if (!isPiece(item) || item.type !== 'crossing-gate') continue;
-      const model = placement.rendered.get(id);
-      const parts = crossingParts.get(id);
-      if (!model || !parts) continue;
-      let motion = crossingMotions.get(id);
-      if (!motion) {
-        motion = idleCrossing();
-        crossingMotions.set(id, motion);
-      }
-      advanceCrossing(motion, item.cell, trainView, dt, motion);
-      if (motion.phase !== 'idle') anyAwake = true;
-      // Arm swing: 1 = up, 0 = down. Closing descends 1 → 0, lifting rises
-      // 0 → 1, both with the blades' gentle ease-out. The squash-and-stretch
-      // bump peaks mid-swing. Reduced motion snaps the pose, no wobble.
-      let open: number;
-      if (motion.phase === 'closing') open = 1 - easeOut(motion.progress);
-      else if (motion.phase === 'lifting') open = easeOut(motion.progress);
-      else open = motion.phase === 'active' ? 0 : 1;
-      let bump = Math.sin(Math.PI * open);
-      if (reducedMotion) {
-        open = motion.phase === 'active' || motion.phase === 'closing' ? 0 : 1;
-        bump = 0;
-      }
-      const stretch = 1 + CROSSING_STRETCH * bump;
-      const squash = 1 - CROSSING_SQUASH * bump;
-      if (parts.east) {
-        parts.east.rotation.y = -GATE_OPEN_Y * open;
-        parts.east.scale.set(stretch, squash, stretch);
-      }
-      if (parts.west) {
-        parts.west.rotation.y = GATE_OPEN_Y * open;
-        parts.west.scale.set(stretch, squash, stretch);
-      }
-      // Lantern: hard alternating blink while awake (any time of day); a
-      // soft paired night-light while it rests after dusk. Reduced motion
-      // swaps the 2 Hz strobe for a steady warn glow on both lamps.
-      const awake = motion.phase !== 'idle';
-      const blinkA = beat ? CROSSING_ACTIVE_GLOW : 0;
-      const blinkB = beat ? 0 : CROSSING_ACTIVE_GLOW;
-      const glowA = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkA) : idleGlow;
-      const glowB = awake ? (reducedMotion ? CROSSING_ACTIVE_GLOW : blinkB) : idleGlow;
-      if (parts.lampA) parts.lampA.emissiveIntensity = glowA;
-      if (parts.lampB) parts.lampB.emissiveIntensity = glowB;
-    }
-    // The bell rings while any gate is awake and eases off when the last
-    // one rests — audio is change-gated, so only edges nudge it.
-    if (anyAwake !== crossingBell) {
-      crossingBell = anyAwake;
-      audio.setCrossingBell(anyAwake);
-    }
-  }
-
-  /** Winter tell: the crossing wears a snow cap like the tunnel domes. */
-  function setCrossingSnow(visible: boolean): void {
-    if (visible === crossingSnow) return;
-    crossingSnow = visible;
-    const setCap = (model: Object3D): void => {
-      const cap = model.getObjectByName('crossing_snow_cap');
-      if (cap) cap.visible = visible;
-    };
-    const template = placement.templates.get('crossing-gate');
-    if (template) setCap(template);
-    for (const [id, model] of placement.rendered) {
-      const item = placement.tracked.get(id);
-      if (item && isPiece(item) && item.type === 'crossing-gate') setCap(model);
-    }
-  }
+  const crossings = startTrackCrossings(placement, audio, reducedMotion);
 
   function setTunnelSnow(visible: boolean): void {
     if (visible === tunnelSnow) return;
@@ -542,9 +244,9 @@ export function startTrackRenderer(
     setGridVisible: ghost.setGridVisible,
     setTunnelSnow,
     setHillSnow: (visible): void => placement.setHillSnow(visible),
-    setSwitchRoad,
-    updateCrossings,
-    setCrossingSnow,
+    setSwitchRoad: crossings.setSwitchRoad,
+    updateCrossings: crossings.updateCrossings,
+    setCrossingSnow: crossings.setCrossingSnow,
     updateDelight: (dt: number): void => {
       if (disposed) return;
       delight.update(dt, reducedMotion);
@@ -563,31 +265,15 @@ export function startTrackRenderer(
     },
     musicBoxProbe: () => musicBox.probe(),
     // Dev/e2e witnesses: live crossing phases and the bell edge state.
-    crossingPhases: () =>
-      [...placement.tracked.values()]
-        .filter((item) => isPiece(item) && item.type === 'crossing-gate')
-        .map((item) => crossingMotions.get(item.id)?.phase ?? 'idle'),
-    bellRinging: () => crossingBell,
-    // Dev/e2e witness: the rendered switch's live pose — the blades always
-    // exist on an authored switch; a lever-less GLB fails soft to null.
-    // The slip's per-entry groups: pass the entry to read that group.
-    switchPose: (pieceId: string, entry?: Edge) => {
-      const model = placement.rendered.get(pieceId);
-      const group = entry && entry !== 'south' ? `switch_blades_${entry}` : 'switch_blades';
-      const blades = model?.getObjectByName(group);
-      if (!model || !blades) return null;
-      const lever = model.getObjectByName('switch_lever');
-      return { blade: blades.rotation.y, lever: lever ? lever.rotation.y : null };
-    },
+    crossingPhases: crossings.crossingPhases,
+    bellRinging: crossings.bellRinging,
+    // Dev/e2e witness: the rendered switch's live pose.
+    switchPose: crossings.switchPose,
     dispose(): void {
       disposed = true;
       placement.dispose();
       ghost.endGhost();
-      if (bladeRaf !== null) cancelAnimationFrame(bladeRaf);
-      bladeRaf = null;
-      bladeTweens.clear();
-      crossingMotions.clear();
-      crossingParts.clear();
+      crossings.dispose();
       critterLife.dispose();
       animatedCritters.clear();
       delight.dispose();
