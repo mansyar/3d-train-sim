@@ -15,7 +15,7 @@
   `e2e/world-portability.spec.ts`, `e2e/save-recovery.spec.ts`, `e2e/runtime-guarantees.spec.ts`,
   `e2e/prod.spec.ts`, `e2e/phone-shell.spec.ts`, `e2e/ride-toybox-flow.spec.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test --list` and `pnpm e2e`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Declare the tag vocabulary and mark the smoke set** — covers: FR-1, FR-2
   - [ ] P1.T1.1: Add `@smoke` to the eleven chosen tests, spread across the five files that own them
