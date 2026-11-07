@@ -92,7 +92,7 @@ same facade dispose. None of these change behaviour, and all are recorded in the
 - **Covers:** FR-5, AC-5
 - **Touches:** `src/scene/track-ghost.ts`, `src/scene/track-renderer.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/undo.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Move the grid lines** — covers: FR-5
   - [ ] P3.T1.1: Move `gridLines`, its material and geometries, and `setGridVisible`; keep the
