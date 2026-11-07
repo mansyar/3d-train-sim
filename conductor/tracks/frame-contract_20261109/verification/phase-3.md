@@ -27,7 +27,7 @@ denied by its permissions, so the primary wrote it directly.
 
 | ID | Evidence |
 |---|---|
-| FR-11 / AC-6 | The two `conductor/tech-stack.md` edits above; both name the module, the order, the fail-fast rule and the proof. |
+| FR-11 / AC-7 | The two `conductor/tech-stack.md` edits above; both name the module, the order, the fail-fast rule and the proof. |
 | FR-12 / NFR-4 | Diff since base touches no `src/core` file, adds no dependency and does not change the lockfile. Gzip delta is **+546 B**, inside the ≤1 KB budget. |
 | NFR-5 | Precache entries unchanged at 178; unit suite grew only by this track's own tests (883 → 892). |
 

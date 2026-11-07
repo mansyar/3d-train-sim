@@ -47,9 +47,11 @@ export const FRAME_SYSTEM_ORDER = [
 export type FrameSystemName = (typeof FRAME_SYSTEM_ORDER)[number];
 
 /**
- * The values the orchestrator computes once per frame and every system reads.
- * One object, mutated in place — a system sees the same inputs its neighbours
- * saw, never a per-system copy.
+ * The values every system reads for one frame. One object, mutated in place —
+ * a system sees the same inputs its neighbours saw, never a per-system copy.
+ * Each value is published by the system that owns it (`fleet` owns `starSpot`,
+ * `day-ambience` owns `night`/`rain`/`snow`), so every consumer later in the
+ * same `run()` reads this frame, not last frame's.
  */
 export interface FrameInputs {
   /** The primary (largest) riding train's spot, or null while nothing rides. */
@@ -114,11 +116,14 @@ function assertWiredOrder(systems: readonly FrameSystem[]): void {
       );
     }
   }
-  // Equal length plus every name present still leaves room for a duplicate
-  // past the documented end; the positional check above caught mid-list ones.
+  // Equal length plus every name present still leaves room for a duplicate of a
+  // documented name appended past the documented end; the positional check above
+  // caught mid-list duplicates.
   if (systems.length > FRAME_SYSTEM_ORDER.length) {
     const extra = systems[FRAME_SYSTEM_ORDER.length];
-    throw new Error(`frame contract: unexpected system "${extra?.name ?? 'unknown'}"`);
+    throw new Error(
+      `frame contract: expected ${FRAME_SYSTEM_ORDER.length} systems, got ${systems.length} — "${extra?.name ?? 'unknown'}" repeats a documented slot`,
+    );
   }
 }
 

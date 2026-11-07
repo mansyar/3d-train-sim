@@ -71,6 +71,18 @@ describe('createFrameRunner — construction', () => {
     expect(() => createFrameRunner([...wiredInOrder(), air])).toThrow('unexpected system "air"');
   });
 
+  it('throws when a documented name is appended a second time', () => {
+    // Every name is present and in order, so only the length reveals the
+    // duplicate — the one way past the positional check.
+    const systems = wiredInOrder();
+    const first = systems[0];
+    if (!first) throw new Error('test wiring is short');
+
+    expect(() => createFrameRunner([...systems, first])).toThrow(
+      'expected 12 systems, got 13 — "day-ambience" repeats a documented slot',
+    );
+  });
+
   it('throws on a swapped pair, naming the misplaced system and the index', () => {
     const systems = wiredInOrder();
     const crossings = systems[5];
@@ -122,9 +134,11 @@ describe('createFrameRunner — running', () => {
   });
 
   it('lets an earlier system publish values a later one reads', () => {
-    // This is how `day-ambience` hands the frame's night factor and weather to
-    // critters, the duck and the barge: the producer writes, the consumers read
-    // later in the same run, so nobody sees last frame's mood.
+    // The convention the wiring relies on: a producer writes a field and a
+    // consumer later in the same run reads it, so nobody sees last frame's
+    // value. This proves the runner permits that flow (shared object, ordered
+    // calls); that `init-scene.ts` publishes from the right slot is a wiring
+    // property, covered by the smoke suite and recorded as residual risk.
     const seen: number[] = [];
     const systems = FRAME_SYSTEM_ORDER.map((name, index) => ({
       name,

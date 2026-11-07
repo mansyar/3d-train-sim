@@ -324,8 +324,15 @@ export function initScene(
     },
     {
       name: 'fleet',
-      update(_inputs, dt) {
+      update(inputs, dt) {
         fleet.update(dt);
+        // Publish the spot here, after the move: critters, the duck and the
+        // portal glow read the primary train's position as of this frame, not
+        // last frame's. One object per frame is the deliberate exception to
+        // "the frame path allocates nothing" — systems need a snapshot, and a
+        // reused mutable spot would alias across them.
+        const star = fleet.primary();
+        inputs.starSpot = star ? { x: star.model.position.x, z: star.model.position.z } : null;
       },
     },
     {
@@ -423,13 +430,9 @@ export function initScene(
     context,
     spinTarget: () => spinTarget,
     onFrame: (dt) => {
-      // Critters, the duck, and the portal glow all read this one spot. Night
-      // and weather are filled by the `day-ambience` system, after it paints.
-      // The spot object is the one allocation left in the frame path,
-      // deliberately unchanged: systems need a snapshot, and a reused mutable
-      // spot would alias across them.
-      const star = fleet.primary();
-      frameInputs.starSpot = star ? { x: star.model.position.x, z: star.model.position.z } : null;
+      // `night`/weather are published by `day-ambience` after it paints, and
+      // `starSpot` by `fleet` after it moves, so every later system reads this
+      // frame's values. The orchestrator only owns the object.
       frameRunner.run(frameInputs, dt);
     },
     perfMonitor,

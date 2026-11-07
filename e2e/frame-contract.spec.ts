@@ -1,5 +1,4 @@
 import { expect, type Page, test } from '@playwright/test';
-import { FRAME_SYSTEM_ORDER } from '../src/scene/frame-contract';
 import { watchConsoleErrors } from './helpers';
 
 /**
@@ -9,6 +8,11 @@ import { watchConsoleErrors } from './helpers';
  * probe on `__tinyTracksScene`) reports exactly the documented names in the
  * documented order. Then the cadence: over a window of animation frames, every
  * system's tick counter advances by exactly the number of frames observed.
+ *
+ * The order is compared against a list written out here, not imported: the runner
+ * already throws on a mismatch between the tuple and the wiring, so a test that
+ * imported the tuple could only ever prove the app booted. Spelled out, this fails
+ * if someone reorders both the tuple and the wiring together and only that.
  *
  * The cadence is measured against `requestAnimationFrame` callbacks in the same
  * page, never against wall-clock time: the lifecycle suspends the loop while the
@@ -23,6 +27,22 @@ type SceneProbe = {
   /** The dev/e2e witness: the wired order with per-system tick counts. */
   frameSystems: () => FrameSystemSnapshot;
 };
+
+/** The contract as documented in `conductor/tech-stack.md`, spelled out on purpose. */
+const DOCUMENTED_ORDER = [
+  'day-ambience',
+  'fleet',
+  'chug',
+  'confetti',
+  'critters',
+  'crossings',
+  'delight',
+  'music-box',
+  'duck',
+  'barge',
+  'portal-glow',
+  'film-camera',
+] as const;
 
 /** Frames to observe; a frame count, not a duration, so a slow machine cannot fail it. */
 const FRAMES_TO_SAMPLE = 30;
@@ -49,7 +69,7 @@ test('the loop ticks the documented systems in order and exactly once per frame'
       return scene.frameSystems().map((system) => system.name);
     });
 
-    expect(liveOrder, 'live frame order').toEqual([...FRAME_SYSTEM_ORDER]);
+    expect(liveOrder, 'live frame order').toEqual([...DOCUMENTED_ORDER]);
     expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
   });
 
@@ -89,18 +109,18 @@ test('the loop ticks the documented systems in order and exactly once per frame'
     expect(
       sample.before.map((system) => system.name),
       'order before sampling',
-    ).toEqual([...FRAME_SYSTEM_ORDER]);
+    ).toEqual([...DOCUMENTED_ORDER]);
     expect(
       sample.after.map((system) => system.name),
       'order after sampling',
-    ).toEqual([...FRAME_SYSTEM_ORDER]);
+    ).toEqual([...DOCUMENTED_ORDER]);
 
     const deltas = sample.after.map((system, index) => ({
       name: system.name,
       delta: system.ticks - (sample.before[index]?.ticks ?? 0),
     }));
     expect(deltas, `tick deltas over ${sample.frames} frames`).toEqual(
-      FRAME_SYSTEM_ORDER.map((name) => ({ name, delta: sample.frames })),
+      DOCUMENTED_ORDER.map((name) => ({ name, delta: sample.frames })),
     );
 
     expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);

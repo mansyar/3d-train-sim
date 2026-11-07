@@ -97,11 +97,11 @@ allocation-free — one preallocated `FrameInputs`, fixed-size integer counters,
 
 ## Notes
 
-- **Input sampling order.** Per the brief, `onFrame` fills `FrameInputs` before the runner starts,
-  so `night`/`weather` are read just before `day-ambience` ticks/paints this frame. Previously
-  they were read after the tick, so they now lag the ambience clocks by one frame. Both clocks
-  move over minutes (`nightFactorAt`/weather blend), so the visible result is unchanged; recording
-  it because it is the one place the new shape is not byte-for-byte the old call order.
+- **Input sampling order (superseded).** The subagent's first wiring filled `FrameInputs` before the
+  runner started, which made `night`/`weather` lag the ambience clocks by one frame. The primary
+  closed that in the same phase: `day-ambience` now publishes `night`/`rain`/`snow` immediately
+  after `tick()`/`paint(dt)`, so consumers read this frame. The note is kept as the record of what
+  was wrong and why the publish-from-the-owner pattern exists (see the rework below).
 - Every rationale comment from the old `onFrame` body survives, moved onto the system it
   describes (chug tempo, critter mood, crossing gates, delight, music boxes, duck, barge, portal
   glow). The "in this exact order" line now points at the contract module.
@@ -138,11 +138,12 @@ Run on HEAD after the phase report, tree clean apart from the changes below.
   `night`/`rain`/`snow` before `frameRunner.run`, so critters, the duck, the barge and
   the portal glow read the *previous* frame's mood — before this phase they read the
   value the paint had just produced. The `day-ambience` system now publishes
-  `inputs.night/rain/snow` immediately after `tick()`/`paint(dt)`, so the old semantics
-  hold exactly and no system reads a stale frame. The subagent flagged the lag honestly;
-  the fix is one block in the system that owns those values, and
-  `frame-contract.test.ts` gained a test ("lets an earlier system publish values a later
-  one reads") so the publish-then-read pattern is proven rather than assumed.
+  `inputs.night/rain/snow` immediately after `tick()`/`paint(dt)`, so mood values are
+  once again this frame's. The subagent flagged the lag honestly; the fix is one block in
+  the system that owns those values, and `frame-contract.test.ts` gained a test ("lets an
+  earlier system publish values a later one reads") for the publish-then-read *pattern* —
+  the wiring itself is what review round 1 caught for `starSpot`, and the same owner
+  pattern now covers it in `fleet`.
 - **Accepted deviation:** `FrameInputs.rain`/`.snow` are `0..1` intensities, not
   booleans (the brief guessed booleans). Weather eases between states and those values
   flow into `CritterMood`/`DuckMood`, so coercing them would have changed behaviour.

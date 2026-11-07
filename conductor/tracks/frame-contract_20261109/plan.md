@@ -81,9 +81,31 @@ this phase's only file is `conductor/tech-stack.md`. The order is twelve names, 
 of the spec listed — corrected before implementation and noted in the spec's edge cases. Gzip delta measured
 like-for-like against a detached worktree build of the base commit: **+546 B**.
 
-<!--
-The primary agent appends after verification, per phase:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/frame-contract_20261109/verification/phase-1.md
--->
+## Phase R1: Review Fixes
+
+- **Goal:** close the six round-1 findings — the stale `starSpot` (the same defect class as the mood lag), the
+  over-claiming publish test, the load-bearing order assertion, the untested duplicate guard, the inaccurate
+  evidence claims and the `FrameInputs` JSDoc.
+- **Depends on:** Phase 3
+- **Covers:** F1, F2, F3, F4, F5, F6
+- **Touches:** `src/scene/init-scene.ts`, `src/scene/frame-contract.ts`, `src/scene/frame-contract.test.ts`,
+  `e2e/frame-contract.spec.ts`, `conductor/tracks/frame-contract_20261109/verification/*.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/frame-contract.spec.ts`
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** pending-squash
+- **Evidence:** `conductor/tracks/frame-contract_20261109/verification/phase-R1.md`
+
+- [x] **R1.T1: Publish `starSpot` from the system that owns it** — covers: F1
+  - [x] **R1.T1.1: Move the fill into the `fleet` system, after `fleet.update(dt)`, and delete the pre-run fill**
+- [x] **R1.T2: State what the publish test actually proves** — covers: F2
+  - [x] **R1.T2.1: Reword the test comment to the shared-object/ordered-call pattern and record the wiring gap as residual risk**
+- [x] **R1.T3: Make the browser order assertion independent** — covers: F3
+  - [x] **R1.T3.1: Compare against a list spelled out in the spec instead of importing the tuple**
+- [x] **R1.T4: Test the duplicate-append guard** — covers: F4
+  - [x] **R1.T4.1: Add the appended-duplicate case and make the message say what happened**
+- [x] **R1.T5: Correct the evidence** — covers: F5
+  - [x] **R1.T5.1: Fix the "same arguments" claim, the superseded mood-lag note, the over-claim and the AC-6/AC-7 labels**
+- [x] **R1.T6: Document where each value comes from** — covers: F6
+  - [x] **R1.T6.1: Reword the `FrameInputs` JSDoc to the publish-from-the-owner rule**
+
