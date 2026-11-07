@@ -13,7 +13,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, NFR-2, NFR-3, NFR-6, AC-1, AC-2, AC-3, AC-5
 - **Touches:** `src/scene/frame-contract.ts`, `src/scene/frame-contract.test.ts`, `src/scene/init-scene.ts`, `src/scene/train-fleet.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Write the contract module** — covers: FR-1
   - [ ] **P1.T1.1: Declare `FRAME_SYSTEM_ORDER` with one reason per entry, plus the `FrameSystemName`, `FrameInputs` and `FrameSystem` types**
