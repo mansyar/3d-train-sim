@@ -23,26 +23,35 @@ no phase ends with that file larger than it started. `track-renderer.ts` appears
   `src/scene/ride-motion.ts`, `src/scene/train-fleet.ts`, `src/scene/scene-context.ts`,
   `src/ui/app.ts`, `src/ui/toy-drag.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Move the grid math into core, test first** — covers: FR-3, AC-3
-  - [ ] P1.T1.1: Write `src/core/meadow-grid.test.ts` first: cell to world for the four corners and
+- [x] **P1.T1: Move the grid math into core, test first** — covers: FR-3, AC-3
+  - [x] P1.T1.1: Write `src/core/meadow-grid.test.ts` first: cell to world for the four corners and
         the centre, every cell in one axis, negative and out-of-range cells, and `PickedItem`
         construction for both kinds. Confirm it fails because the module does not exist.
-  - [ ] P1.T1.2: Move `cellToWorld`, the `CELL_SIZE` derivation and `PickedItem` into
+  - [x] P1.T1.2: Move `cellToWorld`, the `CELL_SIZE` derivation and `PickedItem` into
         `src/core/meadow-grid.ts`, importing only `GROUND_SIZE`, `MEADOW_CELLS` and the core types.
         Re-export nothing from `src/scene`.
-- [ ] **P1.T2: Repoint every importer** — covers: FR-10, AC-4
-  - [ ] P1.T2.1: Point `park-pose.ts`, `ride-motion.ts`, `train-fleet.ts`, `scene-context.ts` and
+- [x] **P1.T2: Repoint every importer** — covers: FR-10, AC-4
+  - [x] P1.T2.1: Point `park-pose.ts`, `ride-motion.ts`, `train-fleet.ts`, `scene-context.ts` and
         the two UI files at the new home; keep `cellToScreen` exported from the renderer for now.
-  - [ ] P1.T2.2: Show `rg "from '../scene/" src/ui` returns nothing, and that `tsc --noEmit` still
+  - [x] P1.T2.2: Show `rg "from '../scene/" src/ui` returns nothing, and that `tsc --noEmit` still
         accepts the unchanged `init-scene.ts`.
-- [ ] **P1.T3: Extract the catalogue** — covers: FR-2
-  - [ ] P1.T3.1: Create `src/scene/track-catalog.ts` holding `PIECE_URLS`, `HILL_SNOW_URLS`,
+- [x] **P1.T3: Extract the catalogue** — covers: FR-2
+  - [x] P1.T3.1: Create `src/scene/track-catalog.ts` holding `PIECE_URLS`, `HILL_SNOW_URLS`,
         `KIT_ANCHORS`, `KIT_MODULE_UNITS`, `BASE_YAW`/`baseYawOf`, `DELIGHT_CAPS` and `isPiece`,
         moved verbatim.
-  - [ ] P1.T3.2: Import them in `track-renderer.ts`; assert nothing was reordered or renamed by
+  - [x] P1.T3.2: Import them in `track-renderer.ts`; assert nothing was reordered or renamed by
         diffing the moved blocks against the base commit.
+
+**Result:** verified
+**Checkpoint:** 69e4d48
+**Evidence:** conductor/tracks/renderer-decomposition_20261108/verification/phase-1.md
+**Deviations:** `src/scene/ground.ts` had to import and re-export `GROUND_SIZE`, because the value
+lived in a three.js module and core may not import scene code; `src/scene/init-scene.ts` also had to
+be repointed because it imported `cellToWorld` and `PickedItem`; both were added to `Touches` before
+the phase ran. The local smoke run failed both ambient-FPS assertions once on throughput and passed
+40/40 on the identical rerun, which is the documented verdict in `e2e/README.md`.
 
 ## Phase 2: Placement
 
