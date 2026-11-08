@@ -2,7 +2,7 @@
   "id": "boot-simplification_20261109",
   "title": "Boot Simplification",
   "type": "refactor",
-  "status": "in_progress",
+  "status": "complete",
   "priority": "medium",
   "depends_on": [
     "frame-contract_20261109"
@@ -29,6 +29,6 @@
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
-  "archived_at": null,
-  "archive_path": null
+  "archived_at": "2026-11-08T16:15:00+11:00",
+  "archive_path": "conductor/archive/boot-simplification_20261109"
 }
