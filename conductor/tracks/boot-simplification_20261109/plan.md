@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-8, FR-9, FR-12, NFR-1, NFR-2, NFR-6, AC-1, AC-3
 - **Touches:** `src/ui/app.ts`, `src/main.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Split the mount in `src/ui/app.ts`** — covers: FR-1, FR-2, FR-3
   - [ ] P1.T1.1: Extract `mountShell(root)`, moving the frame `innerHTML` body out of `mountApp` unchanged (same elements, classes, attributes, order) and returning the canvas.
