@@ -107,7 +107,7 @@
   - [x] R1.T7.1: Date and head the integrated matrix pass, and state that the Phase 2 run in `phase-2.md` is a different run at an earlier head.
 
 **Result:** verified
-**Checkpoint:** `PENDING`
+**Checkpoint:** `5e6d034`
 **Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-R1.md`
 
 **Deviations:** performed by the primary agent (every finding touches Conductor state). `src/ui/app.ts` changed only to delete the orphaned type re-export, which the reviewer asked for; it is dead at the base commit too, so this is a recorded cleanup rather than a behaviour change.
