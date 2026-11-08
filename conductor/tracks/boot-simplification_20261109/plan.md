@@ -63,19 +63,19 @@
 - **Covers:** FR-11, AC-6, AC-7, AC-8
 - **Touches:** `conductor/tech-stack.md`, `conductor/product.md`
 - **Verification:** `pnpm check` and `pnpm build`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Document the boot order** — covers: FR-11
-  - [ ] P3.T1.1: Record in `conductor/tech-stack.md` that the shell mounts, the scene binds, then controls wire against a bound `SceneHandle`, with the reason (no pre-bind gap, no listener queue).
-  - [ ] P3.T1.2: Note that `src/main.ts` no longer carries fallbacks, so a missing scene is a construction error.
-- [ ] **P3.T2: Mark the roadmap and measure** — covers: AC-6, AC-7, AC-8
-  - [ ] P3.T2.1: Mark the `boot-simplification_20261109` roadmap row shipped with the measured numbers.
-  - [ ] P3.T2.2: Record `pnpm check` counts and coverage, the `pnpm build` precache entries, and the gzipped JS delta against the base build.
+- [x] **P3.T1: Document the boot order** — covers: FR-11
+  - [x] P3.T1.1: Record in `conductor/tech-stack.md` that the shell mounts, the scene binds, then controls wire against a bound `SceneHandle`, with the reason (no pre-bind gap, no listener queue).
+  - [x] P3.T1.2: Note that `src/main.ts` no longer carries fallbacks, so a missing scene is a construction error.
+- [x] **P3.T2: Mark the roadmap and measure** — covers: AC-6, AC-7, AC-8
+  - [x] P3.T2.1: Mark the `boot-simplification_20261109` roadmap row shipped with the measured numbers.
+  - [x] P3.T2.2: Record `pnpm check` counts and coverage, the `pnpm build` precache entries, and the gzipped JS delta against the base build.
 
-<!-- Primary agent appends after verification:
 **Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/boot-simplification_20261109/verification/phase-3.md
--->
+**Checkpoint:** `f23da57`
+**Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-3.md`
+
+**Deviations:** performed by the primary agent because the phase writes Conductor-owned docs. The gzip baseline needed a build at the base commit, so a disposable worktree (`tt-boot-base`, removed and pruned) was used rather than rebuilding `main` in place. The bundle came out 227 B smaller, not larger.
 
 <!-- conductor-review appends ## Phase R1: Review Fixes here with its own contract. -->
