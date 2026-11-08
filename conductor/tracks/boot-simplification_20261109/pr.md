@@ -24,6 +24,7 @@ bundle came out **227 B smaller**.
 | 2. The guard | `a8dc1bb` | `src/ui/boot-order.test.ts` — a `@ts-expect-error` fixture plus a source guard, both demonstrated failing |
 | 3. Docs and measurement | `f23da57` | tech-stack order documented, roadmap row shipped, sizes and coverage measured |
 | R1. Review fixes | `5e6d034` | three guard holes closed (each proved to bite), orphaned re-export deleted, four evidence corrections |
+| R2. Second-round fixes | `75efb75` | guard rewritten again: the scene argument is brace-matched and the queue invariant is name-independent; a stray ESC byte in the spec and the superseded Phase 2 description repaired |
 
 ## Requirements
 
@@ -58,7 +59,7 @@ bundle came out **227 B smaller**.
 | Boot-order guard | `pnpm test src/ui/boot-order.test.ts` | pass — 5 tests; three bite demonstrations recorded in `phase-R1.md` |
 | First events | `pnpm exec playwright test e2e/smoke.spec.ts e2e/sun-moon.spec.ts e2e/ride-toybox-flow.spec.ts` | pass — 17 passed, 1 skipped (2.4 m) |
 | Full matrix | `pnpm exec playwright test` | pass — 57 passed, 1 skipped in 8.7 min at `edd3706` |
-| CI | `gh pr checks` | MATRIX_RESULT |
+| CI | `gh pr checks` | see the checks on this pull request — full matrix (tablet · phone · prod) in two shards |
 
 ## Media
 
@@ -67,7 +68,8 @@ listed in the verification table.
 
 ## Review
 
-One round, **PASS WITH FINDINGS**: 3 Medium + 4 Low, all fixed in Phase R1.
+Two rounds, **PASS WITH FINDINGS**: round 1 found 3 Medium + 4 Low, round 2 found 2 Medium + 3
+Low; all twelve are fixed in Phases R1 and R2.
 
 The Mediums were all guard holes — the kind that matter more than a normal bug, because they buy
 false confidence. The `scene` argument was checked with a 400-character window that the dev-handle
@@ -80,6 +82,15 @@ The Lows: an orphaned `CellFromPoint` re-export, a spec claim that the dev handl
 before `mountControls` (they are assigned after), an AC-4 witness credited to `fleet` when it lives
 in the two-loops smoke journey, and two matrix runs that differed without being labelled as
 different runs.
+
+Round 2 checked the rewritten guards rather than trusting them, and found two of them weak in the
+opposite direction: the scene check accepted only one spelling of a correct call while a literal
+`note: 'scene,'` still matched, and the queue scan was still keyed on variable names. Phase R2
+replaced the first with a brace-matched argument parse (four accepted spellings, three rejected
+decoys) and added a name-independent invariant for the second — no loop, no `forEach`, no
+collection in `src/main.ts` — keeping the name scan as a backup. It also repaired a stray ESC byte
+that had eaten the `e` out of three `e2e/` paths, and marked the Phase 2 guard description as
+history.
 
 ## Deviations and risks
 
