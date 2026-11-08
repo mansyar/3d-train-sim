@@ -40,21 +40,21 @@
 - **Covers:** FR-7, FR-10, NFR-5, AC-1, AC-2, AC-4, AC-5
 - **Touches:** `src/ui/boot-order.test.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/sun-moon.spec.ts e2e/fleet.spec.ts e2e/ride-toybox-flow.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Guard the boot order** — covers: FR-10, NFR-5
-  - [ ] P2.T1.1: Assert `src/main.ts` calls `mountShell`, `initScene` and `mountControls` in that order, and contains no listener array declaration and no replay loop over queued listeners.
-  - [ ] P2.T1.2: Prove the guard is not vacuous — it must find all three call sites and at least one `mountControls` argument naming the scene.
-  - [ ] P2.T1.3: Prove it bites: swap two calls, run the guard, record the failure, restore, and record the pass.
-- [ ] **P2.T2: Prove the first events still land** — covers: FR-7, AC-4
-  - [ ] P2.T2.1: Run smoke, sun-moon, fleet and ride-toybox-flow and record the counts; if a first-event assertion fails, fix the wiring rather than the spec.
-  - [ ] P2.T2.2: Run the full matrix once and record it; it must match the base at 57 passed, 1 skipped.
+- [x] **P2.T1: Guard the boot order** — covers: FR-10, NFR-5
+  - [x] P2.T1.1: Assert `src/main.ts` calls `mountShell`, `initScene` and `mountControls` in that order, and contains no listener array declaration and no replay loop over queued listeners.
+  - [x] P2.T1.2: Prove the guard is not vacuous — it must find all three call sites and at least one `mountControls` argument naming the scene.
+  - [x] P2.T1.3: Prove it bites: swap two calls, run the guard, record the failure, restore, and record the pass.
+- [x] **P2.T2: Prove the first events still land** — covers: FR-7, AC-4
+  - [x] P2.T2.1: Run smoke, sun-moon, fleet and ride-toybox-flow and record the counts; if a first-event assertion fails, fix the wiring rather than the spec.
+  - [x] P2.T2.2: Run the full matrix once and record it; it must match the base at 57 passed, 1 skipped.
 
-<!-- Primary agent appends after verification:
 **Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/boot-simplification_20261109/verification/phase-2.md
--->
+**Checkpoint:** `a8dc1bb`
+**Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-2.md`
+
+**Deviations:** the guard lives in `src/ui/boot-order.test.ts` rather than `src/core/`, because `src/core/import-graph.test.ts` forbids every `core → ui` edge (including `import type`) and that purity rule was not worth weakening for a test's address. Two demonstration edits (`mountShell`/`initScene` swapped, a fake `rideModeListeners`) were made and reverted during the phase; `git diff --stat -- src/main.ts` was empty both times and the committed range contains only the guard and its evidence. The subagent's `pnpm exec vitest run` and `git checkout --` were permission-denied, so it used the configured `pnpm test <path>` (same `vitest run`) and reversed the edits by hand — no file was edited to work around a denial.
 
 ## Phase 3: Docs and measurement
 
