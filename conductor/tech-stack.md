@@ -48,7 +48,14 @@ pnpm ^11 — strict, fast, workspace-ready if tracks ever split.
 
 ```
 src/
-  main.ts          # bootstrap
+  main.ts          # bootstrap: shell mounts → scene binds → controls wire
+                   #   (2026-11-08, boot-simplification): `mountShell(root)` writes the
+                   #   frame and returns the canvas, `initScene(canvas, …)` binds, then
+                   #   `mountControls(root, { scene, … })` wires the UI against a bound
+                   #   scene. The order is the type system's job (`scene` is a required
+                   #   `AppOptions` member) and `src/ui/boot-order.test.ts` reads this
+                   #   file to keep it that way. No listener queues, no `scene?.`
+                   #   fallbacks: a missing scene is a construction error, not a state.
   core/            # PURE logic — no three.js imports allowed here
     track-graph.ts #   nodes/edges, piece connectivity
     snapping.ts    #   grid snap resolution → implemented as grid.ts (100% coverage)
@@ -110,7 +117,10 @@ src/
                    #   frame presentation in some compositors, e.g. headless
                    #   Chromium — see perf-guardrails plan fix notes)
   ui/              # DOM overlay; app.ts is the thin wiring shell that composes
-                   #   the modules below (AppOptions is the public facade)
+                   #   the modules below (AppOptions is the public facade), split into
+                   #   `mountShell` (markup only) and `mountControls` (listeners, against a
+                   #   bound scene) so nothing can wire before the scene exists
+    boot-order.test.ts # guard: main.ts mounts shell → scene → controls, no queues
     toy-icons.ts     # piece/scenery SVG catalogs + slot button builder
     toy-drawer.ts    # tabbed toybox drawer (open/close, cap dimming)
     toy-drag.ts      # drag machine: ghost, rotate tap, ✕ chip, trash, ping
