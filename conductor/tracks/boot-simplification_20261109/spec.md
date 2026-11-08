@@ -79,7 +79,7 @@ This track inverts the order — shell, then scene, then controls — so the gap
 | AC-1 | `pnpm exec tsc --noEmit` rejects a `mountControls` call without `scene`, proven by a `@ts-expect-error` fixture that fails if the requirement disappears. | FR-3, NFR-5 |
 | AC-2 | The guard test reports the three mounts in order and finds no listener array and no replay loop in `src/main.ts`; it fails when the order is swapped or a queue is added back, demonstrated both ways. | FR-4, FR-5, FR-10 |
 | AC-3 | `e2e/smoke.spec.ts` passes (13 passed, 1 skipped) — the app boots with a clean console, drag-places, rides, and the parent gate still works. | FR-1, FR-2, FR-7 |
-| AC-4 | The first-event specs pass: 2e/sun-moon.spec.ts (day icon), 2e/smoke.spec.ts (the camera-cycle button inside the two-loops journey), 2e/ride-toybox-flow.spec.ts (ride controls). | FR-7 |
+| AC-4 | The first-event specs pass: `e2e/sun-moon.spec.ts` (day icon), `e2e/smoke.spec.ts` (the camera-cycle button inside the two-loops journey), `e2e/ride-toybox-flow.spec.ts` (ride controls). | FR-7 |
 | AC-5 | The full matrix matches the base: 57 passed, 1 skipped, no retries, no page crashes. | NFR-2 |
 | AC-6 | `pnpm check` is green with the unit count at 893 plus the new guard test, and coverage is not below baseline. | NFR-3 |
 | AC-7 | `pnpm build` reports 178 precache entries and the gzipped JS total is not larger than the base build. | NFR-4 |
@@ -92,7 +92,7 @@ This track inverts the order — shell, then scene, then controls — so the gap
 - **A ride already in progress at mount:** impossible — `initScene` starts idle and the world is hydrated before the controls exist. `riding` still initialises to `false` and is corrected by the first `subscribeRideMode` callback, as today.
 - **Day phase before the first subscription:** `dayClock` now reads the live scene, so `phase` is correct from the first call instead of falling back to `DEFAULT_DAY_PHASE`.
 - **`?perf=debug` overlay:** mounted by `initScene` on `document.body`, not inside `root`, so the shell/controls split does not move it.
-- **Dev handles:** the import.meta.env.DEV block runs last, after mountControls, so __tinyTracksWorld and __tinyTracksScene appear a few lines later than before; __tinyTracksReady still flips when the recovery read settles. Nothing awaits the handles, and 2e waits on __tinyTracksReady.
+- **Dev handles:** the `import.meta.env.DEV` block runs last, after `mountControls`, so `__tinyTracksWorld` and `__tinyTracksScene` appear a few lines later than before; `__tinyTracksReady` still flips when the recovery read settles. Nothing awaits the handles, and `e2e` waits on `__tinyTracksReady`.
 - **A future member added to `SceneHandle`:** controls can use it immediately; no second interface to update. That is the point of FR-3.
 
 ## Dependencies

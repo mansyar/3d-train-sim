@@ -6,10 +6,10 @@ import type { AppOptions } from './app';
 
 /**
  * Boot-order guard: `main.ts` must mount the shell, bind the scene, then wire
- * the controls — the order that deleted the pre-bind gap. Every assertion reads
- * the comment-stripped copy, because the comments in `main.ts` legitimately
- * name the queues this track removed and describe the mount calls; a comment
- * must neither satisfy the order nor hide a real queue.
+ * the controls — the order that deleted the pre-bind gap. The call-site and
+ * queue assertions read the comment-stripped copy, because the comments in
+ * `main.ts` legitimately name the queues this track removed and describe the
+ * mount calls; a comment must neither satisfy the order nor hide a real queue.
  */
 const MAIN_SOURCE = fileURLToPath(new URL('../main.ts', import.meta.url));
 
@@ -18,8 +18,49 @@ const mainWithoutComments = mainSource
   .replaceAll(/\/\*[\s\S]*?\*\//g, '')
   .replaceAll(/\/\/[^\n]*/g, '');
 
+/**
+ * The same copy without string literals, so a label such as `'scene,'` cannot
+ * stand in for the argument this guard is looking for.
+ */
+const mainCodeOnly = mainWithoutComments.replaceAll(
+  /'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\$]|\\.)*`/g,
+  "''",
+);
+
+/** The slice of `source` inside the braces that open at `open`. */
+function blockFrom(source: string, open: number): string {
+  let depth = 0;
+
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    else if (source[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(open, index + 1);
+    }
+  }
+
+  return source.slice(open);
+}
+
 /** The line metric `import-graph.test.ts` uses, so the counts agree. */
 const lineCount = (content: string): number => content.replace(/\n$/, '').split('\n').length;
+
+/**
+ * The `scene` entry of the `mountControls` options object, or `null`. String
+ * literals are blanked first so a label cannot stand in for the argument, and
+ * the object is brace-matched so nesting and spelling do not matter.
+ */
+function sceneArgument(source: string): string | null {
+  const code = source.replaceAll(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\$]|\\.)*`/g, "''");
+  const call = code.indexOf('mountControls(');
+  if (call === -1) return null;
+
+  const brace = code.indexOf('{', code.indexOf(',', call));
+  if (brace === -1) return null;
+
+  const options = blockFrom(code, brace);
+  return /\bscene\s*[,:}]/.test(options) ? options : null;
+}
 
 describe('the mountControls options', () => {
   it('require a bound scene, proven by the compiler rather than by review', () => {
@@ -61,34 +102,53 @@ describe('the src/main.ts boot order', () => {
     expect(scene, `expected initScene → mountControls; got ${indexes}`).toBeLessThan(controls);
   });
 
-  it('carries no listener queue and no replay loop', () => {
-    // No naming convention is safe to assume for a re-introduction, so the
-    // scan looks for the shape: an array/Set/Map bound to a queue-ish name,
-    // and any replay over one (for…of or forEach).
+  it('carries no listener queue, no replay, and no collection at all', () => {
+    // Name-based scans are guesswork: a queue called `subs`, `callbacks` or
+    // `rideMode` would slip one. So the invariant is stated without a name:
+    // today the boot file holds no loop and no collection, and any of these
+    // returning is a deliberate conversation rather than a false positive.
+    // If the mount sequence ever moves into a helper module, this guard moves
+    // with it instead of passing silently.
+    expect(mainCodeOnly, 'a loop returned to src/main.ts').not.toMatch(/\bfor\s*\(/);
+    expect(mainCodeOnly, 'a forEach replay returned to src/main.ts').not.toMatch(/\.forEach\s*\(/);
+    expect(mainCodeOnly, 'a collection returned to src/main.ts').not.toMatch(
+      /\bnew\s+(?:Set|Map|Array|WeakMap|WeakSet)\b/,
+    );
+
+    // The shape scan stays alongside it, so a failure names the queue it found
+    // rather than only the invariant it broke.
     const declarations = [
-      ...mainWithoutComments.matchAll(
-        /(?:const|let)\s+\w*(?:listeners?|queue|pending|buffer|subscribers?)\b[^=;\n]*=\s*(?:\[|new\s+(?:Set|Map|Array))/gi,
-      ),
-    ].map((match) => match[0]);
-    const replayLoops = [
-      ...mainWithoutComments.matchAll(
-        /(?:for\s*\(\s*const\s+\w+\s+of\s+\w*(?:listeners?|queue|pending|buffer|subscribers?)\b|\w*(?:listeners?|queue|pending|buffer|subscribers?)\.forEach\s*\()/gi,
+      ...mainCodeOnly.matchAll(
+        /(?:const|let)\s+\w*(?:listeners?|queue|pending|buffer|subscribers?|subs|callbacks?|hooks?)\b[^=;\n]*=\s*(?:\[|new\s+(?:Set|Map|Array))/gi,
       ),
     ].map((match) => match[0]);
 
     expect(declarations, 'a listener queue returned to src/main.ts').toEqual([]);
-    expect(replayLoops, 'a queued-listener replay loop returned to src/main.ts').toEqual([]);
   });
 
   it('hands the bound scene to mountControls', () => {
-    // Match the argument list, not a 400-character window: the dev-handle
-    // comment also contains the word "scene", which made a window check pass
-    // even with the argument deleted.
-    const call = mainWithoutComments.match(/mountControls\(\s*root\s*,\s*\{[^}]*\bscene\s*,/);
-
+    // Brace-matched, so nesting inside the object is fine, and string-blanked,
+    // so a label such as 'scene,' cannot stand in for the argument.
     expect(
-      call?.[0],
-      'mountControls must be called with root and an options object carrying the bound scene',
+      sceneArgument(mainWithoutComments),
+      'mountControls must be called with an options object carrying the bound scene',
     ).toBeTruthy();
+  });
+
+  it('accepts every spelling of the same correct call and no decoy', () => {
+    const accepted = [
+      'mountControls(root, { world, audio, scene, isReady });',
+      'mountControls(root, { world, audio, scene: handle });',
+      'mountControls(root, { world, audio, isReady: () => { return true; }, scene });',
+      'mountControls(root, {\n  world,\n  scene: sceneHandle,\n});',
+    ];
+    const rejected = [
+      "mountControls(root, { world, audio, note: 'scene,' });",
+      'mountControls(root, { world, audio, sceneHandle });',
+      'mountControls(root);',
+    ];
+
+    for (const source of accepted) expect(sceneArgument(source), source).toBeTruthy();
+    for (const source of rejected) expect(sceneArgument(source), source).toBeNull();
   });
 });

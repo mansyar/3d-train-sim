@@ -39,6 +39,8 @@ source file changed in this phase.
    AppOptions['scene'] }` compiles with **no** directive. If `scene` ever becomes
    optional, `tsc` reports the unused directive and `pnpm check` fails; if the fixture
    were broken in the other direction, the positive control would fail instead.
+> **As shipped in Phase 2 — superseded by Phase R1.** Review round 1 found that the raw-text order check, the `\w*Listeners` queue scan and the 400-character `scene` window could each pass while the property they named was gone, so Phase R1 rewrote all three: the order and the anti-vacuity read the comment-stripped copy, the queue check states a name-independent invariant (no loop, no `forEach`, no collection) beside the name scan, and the `scene` argument is brace-matched on a string-blanked copy. See `phase-R1.md` for the current patterns and the three bite demonstrations. The bullets below describe the Phase 2 state and are kept as history.
+
 2. **Order.** Raw-text `indexOf` for `mountShell(`, `initScene(`, `mountControls(`;
    `shell < scene < controls`. Each failure message prints all three indexes
    (`mountShell=…, initScene=…, mountControls=…`), so a regression says which call moved.
@@ -145,9 +147,7 @@ Review notes (read the guard rather than trusting the table):
   would report the unused directive and `pnpm check` would fail; if the fixture rotted
   the other way, the positive control would fail. `expect('scene' in …)` on both sides
   keeps the two objects from being optimised into "everything compiles".
-- The order guard reads **raw** text while the queue scan reads a **comment-stripped**
-  copy. That split is the correct one: `main.ts` legitimately names the deleted queues in
-  prose, and a commented-out `mountShell(` must not satisfy an index comparison.
+- *Phase 2 (superseded):* the order guard read **raw** text while the queue scan read a **comment-stripped** copy. Review round 1 showed that split was the weaker choice, because a commented-out mount satisfied `toContain` but the JSDoc claimed otherwise; Phase R1 moved every assertion onto the stripped copy.
 - Anti-vacuity is present and non-trivial (`lineCount > 100`, currently 235; all three
   call substrings found) in a separately named test, so a renamed file or a moved mount
   cannot make the suite pass by finding nothing.
