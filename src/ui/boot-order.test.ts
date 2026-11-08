@@ -6,10 +6,10 @@ import type { AppOptions } from './app';
 
 /**
  * Boot-order guard: `main.ts` must mount the shell, bind the scene, then wire
- * the controls — the order that deleted the pre-bind gap. The comments in
- * `main.ts` legitimately talk about the queues this track removed, so the
- * queue scan reads a comment-stripped copy; the call order is read from the
- * raw text, so a commented-out mount cannot satisfy it.
+ * the controls — the order that deleted the pre-bind gap. Every assertion reads
+ * the comment-stripped copy, because the comments in `main.ts` legitimately
+ * name the queues this track removed and describe the mount calls; a comment
+ * must neither satisfy the order nor hide a real queue.
  */
 const MAIN_SOURCE = fileURLToPath(new URL('../main.ts', import.meta.url));
 
@@ -40,17 +40,17 @@ describe('the mountControls options', () => {
 
 describe('the src/main.ts boot order', () => {
   it('finds all three mounts, so the order guard cannot pass vacuously', () => {
-    expect(mainSource.length).toBeGreaterThan(0);
+    expect(mainWithoutComments.length).toBeGreaterThan(0);
     expect(lineCount(mainSource)).toBeGreaterThan(100);
-    expect(mainSource).toContain('mountShell(');
-    expect(mainSource).toContain('initScene(');
-    expect(mainSource).toContain('mountControls(');
+    expect(mainWithoutComments).toContain('mountShell(');
+    expect(mainWithoutComments).toContain('initScene(');
+    expect(mainWithoutComments).toContain('mountControls(');
   });
 
   it('mounts the shell, then the scene, then the controls', () => {
-    const shell = mainSource.indexOf('mountShell(');
-    const scene = mainSource.indexOf('initScene(');
-    const controls = mainSource.indexOf('mountControls(');
+    const shell = mainWithoutComments.indexOf('mountShell(');
+    const scene = mainWithoutComments.indexOf('initScene(');
+    const controls = mainWithoutComments.indexOf('mountControls(');
     // Every index is in the message, so a regression says which call moved.
     const indexes = `mountShell=${shell}, initScene=${scene}, mountControls=${controls}`;
 
@@ -62,13 +62,18 @@ describe('the src/main.ts boot order', () => {
   });
 
   it('carries no listener queue and no replay loop', () => {
-    // Comments are stripped above: this file's prose names the queues on
-    // purpose, and a comment can neither add nor hide a real one.
+    // No naming convention is safe to assume for a re-introduction, so the
+    // scan looks for the shape: an array/Set/Map bound to a queue-ish name,
+    // and any replay over one (for…of or forEach).
     const declarations = [
-      ...mainWithoutComments.matchAll(/(?:const|let)\s+\w*Listeners\s*[:=]/g),
+      ...mainWithoutComments.matchAll(
+        /(?:const|let)\s+\w*(?:listeners?|queue|pending|buffer|subscribers?)\b[^=;\n]*=\s*(?:\[|new\s+(?:Set|Map|Array))/gi,
+      ),
     ].map((match) => match[0]);
     const replayLoops = [
-      ...mainWithoutComments.matchAll(/for\s*\(\s*const\s+listener\s+of\s+\w*Listeners/g),
+      ...mainWithoutComments.matchAll(
+        /(?:for\s*\(\s*const\s+\w+\s+of\s+\w*(?:listeners?|queue|pending|buffer|subscribers?)\b|\w*(?:listeners?|queue|pending|buffer|subscribers?)\.forEach\s*\()/gi,
+      ),
     ].map((match) => match[0]);
 
     expect(declarations, 'a listener queue returned to src/main.ts').toEqual([]);
@@ -76,11 +81,14 @@ describe('the src/main.ts boot order', () => {
   });
 
   it('hands the bound scene to mountControls', () => {
-    const call = mainSource.indexOf('mountControls(');
-    expect(call, 'mountControls( not found in src/main.ts').toBeGreaterThan(-1);
-    // A 400-character window from the call covers the options object; a
-    // substring check is enough to prove the scene is handed over.
-    const callWindow = mainSource.slice(call, call + 400);
-    expect(callWindow, 'mountControls must receive the bound scene').toMatch(/\bscene\b/);
+    // Match the argument list, not a 400-character window: the dev-handle
+    // comment also contains the word "scene", which made a window check pass
+    // even with the argument deleted.
+    const call = mainWithoutComments.match(/mountControls\(\s*root\s*,\s*\{[^}]*\bscene\s*,/);
+
+    expect(
+      call?.[0],
+      'mountControls must be called with root and an options object carrying the bound scene',
+    ).toBeTruthy();
   });
 });

@@ -6,12 +6,10 @@ import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import { createParentGate } from './parent-gate';
 import { createRideControls, RIDE_ICONS } from './ride-controls';
-import { type CellFromPoint, createToyDrag } from './toy-drag';
+import { createToyDrag } from './toy-drag';
 import { createToyDrawer, toyTabPanels, toyTabStrip } from './toy-drawer';
 import { nextDayIcon, PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 import { createTrainPicker } from './train-picker';
-
-export type { CellFromPoint };
 
 /**
  * The scene surface the controls wire against, declared structurally here

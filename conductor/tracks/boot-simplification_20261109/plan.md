@@ -78,4 +78,36 @@
 
 **Deviations:** performed by the primary agent because the phase writes Conductor-owned docs. The gzip baseline needed a build at the base commit, so a disposable worktree (`tt-boot-base`, removed and pruned) was used rather than rebuilding `main` in place. The bundle came out 227 B smaller, not larger.
 
-<!-- conductor-review appends ## Phase R1: Review Fixes here with its own contract. -->
+## Phase R1: Review Fixes
+
+- **Goal:** Close the seven round-1 findings. Three are guard holes that let a regression
+  through green — the `scene` argument was matched by a 400-character window that the dev-handle
+  comment satisfied, the queue scan only knew the `*Listeners` name, and the order check read
+  raw text while its comment claimed the opposite. The rest are an orphaned type re-export and
+  three evidence inaccuracies.
+- **Depends on:** Phase 3
+- **Covers:** F1, F2, F3, F4, F5, F6, F7
+- **Touches:** `src/ui/boot-order.test.ts`, `src/ui/app.ts`, `conductor/tracks/boot-simplification_20261109/spec.md`, `conductor/tracks/boot-simplification_20261109/verification/integrated.md`, `conductor/tracks/boot-simplification_20261109/verification/phase-1.md`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/sun-moon.spec.ts e2e/ride-toybox-flow.spec.ts`
+- **Status:** verified
+
+- [x] **R1.T1: Match the `mountControls` argument list, not a window** — covers: F1
+  - [x] R1.T1.1: Assert `/mountControls\(\s*root\s*,\s*\{[^}]*\bscene\s*,/` on the comment-stripped source, and prove it fails when `scene,` is deleted.
+- [x] **R1.T2: Widen the queue scan past one naming convention** — covers: F2
+  - [x] R1.T2.1: Look for `const`/`let` bindings with a listener/queue/pending/buffer/subscriber name initialised to `[`/`new Set`/`new Map`/`new Array`, and for `for…of` or `.forEach(` replays over such a name; prove a bare `const queue: unknown[] = []` fails.
+- [x] **R1.T3: Read the order from the comment-stripped source** — covers: F3
+  - [x] R1.T3.1: Use the stripped copy for order and anti-vacuity, and correct the JSDoc that claimed a commented-out mount could not satisfy it; prove a commented-out `mountShell` fails.
+- [x] **R1.T4: Drop the orphaned `CellFromPoint` re-export** — covers: F4
+  - [x] R1.T4.1: Remove the re-export and its type-only import from `src/ui/app.ts`; the type still lives in `src/ui/toy-drag.ts` for anyone who needs it.
+- [x] **R1.T5: Correct the dev-handle edge case** — covers: F5
+  - [x] R1.T5.1: Say that the `import.meta.env.DEV` block runs after `mountControls`, and why nothing depends on the handles existing earlier.
+- [x] **R1.T6: Name the real AC-4 witnesses** — covers: F6
+  - [x] R1.T6.1: Attribute the camera-cycle witness to `e2e/smoke.spec.ts` (two-loops journey) and drop `e2e/fleet.spec.ts` from AC-4.
+- [x] **R1.T7: Label the matrix runs** — covers: F7
+  - [x] R1.T7.1: Date and head the integrated matrix pass, and state that the Phase 2 run in `phase-2.md` is a different run at an earlier head.
+
+**Result:** verified
+**Checkpoint:** `PENDING`
+**Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-R1.md`
+
+**Deviations:** performed by the primary agent (every finding touches Conductor state). `src/ui/app.ts` changed only to delete the orphaned type re-export, which the reviewer asked for; it is dead at the base commit too, so this is a recorded cleanup rather than a behaviour change.

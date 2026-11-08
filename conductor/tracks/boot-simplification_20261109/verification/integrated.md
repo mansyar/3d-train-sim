@@ -29,7 +29,7 @@ no `src/core` file, no dependency.
 | Build | `pnpm build` | 0 | 178 precache entries, 10 642.67 KiB; gzipped JS+sw **218 485 B** vs base **218 712 B** (−227 B) |
 | Boot order | `pnpm test src/ui/boot-order.test.ts` | 0 | 5 passed; both bite directions demonstrated and reverted (order swap, re-added queue) |
 | First events | `pnpm exec playwright test e2e/smoke.spec.ts e2e/sun-moon.spec.ts e2e/fleet.spec.ts e2e/ride-toybox-flow.spec.ts` | 0 | 18 passed, 1 skipped |
-| Full matrix | `pnpm exec playwright test` | 0 | **57 passed, 1 skipped** (`@ci` canary) in **8.7 min** — 58 runs, no retries, no page crashes. Attempt 1 was 55 passed / 2 failed / 1 skipped: tablet `smoke.spec.ts:63` (`page.waitForTimeout: Page crashed`) and tablet `river.spec.ts:216`, both the documented dev-server soak class; both files then passed together (15 passed, 1 skipped in 2.1 m), and attempt 2 was clean |
+| Full matrix | `pnpm exec playwright test` | 0 | **57 passed, 1 skipped** (`@ci` canary) in **8.7 min** — 58 runs, no retries, no page crashes, measured at the phase-3 head `edd3706`. Attempt 1 at the same head was 55 passed / 2 failed / 1 skipped: tablet `smoke.spec.ts:63` (`page.waitForTimeout: Page crashed`) and tablet `river.spec.ts:216`, both the documented dev-server soak class; both files then passed together (15 passed, 1 skipped in 2.1 m) and attempt 2 was clean. This is a different run from the Phase 2 matrix in `phase-2.md` (56 passed / 1 failed / 1 skipped at `a8dc1bb`, then 57 / 1) — same suite, earlier head |
 
 ## Acceptance criteria
 
@@ -76,4 +76,7 @@ The three phases hold together: the compiler refuses the old ordering, a source 
 catches the ordering it cannot express as a type, and the journeys that depend on first
 events still pass. The full matrix ran at parity with the base (57 passed, one deliberately
 skipped canary, 8.7 min) after one contention-shaped attempt, so the merged journeys hang
-together as a suite and not only phase by phase. Ready for review.
+together as a suite and not only phase by phase. (Attempt 1 at `edd3706` was 55 passed /
+2 failed / 1 skipped — two tablet page crashes of the documented soak class, both green on
+an isolated rerun; attempt 2 was clean. This is a separate run from the Phase 2 matrix in
+`phase-2.md`.) Ready for review.

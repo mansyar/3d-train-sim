@@ -6,7 +6,7 @@
 - **Date:** 2026-11-08
 - **Branch:** `refactor/boot-simplification_20261109`
 - **Phase base:** `f8f7d89409cdabbc1b5c1a009a6650871a1d346e`
-- **Head after this phase:** `faca892` (plus this evidence commit)
+- **Head after this phase:** squashed into `64095cf` (the working commits `faca892` and `9e43f86` no longer resolve)
 - **Result:** verified
 
 ## Commands
@@ -74,7 +74,7 @@ Remaining `DEFAULT_DAY_PHASE` uses are the pre-existing ones in `src/core/day-cl
 
 ## Primary verification
 
-Checked at head `9e43f86` with a clean working tree, independently of the phase report.
+Checked at head `64095cf` with a clean working tree, independently of the phase report.
 
 | Check | Result |
 | --- | --- |
@@ -82,7 +82,7 @@ Checked at head `9e43f86` with a clean working tree, independently of the phase 
 | `pnpm exec playwright test e2e/smoke.spec.ts` | exit 0 — **13 passed, 1 skipped** in 1.7 min, no retries on the primary's own run |
 | `git diff f8f7d89…HEAD -- src/scene/init-scene.ts \| Measure-Object -Line` | **0** — the frozen `SceneHandle` file is untouched (FR-8) |
 | `rg "Listeners\|scene\?\.\|DEFAULT_DAY_PHASE\|mountApp" src/main.ts src/ui/app.ts` | no matches — queues, late-bind guards, fallbacks and the old mount name are gone |
-| `git diff --stat f8f7d89…HEAD` | 3 files, +166/−121: `src/ui/app.ts`, `src/main.ts`, the evidence file. No e2e, no `src/core`, no dependency, no lockfile |
+| `git diff --stat f8f7d89..64095cf` | 3 files, +185/-121: `src/ui/app.ts`, `src/main.ts`, the evidence file. Nothing under `src/core`, `src/scene`, `e2e` or the dependency manifests changed |
 
 Review notes:
 
