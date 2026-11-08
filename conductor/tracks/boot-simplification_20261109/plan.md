@@ -14,24 +14,24 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-8, FR-9, FR-12, NFR-1, NFR-2, NFR-6, AC-1, AC-3
 - **Touches:** `src/ui/app.ts`, `src/main.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Split the mount in `src/ui/app.ts`** — covers: FR-1, FR-2, FR-3
-  - [ ] P1.T1.1: Extract `mountShell(root)`, moving the frame `innerHTML` body out of `mountApp` unchanged (same elements, classes, attributes, order) and returning the canvas.
-  - [ ] P1.T1.2: Turn the rest of `mountApp` into `mountControls(root, options)`: drop the markup write, take the bound `SceneHandle`, and bind each capability from it so no `scene?.` guard or fallback remains for a capability the scene always provides.
-  - [ ] P1.T1.3: Shrink the options type to `world`, `audio`, `scene`, `isReady?`, `recoveryNote?` and confirm the file no longer declares or re-exports the capability shape it used to need.
-- [ ] **P1.T2: Rewire `src/main.ts`** — covers: FR-4, FR-5, FR-6
-  - [ ] P1.T2.1: Call `mountShell` → `initScene` → `mountControls`, and delete the three listener arrays, the replay loop and the three pre-bind unsubscribe branches.
-  - [ ] P1.T2.2: Make `dayClock` delegate to the bound scene (`phase`, `setPhase`, `subscribe`) with no `?? DEFAULT_DAY_PHASE`; keep the adapter object because persistence takes structural types.
-- [ ] **P1.T3: Remove what the change orphaned** — covers: FR-9, FR-12
-  - [ ] P1.T3.1: Delete imports and types that no longer have a user (`DEFAULT_DAY_PHASE` if it falls out of `main.ts`), without touching the storage gate, the PWA block or the dev handles.
-  - [ ] P1.T3.2: Confirm `SceneHandle` was not edited, and record the `git diff` of `src/scene/init-scene.ts` as empty.
+- [x] **P1.T1: Split the mount in `src/ui/app.ts`** — covers: FR-1, FR-2, FR-3
+  - [x] P1.T1.1: Extract `mountShell(root)`, moving the frame `innerHTML` body out of `mountApp` unchanged (same elements, classes, attributes, order) and returning the canvas.
+  - [x] P1.T1.2: Turn the rest of `mountApp` into `mountControls(root, options)`: drop the markup write, take the bound `SceneHandle`, and bind each capability from it so no `scene?.` guard or fallback remains for a capability the scene always provides.
+  - [x] P1.T1.3: Shrink the options type to `world`, `audio`, `scene`, `isReady?`, `recoveryNote?` and confirm the file no longer declares or re-exports the capability shape it used to need.
+- [x] **P1.T2: Rewire `src/main.ts`** — covers: FR-4, FR-5, FR-6
+  - [x] P1.T2.1: Call `mountShell` → `initScene` → `mountControls`, and delete the three listener arrays, the replay loop and the three pre-bind unsubscribe branches.
+  - [x] P1.T2.2: Make `dayClock` delegate to the bound scene (`phase`, `setPhase`, `subscribe`) with no `?? DEFAULT_DAY_PHASE`; keep the adapter object because persistence takes structural types.
+- [x] **P1.T3: Remove what the change orphaned** — covers: FR-9, FR-12
+  - [x] P1.T3.1: Delete imports and types that no longer have a user (`DEFAULT_DAY_PHASE` if it falls out of `main.ts`), without touching the storage gate, the PWA block or the dev handles.
+  - [x] P1.T3.2: Confirm `SceneHandle` was not edited, and record the `git diff` of `src/scene/init-scene.ts` as empty.
 
-<!-- Primary agent appends after verification:
 **Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/boot-simplification_20261109/verification/phase-1.md
--->
+**Checkpoint:** `64095cf`
+**Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-1.md`
+
+**Deviations:** the options type carries a structural `SceneControls` view instead of `SceneHandle`, because `src/core/import-graph.test.ts` forbids every `src/ui → src/scene` edge (it parses `import type` too) and `src/core` was outside this phase's Touches. The compiler still checks all eighteen members at the `mountControls` call site in `main.ts`. `mountControls` re-queries the canvas because `createToyDrag` binds its pointer listeners to it; one source of truth, no second hand-off.
 
 ## Phase 2: The guard
 
