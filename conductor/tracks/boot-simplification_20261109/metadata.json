@@ -1,0 +1,32 @@
+{
+  "id": "boot-simplification_20261109",
+  "title": "Boot Simplification",
+  "type": "refactor",
+  "status": "new",
+  "priority": "medium",
+  "depends_on": ["frame-contract_20261109"],
+  "created_at": "2026-11-08T14:13:31+11:00",
+  "updated_at": "2026-11-08T14:13:31+11:00",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "refactor/boot-simplification_20261109",
+  "base_branch": "main",
+  "base_sha": "9ac5fd1ded3a7d333409fa118bcb68d82510eef0",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 0,
+    "tasks_total": 8,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "pr_state": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
