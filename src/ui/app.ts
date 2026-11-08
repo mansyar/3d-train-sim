@@ -13,23 +13,18 @@ import { createTrainPicker } from './train-picker';
 
 export type { CellFromPoint };
 
-export interface AppOptions {
-  world: WorldStore;
-  /** Whether asynchronous startup restoration has finished. */
-  isReady?: () => boolean;
-  /** The sound box: whistle toots, placement dings, the big mute switch. */
-  audio: AudioController;
-  /**
-   * Supplies the parent-facing line about a salvaged or restored save. The
-   * boot read settles after mount, so the gate asks lazily when it opens.
-   */
-  recoveryNote?: () => string | null;
-  cellFromPoint: CellFromPoint;
-  /** Begin the in-scene ghost preview for a dragged track piece or scenery toy. */
+/**
+ * The scene surface the controls wire against, declared structurally here
+ * because `src/ui` may not import `src/scene` (the layering guard in
+ * `src/core/import-graph.test.ts`). `main.ts` passes a bound `SceneHandle`, so
+ * the compiler still checks every member below against the real scene.
+ */
+export interface SceneControls {
+  /** The meadow cell under a screen point, or null off-meadow. */
+  cellFromPoint(clientX: number, clientY: number): Cell | null;
+  /** In-scene ghost preview of the toy being dragged from the drawer. */
   beginGhost(kind: PieceType | SceneryKind): void;
-  /** Snap the preview to a cell (null = off-meadow); tint by validity. */
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
-  /** End the preview. */
   endGhost(): void;
   /** The placed piece under a screen point, for relocate/trash drags. */
   pickPiece(clientX: number, clientY: number): PickedItem | null;
@@ -61,7 +56,26 @@ export interface AppOptions {
   subscribeRideMode(listener: (riding: boolean) => void): () => void;
 }
 
-export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElement {
+export interface AppOptions {
+  world: WorldStore;
+  /** The sound box: whistle toots, placement dings, the big mute switch. */
+  audio: AudioController;
+  /** The bound scene every control wires against — required, not late-bound. */
+  scene: SceneControls;
+  /** Whether asynchronous startup restoration has finished. */
+  isReady?: () => boolean;
+  /**
+   * Supplies the parent-facing line about a salvaged or restored save. The
+   * boot read settles after mount, so the gate asks lazily when it opens.
+   */
+  recoveryNote?: () => string | null;
+}
+
+/**
+ * Writes the frame markup once and hands back the canvas the scene binds to.
+ * No listeners and no scene: the controls wait until `initScene` has run.
+ */
+export function mountShell(root: HTMLElement): HTMLCanvasElement {
   root.innerHTML = `
     <canvas class="scene-canvas" aria-label="Tiny Tracks 3D world"></canvas>
     <div class="toy-drawer" role="group" aria-label="Toybox" hidden>
@@ -114,6 +128,16 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
               aria-label="Take back the last change" hidden>↩️</button>
     </div>
   `;
+  const canvas = root.querySelector<HTMLCanvasElement>('.scene-canvas');
+  if (!canvas) {
+    throw new Error('scene canvas missing from app frame');
+  }
+  return canvas;
+}
+
+/** Wires every control against the already-bound scene. Writes no markup. */
+export function mountControls(root: HTMLElement, options: AppOptions): void {
+  const scene = options.scene;
   const canvas = root.querySelector<HTMLCanvasElement>('.scene-canvas');
   if (!canvas) {
     throw new Error('scene canvas missing from app frame');
@@ -180,14 +204,14 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     audio: options.audio,
     isReady: options.isReady,
     isRiding: () => riding,
-    notifyActivity: options.notifyActivity,
-    cellFromPoint: options.cellFromPoint,
-    beginGhost: options.beginGhost,
-    moveGhost: options.moveGhost,
-    endGhost: options.endGhost,
-    pickPiece: options.pickPiece,
-    setPieceVisible: options.setPieceVisible,
-    cellToScreen: options.cellToScreen,
+    notifyActivity: scene.notifyActivity,
+    cellFromPoint: scene.cellFromPoint,
+    beginGhost: scene.beginGhost,
+    moveGhost: scene.moveGhost,
+    endGhost: scene.endGhost,
+    pickPiece: scene.pickPiece,
+    setPieceVisible: scene.setPieceVisible,
+    cellToScreen: scene.cellToScreen,
   });
 
   // ---- Grid toggle (debug): reveal the snap cells pieces land on. Dev-only —
@@ -197,7 +221,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     const show = gridToggle.getAttribute('aria-pressed') !== 'true';
     gridToggle.setAttribute('aria-pressed', String(show));
     gridToggle.classList.toggle('is-active', show);
-    options.setGridVisible(show);
+    scene.setGridVisible(show);
   });
 
   // ---- Ride trigger: one chunky button, ▶ or ⏹ ---------------------------
@@ -211,15 +235,15 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     isRiding: () => riding,
     isReady: options.isReady,
     prefersStill,
-    startRide: options.startRide,
-    stopRide: options.stopRide,
-    tootWhistle: options.tootWhistle,
-    cycleFilmTarget: options.cycleFilmTarget,
-    subscribeFilmCount: options.subscribeFilmCount,
-    cellToScreen: options.cellToScreen,
+    startRide: scene.startRide,
+    stopRide: scene.stopRide,
+    tootWhistle: scene.tootWhistle,
+    cycleFilmTarget: scene.cycleFilmTarget,
+    subscribeFilmCount: scene.subscribeFilmCount,
+    cellToScreen: scene.cellToScreen,
     ping: (x, y) => toyDrag.ping(x, y),
   });
-  options.subscribeRideMode((isRiding) => {
+  scene.subscribeRideMode((isRiding) => {
     riding = isRiding;
     rideControls.refreshRide();
     // Ride mode sheds the build tools; the stop hands them back untouched.
@@ -238,7 +262,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
     audio: options.audio,
     isReady: options.isReady,
     recoveryNote: options.recoveryNote,
-    stopRide: options.stopRide,
+    stopRide: scene.stopRide,
     isRiding: () => riding,
   });
 
@@ -252,14 +276,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): HTMLCanvasElem
   const refreshDay = (phase: DayPhase) => {
     dayToggle.textContent = nextDayIcon(phase);
   };
-  dayToggle.addEventListener('click', () => options.advanceDay());
+  dayToggle.addEventListener('click', () => scene.advanceDay());
   // The drift turns the pages too, so the icon follows the day on its own.
-  options.subscribeDayPhase(refreshDay);
-  refreshDay(options.dayPhase());
+  scene.subscribeDayPhase(refreshDay);
+  refreshDay(scene.dayPhase());
 
   // Any press anywhere is toddler activity: it dismisses the attract drift
   // instantly and keeps the idle clock at arm's length.
-  window.addEventListener('pointerdown', () => options.notifyActivity());
-
-  return canvas;
+  window.addEventListener('pointerdown', () => scene.notifyActivity());
 }
