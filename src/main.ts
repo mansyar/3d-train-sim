@@ -4,7 +4,7 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
-import { type DayPhase, DEFAULT_DAY_PHASE } from './core/day-clock';
+import type { DayPhase } from './core/day-clock';
 import { buildExport, exportFileName } from './core/portable';
 import { recoveryNotice } from './core/recovery';
 import { deserializeWorld, serializeWorld } from './core/save';
@@ -15,7 +15,7 @@ import {
   shouldProbeForUpdate,
   shouldReload,
 } from './core/update-state';
-import { initScene, type SceneHandle } from './scene/init-scene';
+import { initScene } from './scene/init-scene';
 import {
   loadWorldRecovery,
   restoreDayPhasePreference,
@@ -26,7 +26,7 @@ import {
   watchWorldPersistence,
 } from './state/persistence';
 import { createWorldStore } from './state/world';
-import { mountApp } from './ui/app';
+import { mountControls, mountShell } from './ui/app';
 
 import './style.css';
 
@@ -43,6 +43,29 @@ if (root) {
   // opens (behind the 2 s hold, long after this resolves).
   let recoveryLine: string | null = null;
   const recoveryRead = loadWorldRecovery();
+
+  // ---- Boot order: shell → scene → controls ------------------------------
+  // The frame is markup only, so the canvas exists before the scene binds and
+  // every control below wires against a live SceneHandle — no queue, no
+  // late-bind unsubscribe, no fallback. The type checker enforces the order.
+  const canvas = mountShell(root);
+  const scene = initScene(canvas, world, audio);
+
+  /**
+   * The scene owns the day clock, but storage wants a clock-shaped view of it.
+   * Every read goes straight to the bound scene, so there is no pre-bind gap.
+   */
+  const dayClock = {
+    get phase(): DayPhase {
+      return scene.dayPhase();
+    },
+    setPhase: (phase: DayPhase): void => {
+      scene.setDayPhase(phase);
+    },
+    subscribe: (listener: (event: { phase: DayPhase }) => void): (() => void) =>
+      scene.subscribeDayPhase((phase) => listener({ phase })),
+  };
+
   void recoveryRead.then((recovery) => {
     const snapshot = recovery.snapshot;
     recoveryLine = recoveryNotice(
@@ -87,27 +110,6 @@ if (root) {
       );
     }
   });
-  let scene: SceneHandle | null = null;
-  /**
-   * The scene owns the day clock, but storage wants a clock-shaped view of it.
-   * Every read goes through `scene`, so the restore and the watcher see the
-   * meadow that actually exists (the no-op stand-in covers the pre-bind gap).
-   */
-  const dayClock = {
-    get phase(): DayPhase {
-      return scene?.dayPhase() ?? DEFAULT_DAY_PHASE;
-    },
-    setPhase: (phase: DayPhase): void => {
-      scene?.setDayPhase(phase);
-    },
-    subscribe: (listener: (event: { phase: DayPhase }) => void): (() => void) =>
-      scene ? scene.subscribeDayPhase((phase) => listener({ phase })) : () => {},
-  };
-  // The scene binds after the app mounts — queue subscription listeners until
-  // then, so the UI hears every ride change from the very first one.
-  const filmCountListeners: ((count: number) => void)[] = [];
-  const rideModeListeners: ((riding: boolean) => void)[] = [];
-  const dayPhaseListeners: ((phase: DayPhase) => void)[] = [];
 
   // ---- PWA self-update: probe quietly, adopt when the table is quiet -----
   // Deployments install a new service worker, but the running page keeps its
@@ -186,72 +188,20 @@ if (root) {
   // next visibility change or hourly probe — recheck once when the guard ends.
   setTimeout(applyPendingUpdate, BOOT_GUARD_MS);
 
-  rideModeListeners.push((isRiding) => {
+  // Ride state gates the reload. The scene is bound, so it pushes every change
+  // from the first one — no queue stands between the two.
+  scene.subscribeRideMode((isRiding) => {
     riding = isRiding;
     if (!isRiding) applyPendingUpdate();
   });
 
-  const canvas = mountApp(root, {
-    isReady: () => !restoring,
+  mountControls(root, {
     world,
     audio,
+    scene,
+    isReady: () => !restoring,
     recoveryNote: () => recoveryLine,
-    // The scene does not exist until the canvas mounts — bind late.
-    cellFromPoint: (clientX, clientY) => scene?.cellFromPoint(clientX, clientY) ?? null,
-    beginGhost: (type) => scene?.beginGhost(type),
-    moveGhost: (cell, rotation, valid) => scene?.moveGhost(cell, rotation, valid),
-    endGhost: () => scene?.endGhost(),
-    pickPiece: (clientX, clientY) => scene?.pickPiece(clientX, clientY) ?? null,
-    cellToScreen: (cell) => scene?.cellToScreen(cell) ?? null,
-    setPieceVisible: (id, visible) => scene?.setPieceVisible(id, visible),
-    setGridVisible: (visible) => scene?.setGridVisible(visible),
-    startRide: () => scene?.startRide() ?? false,
-    stopRide: () => scene?.stopRide(),
-    notifyActivity: () => scene?.notifyActivity(),
-    tootWhistle: () => scene?.tootWhistle(),
-    cycleFilmTarget: () => scene?.cycleFilmTarget(),
-    dayPhase: () => scene?.dayPhase() ?? DEFAULT_DAY_PHASE,
-    advanceDay: () => scene?.advanceDay(),
-    // Queued like the film listeners: the scene binds after the app mounts, and
-    // an unsubscribe that misses the bind would replay into it and live on.
-    subscribeDayPhase: (listener) => {
-      dayPhaseListeners.push(listener);
-      if (!scene) {
-        return () => {
-          const index = dayPhaseListeners.indexOf(listener);
-          if (index !== -1) dayPhaseListeners.splice(index, 1);
-        };
-      }
-      return scene.subscribeDayPhase(listener);
-    },
-    subscribeFilmCount: (listener) => {
-      filmCountListeners.push(listener);
-      if (!scene) {
-        // Scene not bound yet — unsubscribe must still remove the listener,
-        // or it would be replayed into the scene at bind and live forever.
-        return () => {
-          const index = filmCountListeners.indexOf(listener);
-          if (index !== -1) filmCountListeners.splice(index, 1);
-        };
-      }
-      return scene.subscribeFilmCount(listener);
-    },
-    subscribeRideMode: (listener) => {
-      rideModeListeners.push(listener);
-      if (!scene) {
-        return () => {
-          const index = rideModeListeners.indexOf(listener);
-          if (index !== -1) rideModeListeners.splice(index, 1);
-        };
-      }
-      return scene.subscribeRideMode(listener);
-    },
   });
-  scene = initScene(canvas, world, audio);
-  // Replay the queued listeners into the freshly bound scene.
-  for (const listener of filmCountListeners) scene.subscribeFilmCount(listener);
-  for (const listener of rideModeListeners) scene.subscribeRideMode(listener);
-  for (const listener of dayPhaseListeners) scene.subscribeDayPhase(listener);
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly and
   // probe the live scene (e.g. the cargo wagon count).

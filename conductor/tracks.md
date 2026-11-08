@@ -4,6 +4,7 @@ Registry of development tracks.
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [boot-simplification_20261109](./archive/boot-simplification_20261109/index.md) | Boot Simplification | Refactor | archived |
 | [frame-contract_20261109](./archive/frame-contract_20261109/index.md) | Frame Contract | Refactor | archived |
 | [e2e-cost_20261108](./archive/e2e-cost_20261108/index.md) | E2E Cost | Refactor | archived |
 | [renderer-decomposition_20261108](./archive/renderer-decomposition_20261108/index.md) | Renderer Decomposition | Refactor | archived |
