@@ -4,9 +4,9 @@
 |---|---|
 | Track | `boot-simplification_20261109` |
 | Branch | `refactor/boot-simplification_20261109` |
-| Range | `9ac5fd1..edd3706` (round 1); round 2 over the Phase R1 commit |
-| Rounds | 1 |
-| Verdict | **PASS WITH FINDINGS** |
+| Range | `9ac5fd1..edd3706` (round 1); `edd3706..35bad54` (round 2) |
+| Rounds | 2 |
+| Verdict | **PASS WITH FINDINGS** (round 2; all findings fixed in Phase R2) |
 
 ## Summary
 
@@ -88,6 +88,19 @@ false confidence. All three are closed in Phase R1 and each fix was proved to bi
 | F6 | Low | `spec.md:82` | AC-4 credited the camera-cycle witness to `e2e/fleet.spec.ts`; it is the two-loops journey in `e2e/smoke.spec.ts` | Corrected the witness list |
 | F7 | Low | `verification/integrated.md:32` | The integrated matrix numbers (55/2/1) differ from `phase-2.md` (56/1/1) with no note that they are separate runs | Headed and dated the integrated run and named the Phase 2 run as a different one |
 
+## Findings — round 2
+
+Round 2 confirmed the round-1 closures but found that two of the rewritten guards were themselves
+weak, and that the record had four errors. All five are fixed in Phase R2; no High, no Critical.
+
+| ID | Severity | File | What | Resolution |
+|---|---|---|---|---|
+| R2-F1 | Medium | `src/ui/boot-order.test.ts:87` | The scene check accepted exactly one spelling of a correct call (the old regex would go red on `scene: sceneHandle,` or a block-bodied `isReady` before `scene`) while a literal `note: 'scene,'` still matched. | Replaced with a brace-matched `sceneArgument()` over a string-blanked copy plus a table-driven test of four accepted spellings and three rejected decoys. |
+| R2-F2 | Medium | `src/ui/boot-order.test.ts:68` | The queue scan was still name-keyed, so `const subs`, `callbacks` or `hooks` would slip through. | Added three name-independent assertions over the stripped copy (no `for`, no `.forEach(`, no `new Set/Map/Array/WeakMap/WeakSet`), kept the name scan as a backup, and demonstrated that `const subs: unknown[] = []` plus a loop fails. |
+| R2-F3 | Low | `conductor/tracks/boot-simplification_20261109/spec.md:82,95` | A PowerShell escape had written a literal ESC byte: AC-4 read `2e/sun-moon.spec.ts` and the dev-handle edge case lost its backticks. | Both lines restored, and the track plus sources scanned for any other ESC bytes (none). |
+| R2-F4 | Low | `verification/phase-2.md:42-54,148-150` | The Phase 2 evidence still described the raw-text `indexOf`, the 400-character window and the `\w*Listeners` scan as the shipped guard, and a review note called the split correct. | The section is headed as the Phase 2 state and points at `phase-R1.md`; the review note is rewritten and marked superseded. |
+| R2-F5 | Low | `src/ui/boot-order.test.ts:9-12` | The JSDoc claimed every assertion reads the comment-stripped copy while the anti-vacuity line count reads the raw file. | Narrowed to the call-site and queue assertions, and the raw read is explained. |
+
 ## Overrides
 
 None.
@@ -121,3 +134,4 @@ passes for the wrong reason is the failure mode this track exists to prevent.
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 |---|---|---|---|---|---|---|
 | 1 | PASS WITH FINDINGS | 0 | 0 | 3 | 4 | 7 |
+| 2 | PASS WITH FINDINGS | 0 | 0 | 2 | 3 | 5 |

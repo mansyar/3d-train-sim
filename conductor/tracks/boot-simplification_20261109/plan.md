@@ -111,3 +111,29 @@
 **Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-R1.md`
 
 **Deviations:** performed by the primary agent (every finding touches Conductor state). `src/ui/app.ts` changed only to delete the orphaned type re-export, which the reviewer asked for; it is dead at the base commit too, so this is a recorded cleanup rather than a behaviour change.
+
+## Phase R2: Second-round review fixes
+
+- **Goal:** make the two rewritten guards witness what they name — the scene argument is parsed by brace matching instead of one spelling, and the queue guard states a name-independent invariant beside the name scan — then repair the four record errors round 2 found.
+- **Depends on:** Phase R1
+- **Covers:** R2-F1, R2-F2, R2-F3, R2-F4, R2-F5
+- **Touches:** `src/ui/boot-order.test.ts`, `conductor/tracks/boot-simplification_20261109/spec.md`, `conductor/tracks/boot-simplification_20261109/verification/phase-2.md`
+- **Verification:** `pnpm check`
+- **Status:** verified
+
+- [x] **R2.T1: Parse the argument list instead of matching one spelling** — covers: R2-F1
+  - [x] R2.T1.1: Brace-match the options object after `mountControls(`, blank string literals first, and accept `scene` anywhere in it as a shorthand or a named property; prove a decoy `note: 'scene,'` is still rejected.
+- [x] **R2.T2: State the queue invariant without relying on names** — covers: R2-F2
+  - [x] R2.T2.1: Assert no `for`, no `.forEach(` and no `new Set/Map/Array/WeakMap/WeakSet` anywhere in `src/main.ts`, keep the name scan as a backup, and prove `const subs: unknown[] = []` plus a loop fails.
+- [x] **R2.T3: Restore the AC-4 paths** — covers: R2-F3
+  - [x] R2.T3.1: Repair the three `e2e/` paths and the lost backticks in the AC-4 row and the dev-handle edge case (a stray ESC byte from a shell escape), and scan the track for any other ESC bytes.
+- [x] **R2.T4: Mark the Phase 2 guard description as superseded** — covers: R2-F4
+  - [x] R2.T4.1: Head the Phase 2 guard bullets as the Phase 2 state, point at `phase-R1.md`, and correct the review note that still described the raw-text/window split as shipped.
+- [x] **R2.T5: Narrow the JSDoc to what is true** — covers: R2-F5
+  - [x] R2.T5.1: Say that the call-site and queue assertions read the comment-stripped copy, and note that the anti-vacuity line count reads the raw file on purpose.
+
+**Result:** verified
+**Checkpoint:** 75efb75
+**Evidence:** `conductor/tracks/boot-simplification_20261109/verification/phase-R2.md`
+
+**Deviations:** performed by the primary agent (the phase is a guard test plus Conductor records). No `src/main.ts`, `src/scene`, `src/ui/app.ts`, dependency, markup or spec change, so no Playwright run was needed; `pnpm check` exercises the guard and `tsc` exercises the `@ts-expect-error` fixtures.
