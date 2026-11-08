@@ -38,9 +38,9 @@
 - **Goal:** a source-level test fails if the boot order regresses or a listener queue returns, and the three first-event specs prove no listener was lost with the queues gone.
 - **Depends on:** Phase 1
 - **Covers:** FR-7, FR-10, NFR-5, AC-1, AC-2, AC-4, AC-5
-- **Touches:** `src/core/boot-order.test.ts`
+- **Touches:** `src/ui/boot-order.test.ts`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/smoke.spec.ts e2e/sun-moon.spec.ts e2e/fleet.spec.ts e2e/ride-toybox-flow.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Guard the boot order** — covers: FR-10, NFR-5
   - [ ] P2.T1.1: Assert `src/main.ts` calls `mountShell`, `initScene` and `mountControls` in that order, and contains no listener array declaration and no replay loop over queued listeners.
