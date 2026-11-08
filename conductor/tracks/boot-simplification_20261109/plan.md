@@ -63,7 +63,7 @@
 - **Covers:** FR-11, AC-6, AC-7, AC-8
 - **Touches:** `conductor/tech-stack.md`, `conductor/product.md`
 - **Verification:** `pnpm check` and `pnpm build`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Document the boot order** — covers: FR-11
   - [ ] P3.T1.1: Record in `conductor/tech-stack.md` that the shell mounts, the scene binds, then controls wire against a bound `SceneHandle`, with the reason (no pre-bind gap, no listener queue).
