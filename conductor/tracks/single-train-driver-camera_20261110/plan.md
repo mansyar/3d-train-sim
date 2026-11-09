@@ -35,7 +35,7 @@
 - **Covers:** FR-4, FR-5, FR-6, AC-4, AC-5
 - **Touches:** `src/scene/film-camera.ts`, `src/ui/ride-controls.ts`, `src/ui/app.ts`, `e2e/smoke.spec.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Driver view in film-camera** — covers: FR-4
   - [ ] **P2.T1.1: Add `driver` filmed target; position at cab eye (derived from rig model), look along current heading; eased lerp like chase**
