@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [process-hygiene_20261109](./tracks/process-hygiene_20261109/index.md) | Process Hygiene | Chore | in_progress |
+| [process-hygiene_20261109](./archive/process-hygiene_20261109/index.md) | Process Hygiene | Chore | archived |
 | [boot-simplification_20261109](./archive/boot-simplification_20261109/index.md) | Boot Simplification | Refactor | archived |
 | [frame-contract_20261109](./archive/frame-contract_20261109/index.md) | Frame Contract | Refactor | archived |
 | [e2e-cost_20261108](./archive/e2e-cost_20261108/index.md) | E2E Cost | Refactor | archived |
