@@ -72,4 +72,4 @@ Close out Phase 1 by cleaning the Conductor state that accumulated across 67 shi
 - `conductor/tracks.md` (current mixed-status registry)
 - `conductor/product-guidelines.md` principle 5 and parent-gate bullets
 - `index.html` viewport meta
-- `src/input/parent-gate.ts`
+- `src/ui/parent-gate.ts`
