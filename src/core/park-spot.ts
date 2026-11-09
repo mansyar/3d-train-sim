@@ -38,16 +38,16 @@ function railsSpotOf(component: RideComponent, pieces: readonly PlacedPiece[]): 
 }
 
 /**
- * The pre-ride spare's parking spot for a world: the dry rails of the largest
- * ride nearest the meadow heart (the ride ▶ adopts first), or — when the world
- * has no rideable track — the nearest dry cell, so the opening toy still
- * greets the toddler at the meadow's heart. Deterministic, total: every world
- * yields a spot.
+ * The pre-ride spare's parking spot for a world: the dry rails of the
+ * selected ride (longest looped, else longest — the ride ▶ adopts first)
+ * nearest the meadow heart, or — when the world has no rideable track —
+ * the nearest dry cell, so the opening toy still greets the toddler at
+ * the meadow's heart. Deterministic, total: every world yields a spot.
  */
 export function findParkSpot(pieces: readonly PlacedPiece[]): ParkSpot {
-  const [largest] = selectRideComponents(rideComponentsOf(pieces), 1);
-  if (largest) {
-    const rails = railsSpotOf(largest, pieces);
+  const [selected] = selectRideComponents(rideComponentsOf(pieces), 1);
+  if (selected) {
+    const rails = railsSpotOf(selected, pieces);
     if (rails) return rails;
   }
 

@@ -47,16 +47,18 @@ export interface RideComponent {
 }
 
 /**
- * The rides that get a train: ranked most pieces first (a bigger layout is the
- * kid's centre of attention), cell-key tiebreak for equal sizes, then capped —
- * beyond-cap components stay static scenery, never a failure. Deterministic
- * under any input order.
+ * The rides that get a train: closed loops first (a loop keeps a toddler's
+ * attention), longest among those, else longest overall; cell-key tiebreak
+ * for equal sizes, then capped — beyond-cap components stay static scenery,
+ * never a failure. Deterministic under any input order.
  */
 export function selectRideComponents(
   components: readonly RideComponent[],
   cap = 4,
 ): RideComponent[] {
-  return components
+  const closed = components.filter((component) => component.path.closed);
+  const pool = closed.length > 0 ? closed : components;
+  return pool
     .map((component, index) => ({ component, index }))
     .sort(
       (a, b) =>
