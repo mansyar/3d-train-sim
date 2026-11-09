@@ -386,9 +386,10 @@ function walkComponent(ids: readonly string[], graph: TrackGraph): TrainPath {
 }
 
 /**
- * One ride per connected track component: every loop and line a toddler builds
- * gets its own train. Components are ordered by each one's smallest cell key
- * (the anchor), so the result never depends on array order — a cell hosts one
+ * Components of every connected track component: every loop and line a toddler builds.
+ * Ride selection (selectRideComponents) picks the single loop-then-longest
+ * component; this helper returns all components ordered by anchor (smallest
+ * cell key), so the result never depends on array order — a cell hosts one
  * piece, so anchor keys are unique across components.
  */
 export function rideComponentsOf(pieces: readonly PlacedPiece[]): RideComponent[] {

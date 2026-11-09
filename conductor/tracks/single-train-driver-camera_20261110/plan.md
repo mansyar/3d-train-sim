@@ -72,3 +72,16 @@
 **Result:** Verified 2026-11-10. Docs: product.md one-train loop-then-longest + Overview→Chase→Driver + superseded multi-train marker; README + CHANGELOG `[Unreleased]` updated. `pnpm check` exit 0 (52 files/904); `pnpm test:coverage` 97.24%/90.34%/97.84%/99.37% (gate 80% met); `pnpm build` clean; full matrix tablet+phone 59 passed, 1 skipped. AC-6 no `ridingTrainCount===2`.
 **Checkpoint:** `a09bb87`
 **Evidence:** `conductor/tracks/single-train-driver-camera_20261110/verification/phase-3.md`
+
+## Phase R1 — Review fixes
+
+**Verdict:** PASS WITH FINDINGS, all findings resolved
+**Round:** 1
+
+- [x] **R1.T1: F1 style.css:172-173 comment** — “present only while two or more trains ride” → “present only while at least one train rides (≥1, app frame toggles hidden)” (FR-5)
+- [x] **R1.T2: F2 pathing.ts:389 doc** — `rideComponentsOf` “gets its own train” → “one component per connected track; ride selection picks the single loop-then-longest component” (FR-1/FR-2 docs)
+- [x] **R1.T3: F3 park-pose.ts:17 doc** — “largest ride” → “selected ride — longest looped, else longest” (FR-7 docs)
+
+**Result:** Verified 2026-11-10. `pnpm exec biome check .` exit 0 (182 files, run twice incl. after fixes); `pnpm check` exit 0 (tsc + vitest 52 files / 904 tests).
+**Evidence:** `conductor/tracks/single-train-driver-camera_20261110/review.md`
+**Status:** complete

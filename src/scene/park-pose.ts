@@ -14,11 +14,11 @@ export interface ParkPose {
 }
 
 /**
- * The pose the pre-ride opener waits at: the entry edge of the largest
- * ride's dry nearest-to-heart step — the ride ▶ adopts first, so the train
- * rolls on with no snap — or the centre of the nearest dry cell when the
- * world has no track. Null only when a rails spot cannot be resolved from
- * the walk (callers keep the authored origin).
+ * The pose the pre-ride opener waits at: the entry edge of the selected
+ * ride's dry nearest-to-heart step (longest looped, else longest) — the ride ▶
+ * adopts first, so the train rolls on with no snap — or the centre of the
+ * nearest dry cell when the world has no track. Null only when a rails spot
+ * cannot be resolved from the walk (callers keep the authored origin).
  */
 export function parkPoseFor(pieces: readonly PlacedPiece[]): ParkPose | null {
   const spot = findParkSpot(pieces);
