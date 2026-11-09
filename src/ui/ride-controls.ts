@@ -149,9 +149,9 @@ export function createRideControls(deps: RideControlsDeps): RideControls {
     deps.tootWhistle(); // Whistle, echo inside tunnels, and the steam puff.
   });
 
-  // ---- 🎥 camera cycle: joins the rail while two or more trains ride -----
-  // Each tap glides the chase camera to the next train, then the overview,
-  // then wraps; hidden under reduced motion (no chase to cycle).
+  // ---- 🎥 camera cycle: joins the rail while at least one train rides ----
+  // Each tap glides the camera: overview → chase → driver → overview → wrap;
+  // hidden while idle. Reduced-motion hiding lives in style.css (untouched).
   const filmToggle = root.querySelector<HTMLButtonElement>('.film-toggle');
   if (!filmToggle) {
     throw new Error('film toggle missing from app frame');
@@ -161,7 +161,7 @@ export function createRideControls(deps: RideControlsDeps): RideControls {
     deps.cycleFilmTarget();
   });
   deps.subscribeFilmCount((count) => {
-    filmToggle.hidden = count < 2;
+    filmToggle.hidden = count < 1;
   });
 
   return { refreshRide, refreshUndo };
