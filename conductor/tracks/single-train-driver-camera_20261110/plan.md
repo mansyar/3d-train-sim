@@ -59,12 +59,16 @@
 - **Covers:** FR-1, AC-6
 - **Touches:** `conductor/product.md`, `README.md`, `CHANGELOG.md`, `e2e/*.spec.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Doc sync** — covers: FR-1
-  - [ ] **P3.T1.1: `conductor/product.md` — core loop (up to 4 → 1), V1 scope, shipped-roadmap note superseded; add shipped line for this track**
-  - [ ] **P3.T1.2: `README.md` and `CHANGELOG.md` if they repeat the multi-train promise**
-- [ ] **P3.T2: Full verification** — covers: AC-6
-  - [ ] **P3.T2.1: `pnpm test:coverage` gate 80% on src/core + src/state**
-  - [ ] **P3.T2.2: `pnpm build` then full Playwright matrix (tablet, phone, prod); record counts**
-  - [ ] **P3.T2.3: Media demo (GIF) of driver view for the PR body**
+- [x] **P3.T1: Doc sync** — covers: FR-1
+  - [x] **P3.T1.1: `conductor/product.md` — core loop (up to 4 → 1), V1 scope, shipped-roadmap note superseded; add shipped line for this track**
+  - [x] **P3.T1.2: `README.md` and `CHANGELOG.md` if they repeat the multi-train promise**
+- [x] **P3.T2: Full verification** — covers: AC-6
+  - [x] **P3.T2.1: `pnpm test:coverage` gate 80% on src/core + src/state**
+  - [x] **P3.T2.2: `pnpm build` then full Playwright matrix (tablet, phone, prod); record counts**
+  - [x] **P3.T2.3: Media demo (GIF) of driver view for the PR body**
+
+**Result:** Verified 2026-11-10. Docs: product.md one-train loop-then-longest + Overview→Chase→Driver + superseded multi-train marker; README + CHANGELOG `[Unreleased]` updated. `pnpm check` exit 0 (52 files/904); `pnpm test:coverage` 97.24%/90.34%/97.84%/99.37% (gate 80% met); `pnpm build` clean; full matrix tablet+phone 59 passed, 1 skipped. AC-6 no `ridingTrainCount===2`.
+**Checkpoint:** `a09bb87`
+**Evidence:** `conductor/tracks/single-train-driver-camera_20261110/verification/phase-3.md`

@@ -14,9 +14,9 @@
   "base_sha": "93e919e6fc46103e9b013a96f479a4b8b28b58f9",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 18,
-    "tasks_done": 13
+    "tasks_done": 18
   },
   "last_checkpoint": null,
   "review_verdict": null,
