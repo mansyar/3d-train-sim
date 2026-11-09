@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
- * The smoke journey — nine tests where there were twenty.
+ * The smoke journey — ten tests where there were twenty.
  *
  * Each merged test boots once and names its phases with `test.step`, so a
  * failure points at the action rather than at a sixty-second body. The @smoke
@@ -1060,7 +1060,9 @@ test('cargo wagons ride along, survive a train switch and a reload', async ({ pa
   });
 });
 
-test('two disjoint loops ride two trains and the 🎥 button cycles them', async ({ page }) => {
+test('a single loop rides one train and the 🎥 button cycles chase, driver, overview @smoke', async ({
+  page,
+}) => {
   const consoleErrors = watchConsoleErrors(page);
 
   const requestUrls: string[] = [];
@@ -1069,8 +1071,8 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
   await page.goto('/');
   await waitForReady(page);
 
-  await test.step('lay two disjoint corner loops and start the ride', async () => {
-    // Two disjoint 2×2 corner loops, far apart, via the dev handle.
+  await test.step('lay one corner loop and start the ride', async () => {
+    // A single 2×2 corner loop, via the dev handle.
     await clearMeadow(page);
     await page.evaluate(() => {
       const world = (
@@ -1081,19 +1083,15 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
         }
       ).__tinyTracksWorld;
       if (!world) throw new Error('dev world handle missing');
-      const loops = [
+      const loop = [
         { x: 0, y: 0 },
         { x: 1, y: 0 },
         { x: 1, y: 1 },
         { x: 0, y: 1 },
-        { x: 9, y: 5 },
-        { x: 10, y: 5 },
-        { x: 10, y: 6 },
-        { x: 9, y: 6 },
       ];
       const rotations = [90, 180, 270, 0];
-      loops.forEach(({ x, y }, i) => {
-        if (world.place('corner', { x, y }, rotations[i % 4] ?? 0) !== 'placed') {
+      loop.forEach(({ x, y }, i) => {
+        if (world.place('corner', { x, y }, rotations[i] ?? 0) !== 'placed') {
           throw new Error(`loop corner placement failed at ${x},${y}`);
         }
       });
@@ -1106,21 +1104,19 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
     await page.click('.ride-toggle');
     await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
 
-    // Two disjoint loops — two little trains out there riding.
+    // One train rides — exactly one, never a second.
     await page.waitForFunction(() => {
       const scene = (
         window as unknown as { __tinyTracksScene?: { ridingTrainCount: () => number } }
       ).__tinyTracksScene;
-      return scene?.ridingTrainCount() === 2;
+      return scene?.ridingTrainCount() === 1;
     });
 
-    // Two trains ride — the 🎥 button joins the rail next to 🎺.
+    // One train rides — the 🎥 button joins the rail next to 🎺.
     await expect(page.locator('.film-toggle')).toBeVisible();
   });
 
-  await test.step('each tap cycles the chase camera and wraps around', async () => {
-    // Each tap cycles the chase camera: second train → overview → wrap to the
-    // train the ride started with.
+  await test.step('each tap cycles chase, driver, overview, and wraps', async () => {
     const filmedAnchor = () =>
       page.evaluate(() => {
         const scene = (
@@ -1129,19 +1125,146 @@ test('two disjoint loops ride two trains and the 🎥 button cycles them', async
         if (!scene) throw new Error('dev scene handle missing');
         return scene.filmedAnchor();
       });
+    const filmedView = () =>
+      page.evaluate(() => {
+        const scene = (
+          window as unknown as {
+            __tinyTracksScene?: { filmedView: () => 'overview' | 'chase' | 'driver' };
+          }
+        ).__tinyTracksScene;
+        if (!scene) throw new Error('dev scene handle missing');
+        return scene.filmedView();
+      });
     const starting = await filmedAnchor();
     expect(starting).not.toBeNull();
+    expect(await filmedView()).toBe('chase');
+
+    // Chase → driver: same train, now from the cab.
+    await page.locator('.film-toggle').click();
+    expect(await filmedView()).toBe('driver');
+    expect(await filmedAnchor()).toBe(starting);
+
+    // The driver eye sits at the cab, near the train — not the chase offset.
+    await page.waitForFunction(() => {
+      const scene = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cameraSpot: () => { x: number; y: number; z: number };
+            primarySpot: () => { x: number; z: number } | null;
+          };
+        }
+      ).__tinyTracksScene;
+      const cam = scene?.cameraSpot();
+      const spot = scene?.primarySpot();
+      if (!cam || !spot) return false;
+      return Math.hypot(cam.x - spot.x, cam.z - spot.z) < 4 && cam.y > 1 && cam.y < 5;
+    });
+
+    // Driver → overview.
+    await page.locator('.film-toggle').click();
+    expect(await filmedView()).toBe('overview');
+    expect(await filmedAnchor()).toBeNull();
+
+    // Overview → chase wraps around to the train the ride started with.
+    await page.locator('.film-toggle').click();
+    expect(await filmedView()).toBe('chase');
+    expect(await filmedAnchor()).toBe(starting);
+  });
+
+  await test.step('nothing left the page and the console stayed silent', async () => {
+    const origin = new URL(page.url()).origin;
+    const external = requestUrls.filter((url) => new URL(url).origin !== origin);
+    expect(external, `external requests: ${external.join(', ')}`).toEqual([]);
+    expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+  });
+});
+
+test('an open line rides the open line and stop returns to overview @smoke', async ({ page }) => {
+  const consoleErrors = watchConsoleErrors(page);
+
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await page.goto('/');
+  await waitForReady(page);
+
+  await test.step('lay an open two-piece line and start the ride', async () => {
+    await clearMeadow(page);
+    await page.evaluate(() => {
+      const world = (
+        window as unknown as {
+          __tinyTracksWorld?: {
+            place: (type: string, cell: { x: number; y: number }, rotation: number) => string;
+          };
+        }
+      ).__tinyTracksWorld;
+      if (!world) throw new Error('dev world handle missing');
+      if (world.place('straight', { x: 2, y: 7 }, 0) !== 'placed') {
+        throw new Error('open-line placement failed at 2,7');
+      }
+      if (world.place('straight', { x: 2, y: 8 }, 0) !== 'placed') {
+        throw new Error('open-line placement failed at 2,8');
+      }
+    });
+    await page.waitForTimeout(700);
+
+    await expect(page.locator('.film-toggle')).toBeHidden();
+
+    await page.click('.ride-toggle');
+    await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+
+    // The open line rides — one train on it.
+    await page.waitForFunction(() => {
+      const scene = (
+        window as unknown as { __tinyTracksScene?: { ridingTrainCount: () => number } }
+      ).__tinyTracksScene;
+      return scene?.ridingTrainCount() === 1;
+    });
+
+    await expect(page.locator('.film-toggle')).toBeVisible();
+  });
+
+  await test.step('the driver view drops into the cab, then stop eases home', async () => {
+    const filmedView = () =>
+      page.evaluate(() => {
+        const scene = (
+          window as unknown as {
+            __tinyTracksScene?: { filmedView: () => 'overview' | 'chase' | 'driver' };
+          }
+        ).__tinyTracksScene;
+        if (!scene) throw new Error('dev scene handle missing');
+        return scene.filmedView();
+      });
+    expect(await filmedView()).toBe('chase');
 
     await page.locator('.film-toggle').click();
-    const second = await filmedAnchor();
-    expect(second).not.toBeNull();
-    expect(second).not.toBe(starting);
+    expect(await filmedView()).toBe('driver');
+    await page.waitForFunction(() => {
+      const scene = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cameraSpot: () => { x: number; y: number; z: number };
+            primarySpot: () => { x: number; z: number } | null;
+          };
+        }
+      ).__tinyTracksScene;
+      const cam = scene?.cameraSpot();
+      const spot = scene?.primarySpot();
+      if (!cam || !spot) return false;
+      return Math.hypot(cam.x - spot.x, cam.z - spot.z) < 4 && cam.y > 1 && cam.y < 5;
+    });
 
-    await page.locator('.film-toggle').click();
-    expect(await filmedAnchor()).toBeNull(); // The overview.
+    // Stop returns to the overview and the 🎥 button leaves the rail.
+    await page.click('.ride-toggle');
+    await expect(page.locator('.ride-toggle')).not.toHaveClass(/is-riding/);
+    await expect(page.locator('.film-toggle')).toBeHidden();
+    expect(await filmedView()).toBe('overview');
 
-    await page.locator('.film-toggle').click();
-    expect(await filmedAnchor()).toBe(starting); // Wrapped around.
+    // Starting again re-films the chase view.
+    await page.click('.ride-toggle');
+    await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+    await expect(page.locator('.film-toggle')).toBeVisible();
+    expect(await filmedView()).toBe('chase');
   });
 
   await test.step('nothing left the page and the console stayed silent', async () => {

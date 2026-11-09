@@ -21,16 +21,16 @@ export type RideListener = (mode: RideMode, rides: readonly RideState[]) => void
 
 export interface RideController {
   mode(): RideMode;
-  /** The active rides, ranked most pieces first. */
+  /** The active rides: exactly one, the loop-then-longest selection. */
   rides(): readonly RideState[];
   /**
-   * The primary ride — the largest active one (kept after a stop for the
+   * The primary ride — the active one (kept after a stop for the
    * camera), or `null` while idle before the first start.
    */
   ride(): RideState | null;
-  /** Re-solves the live layout and starts one ride per selected component (cap 4). */
+  /** Re-solves the live layout and starts the single selected ride. */
   startAll(): boolean;
-  /** Gently stops every ride. The last paths are kept for the camera. */
+  /** Gently stops the ride. The last path is kept for the camera. */
   stopAll(): void;
   /** ▶ convenience — alias of `startAll()` while the scene migrates. */
   start(): boolean;
@@ -40,9 +40,10 @@ export interface RideController {
 }
 
 /**
- * Rides are built from the world as it is *right now* — one per connected
- * track component, ranked most pieces first and capped at four concurrent
- * rides (beyond-cap components sit idle as static scenery). Edits are scoped:
+ * The ride is built from the world as it is *right now* — exactly one train,
+ * on the longest looped component (or the longest component when none is
+ * looped), capped at one; other components sit idle as static scenery.
+ * Edits are scoped:
  * a world change softly stops only the rides whose component is no longer
  * intact; scenery moves and train-kind switches never touch a running ride.
  * A mid-ride edit is a new ride waiting to happen, never an error.
@@ -90,7 +91,8 @@ export function createRideController(world: WorldStore): RideController {
   };
 
   const startAll = (): boolean => {
-    const selected = selectRideComponents(rideComponentsOf(world.pieces()));
+    if (active.size > 0) return true; // already riding — never swap mid-ride
+    const selected = selectRideComponents(rideComponentsOf(world.pieces()), 1);
     let started = false;
     for (const component of selected) {
       if (active.has(component.anchor)) continue; // already riding — untouched

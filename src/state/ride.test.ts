@@ -62,7 +62,7 @@ describe('createRideController', () => {
     world.place('straight', { x: 9, y: 0 }, 90);
     const ride = createRideController(world);
     ride.startAll();
-    expect(ride.rides()).toHaveLength(2);
+    expect(ride.rides()).toHaveLength(1);
 
     world.place('straight', { x: 10, y: 0 }, 90); // extends the line only
 
@@ -189,7 +189,7 @@ describe('reset and rides', () => {
   });
 });
 
-describe('multi-ride — one ride per track component', () => {
+describe('single-train — loop-then-longest selection (one ride)', () => {
   function loopAt(world: ReturnType<typeof createWorldStore>, ox: number, oy: number): void {
     world.place('corner', { x: ox, y: oy }, 90);
     world.place('corner', { x: ox + 1, y: oy }, 180);
@@ -204,38 +204,48 @@ describe('multi-ride — one ride per track component', () => {
     return world;
   }
 
-  it('startAll() starts one ride per component, ranked most pieces first', () => {
+  it('startAll() starts exactly one ride: the smallest-anchor loop on a tie', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
 
     expect(ride.startAll()).toBe(true);
 
     expect(ride.mode()).toBe('riding');
-    expect(ride.rides()).toHaveLength(2);
-    expect(ride.rides().map((r) => r.anchor)).toEqual(['0,0', '10,5']);
+    expect(ride.rides()).toHaveLength(1);
+    expect(ride.rides().map((r) => r.anchor)).toEqual(['0,0']);
     expect(ride.rides().every((r) => r.path.closed)).toBe(true);
   });
 
-  it('a second ▶ press re-solves and starts only the missing rides', () => {
+  it('a second ▶ press never swaps the running ride', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
     const first = ride.rides()[0];
-    expect(first).toBeDefined();
+    expect(first?.anchor).toBe('0,0');
 
-    // A fresh disjoint loop appears: nothing auto-starts, and the running
-    // rides keep their exact state.
-    loopAt(world, 10, 0);
-    expect(ride.rides()).toHaveLength(2);
-    expect(ride.rides()[0]).toBe(first);
+    // A fresh, longer loop appears that would win a fresh selection.
+    world.place('corner', { x: 10, y: 0 }, 90);
+    world.place('straight', { x: 11, y: 0 }, 90);
+    world.place('straight', { x: 12, y: 0 }, 90);
+    world.place('corner', { x: 13, y: 0 }, 180);
+    world.place('corner', { x: 13, y: 1 }, 270);
+    world.place('straight', { x: 12, y: 1 }, 90);
+    world.place('straight', { x: 11, y: 1 }, 90);
+    world.place('corner', { x: 10, y: 1 }, 0);
 
-    // The next ▶ re-solves and starts only the missing ride.
+    // The running ride is never swapped mid-ride.
     expect(ride.startAll()).toBe(true);
-    expect(ride.rides()).toHaveLength(3);
+    expect(ride.rides()).toHaveLength(1);
     expect(ride.rides()[0]).toBe(first);
+
+    // Re-pick happens after a stop: the longer loop now wins.
+    ride.stopAll();
+    expect(ride.startAll()).toBe(true);
+    expect(ride.rides()).toHaveLength(1);
+    expect(ride.rides()[0]?.anchor).toBe('10,0');
   });
 
-  it('stops every ride at once', () => {
+  it('stops the ride', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
@@ -248,46 +258,60 @@ describe('multi-ride — one ride per track component', () => {
     expect(ride.ride()?.path.closed).toBe(true);
   });
 
-  it('caps concurrent rides at 4; beyond-cap components stay idle', () => {
+  it('selects exactly one ride among five loops', () => {
     const world = createWorldStore();
     for (const ox of [0, 2, 8, 10, 12]) loopAt(world, ox, 0);
     const ride = createRideController(world);
 
     expect(ride.startAll()).toBe(true);
 
-    expect(ride.rides()).toHaveLength(4);
-    // Five equal-size loops, cap of four: the tie-break leaves (8,0) idle.
-    expect(ride.rides().map((r) => r.anchor)).not.toContain('8,0');
+    expect(ride.rides()).toHaveLength(1);
+    // Five equal-size loops: the tie-break picks the smallest anchor.
+    expect(ride.rides().map((r) => r.anchor)).toEqual(['0,0']);
   });
 
-  it("an edit to one component soft-stops only that component's ride", () => {
+  it('startAll() over three components yields exactly one ride (loop-then-longest)', () => {
+    const world = createWorldStore();
+    loopAt(world, 0, 0); // closed 4-piece loop
+    world.place('straight', { x: 8, y: 0 }, 90);
+    world.place('straight', { x: 9, y: 0 }, 90); // open 2-piece line
+    world.place('corner', { x: 3, y: 3 }, 0); // lone piece
+    const ride = createRideController(world);
+
+    expect(ride.startAll()).toBe(true);
+
+    expect(ride.rides()).toHaveLength(1);
+    expect(ride.rides()[0]?.anchor).toBe('0,0');
+    expect(ride.rides()[0]?.path.closed).toBe(true);
+  });
+
+  it('an edit that breaks the ridden component soft-stops the ride', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
 
-    // Removing a piece breaks loop A's component — only its own ride stops.
+    // Removing a piece breaks the ridden loop's component — its ride stops.
     const victim = world.pieces().find((p) => p.cell.x <= 1);
     if (!victim) throw new Error('loop A piece missing');
     world.remove(victim.id);
 
-    expect(ride.rides()).toHaveLength(1);
-    expect(ride.rides()[0]?.anchor).toBe('10,5');
-    expect(ride.mode()).toBe('riding');
+    expect(ride.rides()).toHaveLength(0);
+    expect(ride.mode()).toBe('idle');
   });
 
-  it('starting rides never nudges the camera target of running ones', () => {
+  it('starting a ride never nudges the camera target of the running one', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
-    const before = ride.rides().slice();
+    const before = ride.rides()[0];
 
     loopAt(world, 10, 0);
 
-    expect(ride.rides()[0]).toBe(before[0]);
-    expect(ride.rides()[1]).toBe(before[1]);
+    expect(ride.rides()).toHaveLength(1);
+    expect(ride.rides()[0]).toBe(before);
   });
 
-  it('selecting another locomotive mid-ride keeps every ride running (R3)', () => {
+  it('selecting another locomotive mid-ride keeps the ride running (R3)', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
@@ -296,19 +320,19 @@ describe('multi-ride — one ride per track component', () => {
 
     world.selectTrain('diesel');
 
-    expect(ride.rides()).toHaveLength(2);
+    expect(ride.rides()).toHaveLength(1);
     expect(ride.mode()).toBe('riding');
     expect(listener).not.toHaveBeenCalled();
   });
 
-  it('placing scenery mid-ride keeps every ride running', () => {
+  it('placing scenery mid-ride keeps the ride running', () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
     ride.startAll();
 
     world.placeScenery('tree', { x: 3, y: 3 }, 0);
 
-    expect(ride.rides()).toHaveLength(2);
+    expect(ride.rides()).toHaveLength(1);
     expect(ride.mode()).toBe('riding');
   });
 });

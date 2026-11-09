@@ -6,8 +6,8 @@ button, watch your train go.
 Tiny Tracks is a digital Brio-style train set for little engineers aged
 2–4. Kids drag chunky track pieces that snap together on a grid,
 decorate their meadow with trees, houses, and critters, pick one of six
-friendly locomotives, and press ▶ — every connected track comes alive
-with its own train. No rules, no reading, no failure: just the pure joy
+friendly locomotives, and press ▶ — one train rides the longest looped
+track, or the longest track when there is none. No rules, no reading, no failure: just the pure joy
 of cause and effect.
 
 ## What's on the table

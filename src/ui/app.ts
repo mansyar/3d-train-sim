@@ -40,7 +40,7 @@ export interface SceneControls {
   notifyActivity(): void;
   /** The big toot: the answering train whistles (echoing inside tunnels) and puffs. */
   tootWhistle(): void;
-  /** Each tap cycles the chase camera: filmed train → next train → overview. */
+  /** Each tap cycles the camera: overview → chase → driver → overview. */
   cycleFilmTarget(): void;
   /** The meadow's current time of day, for the sun/moon button's icon. */
   dayPhase(): DayPhase;
@@ -113,7 +113,7 @@ export function mountShell(root: HTMLElement): HTMLCanvasElement {
       <button class="toy-slot" type="button" aria-label="Train collection"
               aria-expanded="false" data-drawer="trains">🚂</button>
       <button class="whistle-toot" type="button" aria-label="Toot the whistle">🎺</button>
-      <button class="film-toggle" type="button" aria-label="Switch the camera between trains" hidden>🎥</button>
+      <button class="film-toggle" type="button" aria-label="Switch the camera view" hidden>🎥</button>
       <button class="ride-toggle" type="button"
               aria-label="Ride the train">${RIDE_ICONS.play}</button>
       <button class="day-toggle" type="button"

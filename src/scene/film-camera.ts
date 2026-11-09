@@ -11,19 +11,35 @@ const OVERVIEW_LOOK = new Vector3(0, 0, 0);
 const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 /** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
 const CAMERA_EASE = 2.5;
+/** Driver eye height above the model origin (cab eye, world units).
+ * The kit loco is ~2.7 tall, so the eye must sit above the cab (3.4)
+ * or it lands inside the model once the train moves. */
+const DRIVER_EYE_HEIGHT = 3.4;
+/** Driver eye ahead of the model origin along the heading, world units.
+ * Negative = behind the loco, above the cab, looking forward over the nose. */
+const DRIVER_EYE_FORWARD = -2.5;
+/** Driver look-ahead distance along the heading, world units. */
+const DRIVER_LOOK_DISTANCE = 12;
 
-/** What the chase camera films: one riding train, or the whole meadow. */
-type FilmedTarget = { kind: 'train'; anchor: string } | { kind: 'overview' };
+/** What the camera films: chase, driver, or the whole meadow. */
+type FilmedTarget =
+  | { kind: 'train'; anchor: string }
+  | { kind: 'driver'; anchor: string }
+  | { kind: 'overview' };
 
 export interface FilmCamera {
   /** Keeps the camera's chosen star sticky across ride changes. */
   sync(ridesList: readonly RideState[]): void;
-  /** Each 🎥 tap: filmed train → next train → overview → wrap. */
+  /** Each 🎥 tap: overview → chase → driver → overview → wrap. */
   cycle(): void;
   /** The rig the camera is currently filming, or null for the overview. */
   filmedRig(): TrainRig | null;
   /** The ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
+  /** The camera's current view: overview, chase, or driver (e2e witness). */
+  filmedView(): 'overview' | 'chase' | 'driver';
+  /** The camera's live world position (e2e driver-view witness). */
+  cameraSpot(): { x: number; y: number; z: number };
   /** Begin easing into the idle drift (fired by the attract clock). */
   enterIdle(): void;
   /** Begin easing back to the plain overview (fired by activity). */
@@ -59,22 +75,23 @@ export function createFilmCamera({
   let filmed: FilmedTarget = { kind: 'overview' };
 
   /** The rig the camera is currently filming, or null for the overview. */
-  const filmedRig = (): TrainRig | null => (filmed.kind === 'train' ? rigFor(filmed.anchor) : null);
+  const filmedRig = (): TrainRig | null =>
+    filmed.kind === 'overview' ? null : rigFor(filmed.anchor);
   /**
    * Keeps the camera's chosen star sticky: a running ride keeps the camera
-   * even as more trains join (a second ▶ never yanks the view), and a filmed
-   * train that stops hands the camera to the next riding train — or eases
-   * home to the overview when the last ride ends. An overview the kid chose
-   * with 🎥 stays put until the rides themselves end.
+   * even as the rider re-presses ▶ (a second press never yanks the view), and
+   * a filmed train that stops hands the camera to the next riding train — or
+   * eases home to the overview when the last ride ends. An overview the kid
+   * chose with 🎥 stays put until the rides themselves end.
    */
   let ridesWereActive = false;
   const syncFilmed = (ridesList: readonly RideState[]): void => {
     const active = ridesList.length > 0;
-    if (filmed.kind === 'train') {
+    if (filmed.kind === 'train' || filmed.kind === 'driver') {
       const anchor = filmed.anchor;
       if (ridesList.some((ride) => ride.anchor === anchor)) {
         ridesWereActive = active;
-        return; // Still filming a running train.
+        return; // Still filming a running train (chase or driver).
       }
     } else if (ridesWereActive && active) {
       ridesWereActive = active;
@@ -84,14 +101,19 @@ export function createFilmCamera({
     ridesWereActive = active;
   };
 
-  /** Each 🎥 tap: filmed train → next train → overview → wrap. */
+  /**
+   * Each 🎥 tap: overview → chase → driver → overview → wrap. A fresh ride
+   * always re-films the chase view (sync lands on 'train'); the driver rides
+   * the same anchor the chase was already filming.
+   */
   const cycleFilmTarget = (): void => {
     const ridesList = rides.rides();
     if (filmed.kind === 'train') {
-      const anchor = filmed.anchor;
-      const index = ridesList.findIndex((ride) => ride.anchor === anchor);
-      const next = ridesList[index + 1];
-      filmed = next ? { kind: 'train', anchor: next.anchor } : { kind: 'overview' };
+      filmed = { kind: 'driver', anchor: filmed.anchor };
+      return;
+    }
+    if (filmed.kind === 'driver') {
+      filmed = { kind: 'overview' };
       return;
     }
     filmed = ridesList[0] ? { kind: 'train', anchor: ridesList[0].anchor } : { kind: 'overview' };
@@ -140,7 +162,30 @@ export function createFilmCamera({
   const updateCamera = (dt: number): void => {
     if (reducedMotion) return;
     const star = filmedRig();
-    if (star) {
+    if (star && filmed.kind === 'driver') {
+      // Driver eye: the cab, derived from the rig model the ride motion just
+      // posed — position ahead of the origin, up at cab height, looking level
+      // along the model's current heading (no separate path math).
+      // No easing/delay: the driver view snaps to the train every frame so
+      // it never trails behind or into the model while moving.
+      const yaw = star.model.rotation.y;
+      const forwardX = Math.sin(yaw);
+      const forwardZ = Math.cos(yaw);
+      desiredPosition.set(
+        star.model.position.x + forwardX * DRIVER_EYE_FORWARD,
+        star.model.position.y + DRIVER_EYE_HEIGHT,
+        star.model.position.z + forwardZ * DRIVER_EYE_FORWARD,
+      );
+      desiredLook.set(
+        desiredPosition.x + forwardX * DRIVER_LOOK_DISTANCE,
+        desiredPosition.y,
+        desiredPosition.z + forwardZ * DRIVER_LOOK_DISTANCE,
+      );
+      camera.position.copy(desiredPosition);
+      camLook.copy(desiredLook);
+      camera.lookAt(camLook);
+      return;
+    } else if (star) {
       desiredPosition.copy(star.model.position).add(FOLLOW_OFFSET);
       desiredLook.copy(star.model.position);
     } else {
@@ -156,7 +201,14 @@ export function createFilmCamera({
     sync: syncFilmed,
     cycle: cycleFilmTarget,
     filmedRig,
-    filmedAnchor: () => (filmed.kind === 'train' ? filmed.anchor : null),
+    filmedAnchor: () => (filmed.kind === 'overview' ? null : filmed.anchor),
+    filmedView: () =>
+      filmed.kind === 'overview' ? 'overview' : filmed.kind === 'driver' ? 'driver' : 'chase',
+    cameraSpot: () => ({
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+    }),
     enterIdle: () => attract.enterIdle(),
     exitIdle: () => attract.exitIdle(),
     frameOverview,

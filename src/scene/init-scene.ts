@@ -99,13 +99,17 @@ export interface SceneHandle {
   switchPose(pieceId: string, entry?: Edge): { blade: number; lever: number | null } | null;
   /** Debug aid: the ride anchor the camera films, or null for the overview. */
   filmedAnchor(): string | null;
+  /** Debug aid: the camera's current view — overview, chase, or driver. */
+  filmedView(): 'overview' | 'chase' | 'driver';
+  /** Debug aid: the live camera world position (driver-view witness). */
+  cameraSpot(): { x: number; y: number; z: number };
   /** Begin riding the current layout. Refuses an empty meadow. */
   startRide(): boolean;
   /** Gently stop the ride. */
   stopRide(): void;
   /** Notify the idle-attract clock of toddler activity (touch, press, drag). */
   notifyActivity(): void;
-  /** Each tap cycles the chase camera: filmed train → next train → overview. */
+  /** Each tap cycles the camera: overview → chase → driver → overview. */
   cycleFilmTarget(): void;
   /** The meadow's current time of day (the sun/moon button's next-phase icon). */
   dayPhase(): DayPhase;
@@ -254,7 +258,7 @@ export function initScene(
     },
   });
 
-  /** The UI shows the 🎥 button only while two or more trains ride. */
+  /** The UI shows the 🎥 button only while at least one train rides. */
   const filmCountListeners = new Set<(count: number) => void>();
 
   /** The UI's ▶/⏹ face follows the real ride state (scoped edits keep riding). */
@@ -505,6 +509,8 @@ export function initScene(
     musicBoxProbe: () => tracks.musicBoxProbe(),
     switchPose: (pieceId: string, entry?: Edge) => tracks.switchPose(pieceId, entry),
     filmedAnchor: () => filmCamera.filmedAnchor(),
+    filmedView: () => filmCamera.filmedView(),
+    cameraSpot: () => filmCamera.cameraSpot(),
     subscribeFilmCount(listener) {
       filmCountListeners.add(listener);
       return () => {
