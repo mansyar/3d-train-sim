@@ -13,7 +13,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-7, AC-1, AC-2, AC-3
 - **Touches:** `src/core/pathing.ts`, `src/core/pathing.test.ts`, `src/state/ride.ts`, `src/state/ride.test.ts`, `src/core/park-spot.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Red — selection unit tests** — covers: FR-2
   - [ ] **P1.T1.1: Closed-short beats open-long** (AC-1)
