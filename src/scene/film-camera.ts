@@ -15,8 +15,9 @@ const CAMERA_EASE = 2.5;
  * The kit loco is ~2.7 tall, so the eye must sit above the cab (3.4)
  * or it lands inside the model once the train moves. */
 const DRIVER_EYE_HEIGHT = 3.4;
-/** Driver eye ahead of the model origin along the heading, world units. */
-const DRIVER_EYE_FORWARD = 0.6;
+/** Driver eye ahead of the model origin along the heading, world units.
+ * Negative = behind the loco, above the cab, looking forward over the nose. */
+const DRIVER_EYE_FORWARD = -2.5;
 /** Driver look-ahead distance along the heading, world units. */
 const DRIVER_LOOK_DISTANCE = 12;
 
