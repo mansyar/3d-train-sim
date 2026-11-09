@@ -4,7 +4,7 @@
 A world where every toddler can build their own railway and watch it come alive — no rules, no reading, no failure. Just the pure joy of cause and effect: lay the track, press the button, and watch your train go.
 
 ## Product Description
-Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of six locomotives, then press ▶ to watch autonomous trains chug around their own creation — every connected track comes alive with its own train (up to four at once) — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads, Android tablets, and phones.
+Tiny Tracks is a web-based 3D toy train world for toddlers (ages 2–4). Kids drag chunky, Brio-style track pieces that snap together on a grid, decorate their meadow world with toy scenery, choose one of six locomotives, then press ▶ to watch autonomous train chug around their own creation — the single train rides the longest looped track, or the longest track when there is none — with whistles, steam puffs, and a friendly follow-camera. Touch-first, installable PWA that works fully offline on family iPads, Android tablets, and phones.
 
 ## Target Users
 - **Primary:** Toddlers aged 2–4. Non-readers. Developing fine motor skills. Short attention spans reward instant, forgiving feedback.
@@ -31,16 +31,16 @@ Supporting guardrails:
 ## Core Gameplay Loop
 1. **Build:** drag track pieces (straights, 90° curves, crossings, a railway crossing gate, bridges, tunnels) from the toybox; they snap satisfyingly to the grid. Pieces can be lifted with a tap, dragged to a new spot, or dropped on the toybox trash bin to put them away. A ↩️ take-back in the bottom bar undoes the very last move.
 2. **Decorate:** drop trees, houses, animals, stations anywhere.
-3. **Play:** choose one of six friendly locomotives, then press ▶ — every connected track gets its own train (up to 4 concurrent, ranked most-pieces-first) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
+3. **Play:** choose one of six friendly locomotives, then press ▶ — one train rides the longest looped track (or the longest track when there is none) that chugs with sound and steam, pausing ~2 s at any station with a happy ding-ding — empty wagons pop aboard a
 crate there, loaded wagons deliver theirs in a confetti burst, and the station's
-platform keeps the delivered crates (up to 8); the chase camera follows one train, and the 🎥 button cycles between riding trains and the overview while ≥2 ride. Whistle button. ⏹ stops them all.
+platform keeps the delivered crates (up to 8); the chase camera follows the train, and the 🎥 button cycles Overview → Chase → Driver while riding. Whistle button. ⏹ stops it.
 4. **Reset:** always autosaved; full reset only behind a parent gate (long-press).
 
 ## V1 Scope (Lean Core)
 - Grid-snap track building on a single grassy meadow
 - Scenery placement (trees, houses, animals, stations)
-- Six selectable autonomous locomotives running any layout — one train per connected track (up to 4 concurrent): closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
-- 🎥 camera cycling between riding trains and the overview (visible at ≥2 rides; hidden under reduced motion)
+- Six selectable autonomous locomotives running any layout — one train at a time: rides the longest connected looped track, or the longest track when there is no loop (anchor tie-break): closed loops loop forever; open layouts (dead ends) ride in, pause, and shuttle back
+- 🎥 camera cycling Overview → Chase → Driver (visible at ≥1 ride; hidden under reduced motion)
 - Go / stop / whistle control panel
 - Follow-camera
 - Sound: chug loop, whistle, happy dings, soft knock for drops that bounce home
@@ -64,7 +64,7 @@ Every originally-listed candidate has shipped; this section is the record, not t
 - Scenery delight toys — ✅ shipped (scenery-delight_20260905, 2026-09-06): three animated town-tab toys, each Blender-authored via a checked-in recipe with a winter snow cap — a windmill whose sails turn in the breeze, a carousel with three little horses revolving under the canopy, and a hot-air balloon that rests, lifts off, wanders its own 2–3-cell neighborhood, and lands again; all motion freezes under reduced motion.
 - Music box — ✅ shipped (music-box_20260913, 2026-09-13): a singing town-tab toy, Blender-authored via a checked-in recipe with a winter snow cap — its figurine twirls and it chimes one of four public-domain nursery melodies (ABC/Twinkle, Mary Had a Little Lamb, London Bridge, Row Row Row Your Boat) as a riding train passes, never repeating the previous tune; the phrase finishes gently on ⏹, and every note is synthesized in the browser (zero new downloads).
 - River life — ✅ shipped (river-life-expansion_20260905, 2026-09-05): the river gains a drifting Blender-authored cargo barge (`barge.glb` via a checked-in recipe; low-profile water-level bridge pass, engine off at bedtime/frozen while the bob never stops) and the frog — a floating critter placable on water cells (lily pad resting at the surface) or on land, hopping with a soft synthesized ribbit as the train passes; the barge is ambience (not serialized), so saves stay additive with no version bump.
-- ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug
+- ~~Multi-train layouts~~ — ✅ shipped (every-layout-rides track, 2026-08-30): one autonomous train per connected track, 🎥 camera cycling between rides and the overview, whistle targeting, shared chug — **superseded 2026-11-10 by `single-train-driver-camera_20261110`: one train at a time (longest looped, else longest) and 🎥 cycles Overview → Chase → Driver; multi-train lines above are historical only**
 
 ## Roadmap (Next)
 

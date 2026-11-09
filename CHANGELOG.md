@@ -10,6 +10,12 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 ## [Unreleased]
 
 ### Added
+- **One train, and a driver's seat on the camera.** Only one train rides at a
+  time now: if your meadow has a loop, the train runs the longest loop; if
+  there is no loop, it runs the longest track you've built, and it never hops
+  to a different track while it's already riding. The 🎥 button also gained a
+  driver view — tap it and you ride along from the driver's seat, looking
+  down the track ahead. No driving required; the train still steers itself.
 - **A sun and moon button, so little ones can turn the day themselves.** Tap
   it and the meadow walks through its moods one page at a time: a peach dawn,
   a bright morning, noon, an orange dusk, then a deep blue night where the

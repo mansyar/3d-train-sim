@@ -59,7 +59,7 @@
 - **Covers:** FR-1, AC-6
 - **Touches:** `conductor/product.md`, `README.md`, `CHANGELOG.md`, `e2e/*.spec.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Doc sync** — covers: FR-1
   - [ ] **P3.T1.1: `conductor/product.md` — core loop (up to 4 → 1), V1 scope, shipped-roadmap note superseded; add shipped line for this track**
