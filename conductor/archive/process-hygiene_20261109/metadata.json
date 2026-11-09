@@ -1,0 +1,32 @@
+{
+  "id": "process-hygiene_20261109",
+  "title": "Process Hygiene",
+  "type": "chore",
+  "status": "complete",
+  "priority": "low",
+  "depends_on": [],
+  "created_at": "2026-11-09T09:40:39Z",
+  "updated_at": "2026-11-09T09:40:39Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/process-hygiene_20261109",
+  "base_branch": "main",
+  "base_sha": "abe4b8d8d8e3244622814f45f643d3d8840249eb",
+  "progress": {
+    "phases_total": 1,
+    "phases_verified": 1,
+    "tasks_total": 4,
+    "tasks_done": 4
+  },
+  "last_checkpoint": "046b706",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 1,
+  "doc_sync": "cleared",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/73",
+  "pr_state": "open",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-09T09:40:39Z",
+  "archive_path": "conductor/archive/process-hygiene_20261109"
+}

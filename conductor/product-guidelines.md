@@ -9,8 +9,10 @@ The quality bar. Every implementation track is reviewed against these rules. The
 3. **The train is always autonomous.** The kid never drives the train. They build the world; the train brings it to life. Go/Stop/Whistle are the only direct controls, and Stop just pauses the chugging, never punishes.
 4. **Instant feedback.** Every touch responds in <100ms: a scale-bounce, a sound, a particle. Nothing in the kid UI ever feels dead or unresponsive.
 5. **Toddler-proof gestures.** Only tap and drag. No pinch, no long-press, no double-tap, no hover, no drag-precision under ~48px tolerance. Accidental touches must never cause destructive changes.
-6. **Autosave always.** The world saves automatically and silently after every change. Loading the app always restores the last world exactly as it was.
-7. **Destruction is parent-gated.** Reset/clear/overwrite actions live behind the parent gate (a hold-and-confirm interaction a toddler cannot perform by accident).
+   - **Intentional exception — parent-only long-press (process-hygiene_20261109):** The parent gate uses a deliberate hold-to-confirm long-press that a toddler cannot perform by accident. This is the *only* long-press in the product; it lives behind the parent gate in `src/ui/parent-gate.ts` and is unreachable from the kid UI. The "no long-press for kids" rule above remains in force for every kid-facing gesture.
+6. **Viewport — `user-scalable=no` is intentional (process-hygiene_20261109):** `index.html` sets `user-scalable=no` so a toddler's pinch cannot zoom or pan mid-ride and lose the train. This is a deliberate product decision, not an oversight. The accessibility zoom policy is revisited in Phase 2 (`a11y-pass_20261111`) but any change must keep the toddler experience zoom-free.
+7. **Autosave always.** The world saves automatically and silently after every change. Loading the app always restores the last world exactly as it was.
+8. **Destruction is parent-gated.** Reset/clear/overwrite actions live behind the parent gate (a hold-and-confirm interaction a toddler cannot perform by accident).
 
 ## Audio principles
 
