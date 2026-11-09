@@ -80,7 +80,11 @@ jobs:
 
   e2e:
     name: Gate · e2e (tablet · phone · prod)
-    runs-on: ubuntu-latest
+    # Pin the image the PR gate uses (ci.yml) instead of ubuntu-latest: the
+    # browser cache is keyed by OS version, and a runner image bump that
+    # restores 24.04 browsers onto 26.04 breaks WebKit on missing shared
+    # libraries (libicudata.so.74) - v0.11.0's first publish run failed that way.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -104,7 +108,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-ubuntu-24.04-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
