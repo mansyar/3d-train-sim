@@ -11,8 +11,10 @@ const OVERVIEW_LOOK = new Vector3(0, 0, 0);
 const FOLLOW_OFFSET = new Vector3(0, 9, 11);
 /** Higher = snappier chase. Chosen for a gentle, toy-like glide. */
 const CAMERA_EASE = 2.5;
-/** Driver eye height above the model origin (cab eye, world units). */
-const DRIVER_EYE_HEIGHT = 2.2;
+/** Driver eye height above the model origin (cab eye, world units).
+ * The kit loco is ~2.7 tall, so the eye must sit above the cab (3.4)
+ * or it lands inside the model once the train moves. */
+const DRIVER_EYE_HEIGHT = 3.4;
 /** Driver eye ahead of the model origin along the heading, world units. */
 const DRIVER_EYE_FORWARD = 0.6;
 /** Driver look-ahead distance along the heading, world units. */
@@ -163,6 +165,8 @@ export function createFilmCamera({
       // Driver eye: the cab, derived from the rig model the ride motion just
       // posed — position ahead of the origin, up at cab height, looking level
       // along the model's current heading (no separate path math).
+      // No easing/delay: the driver view snaps to the train every frame so
+      // it never trails behind or into the model while moving.
       const yaw = star.model.rotation.y;
       const forwardX = Math.sin(yaw);
       const forwardZ = Math.cos(yaw);
@@ -176,6 +180,10 @@ export function createFilmCamera({
         desiredPosition.y,
         desiredPosition.z + forwardZ * DRIVER_LOOK_DISTANCE,
       );
+      camera.position.copy(desiredPosition);
+      camLook.copy(desiredLook);
+      camera.lookAt(camLook);
+      return;
     } else if (star) {
       desiredPosition.copy(star.model.position).add(FOLLOW_OFFSET);
       desiredLook.copy(star.model.position);
