@@ -13,16 +13,20 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-7, AC-1, AC-2, AC-3
 - **Touches:** `src/core/pathing.ts`, `src/core/pathing.test.ts`, `src/state/ride.ts`, `src/state/ride.test.ts`, `src/core/park-spot.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Red — selection unit tests** — covers: FR-2
-  - [ ] **P1.T1.1: Closed-short beats open-long** (AC-1)
-  - [ ] **P1.T1.2: No closed → longest open; tie → smaller anchor deterministically regardless of input order** (AC-2)
-  - [ ] **P1.T1.3: startAll over 3 components yields exactly 1 ride** (AC-3)
-- [ ] **P1.T2: Green — implement loop-then-longest selection** — covers: FR-1, FR-2
-  - [ ] **P1.T2.1: Filter closed components first, else all; rank by pieces then anchor; cap 1** in `selectRideComponents` / ride layer
-  - [ ] **P1.T2.2: Audit `park-spot.ts` call site (`selectRideComponents(..., 1)`) still correct after the rule change**
-  - [ ] **P1.T2.3: Confirm parked opener (FR-7) and scoped mid-ride edits (FR-3) unchanged**
+- [x] **P1.T1: Red — selection unit tests** — covers: FR-2
+  - [x] **P1.T1.1: Closed-short beats open-long** (AC-1)
+  - [x] **P1.T1.2: No closed → longest open; tie → smaller anchor deterministically regardless of input order** (AC-2)
+  - [x] **P1.T1.3: startAll over 3 components yields exactly 1 ride** (AC-3)
+- [x] **P1.T2: Green — implement loop-then-longest selection** — covers: FR-1, FR-2
+  - [x] **P1.T2.1: Filter closed components first, else all; rank by pieces then anchor; cap 1** in `selectRideComponents` / ride layer
+  - [x] **P1.T2.2: Audit `park-spot.ts` call site (`selectRideComponents(..., 1)`) still correct after the rule change**
+  - [x] **P1.T2.3: Confirm parked opener (FR-7) and scoped mid-ride edits (FR-3) unchanged**
+
+**Result:** Verified 2026-11-10. `selectRideComponents` filters to `path.closed` when any exist else all, ranks by pieces then anchor; ride layer caps to 1 with never-swap guard. TDD: 3 Red failures → Green, `pnpm check` exit 0 (52 files, 904 tests). Park-spot call site needs no logic change.
+**Checkpoint:** `5b8d3a3`
+**Evidence:** `conductor/tracks/single-train-driver-camera_20261110/verification/phase-1.md`
 
 ## Phase 2: Driver camera and 🎥 cycle
 

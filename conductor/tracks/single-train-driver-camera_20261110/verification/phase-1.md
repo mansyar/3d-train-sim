@@ -72,6 +72,16 @@ AC-1, AC-2 and AC-3; the full `pnpm check` suite is green.
   stability). Required by the FR-1 behavior change; each rewrite keeps the
   original invariant's coverage.
 
+## Primary verification (4.7)
+
+- Agent's reported command results read: evidence phase-1.md lists `pnpm check` exit 0 and AC table stated pass — required JSON/evidence present.
+- Porcelain clean; diff in Touches only (pathing, ride, park-spot + tests + phase-1.md evidence).
+- Guards: `git log --oneline e402201..HEAD` = task commits `3e2c712`, `5b8d3a3`, `d485a28`, all in report, no extra commits; tree clean at acceptance → keep task commits, no squash.
+
+Date: 2026-11-10; Checkpoint: `5b8d3a3`
+Command: `pnpm check` — exit 0 (biome 182, `tsc`, vitest 52 files / 904 passed).
+Compared AC-1/AC-2/AC-3 against evidence table; verified on own run.
+
 ## Notes
 
 - Task commits: `3e2c712` (Red tests), `5b8d3a3` (Green selection +
