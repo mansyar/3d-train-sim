@@ -67,6 +67,12 @@ this executor; see Notes for the exact command the primary should run.
   left untouched (outside Touches, comment-only; the rule it describes now
   lives in `ride-controls.ts` at ≥1).
 
+## Primary verification (4.7)
+
+Date: 2026-11-10; Checkpoint: `10e2163`
+Commands: `pnpm check` — exit 0 (biome 182 files, `tsc --noEmit`, vitest 52/904). `pnpm e2e` — exit 0 (21 passed, incl. smoke.spec 1063 single-loop driver cycle and 1182 open-line stop-to-overview on tablet+phone), proving AC-4/AC-5 statically flagged pass* evidence.
+Compared AC-4/AC-5/FR-4/FR-5/FR-6 against evidence table; runtime proof 2026-11-10 confirmed by primary run.
+
 ## Notes
 
 - The new journeys are tagged `@smoke`, so the phone project's grep lane

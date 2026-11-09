@@ -35,18 +35,22 @@
 - **Covers:** FR-4, FR-5, FR-6, AC-4, AC-5
 - **Touches:** `src/scene/film-camera.ts`, `src/ui/ride-controls.ts`, `src/ui/app.ts`, `e2e/smoke.spec.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Driver view in film-camera** — covers: FR-4
-  - [ ] **P2.T1.1: Add `driver` filmed target; position at cab eye (derived from rig model), look along current heading; eased lerp like chase**
-  - [ ] **P2.T1.2: Cycle order Overview → Chase → Driver → wrap; stop returns to overview (FR-6)**
-- [ ] **P2.T2: 🎥 visibility at ≥1 ride** — covers: FR-5
-  - [ ] **P2.T2.1: Change `subscribeFilmCount` threshold from ≥2 to ≥1 in `ride-controls.ts` / wallet**
-  - [ ] **P2.T2.2: Keep reduced-motion hidden; keep idle hidden**
-- [ ] **P2.T3: E2E rewrite** — covers: AC-4, AC-5
-  - [ ] **P2.T3.1: Replace two-disjoint-loops journey with single-train + driver-view journey (chase → driver near cab → overview → wrap)**
-  - [ ] **P2.T3.2: Open-line-only journey rides the open line; stop returns to overview**
-  - [ ] **P2.T3.3: Remove `ridingTrainCount === 2` witnesses**
+- [x] **P2.T1: Driver view in film-camera** — covers: FR-4
+  - [x] **P2.T1.1: Add `driver` filmed target; position at cab eye (derived from rig model), look along current heading; eased lerp like chase**
+  - [x] **P2.T1.2: Cycle order Overview → Chase → Driver → wrap; stop returns to overview (FR-6)**
+- [x] **P2.T2: 🎥 visibility at ≥1 ride** — covers: FR-5
+  - [x] **P2.T2.1: Change `subscribeFilmCount` threshold from ≥2 to ≥1 in `ride-controls.ts` / wallet**
+  - [x] **P2.T2.2: Keep reduced-motion hidden; keep idle hidden**
+- [x] **P2.T3: E2E rewrite** — covers: AC-4, AC-5
+  - [x] **P2.T3.1: Replace two-disjoint-loops journey with single-train + driver-view journey (chase → driver near cab → overview → wrap)**
+  - [x] **P2.T3.2: Open-line-only journey rides the open line; stop returns to overview**
+  - [x] **P2.T3.3: Remove `ridingTrainCount === 2` witnesses**
+
+**Result:** Verified 2026-11-10. `pnpm check` exit 0 (Biome 182, tsc, Vitest 52 files/904 tests). Primary ran `pnpm e2e` (exit 0, 21 tests passed on tablet+phone) proving AC-4/AC-5 (smoke.spec 1063 single-loop driver, 1182 open-line). Deviations: `src/scene/init-scene.ts` exposes `filmedView()/cameraSpot()` witnesses (AC-4 provability), `src/style.css` stale two-train comment noted not edited.
+**Checkpoint:** `10e2163`
+**Evidence:** `conductor/tracks/single-train-driver-camera_20261110/verification/phase-2.md`
 
 ## Phase 3: Docs sync and full matrix
 
