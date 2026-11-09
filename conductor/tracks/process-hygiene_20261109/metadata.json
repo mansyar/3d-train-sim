@@ -1,0 +1,32 @@
+{
+  "id": "process-hygiene_20261109",
+  "title": "Process Hygiene",
+  "type": "chore",
+  "status": "new",
+  "priority": "low",
+  "depends_on": [],
+  "created_at": "2026-11-09T09:40:39Z",
+  "updated_at": "2026-11-09T09:40:39Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/process-hygiene_20261109",
+  "base_branch": "main",
+  "base_sha": "abe4b8d8d8e3244622814f45f643d3d8840249eb",
+  "progress": {
+    "phases_total": 1,
+    "phases_verified": 0,
+    "tasks_total": 4,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "pr_state": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
