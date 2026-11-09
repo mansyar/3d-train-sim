@@ -1091,9 +1091,9 @@ describe('solvePath — switch pieces (Y and three-way topologies)', () => {
 });
 
 describe('selectRideComponents — rank and cap concurrent rides', () => {
-  const component = (id: string, size: number, anchor: string): RideComponent => ({
+  const component = (id: string, size: number, anchor: string, closed = false): RideComponent => ({
     pieceIds: Array.from({ length: size }, (_, i) => `${id}-${i}`),
-    path: { steps: [], closed: false },
+    path: { steps: [], closed },
     anchor,
   });
 
@@ -1170,5 +1170,44 @@ describe('selectRideComponents — rank and cap concurrent rides', () => {
     ]) {
       expect(selectRideComponents(shuffled)).toEqual(selected);
     }
+  });
+
+  it('prefers a short closed loop over a long open line (loop-then-longest)', () => {
+    const openLong = component('open-long', 10, '0,0');
+    const closedShort = component('closed-short', 4, '5,5', true);
+
+    expect(selectRideComponents([openLong, closedShort], 1)).toEqual([closedShort]);
+    expect(selectRideComponents([closedShort, openLong], 1)).toEqual([closedShort]);
+    // The pool is filtered to closed components when any exist.
+    expect(selectRideComponents([openLong, closedShort], 4)).toEqual([closedShort]);
+  });
+
+  it('falls back to the longest open component when no component is closed', () => {
+    const openEight = component('open-eight', 8, '5,5');
+    const openFive = component('open-five', 5, '0,0');
+
+    expect(selectRideComponents([openEight, openFive], 1)).toEqual([openEight]);
+    expect(selectRideComponents([openFive, openEight], 1)).toEqual([openEight]);
+  });
+
+  it('breaks piece-count ties by smaller anchor regardless of input order', () => {
+    const smallAnchor = component('small-anchor', 5, '0,0');
+    const largeAnchor = component('large-anchor', 5, '9,9');
+
+    expect(selectRideComponents([smallAnchor, largeAnchor], 1)).toEqual([smallAnchor]);
+    expect(selectRideComponents([largeAnchor, smallAnchor], 1)).toEqual([smallAnchor]);
+  });
+
+  it('ranks closed components by most pieces, then anchor', () => {
+    const closedSmall = component('closed-small', 4, '0,0', true);
+    const closedBig = component('closed-big', 8, '9,9', true);
+    const openBiggest = component('open-biggest', 12, '2,2');
+
+    expect(selectRideComponents([closedSmall, closedBig, openBiggest], 1)).toEqual([closedBig]);
+
+    const tieLarge = component('tie-large', 6, '9,9', true);
+    const tieSmall = component('tie-small', 6, '1,1', true);
+    expect(selectRideComponents([tieLarge, tieSmall], 1)).toEqual([tieSmall]);
+    expect(selectRideComponents([tieSmall, tieLarge], 1)).toEqual([tieSmall]);
   });
 });

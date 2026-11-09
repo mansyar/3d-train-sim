@@ -260,6 +260,21 @@ describe('multi-ride — one ride per track component', () => {
     expect(ride.rides().map((r) => r.anchor)).not.toContain('8,0');
   });
 
+  it('startAll() over three components yields exactly one ride (loop-then-longest)', () => {
+    const world = createWorldStore();
+    loopAt(world, 0, 0); // closed 4-piece loop
+    world.place('straight', { x: 8, y: 0 }, 90);
+    world.place('straight', { x: 9, y: 0 }, 90); // open 2-piece line
+    world.place('corner', { x: 3, y: 3 }, 0); // lone piece
+    const ride = createRideController(world);
+
+    expect(ride.startAll()).toBe(true);
+
+    expect(ride.rides()).toHaveLength(1);
+    expect(ride.rides()[0]?.anchor).toBe('0,0');
+    expect(ride.rides()[0]?.path.closed).toBe(true);
+  });
+
   it("an edit to one component soft-stops only that component's ride", () => {
     const world = twoLoopsWorld();
     const ride = createRideController(world);
