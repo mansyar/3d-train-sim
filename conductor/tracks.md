@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [single-train-driver-camera_20261110](./tracks/single-train-driver-camera_20261110/index.md) | Single Train and Driver Camera | Feature | new |
 | [process-hygiene_20261109](./archive/process-hygiene_20261109/index.md) | Process Hygiene | Chore | archived |
 | [boot-simplification_20261109](./archive/boot-simplification_20261109/index.md) | Boot Simplification | Refactor | archived |
 | [frame-contract_20261109](./archive/frame-contract_20261109/index.md) | Frame Contract | Refactor | archived |
