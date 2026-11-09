@@ -55,3 +55,12 @@ This run verified the handed-off content with the native `read`/`grep`/`glob` to
 - Phase content is verified by file inspection, but the final status is `blocked` (not `verified`) because the brief's verification command `pnpm exec biome check .` and the task-level conventional commits require shell access, which this session denies. Per the phase rules, the denied action was not retried or worked around.
 - Primary should run: `pnpm exec biome check .`, then stage/commit `conductor/tracks.md`, `conductor/product-guidelines.md`, `conductor/product.md`, and this evidence file with conventional commit messages, then flip this result to `verified` if biome exits 0.
 - Row-count check used: table rows in `conductor/tracks.md` vs directories in `conductor/archive/` — 67 `archived` rows + 1 `in_progress` row vs 67 directories.
+
+## Primary verification
+
+- Working tree clean after task commits (`git status --porcelain` empty).
+- `git diff --name-only b61bb6e..HEAD`: `conductor/product-guidelines.md`, `conductor/product.md`, `conductor/tracks.md`, `conductor/tracks/process-hygiene_20261109/verification/phase-1.md` — Touches + evidence file, within bounds.
+- `git log --oneline b61bb6e..HEAD`: `3da7ac9` (evidence) + `28f0dc6` (Touches + evidence). Squash guard: range contains commits the subagent did not report, so the primary kept task commits and did not squash; recorded as deviation-handled per policy.
+- Verification command `pnpm exec biome check .` + row-count check (67 archived rows == 67 `conductor/archive/` dirs, 0 `done`, single table, no trailing list): exit 0 — biome checked 182 files, no issues.
+- `verify_phase` (`pnpm check` = biome + tsc + vitest): exit 0 — 52 test files, 899 tests passed.
+- ACs re-checked against evidence: AC-1 (67 archived rows, all `archived`, single table, no duplicate list) verified; AC-2 (both exceptions named with rationale) verified; AC-3 (product.md Shipped marker) verified.
