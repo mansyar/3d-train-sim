@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, AC-1, AC-2, AC-3
 - **Touches:** `conductor/tracks.md`, `conductor/product-guidelines.md`, `conductor/product.md`
 - **Verification:** `pnpm exec biome check .` + row-count check (rows == archive dirs, all `archived`)
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Rebuild registry table** — covers: FR-1, FR-2
   - [ ] **P1.T1.1: Generate one row per `conductor/archive/` directory**
