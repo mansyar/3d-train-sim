@@ -11,10 +11,10 @@
 
 - **Goal:** Pure disclosure model decides visible kinds and unlock state, fully unit-tested.
 - **Depends on:** none
-- **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, AC-1, AC-2, AC-3
+- **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `src/core/disclosure.ts`, `src/core/disclosure.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Disclosure tier model** — covers: FR-1, FR-2
   - [ ] **P1.T1.1: Kind tiers table + tests** (basics vs `switch-3way` / `switch-slip` / `station`)
@@ -34,7 +34,7 @@ The primary appends after acceptance:
 
 - **Goal:** Basics-only toybox on fresh install; icon-only unlock celebration.
 - **Depends on:** Phase 1
-- **Covers:** FR-2, FR-6, AC-4
+- **Covers:** FR-2, FR-6, NFR-1, NFR-3, AC-4
 - **Touches:** `src/ui/toy-drawer.ts`, `src/core/drawer.ts`
 - **Verification:** `pnpm check`
 - **Status:** pending
@@ -65,7 +65,7 @@ Review fixes are appended by `conductor-review` as:
 
 - **Goal:** Unlock flag persists and migrates; e2e proves gating, unlock, and reload.
 - **Depends on:** Phase 2
-- **Covers:** FR-4, FR-5, FR-7, AC-5, AC-6
+- **Covers:** FR-4, FR-5, FR-7, NFR-1, NFR-2, NFR-3, NFR-4, AC-5, AC-6
 - **Touches:** `src/core/save.ts`, `src/state/world.ts`, `e2e/disclosure.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/disclosure.spec.ts`
 - **Status:** pending
