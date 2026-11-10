@@ -106,7 +106,7 @@ The named roadmap closed with the double-slip switch. This roadmap is deliberate
 | Track | Priority | Effort | Done when |
 |---|---|---|---|
 | `clarity-audit_20261110` | P0 | 5d | Observed sessions with three children aged 2–4; baseline time-to-first-ride and unassisted session length recorded; friction list ranked |
-| `progressive-disclosure_20261110` | P0 | 4d | First run offers basics only; advanced pieces (three-way, double-slip, cargo loop) live in a second tier; measured improvement over baseline |
+| `progressive-disclosure_20261110` | P0 | 4d | First run offers basics only; advanced pieces (three-way, double-slip, cargo loop) live in a second tier; measured improvement over baseline. **Shipped 2026-11-10** — tiered toybox: basics first, `switch-3way` / `switch-slip` / `station` unlock after 3 rides with an icon-only celebration, persisted + grandfathered, e2e-pinned |
 | `local-insights_20261111` | P1 | 3d | Parent-gate panel shows sessions, longest session, reset count, storage health, and a crash counter — on device only, never transmitted |
 | `install-onboarding_20261111` | P1 | 1.5d | `display-mode` detection plus an iOS "Add to Home Screen" hint behind the parent gate, needing no reading |
 | `a11y-pass_20261111` | P1 | 3d | axe clean in e2e; visible focus states; contrast audit; zoom policy settled |
