@@ -298,6 +298,12 @@ body {
   transform: translateY(-2px);
 }
 
+/* The unlock celebration: tabs that gained toys bounce once, reusing
+   ride-pop. Icon-only — no text, no new keyframes. */
+.drawer-tab.pop {
+  animation: ride-pop 0.45s ease-out;
+}
+
 .drawer-panel {
   display: flex;
   flex-wrap: nowrap; /* One scrollable row: the 6-toy Adventure panel swipes
@@ -328,6 +334,13 @@ body {
   min-width: 72px;
   padding: 10px;
   touch-action: none;
+}
+
+/* Locked advanced slots hide entirely — never the dimming style, which
+   keeps meaning "board is full". */
+.piece-slot[hidden],
+.scenery-slot[hidden] {
+  display: none;
 }
 
 .piece-slot svg {
@@ -842,6 +855,7 @@ body {
   /* The invitation stays still — and never hides the ▶ button itself. */
   .ride-toggle.is-ready-pulse,
   .ride-toggle.pop,
+  .drawer-tab.pop,
   .wagon-slot.pop {
     animation: none;
   }
