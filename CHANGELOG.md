@@ -7,6 +7,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/); versions
 are `vX.Y.Z` git tags that trigger the release pipeline (see
 `conductor/tech-stack.md`).
 
+## [Unreleased]
+
+### Added
+- **A toybox that grows with your little engineer.** First runs offer just
+  the simple pieces — straights, curves, and plain switches — so the first
+  ride comes fast. After three rides, the toybox grows a three-way
+  junction, the double-slip crossing, and the station (with its cargo
+  run), announced with a happy bounce and a ding, no reading needed. Saved
+  worlds keep everything they already had, and the grown-up toybox stays
+  unlocked even after a restart.
+
 ## [0.11.0] - 2026-11-09
 
 ### Added

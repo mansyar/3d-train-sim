@@ -356,6 +356,22 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
     );
     await expect(page.locator('.drawer-panel[data-panel="rails"]')).toBeVisible();
 
+    // Progressive disclosure: a fresh profile locks the advanced tier
+    // (three-way, double-slip, station). Three completed rides unlock it —
+    // the drawer listens to the world store, which this seeds directly so
+    // the journey below can place a station.
+    await page.evaluate(() => {
+      const world = (
+        window as unknown as {
+          __tinyTracksWorld?: { recordRide: () => boolean };
+        }
+      ).__tinyTracksWorld;
+      if (!world) throw new Error('dev world handle missing');
+      world.recordRide();
+      world.recordRide();
+      world.recordRide();
+    });
+
     // Walk the tabs: Nature, Town (the buildings), Critters (the animals).
     await page.click('.drawer-tab[data-tab="nature"]');
     await expect(page.locator('.drawer-panel[data-panel="nature"]')).toBeVisible();

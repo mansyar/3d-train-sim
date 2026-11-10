@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createDisclosureState, recordCompletedRide } from './disclosure';
 import { DRAWER_TABS, drawerTabs, tabForKind } from './drawer';
 import { SCENERY_KINDS } from './scenery';
 import type { PieceType } from './track-graph';
@@ -78,6 +79,34 @@ describe('drawerTabs', () => {
     const adventure = drawerTabs().find((tab) => tab.id === 'adventure');
     expect(adventure?.icon).toBe('🌉');
     expect(adventure?.aria).toBe('Adventure toys');
+  });
+});
+
+describe('drawerTabs disclosure gating', () => {
+  it('hides the advanced slots while locked (FR-2)', () => {
+    const tabs = drawerTabs(createDisclosureState());
+    const adventure = tabs.find((tab) => tab.id === 'adventure');
+    expect(adventure?.kinds).not.toContain('switch-3way');
+    expect(adventure?.kinds).not.toContain('switch-slip');
+    const town = tabs.find((tab) => tab.id === 'town');
+    expect(town?.kinds).not.toContain('station');
+  });
+
+  it('keeps every basics kind while locked, in the same order', () => {
+    const locked = drawerTabs(createDisclosureState()).flatMap((tab) => tab.kinds);
+    const full = drawerTabs().flatMap((tab) => tab.kinds);
+    const advanced = ['switch-3way', 'switch-slip', 'station'];
+    expect(locked).toHaveLength(full.length - advanced.length);
+    expect(locked).toEqual(full.filter((kind) => !advanced.includes(kind)));
+    for (const kind of ['straight', 'switch', 'bridge', 'house', 'tree', 'pig']) {
+      expect(locked).toContain(kind);
+    }
+  });
+
+  it('renders every slot unlocked, exactly as today', () => {
+    let state = createDisclosureState();
+    for (let ride = 0; ride < 3; ride += 1) state = recordCompletedRide(state);
+    expect(drawerTabs(state)).toEqual(drawerTabs());
   });
 });
 

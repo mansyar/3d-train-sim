@@ -1,5 +1,6 @@
 import { MAX_DELIVERED_CRATES } from './cargo';
 import { DAY_PHASES, type DayPhase, DEFAULT_DAY_PHASE } from './day-clock';
+import type { DisclosureState } from './disclosure';
 import { PIECE_TYPES } from './pieces';
 import { isWater } from './river';
 import { type PlacedScenery, SCENERY_KINDS, type SceneryKind } from './scenery';
@@ -42,6 +43,13 @@ export interface WorldSnapshot {
   deliveries?: Record<string, number>;
   /** Per-train wagon presets; omitted when every train pulls classic. */
   consist?: Partial<Record<TrainKind, WagonPreset>>;
+  /**
+   * Progressive-disclosure progress: the completed-ride count plus the unlock
+   * flag. Omitted for fresh-locked worlds, which read back identically.
+   * Parsed outside `parseWorldSnapshot` (like `preferences`), so the
+   * salvage rules below never see it.
+   */
+  disclosure?: DisclosureState;
 }
 
 export interface WorldData {
@@ -62,6 +70,7 @@ export function serializeWorld(
   deliveries: Record<string, number> = {},
   consist: TrainConsist = defaultConsist(),
   dayPhase?: DayPhase,
+  disclosure?: DisclosureState,
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -89,6 +98,10 @@ export function serializeWorld(
   if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
   // Same for an all-classic consist — the default needs no storage.
   if (!isClassicConsist(consist)) snapshot.consist = { ...consist };
+  // Same for a fresh lock — zero rides and no unlock read back identically.
+  if (disclosure && (disclosure.completedRides > 0 || disclosure.unlocked)) {
+    snapshot.disclosure = { ...disclosure };
+  }
   return snapshot;
 }
 

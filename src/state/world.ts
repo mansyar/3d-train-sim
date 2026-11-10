@@ -1,4 +1,10 @@
 import { deliveredCountAfter } from '../core/cargo';
+import {
+  applyGrandfather,
+  createDisclosureState,
+  type DisclosureState,
+  recordCompletedRide,
+} from '../core/disclosure';
 import { isWater } from '../core/river';
 import type { WorldData } from '../core/save';
 import { type PlacedScenery, sceneryFloats } from '../core/scenery';
@@ -72,6 +78,19 @@ export interface WorldStore {
   deliverCrate(stationId: string): number;
   /** A defensive copy of the delivery ledger — station id → crate count. */
   deliveries(): Record<string, number>;
+  /** A defensive copy of the disclosure progress — never the live record. */
+  disclosure(): DisclosureState;
+  /**
+   * Records one completed ride (a ▶ run with the train moving, ended by ⏹).
+   * Returns true exactly on the ride that unlocks the advanced tier. Every
+   * call notifies, so autosave keeps the count exact.
+   */
+  recordRide(): boolean;
+  /**
+   * Replaces disclosure progress with the boot-restored state (the stored
+   * flag and count, grandfathered). Notifies, so late subscribers re-gate.
+   */
+  restoreDisclosure(state: DisclosureState): void;
   hydrate(data: WorldData): void;
   /**
    * Replaces the whole meadow with a preset world as ONE undoable change.
@@ -114,10 +133,18 @@ function copyScenery(list: readonly PlacedScenery[]): PlacedScenery[] {
   return list.map((item) => ({ ...item, cell: { ...item.cell } }));
 }
 
+/** Every piece type and scenery kind on a meadow, for the grandfather rule. */
+function meadowKinds(data: WorldData): string[] {
+  return [...data.pieces.map((piece) => piece.type), ...data.scenery.map((item) => item.kind)];
+}
+
 export function createWorldStore(): WorldStore {
   const placed: PlacedPiece[] = [];
   const scenery: PlacedScenery[] = [];
   let deliveries: Record<string, number> = {};
+  // Disclosure progress rides with the world (not the drawer): every ride
+  // and every meadow replacement notifies, so autosave keeps it exact.
+  let disclosure: DisclosureState = createDisclosureState();
   let selectedTrain: TrainKind = 'steam';
   let consist: TrainConsist = defaultConsist();
   const listeners = new Set<WorldListener>();
@@ -310,6 +337,21 @@ export function createWorldStore(): WorldStore {
       return count;
     },
 
+    disclosure: () => ({ ...disclosure }),
+
+    recordRide() {
+      const next = recordCompletedRide(disclosure);
+      const justUnlocked = next.unlocked && !disclosure.unlocked;
+      disclosure = next;
+      notify();
+      return justUnlocked;
+    },
+
+    restoreDisclosure(state) {
+      disclosure = { ...state };
+      notify();
+    },
+
     hydrate(data) {
       selectedTrain = data.train;
       deliveries = { ...(data.deliveries ?? {}) };
@@ -346,6 +388,9 @@ export function createWorldStore(): WorldStore {
       placed.splice(0, placed.length);
       scenery.splice(0, scenery.length);
       deliveries = {};
+      // The parent-gated full reset returns the toybox to basics: the unlock
+      // flag and the ride count clear together with the meadow.
+      disclosure = createDisclosureState();
       nextId = 1;
       pendingUndo = null;
       notify();
@@ -365,6 +410,10 @@ export function createWorldStore(): WorldStore {
       const priorNextId = nextId;
       deliveries = { ...(data.deliveries ?? {}) };
       replaceMeadow(data);
+      // A meadow arriving from outside current-session authorship grandfathers
+      // its advanced pieces: present unlocks, absent keeps the stored state,
+      // and pieces are never touched. Undo cannot take the unlock back.
+      disclosure = applyGrandfather(disclosure, meadowKinds(data));
       pendingUndo = () => {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };
@@ -391,6 +440,9 @@ export function createWorldStore(): WorldStore {
       consist = readConsist(data.consist);
       deliveries = { ...(data.deliveries ?? {}) };
       replaceMeadow(data);
+      // Same grandfather as applyPreset: the file's advanced pieces unlock
+      // with every piece kept; undo still cannot take the unlock back.
+      disclosure = applyGrandfather(disclosure, meadowKinds(data));
       pendingUndo = () => {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };

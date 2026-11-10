@@ -167,6 +167,8 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
   // stays here in setDrawer.
   const toyDrawer = createToyDrawer(root, drawer, {
     world: options.world,
+    audio: options.audio,
+    prefersStill,
     // Deferred fire: beginDrag only runs on a user pointerdown, after the
     // toyDrag const below has been initialized (a wiring-time call would TDZ).
     beginDrag: (kind) => toyDrag.beginDrag(kind),
@@ -241,8 +243,14 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
     cellToScreen: scene.cellToScreen,
     ping: (x, y) => toyDrag.ping(x, y),
   });
+  // Unlock mid-ride (3rd ride completes while riding) → reveal applies at
+  // ride end, never interrupting the train: a riding→idle transition counts
+  // one completed ride. Empty meadows never enter riding mode, so they never
+  // count; there is no pause/resume to double-count.
   scene.subscribeRideMode((isRiding) => {
+    const rideEnded = riding && !isRiding;
     riding = isRiding;
+    if (rideEnded) toyDrawer.notifyRideCompleted();
     rideControls.refreshRide();
     // Ride mode sheds the build tools; the stop hands them back untouched.
     // ⏹, whistle, 🎥, mute, and the parent gate stay on the rail.

@@ -14,14 +14,16 @@ of cause and effect.
 
 - **Six locomotives** — Steam, Diesel, Tram, Express, Freight, and
   Bullet — each with its own pace, whistle voice, and wagon outfits
-- **A growing toybox** — straights, curves, switches with swinging signal
-  levers, a three-way junction, hills, tunnels, bridges, and a railway
-  crossing gate that really warns the trains
+- **A growing toybox** — little ones start with simple straights, curves,
+  and switches; after a few rides the toybox grows a three-way junction,
+  hills, tunnels, bridges, and a railway crossing gate that really warns
+  the trains
 - **A living meadow** — a winding river with a barge and a frog,
   windmills, carousels, a hot-air balloon that wanders the sky, and a
   music box that chimes as the train rolls past
-- **Real work** — wagons load crates at the first station and deliver
-  them at the next, with a confetti burst and a growing platform pile
+- **Real work** — once the toybox grows, the station unlocks: wagons load
+  crates at the first station and deliver them at the next, with a confetti
+  burst and a growing platform pile
 - **Day, night, and weather** — sunny mornings, golden sunsets, starry
   nights, rain, and snow (the river even freezes over)
 

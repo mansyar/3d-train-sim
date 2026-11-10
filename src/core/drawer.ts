@@ -5,6 +5,7 @@
  * browser or Three.js coupling.
  */
 
+import { type DisclosureState, isKindVisible } from './disclosure';
 import { PIECE_TYPES, type PieceType } from './pieces';
 import { SCENERY_KINDS, type SceneryKind, sceneryCategory } from './scenery';
 
@@ -74,13 +75,26 @@ const TAB_ARIA: Record<DrawerTabId, string> = {
   critter: 'Critter toys',
 };
 
-/** The drawer tabs with their toys, derived from the catalogs. */
-export function drawerTabs(): DrawerTab[] {
+/**
+ * The drawer tabs with their toys, derived from the catalogs. Pass the
+ * disclosure state to hide the advanced tier while locked (fresh installs
+ * see basics only); omit it — or pass an unlocked state — for the full
+ * toybox exactly as before.
+ */
+export function drawerTabs(state?: DisclosureState): DrawerTab[] {
   const kindsByTab = new Map<DrawerTabId, (PieceType | SceneryKind)[]>(
     DRAWER_TABS.map((id) => [id, []]),
   );
   for (const kind of PIECE_TYPES) kindsByTab.get(tabForKind(kind))?.push(kind);
   for (const kind of SCENERY_KINDS) kindsByTab.get(sceneryCategory(kind))?.push(kind);
+  if (state !== undefined && !state.unlocked) {
+    return DRAWER_TABS.map((id) => ({
+      id,
+      icon: TAB_ICONS[id],
+      aria: TAB_ARIA[id],
+      kinds: (kindsByTab.get(id) ?? []).filter((kind) => isKindVisible(kind, state)),
+    }));
+  }
   return DRAWER_TABS.map((id) => ({
     id,
     icon: TAB_ICONS[id],

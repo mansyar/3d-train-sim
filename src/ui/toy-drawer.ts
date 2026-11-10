@@ -1,3 +1,5 @@
+import type { AudioController } from '../audio/audio-controller';
+import { type DisclosureState, isAdvancedKind } from '../core/disclosure';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import type { SceneryKind } from '../core/scenery';
 import { MAX_PIECES, type PieceType } from '../core/track-graph';
@@ -25,11 +27,22 @@ export interface ToyDrawerDeps {
   beginDrag(kind: PieceType | SceneryKind): void;
   /** A second tap on the active tab asks the wiring to close the drawer. */
   requestClose(): void;
+  /** Sound box for the unlock ding; omit only where celebration is out of scope. */
+  audio?: AudioController | undefined;
+  /** Reduced-motion sample taken once by the wiring (no bounce, silent reveal). */
+  prefersStill?: boolean | undefined;
 }
 
 export interface ToyDrawer {
   /** Show the toys drawer and re-show the remembered tab, or hide it. */
   setOpen(open: boolean): void;
+  /**
+   * Records one completed ride (a ▶ run with the train moving, ended by ⏹).
+   * Returns true exactly on the ride that unlocks the advanced tier.
+   */
+  notifyRideCompleted(): boolean;
+  /** The current disclosure progress, defensively copied. */
+  disclosureState(): DisclosureState;
 }
 
 export function createToyDrawer(
@@ -92,10 +105,61 @@ export function createToyDrawer(
   deps.world.subscribe(refreshCap);
   refreshCap();
 
+  // ---- Progressive disclosure: basics-only toybox, unlock celebration ----
+  // The static panels above hold every catalog slot; while locked the
+  // advanced slots hide via `hidden` — never the MAX_PIECES dimming style,
+  // which keeps meaning "board is full". The third completed ride reveals
+  // them with an icon-only bounce + happy ding; muted or reduced-motion
+  // hands get the same unlocked toybox revealed silently and still (AC-5).
+  // The world store owns the progress (so it autosaves with the world); the
+  // drawer gates slots, celebrates ride-end unlocks, and re-gates on every
+  // world mutation so reloads and resets apply silently.
+
+  const applyGating = (): void => {
+    const locked = !deps.world.disclosure().unlocked;
+    for (const slot of root.querySelectorAll<HTMLButtonElement>('.piece-slot, .scenery-slot')) {
+      const kind = slot.dataset.piece ?? slot.dataset.scenery ?? null;
+      if (kind !== null && isAdvancedKind(kind)) slot.hidden = locked;
+    }
+  };
+  // Reloads, resets, and restored saves land through the store — re-gate
+  // silently on each one. Only a ride-end unlock celebrates, and only once.
+  deps.world.subscribe(applyGating);
+
+  const celebrateUnlock = (): void => {
+    const audio = deps.audio;
+    if (!audio || audio.isMuted() || (deps.prefersStill ?? false)) return;
+    audio.ding();
+    for (const id of ['adventure', 'town'] as const) {
+      const tab = tabButtons.get(id);
+      if (!tab) continue;
+      // Restart the pop when unlocks land back-to-back (same pattern as ▶).
+      tab.classList.remove('pop');
+      void tab.offsetWidth;
+      tab.classList.add('pop');
+    }
+  };
+
+  for (const button of tabButtons.values()) {
+    button.addEventListener('animationend', () => button.classList.remove('pop'));
+  }
+
+  const notifyRideCompleted = (): boolean => {
+    // The count lives in the world store now, so the ride autosaves with the
+    // world; the store's own notification already re-gated the slots above.
+    const justUnlocked = deps.world.recordRide();
+    if (justUnlocked) celebrateUnlock();
+    return justUnlocked;
+  };
+
+  applyGating();
+
   return {
     setOpen(open) {
       drawer.toggleAttribute('hidden', !open);
       if (open) showTab(activeTab ?? 'rails');
     },
+    notifyRideCompleted,
+    disclosureState: () => deps.world.disclosure(),
   };
 }
