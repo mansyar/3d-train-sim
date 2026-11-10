@@ -14,19 +14,19 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `src/core/disclosure.ts`, `src/core/disclosure.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Disclosure tier model** — covers: FR-1, FR-2
-  - [ ] **P1.T1.1: Kind tiers table + tests** (basics vs `switch-3way` / `switch-slip` / `station`)
-  - [ ] **P1.T1.2: Visibility selector + tests** (locked → basics; unlocked → all)
-- [ ] **P1.T2: Ride-count unlock + grandfather** — covers: FR-3, FR-4, FR-5
-  - [ ] **P1.T2.1: Ride counter + threshold (3) + tests**
-  - [ ] **P1.T2.2: Grandfather rule + tests** (world has advanced piece → unlocked)
+- [x] **P1.T1: Disclosure tier model** — covers: FR-1, FR-2
+  - [x] **P1.T1.1: Kind tiers table + tests** (basics vs `switch-3way` / `switch-slip` / `station`)
+  - [x] **P1.T1.2: Visibility selector + tests** (locked → basics; unlocked → all)
+- [x] **P1.T2: Ride-count unlock + grandfather** — covers: FR-3, FR-4, FR-5
+  - [x] **P1.T2.1: Ride counter + threshold (3) + tests**
+  - [x] **P1.T2.2: Grandfather rule + tests** (world has advanced piece → unlocked)
 
 <!--
 The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified (primary: `pnpm check` exit 0 — biome 184 files clean, tsc clean, 53 files / 928 tests pass)
+**Checkpoint:** cea0533
 **Evidence:** conductor/tracks/progressive-disclosure_20261110/verification/phase-1.md
 -->
 

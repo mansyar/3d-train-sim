@@ -62,3 +62,19 @@ were all fixed by the brief.
   salvage rules.
 - Phase 3 wiring point: store `DisclosureState` in the world save/autosave and
   feed piece types + scenery kinds into `applyGrandfather` on load.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-10
+- Checkpoint: cea0533
+- Tree: clean (`git status --porcelain` empty).
+- Diff `04d842d..HEAD`: `src/core/disclosure.ts`,
+  `src/core/disclosure.test.ts`,
+  `conductor/tracks/progressive-disclosure_20261110/verification/phase-1.md` —
+  within Touches plus evidence.
+- Commands: `pnpm check` exit 0 (biome 184 files clean, tsc clean, 53 test
+  files / 928 tests pass). Subagent coverage run: 97.28% stmts / 90.59%
+  branches, `disclosure.ts` fully covered — above the 80% gate.
+- AC comparison: AC-1/AC-2/AC-3 all pass per evidence table and re-verified
+  model semantics (locked hides exactly the 3 advanced kinds; 3rd ride
+  unlocks; JSON round-trip preserves unlock).

@@ -10,15 +10,15 @@
   ],
   "doc_sync": "pending",
   "id": "progressive-disclosure_20261110",
-  "last_checkpoint": null,
+  "last_checkpoint": "cea0533",
   "plan": "plan.md",
   "pr_state": null,
   "pr_url": null,
   "priority": "high",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 0,
-    "tasks_done": 0,
+    "phases_verified": 1,
+    "tasks_done": 6,
     "tasks_total": 18
   },
   "review_rounds": 0,
@@ -30,5 +30,5 @@
   "status": "in_progress",
   "title": "Progressive Disclosure",
   "type": "feature",
-  "updated_at": "2026-11-10T05:47:01Z"
+  "updated_at": "2026-11-10T05:52:00Z"
 }
