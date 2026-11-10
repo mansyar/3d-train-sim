@@ -90,3 +90,20 @@
 - Session state: `DisclosureState` lives in the toy-drawer (the existing
   owner of drawer UI state) for Phase 2; Phase 3 persists it (world save +
   grandfather) per the plan.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-10
+- Checkpoint: 5155d72
+- Tree: clean (`git status --porcelain` empty).
+- Diff `630adb5..HEAD`: `src/core/drawer.ts`, `src/core/drawer.test.ts`,
+  `src/ui/toy-drawer.ts`, `src/ui/toy-drawer.test.ts` (Touches + tests),
+  `src/ui/app.ts` + `src/style.css` (recorded deviations),
+  `conductor/tracks/progressive-disclosure_20261110/verification/phase-2.md`
+  (evidence).
+- Commands: `pnpm check` exit 0 (biome clean, tsc clean, 54 test files /
+  938 tests pass — 928 before + 10 new). Subagent coverage run: core+state
+  97.3 / 90.5 / 97.9 / 99.4 — above the 80% gate.
+- AC comparison: FR-2/P2.T1.1, FR-2/P2.T1.2, FR-6/P2.T2.1, P2.T2.2, NFR-1,
+  NFR-3, AC-4 all pass per evidence table; deviations reviewed and accepted
+  (smallest possible wiring, no ride-controller change needed).

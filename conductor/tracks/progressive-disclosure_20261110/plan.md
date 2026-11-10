@@ -37,14 +37,19 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-6, NFR-1, NFR-3, AC-4
 - **Touches:** `src/ui/toy-drawer.ts`, `src/core/drawer.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Toybox gating** — covers: FR-2
-  - [ ] **P2.T1.1: Hide advanced slots while locked**
-  - [ ] **P2.T1.2: MAX_PIECES cap dimming preserved**
-- [ ] **P2.T2: Unlock celebration** — covers: FR-6
-  - [ ] **P2.T2.1: Bounce + ding, mute + reduced-motion respected**
-  - [ ] **P2.T2.2: Sub-100 ms tap feedback preserved**
+- [x] **P2.T1: Toybox gating** — covers: FR-2
+  - [x] **P2.T1.1: Hide advanced slots while locked**
+  - [x] **P2.T1.2: MAX_PIECES cap dimming preserved**
+- [x] **P2.T2: Unlock celebration** — covers: FR-6
+  - [x] **P2.T2.1: Bounce + ding, mute + reduced-motion respected**
+  - [x] **P2.T2.2: Sub-100 ms tap feedback preserved**
+
+**Result (Phase 2):** verified (primary: `pnpm check` exit 0 — 54 files / 938 tests pass)
+**Checkpoint (Phase 2):** 5155d72
+**Evidence (Phase 2):** conductor/tracks/progressive-disclosure_20261110/verification/phase-2.md
+**Deviations (Phase 2):** `src/ui/app.ts` (ride-end counting hook on existing `subscribeRideMode` push, no ride-controller change needed), `src/style.css` (`.drawer-tab.pop` reusing `ride-pop`, `[hidden]` guards, reduced-motion `animation: none` cover)
 
 <!--
 Review fixes are appended by `conductor-review` as:
