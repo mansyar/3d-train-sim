@@ -1,5 +1,6 @@
 import { type DBSchema, openDB } from 'idb';
 import { type DayPhase, DEFAULT_DAY_PHASE } from '../core/day-clock';
+import type { DisclosureState } from '../core/disclosure';
 import {
   deserializePreferences,
   parseWorldSnapshot,
@@ -126,6 +127,7 @@ interface WorldReader {
   scenery(): readonly PlacedScenery[];
   deliveries(): Record<string, number>;
   consist(): TrainConsist;
+  disclosure(): DisclosureState;
   subscribe(listener: () => void): () => void;
 }
 
@@ -138,6 +140,7 @@ function snapshotOf(world: WorldReader, muted: boolean, dayPhase?: DayPhase): Wo
     world.deliveries(),
     world.consist(),
     dayPhase,
+    world.disclosure(),
   );
 }
 

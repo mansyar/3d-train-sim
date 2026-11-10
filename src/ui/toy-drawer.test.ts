@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AudioController } from '../audio/audio-controller';
+import { createDisclosureState, recordCompletedRide } from '../core/disclosure';
 import { DRAWER_TABS, drawerTabs } from '../core/drawer';
 import { MAX_PIECES } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
@@ -135,11 +136,23 @@ function buildHarness(options: HarnessOptions): Harness {
   };
   const drawerElement = new FakeElement(['toy-drawer'], {});
 
+  // The drawer delegates progress to the world store now, so the mock keeps a
+  // real DisclosureState behind the extended store contract — including the
+  // store notification the drawer re-gates on.
+  let disclosure = createDisclosureState();
   const worldListeners: FakeListener[] = [];
   const world = {
     pieces: () =>
       Array.from({ length: options.worldCount }, (_, index) => ({ id: `piece-${index}` })),
     scenery: () => [],
+    disclosure: () => ({ ...disclosure }),
+    recordRide: () => {
+      const next = recordCompletedRide(disclosure);
+      const justUnlocked = next.unlocked && !disclosure.unlocked;
+      disclosure = next;
+      for (const listener of worldListeners) listener({ preventDefault() {} });
+      return justUnlocked;
+    },
     subscribe: (listener: FakeListener) => {
       worldListeners.push(listener);
       return () => undefined;

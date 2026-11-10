@@ -1,10 +1,5 @@
 import type { AudioController } from '../audio/audio-controller';
-import {
-  createDisclosureState,
-  type DisclosureState,
-  isAdvancedKind,
-  recordCompletedRide,
-} from '../core/disclosure';
+import { type DisclosureState, isAdvancedKind } from '../core/disclosure';
 import { type DrawerTabId, drawerTabs } from '../core/drawer';
 import type { SceneryKind } from '../core/scenery';
 import { MAX_PIECES, type PieceType } from '../core/track-graph';
@@ -116,14 +111,20 @@ export function createToyDrawer(
   // which keeps meaning "board is full". The third completed ride reveals
   // them with an icon-only bounce + happy ding; muted or reduced-motion
   // hands get the same unlocked toybox revealed silently and still (AC-5).
-  let disclosure: DisclosureState = createDisclosureState();
+  // The world store owns the progress (so it autosaves with the world); the
+  // drawer gates slots, celebrates ride-end unlocks, and re-gates on every
+  // world mutation so reloads and resets apply silently.
 
   const applyGating = (): void => {
+    const locked = !deps.world.disclosure().unlocked;
     for (const slot of root.querySelectorAll<HTMLButtonElement>('.piece-slot, .scenery-slot')) {
       const kind = slot.dataset.piece ?? slot.dataset.scenery ?? null;
-      if (kind !== null && isAdvancedKind(kind)) slot.hidden = !disclosure.unlocked;
+      if (kind !== null && isAdvancedKind(kind)) slot.hidden = locked;
     }
   };
+  // Reloads, resets, and restored saves land through the store — re-gate
+  // silently on each one. Only a ride-end unlock celebrates, and only once.
+  deps.world.subscribe(applyGating);
 
   const celebrateUnlock = (): void => {
     const audio = deps.audio;
@@ -144,13 +145,10 @@ export function createToyDrawer(
   }
 
   const notifyRideCompleted = (): boolean => {
-    const next = recordCompletedRide(disclosure);
-    const justUnlocked = next.unlocked && !disclosure.unlocked;
-    disclosure = next;
-    if (justUnlocked) {
-      applyGating();
-      celebrateUnlock();
-    }
+    // The count lives in the world store now, so the ride autosaves with the
+    // world; the store's own notification already re-gated the slots above.
+    const justUnlocked = deps.world.recordRide();
+    if (justUnlocked) celebrateUnlock();
     return justUnlocked;
   };
 
@@ -162,6 +160,6 @@ export function createToyDrawer(
       if (open) showTab(activeTab ?? 'rails');
     },
     notifyRideCompleted,
-    disclosureState: () => ({ ...disclosure }),
+    disclosureState: () => deps.world.disclosure(),
   };
 }

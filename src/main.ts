@@ -5,6 +5,7 @@ import '@fontsource/baloo-2'; // The kid-playful display face — bundled, offli
 import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import type { DayPhase } from './core/day-clock';
+import { applyGrandfather, parseDisclosureState } from './core/disclosure';
 import { buildExport, exportFileName } from './core/portable';
 import { recoveryNotice } from './core/recovery';
 import { deserializeWorld, serializeWorld } from './core/save';
@@ -75,7 +76,20 @@ if (root) {
       recovery.droppedDuplicates,
     );
     if (snapshot) {
-      world.hydrate(deserializeWorld(snapshot));
+      const data = deserializeWorld(snapshot);
+      world.hydrate(data);
+      // The stored count and flag survive reload exactly: worlds without
+      // advanced pieces keep their stored state, while a stored world already
+      // holding one unlocks with every piece kept. Kinds come from the
+      // validated world (never raw storage), so a salvaged entry cannot crash
+      // the boot. Fresh installs never pass through here, so the seeded oval —
+      // which parks a station by the track — still opens on the basics tier.
+      world.restoreDisclosure(
+        applyGrandfather(parseDisclosureState(snapshot.disclosure), [
+          ...data.pieces.map((piece) => piece.type),
+          ...data.scenery.map((item) => item.kind),
+        ]),
+      );
     } else {
       // First run: seed a rideable cozy oval so the meadow invites one tap.
       world.hydrate(cozyOval());
