@@ -101,9 +101,11 @@ test('riding hides the build tools, and stopping returns them with the five tabs
 
     const counts: Record<string, number> = {
       rails: 10,
-      adventure: 9,
+      // Fresh profile: the advanced tier is locked (three-way, double-slip
+      // hidden; station hidden from town), so the locked counts apply.
+      adventure: 7,
       nature: 3,
-      town: 7,
+      town: 6,
       critter: 4,
     };
     for (const [tab, count] of Object.entries(counts)) {
@@ -114,15 +116,33 @@ test('riding hides the build tools, and stopping returns them with the five tabs
         await page.locator(`.drawer-tab[data-tab="${tab}"]`).click();
       }
       await expect(panel).toBeVisible();
-      await expect(panel.locator('.piece-slot, .scenery-slot')).toHaveCount(count);
+      // Locked advanced slots hide via the `hidden` attribute but stay in the
+      // DOM — count only the slots a toddler can actually see and tap.
+      await expect(
+        panel.locator('.piece-slot:not([hidden]), .scenery-slot:not([hidden])'),
+      ).toHaveCount(count);
     }
 
-    // Toy rows are single scrollable rows by design (Rails already holds 10
-    // toys), so the 9-toy Adventure row swipes on phones and tablets alike
-    // instead of wrapping over the meadow.
+    // Unlock the advanced tier (three completed rides) and prove the full
+    // 9-toy Adventure row still swipes on phones and tablets alike instead
+    // of wrapping over the meadow.
+    await page.evaluate(() => {
+      const world = (
+        window as unknown as {
+          __tinyTracksWorld?: { recordRide: () => boolean };
+        }
+      ).__tinyTracksWorld;
+      if (!world) throw new Error('dev world handle missing');
+      world.recordRide();
+      world.recordRide();
+      world.recordRide();
+    });
     await page.locator('.drawer-tab[data-tab="adventure"]').click();
     const adventure = page.locator('.drawer-panel[data-panel="adventure"]');
     await expect(adventure).toBeVisible();
+    await expect(
+      adventure.locator('.piece-slot:not([hidden]), .scenery-slot:not([hidden])'),
+    ).toHaveCount(9);
     const overflow = await page
       .locator('.drawer-panel[data-panel="adventure"]')
       .evaluate((panel) => panel.scrollWidth > panel.clientWidth + 1);
