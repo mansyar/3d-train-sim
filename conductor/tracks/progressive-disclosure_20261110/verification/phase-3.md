@@ -91,3 +91,19 @@ never in `hydrate` (fresh seed) or `undo` (undo never removes the unlock).
   spec. State still sits at 94.30%, far above the 80% gate.
 - Follow-up for a later track (not this phase): the seeded `cozyOval` parks
   a station while locked — intended per FR-1, and the e2e suite now pins it.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-10
+- Checkpoint: f62000d
+- Tree: clean (`git status --porcelain` empty).
+- Diff `2e98eb7..HEAD`: `src/core/save.ts`, `src/state/world.ts`,
+  `e2e/disclosure.spec.ts` (Touches), `src/state/persistence.ts`,
+  `src/ui/toy-drawer.ts`, `src/main.ts`, `src/ui/toy-drawer.test.ts`
+  (recorded deviations), `verification/phase-3.md` (evidence).
+- Commands: `pnpm check` exit 0 (biome clean, tsc clean, 54 files /
+  938 tests pass); `pnpm exec playwright test e2e/disclosure.spec.ts`
+  exit 0 (3 passed, 1.2m, tablet).
+- AC comparison: FR-4/FR-5/FR-7, AC-5/AC-6, NFR-1..NFR-4 all pass per
+  evidence table and re-verified runs; deviations reviewed and accepted
+  (each the smallest possible wiring for its requirement).

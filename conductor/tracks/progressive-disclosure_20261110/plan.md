@@ -75,9 +75,14 @@ Review fixes are appended by `conductor-review` as:
 - **Verification:** `pnpm exec playwright test e2e/disclosure.spec.ts`
 - **Status:** in_progress
 
-- [ ] **P3.T1: Persistence + migration** — covers: FR-4, FR-5, FR-7
-  - [ ] **P3.T1.1: Save/load unlock flag; parent reset clears**
-  - [ ] **P3.T1.2: Pre-tier world migration (grandfather)**
-- [ ] **P3.T2: E2E + measurement hooks** — covers: AC-5, AC-6
-  - [ ] **P3.T2.1: disclosure.spec.ts (locked → 3 rides → unlocked → reload persists)**
-  - [ ] **P3.T2.2: Audit-comparison notes (baseline fields recorded)**
+- [x] **P3.T1: Persistence + migration** — covers: FR-4, FR-5, FR-7
+  - [x] **P3.T1.1: Save/load unlock flag; parent reset clears**
+  - [x] **P3.T1.2: Pre-tier world migration (grandfather)**
+- [x] **P3.T2: E2E + measurement hooks** — covers: AC-5, AC-6
+  - [x] **P3.T2.1: disclosure.spec.ts (locked → 3 rides → unlocked → reload persists)**
+  - [x] **P3.T2.2: Audit-comparison notes (baseline fields recorded)**
+
+**Result (Phase 3):** verified (primary: `pnpm exec playwright test e2e/disclosure.spec.ts` 3 passed + `pnpm check` exit 0 — 54 files / 938 tests)
+**Checkpoint (Phase 3):** f62000d
+**Evidence (Phase 3):** conductor/tracks/progressive-disclosure_20261110/verification/phase-3.md
+**Deviations (Phase 3):** `src/state/persistence.ts` (WorldReader.disclosure + snapshotOf carry), `src/ui/toy-drawer.ts` (delegates to world store, re-gates on subscription), `src/main.ts` (boot restore via parseDisclosureState + grandfather), `src/ui/toy-drawer.test.ts` (harness mock, test-only) — all accepted as smallest possible wiring
