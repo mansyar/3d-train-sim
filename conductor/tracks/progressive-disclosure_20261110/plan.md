@@ -73,7 +73,7 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** FR-4, FR-5, FR-7, NFR-1, NFR-2, NFR-3, NFR-4, AC-5, AC-6
 - **Touches:** `src/core/save.ts`, `src/state/world.ts`, `e2e/disclosure.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/disclosure.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Persistence + migration** — covers: FR-4, FR-5, FR-7
   - [ ] **P3.T1.1: Save/load unlock flag; parent reset clears**
