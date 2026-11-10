@@ -37,7 +37,7 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-6, NFR-1, NFR-3, AC-4
 - **Touches:** `src/ui/toy-drawer.ts`, `src/core/drawer.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Toybox gating** — covers: FR-2
   - [ ] **P2.T1.1: Hide advanced slots while locked**
