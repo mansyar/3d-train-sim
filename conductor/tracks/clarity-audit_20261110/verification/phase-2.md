@@ -64,3 +64,13 @@ definitions (§4.1, §4.2) were reused unchanged.
 - The v1.0 gate figures in `comparison.md` (3/3 under 60 s, one 10+ min session)
   come from `conductor/product.md` per the spec's stated assumption; they are
   reference thresholds, not measured current-state values.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-17
+- Checkpoint: `8cda390` (no squash: both commits in phase range were reported by the executor)
+- Working tree clean; diff for `6cb98405..HEAD` contains only `report.md`, `comparison.md`, and this evidence file — all within Touches.
+- Exact plan Verification command re-run by the primary: exit 0.
+- `pnpm check` re-run by the primary: exit 0; Biome clean, tsc clean, Vitest 54 files / 938 tests passed.
+- FR-3, FR-4, FR-5, FR-6, AC-2, AC-3, AC-4, NFR-2 and NFR-3 verified against the committed artifacts. All measured cells remain "not measured" / "awaiting observation"; no numbers invented.
+- No deviations from Touches.

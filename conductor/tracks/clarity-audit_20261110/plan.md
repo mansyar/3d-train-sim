@@ -41,18 +41,18 @@
 - **Covers:** FR-3, FR-4, FR-5, FR-6, AC-2, AC-3, AC-4, NFR-2, NFR-3
 - **Touches:** `conductor/tracks/clarity-audit_20261110/report.md`, `conductor/tracks/clarity-audit_20261110/comparison.md`
 - **Verification:** `python -c "from pathlib import Path; d = Path('conductor/tracks/clarity-audit_20261110'); r = (d / 'report.md').read_text(encoding='utf-8'); c = (d / 'comparison.md').read_text(encoding='utf-8'); assert all(s in r for s in ('not measured', 'severity', 'child 1', 'child 2', 'child 3')); assert all(s in c for s in ('awaiting observation', 'v0.12.0', 'progressive-disclosure_20261110'))"`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Build the session report template** — covers: FR-3, FR-4, FR-6
-  - [ ] **P2.T1.1:** Three per-child rows with both measures and a "not measured" state
-  - [ ] **P2.T1.2:** Friction table with child count, severity, and count-then-severity top five
-- [ ] **P2.T2: Build the comparison artifact** — covers: FR-5, FR-6
-  - [ ] **P2.T2.1:** v0.12.0 current-state baseline table with all values "awaiting observation"
-  - [ ] **P2.T2.2:** Cite imported field definitions and state that no pre-feature numbers exist
+- [x] **P2.T1: Build the session report template** — covers: FR-3, FR-4, FR-6
+  - [x] **P2.T1.1:** Three per-child rows with both measures and a "not measured" state
+  - [x] **P2.T1.2:** Friction table with child count, severity, and count-then-severity top five
+- [x] **P2.T2: Build the comparison artifact** — covers: FR-5, FR-6
+  - [x] **P2.T2.1:** v0.12.0 current-state baseline table with all values "awaiting observation"
+  - [x] **P2.T2.2:** Cite imported field definitions and state that no pre-feature numbers exist
 
 <!--
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 8cda390
 **Evidence:** conductor/tracks/clarity-audit_20261110/verification/phase-2.md
 -->
 
