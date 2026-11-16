@@ -14,7 +14,7 @@
 - **Depends on:** none
 - **Covers:** FR-1, FR-2, AC-1, NFR-3
 - **Touches:** `conductor/tracks/clarity-audit_20261110/protocol.md`
-- **Verification:** `python -c "from pathlib import Path; t = Path('conductor/tracks/clarity-audit_20261110/protocol.md').read_text(encoding='utf-8'); assert all(s in t for s in ('2–4', 'consent', 'time-to-first-ride', 'unassisted session length', '20', 'not measured'))"`
+- **Verification:** `python -c "from pathlib import Path; t = Path('conductor/tracks/clarity-audit_20261110/protocol.md').read_text(encoding='utf-8'); assert all(s in t for s in ('2\u20134', 'consent', 'time-to-first-ride', 'unassisted session length', '20', 'not measured'))"`
 - **Status:** in_progress
 
 - [ ] **P1.T1: Write the observation protocol** — covers: FR-1, FR-2
