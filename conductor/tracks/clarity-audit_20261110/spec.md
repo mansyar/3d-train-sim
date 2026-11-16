@@ -76,7 +76,7 @@ observed behavior.
 | --- | --- |
 | NFR-1 | Phase verification is artifact-only: deterministic completeness checks assert required headings, columns and pending states; no unit tests are invented for prose. |
 | NFR-2 | No app code, telemetry, network calls, or privacy-guideline changes; `pnpm check` stays green. |
-| NFR-3 | Every acceptance criterion traces to an FR ID; IDs remain stable after approval. |
+| NFR-3 | Every acceptance criterion traces to an FR or NFR ID; IDs remain stable after approval. |
 
 ## Acceptance Criteria
 

@@ -27,12 +27,6 @@
 **Evidence:** conductor/tracks/clarity-audit_20261110/verification/phase-1.md
 **Note:** No squash — the range includes primary commit `f9b15f4` (verification-command portability fix) that the executor did not report; task commits were kept.
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/clarity-audit_20261110/verification/phase-1.md
--->
-
 ## Phase 2: Report and comparison templates
 
 - **Goal:** Empty, structured artifacts exist for session records, ranked
@@ -50,11 +44,9 @@
   - [x] **P2.T2.1:** v0.12.0 current-state baseline table with all values "awaiting observation"
   - [x] **P2.T2.2:** Cite imported field definitions and state that no pre-feature numbers exist
 
-<!--
 **Result:** verified
 **Checkpoint:** 8cda390
 **Evidence:** conductor/tracks/clarity-audit_20261110/verification/phase-2.md
--->
 
 ## Phase 3: Roadmap sync and artifact gate
 
@@ -89,3 +81,19 @@ Review fixes are appended by `conductor-review` as:
 
 - [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
 -->
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve the two Low review findings without changing artifacts or app code.
+- **Depends:** Phase 3
+- **Covers:** F1, F2
+- **Touches:** `conductor/tracks/clarity-audit_20261110/plan.md`, `conductor/tracks/clarity-audit_20261110/spec.md`, `conductor/tracks/clarity-audit_20261110/review.md`
+- **Verification:** `python conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py` and `pnpm check`
+- **Status:** complete
+
+- [x] **R1.T1: Resolve F1** — covers: F1 — uncomment the Phase 2 Result/Checkpoint/Evidence block and remove the stale Phase 1 `<short-sha>` template comment.
+- [x] **R1.T2: Resolve F2** — covers: F2 — NFR-3 now says "FR or NFR ID", matching AC-6's meta-criterion mapping, with no ID renumbered.
+
+**Result:** verified — both Low findings addressed; deterministic checker still exit 0 (73 checks); `pnpm check` exit 0.
+**Checkpoint:** pending commit
+**Evidence:** conductor/tracks/clarity-audit_20261110/review.md
