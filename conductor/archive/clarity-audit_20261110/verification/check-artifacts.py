@@ -10,9 +10,9 @@ Source is ASCII-only (non-ASCII characters use \\u escapes) for shell portabilit
 from pathlib import Path
 import sys
 
-# verification/ -> clarity-audit_20261110 -> tracks -> conductor -> repo root
+# verification/ -> track dir -> (tracks or archive) -> conductor -> repo root
 ROOT = Path(__file__).resolve().parents[4]
-TRACK = ROOT / "conductor" / "tracks" / "clarity-audit_20261110"
+TRACK = Path(__file__).resolve().parents[1]
 
 FILES = {
     "protocol.md": TRACK / "protocol.md",
