@@ -95,5 +95,5 @@ Review fixes are appended by `conductor-review` as:
 - [x] **R1.T2: Resolve F2** — covers: F2 — NFR-3 now says "FR or NFR ID", matching AC-6's meta-criterion mapping, with no ID renumbered.
 
 **Result:** verified — both Low findings addressed; deterministic checker still exit 0 (73 checks); `pnpm check` exit 0.
-**Checkpoint:** pending commit
+**Checkpoint:** e2e7b12
 **Evidence:** conductor/tracks/clarity-audit_20261110/review.md
