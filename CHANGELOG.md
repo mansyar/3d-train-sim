@@ -9,6 +9,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-17
+
 ### Added
 - **A toybox that grows with your little engineer.** First runs offer just
   the simple pieces — straights, curves, and plain switches — so the first
@@ -39,8 +41,6 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   straight → east diagonal → west diagonal on successive passes, with the
   entry's point blades and the signal lever following the chosen road.
   Find it in the Adventure tab. Saves stay compatible — no reset needed.
-
-## [Unreleased]
 
 ## [0.10.0] - 2026-09-19
 
@@ -323,7 +323,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/mansyar/3d-train-sim/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mansyar/3d-train-sim/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/mansyar/3d-train-sim/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/mansyar/3d-train-sim/compare/v0.8.0...v0.9.0
