@@ -64,7 +64,7 @@
 - **Covers:** FR-7, AC-5, AC-6, NFR-1, NFR-2, NFR-3
 - **Touches:** `conductor/product.md`, `conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py`, `conductor/tracks/clarity-audit_20261110/verification/artifacts.md`
 - **Verification:** `python conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py` **and** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7
 - [ ] **P3.T2: Add the deterministic artifact check and evidence** — covers: AC-6, NFR-1
