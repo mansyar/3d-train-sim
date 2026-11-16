@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [clarity-audit_20261110](./tracks/clarity-audit_20261110/index.md) | Clarity Audit | Chore | in_progress |
+| [clarity-audit_20261110](./archive/clarity-audit_20261110/index.md) | Clarity Audit | Chore | archived |
 | [progressive-disclosure_20261110](./archive/progressive-disclosure_20261110/index.md) | Progressive Disclosure | Feature | archived |
 | [single-train-driver-camera_20261110](./archive/single-train-driver-camera_20261110/index.md) | Single Train and Driver Camera | Feature | archived |
 | [process-hygiene_20261109](./archive/process-hygiene_20261109/index.md) | Process Hygiene | Chore | archived |
