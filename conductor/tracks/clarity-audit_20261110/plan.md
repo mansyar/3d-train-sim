@@ -41,7 +41,7 @@
 - **Covers:** FR-3, FR-4, FR-5, FR-6, AC-2, AC-3, AC-4, NFR-2, NFR-3
 - **Touches:** `conductor/tracks/clarity-audit_20261110/report.md`, `conductor/tracks/clarity-audit_20261110/comparison.md`
 - **Verification:** `python -c "from pathlib import Path; d = Path('conductor/tracks/clarity-audit_20261110'); r = (d / 'report.md').read_text(encoding='utf-8'); c = (d / 'comparison.md').read_text(encoding='utf-8'); assert all(s in r for s in ('not measured', 'severity', 'child 1', 'child 2', 'child 3')); assert all(s in c for s in ('awaiting observation', 'v0.12.0', 'progressive-disclosure_20261110'))"`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Build the session report template** — covers: FR-3, FR-4, FR-6
   - [ ] **P2.T1.1:** Three per-child rows with both measures and a "not measured" state
