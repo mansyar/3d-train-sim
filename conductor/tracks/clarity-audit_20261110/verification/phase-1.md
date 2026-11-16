@@ -49,3 +49,20 @@ written. No product or design decision was required.
 - `protocol.md` was committed as `bb9951b` (docs(conductor): add clarity audit
   observation protocol); this evidence file is committed in a follow-up commit
   so the report can reference the deliverable's head hash without amending.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-17
+- Checkpoint: f63c31e (no squash: primary's `f9b15f4` verification-command fix was
+  in range and unreported by the executor, so task commits were preserved)
+- `git status --porcelain`: clean after executor commits
+- `git diff --name-only 2c88e7c..HEAD`: `plan.md` (primary correction),
+  `protocol.md` (Touches), `verification/phase-1.md` (evidence) — in bounds
+- Verification command (exact, ASCII escape): exit 0 — all six required strings present
+- `pnpm check`: exit 0 — Biome clean, tsc clean, Vitest 54 files / 938 tests passed
+- AC-1 and FR-1/FR-2/NFR-3: satisfied by protocol.md sections 1–5 and 7; no
+  invented data, no app code, no telemetry
+- Deviation accepted: `conductor-phase` executor's `edit` permission denies
+  `conductor/**` outside `verification/**`, so an unrestricted executor wrote the
+  artifact; verification command changed from a literal en-dash (rejected by the
+  portable shell scanner) to the equivalent `2\u20134` escape

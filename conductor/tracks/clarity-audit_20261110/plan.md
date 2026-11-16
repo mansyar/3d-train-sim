@@ -15,12 +15,17 @@
 - **Covers:** FR-1, FR-2, AC-1, NFR-3
 - **Touches:** `conductor/tracks/clarity-audit_20261110/protocol.md`
 - **Verification:** `python -c "from pathlib import Path; t = Path('conductor/tracks/clarity-audit_20261110/protocol.md').read_text(encoding='utf-8'); assert all(s in t for s in ('2\u20134', 'consent', 'time-to-first-ride', 'unassisted session length', '20', 'not measured'))"`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Write the observation protocol** — covers: FR-1, FR-2
-  - [ ] **P1.T1.1:** Cohort of three children aged 2–4, parent consent and anonymous notes
-  - [ ] **P1.T1.2:** Session flow, device setup, and interruption/disengagement handling
-  - [ ] **P1.T1.3:** Clock definitions (open/wake → first ride; first placement → disengage/help, 20-minute cap)
+- [x] **P1.T1: Write the observation protocol** — covers: FR-1, FR-2
+  - [x] **P1.T1.1:** Cohort of three children aged 2–4, parent consent and anonymous notes
+  - [x] **P1.T1.2:** Session flow, device setup, and interruption/disengagement handling
+  - [x] **P1.T1.3:** Clock definitions (open/wake → first ride; first placement → disengage/help, 20-minute cap)
+
+**Result:** verified
+**Checkpoint:** f63c31e
+**Evidence:** conductor/tracks/clarity-audit_20261110/verification/phase-1.md
+**Note:** No squash — the range includes primary commit `f9b15f4` (verification-command portability fix) that the executor did not report; task commits were kept.
 
 <!--
 **Result:** verified
