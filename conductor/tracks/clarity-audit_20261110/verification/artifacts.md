@@ -64,3 +64,13 @@ measurement numbers; no product or design decision was required.
 - The checker verifies pending states by asserting exact result rows (per-child
   and friction cells are only "not measured"; the v0.12.0 baseline cells are only
   "awaiting observation"), so no invented numeric result can satisfy it.
+
+## Primary verification (4.7)
+
+- Date: 2026-11-17
+- Checkpoint: `ddccc17` (no squash: all three phase commits were reported by the executor)
+- Working tree clean; diff for `8aea641..HEAD` contains only `product.md`, `check-artifacts.py`, and this evidence file — all within Touches.
+- `python conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py` re-run by the primary: exit 0 — `OK: 73 artifact checks passed across 4 files`.
+- `pnpm check` re-run by the primary: exit 0 (Biome/tsc clean, Vitest 54 files / 938 tests passed).
+- FR-7, AC-5, AC-6, NFR-1, NFR-2 and NFR-3 verified against the committed roadmap row, checker and artifacts. No sessions were run and no measurement numbers were invented.
+- No deviations from Touches.

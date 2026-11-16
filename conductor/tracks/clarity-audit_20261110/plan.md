@@ -64,12 +64,16 @@
 - **Covers:** FR-7, AC-5, AC-6, NFR-1, NFR-2, NFR-3
 - **Touches:** `conductor/product.md`, `conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py`, `conductor/tracks/clarity-audit_20261110/verification/artifacts.md`
 - **Verification:** `python conductor/tracks/clarity-audit_20261110/verification/check-artifacts.py` **and** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7
-- [ ] **P3.T2: Add the deterministic artifact check and evidence** — covers: AC-6, NFR-1
-  - [ ] **P3.T2.1:** Checker asserts required headings, columns, pending values, and AC→FR traceability
-  - [ ] **P3.T2.2:** Record commands and results in `verification/artifacts.md`
+- [x] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7
+- [x] **P3.T2: Add the deterministic artifact check and evidence** — covers: AC-6, NFR-1
+  - [x] **P3.T2.1:** Checker asserts required headings, columns, pending values, and AC→FR traceability
+  - [x] **P3.T2.2:** Record commands and results in `verification/artifacts.md`
+
+**Result:** verified — roadmap Shipped marker added; `check-artifacts.py` exit 0 (73 checks); `pnpm check` exit 0 (938 tests).
+**Checkpoint:** ddccc17
+**Evidence:** conductor/tracks/clarity-audit_20261110/verification/artifacts.md
 
 <!--
 Review fixes are appended by `conductor-review` as:
