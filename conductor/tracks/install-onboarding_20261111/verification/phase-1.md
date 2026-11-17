@@ -47,3 +47,9 @@ None. All changes stayed within the phase Touches.
 - `deserializePreferences` omits `installHintDismissed` when it is not explicitly `true`, preserving existing exact-equality assertions; consumers read it as `=== true` for a default-false boolean.
 - `src/main.ts` (browser probe construction and watcher wiring) is intentionally left for Phase 2, which owns the UI.
 - Two exploratory shell attempts at a targeted test run were denied by the permission policy; verification was performed with the single allowed command, `pnpm check && pnpm test:coverage`, which passed on the final run. Three verification runs total: two found and fixed formatting/expectation issues, the third passed.
+
+## Primary verification
+
+- **Command:** `pnpm check && pnpm test:coverage`
+- **Exit code:** 0
+- **Result:** pass. Biome checked 194 files with no fixes; `tsc --noEmit` clean; 57 test files / 1009 unit tests passed; coverage 97.05% statements, 91.19% branches, 97.39% functions, 98.86% lines — all above the 80% gate. Working tree clean; changed files in `e9fa0ae..HEAD` match the phase Touches plus this evidence file; commits `ece9021`, `3930a46`, `576035e` match the subagent report with no extras. AC-1 and AC-6 confirmed in `src/core/install-mode.test.ts` and `src/state/persistence.test.ts`.

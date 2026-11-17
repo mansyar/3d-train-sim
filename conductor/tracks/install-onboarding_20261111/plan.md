@@ -15,20 +15,18 @@
 - **Covers:** FR-1, FR-6, NFR-1, NFR-2, AC-1, AC-6
 - **Touches:** `src/core/install-mode.ts`, `src/core/install-mode.test.ts`, `src/core/save.ts`, `src/core/save.test.ts`, `src/state/persistence.ts`, `src/state/persistence.test.ts`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Pure install-mode classifier** — covers: FR-1
-  - [ ] **P1.T1.1: Classify from an injectable display-mode query and `navigator.standalone`, tolerating missing APIs and non-browser environments**
-  - [ ] **P1.T1.2: Cover every signal combination, missing APIs, and a runtime media-query change in unit tests** — covers: AC-1
-- [ ] **P1.T2: Persisted install-hint dismissal preference** — covers: FR-6, FR-5
-  - [ ] **P1.T2.1: Add optional `installHintDismissed` to `DevicePreferences`, round-trip it through snapshots, and default missing/malformed values to false**
-  - [ ] **P1.T2.2: Write the flag through the full-snapshot save path; a rejected save stays non-fatal** — covers: AC-6
+- [x] **P1.T1: Pure install-mode classifier** — covers: FR-1
+  - [x] **P1.T1.1: Classify from an injectable display-mode query and `navigator.standalone`, tolerating missing APIs and non-browser environments**
+  - [x] **P1.T1.2: Cover every signal combination, missing APIs, and a runtime media-query change in unit tests** — covers: AC-1
+- [x] **P1.T2: Persisted install-hint dismissal preference** — covers: FR-6, FR-5
+  - [x] **P1.T2.1: Add optional `installHintDismissed` to `DevicePreferences`, round-trip it through snapshots, and default missing/malformed values to false**
+  - [x] **P1.T2.2: Write the flag through the full-snapshot save path; a rejected save stays non-fatal** — covers: AC-6
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — pure classifier with injectable signals and a live detector; dismissal round-trips through minimal snapshots with non-fatal saves. `pnpm check` and `pnpm test:coverage` both exit 0 (1009 tests, coverage above the 80% gate).
+**Checkpoint:** 865e694
 **Evidence:** conductor/tracks/install-onboarding_20261111/verification/phase-1.md
--->
 
 ## Phase 2: Gated tray hint and wiring
 
