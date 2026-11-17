@@ -60,7 +60,7 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-6, FR-7, FR-8, NFR-2, NFR-4, NFR-5, AC-4, AC-5, AC-6, AC-7, AC-8
 - **Touches:** `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`, `e2e/insights.spec.ts`, `conductor/product.md`, `README.md`, `CHANGELOG.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/insights.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Add the read-only panel inside the parent tray** — covers: FR-4, FR-6, NFR-4, NFR-5, AC-4, AC-5
   - [ ] **P3.T1.1: Markup and styles** — text-only rows for sessions, longest, resets, unexpected closes and storage health; no kid-facing control.
