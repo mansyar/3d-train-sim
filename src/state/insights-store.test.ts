@@ -41,6 +41,34 @@ function makeDb(initial?: Record<string, unknown>, failPut = false) {
   };
 }
 
+/** The slice of an upgrade database the v2 migration actually touches. */
+interface UpgradeDb {
+  objectStoreNames: { contains(name: string): boolean };
+  createObjectStore(name: string): void;
+}
+type UpgradeFn = (db: UpgradeDb) => void;
+
+/** A stand-in that records which object stores the migration creates. */
+function makeUpgradeDb(initialStores: string[] = []) {
+  const stores = new Set(initialStores);
+  return {
+    stores,
+    objectStoreNames: { contains: (name: string) => stores.has(name) },
+    createObjectStore: vi.fn((name: string) => {
+      stores.add(name);
+    }),
+  };
+}
+
+/** Captures the `upgrade` callback openDB receives as its third argument. */
+function capturedUpgrade(): UpgradeFn {
+  const call = openDBMock.mock.calls[0];
+  if (!call) throw new Error('openDB was not called');
+  const upgrade = call[2]?.upgrade;
+  if (!upgrade) throw new Error('openDB was called without an upgrade callback');
+  return upgrade as unknown as UpgradeFn;
+}
+
 describe('normalizeInsights', () => {
   it('returns a safe default for non-object values', () => {
     expect(normalizeInsights(null)).toEqual(createInsights());
@@ -128,6 +156,61 @@ describe('loadInsights', () => {
 
     await expect(loadInsights()).resolves.toEqual(createInsights());
     expect(db.close).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('v2 database migration', () => {
+  beforeEach(() => openDBMock.mockReset());
+
+  it('opens tiny-tracks at version 2 with an upgrade callback', async () => {
+    openDBMock.mockResolvedValue(makeDb() as never);
+
+    await loadInsights();
+
+    expect(openDBMock).toHaveBeenCalledTimes(1);
+    expect(openDBMock.mock.calls[0]?.[0]).toBe('tiny-tracks');
+    expect(openDBMock.mock.calls[0]?.[1]).toBe(2);
+    expect(capturedUpgrade()).toBeTypeOf('function');
+  });
+
+  it('creates both worlds and insights when upgrading an empty database', async () => {
+    openDBMock.mockResolvedValue(makeDb() as never);
+    await loadInsights();
+    const db = makeUpgradeDb();
+
+    capturedUpgrade()(db);
+
+    expect(db.createObjectStore).toHaveBeenCalledTimes(2);
+    expect(db.createObjectStore).toHaveBeenCalledWith('worlds');
+    expect(db.createObjectStore).toHaveBeenCalledWith('insights');
+    expect([...db.stores]).toEqual(['worlds', 'insights']);
+  });
+
+  it('creates only insights when upgrading a v1 database that already has worlds', async () => {
+    openDBMock.mockResolvedValue(makeDb() as never);
+    await loadInsights();
+    const db = makeUpgradeDb(['worlds']);
+
+    capturedUpgrade()(db);
+
+    expect(db.createObjectStore).toHaveBeenCalledTimes(1);
+    expect(db.createObjectStore).toHaveBeenCalledWith('insights');
+    expect([...db.stores]).toEqual(['worlds', 'insights']);
+  });
+
+  it('creates nothing on a repeat invocation once both stores exist', async () => {
+    openDBMock.mockResolvedValue(makeDb() as never);
+    await loadInsights();
+    const db = makeUpgradeDb();
+    const upgrade = capturedUpgrade();
+
+    upgrade(db);
+    expect(db.createObjectStore).toHaveBeenCalledTimes(2);
+    db.createObjectStore.mockClear();
+
+    upgrade(db);
+    expect(db.createObjectStore).not.toHaveBeenCalled();
+    expect([...db.stores]).toEqual(['worlds', 'insights']);
   });
 });
 
