@@ -26,7 +26,12 @@
     },
     {
       "groupName": "test tooling",
-      "matchPackageNames": ["vitest", "@vitest/coverage-v8", "@playwright/test"],
+      "matchPackageNames": [
+        "vitest",
+        "@vitest/coverage-v8",
+        "@playwright/test",
+        "@axe-core/playwright"
+      ],
       "matchUpdateTypes": ["minor", "patch"]
     },
     {

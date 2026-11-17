@@ -22,6 +22,7 @@ Single-page, offline-capable PWA. No backend, no database, no accounts. Static a
 
 | Tool | Version | Role |
 |---|---|---|
+| @axe-core/playwright | ^4.14.0 | Dev-only e2e accessibility scan: axe injected from local `node_modules` by Playwright — no runtime script, network call or CSP change. Added 2026-11-17 (a11y-pass track); Phase 2 owns the four-state tablet scan |
 | @biomejs/biome | ~2.5.10 | Lint + format in one fast tool (replaces ESLint + Prettier). Config: `biome.json` |
 | typescript | ~7.0.2 | Native compiler (Go-based). Typecheck gate: `tsc --noEmit` |
 

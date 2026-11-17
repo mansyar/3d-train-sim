@@ -1,0 +1,32 @@
+{
+  "id": "a11y-pass_20261111",
+  "title": "Accessibility Pass",
+  "type": "feature",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-17T08:53:28Z",
+  "updated_at": "2026-11-17T09:55:00Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/a11y-pass_20261111",
+  "base_branch": "main",
+  "base_sha": "0e985dbb1b7ce44b3523630e8c93857fecf0d2f8",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 3,
+    "tasks_total": 23,
+    "tasks_done": 23
+  },
+  "last_checkpoint": "37e65ec",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 2,
+  "doc_sync": "cleared",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/78",
+  "pr_state": "open",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-17T09:55:00Z",
+  "archive_path": "conductor/archive/a11y-pass_20261111"
+}

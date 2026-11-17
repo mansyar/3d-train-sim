@@ -27,6 +27,17 @@ body {
   user-select: none;
 }
 
+/* ---- Keyboard focus ------------------------------------------------------ */
+
+/* A calm ring marks keyboard focus on every control (all slots are buttons)
+   and on the canvas. `:focus-visible` keeps a toddler's pointer taps quiet;
+   outline + offset leave layout and 64px touch targets untouched. */
+.scene-canvas:focus-visible,
+button:focus-visible {
+  outline: 3px solid var(--toy-orange);
+  outline-offset: 3px;
+}
+
 .scene-canvas {
   display: block;
   height: 100%;
@@ -846,7 +857,7 @@ body {
 }
 
 .insights-list dt {
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .insights-list dd {

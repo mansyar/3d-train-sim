@@ -164,6 +164,18 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
   let confirmArmed = false;
   let suppressNextClick = false; // The hold's own release must not confirm.
 
+  // ---- Parent-only zoom --------------------------------------------------
+  // The viewport stays kid-safe except while the 2 s-hold tray is on screen.
+  // A reload boots from index.html's no-zoom meta, so nothing is persisted.
+  const viewportMeta = root.ownerDocument.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+  const KID_VIEWPORT =
+    'width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover';
+  const PARENT_VIEWPORT =
+    'width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover';
+  const setParentZoom = (enabled: boolean) => {
+    if (viewportMeta) viewportMeta.content = enabled ? PARENT_VIEWPORT : KID_VIEWPORT;
+  };
+
   const cancelHold = () => {
     if (holdRaf !== null) cancelAnimationFrame(holdRaf);
     if (holdTimer !== null) clearTimeout(holdTimer);
@@ -182,6 +194,7 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     parentGate.setAttribute('aria-label', CONFIRM_LABEL);
     presetTray.hidden = false;
     presetTray.classList.remove('is-reporting');
+    setParentZoom(true);
     refreshRecoveryNote();
     clearPortableNote();
     refreshInsights();
@@ -193,6 +206,7 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     parentGate.classList.remove('is-confirm');
     parentGate.setAttribute('aria-label', HOLD_LABEL);
     presetTray.hidden = true;
+    setParentZoom(false);
   };
 
   parentGate.addEventListener('pointerdown', (event) => {
@@ -286,11 +300,13 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     showPortableNote(text);
     presetTray.hidden = false;
     presetTray.classList.add('is-reporting');
+    setParentZoom(true);
   };
   const clearPortableReport = () => {
     if (!presetTray.classList.contains('is-reporting')) return;
     presetTray.classList.remove('is-reporting');
     presetTray.hidden = true;
+    setParentZoom(false);
     clearPortableNote();
   };
 
