@@ -140,7 +140,12 @@ interface WorldReader {
   subscribe(listener: () => void): () => void;
 }
 
-function snapshotOf(world: WorldReader, muted: boolean, dayPhase?: DayPhase): WorldSnapshot {
+function snapshotOf(
+  world: WorldReader,
+  muted: boolean,
+  dayPhase?: DayPhase,
+  installHintDismissed = false,
+): WorldSnapshot {
   return serializeWorld(
     world.pieces(),
     world.scenery(),
@@ -150,6 +155,7 @@ function snapshotOf(world: WorldReader, muted: boolean, dayPhase?: DayPhase): Wo
     world.consist(),
     dayPhase,
     world.disclosure(),
+    installHintDismissed,
   );
 }
 
@@ -158,9 +164,10 @@ export function watchWorldPersistence(
   readMuted: () => boolean = () => false,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
   readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
+  readInstallHintDismissed: () => boolean = () => false,
 ): () => void {
   return world.subscribe(() => {
-    void save(snapshotOf(world, readMuted(), readDayPhase()));
+    void save(snapshotOf(world, readMuted(), readDayPhase(), readInstallHintDismissed()));
   });
 }
 
@@ -172,6 +179,8 @@ export function watchMutePersistence(
   audio: { isMuted(): boolean; subscribe(listener: () => void): () => void },
   world: WorldReader,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+  readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
+  readInstallHintDismissed: () => boolean = () => false,
 ): () => void {
   // Chug start/stop also notify; only an actual mute change persists.
   let lastPersisted = audio.isMuted();
@@ -180,7 +189,7 @@ export function watchMutePersistence(
     if (muted === lastPersisted) return;
     lastPersisted = muted;
     try {
-      void save(snapshotOf(world, muted));
+      void save(snapshotOf(world, muted, readDayPhase(), readInstallHintDismissed()));
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
@@ -213,13 +222,14 @@ export function watchDayPhasePersistence(
   world: WorldReader,
   readMuted: () => boolean = () => false,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+  readInstallHintDismissed: () => boolean = () => false,
 ): () => void {
   let lastPersisted = clock.phase;
   return clock.subscribe((event) => {
     if (event.phase === lastPersisted) return;
     lastPersisted = event.phase;
     try {
-      void save(snapshotOf(world, readMuted(), event.phase));
+      void save(snapshotOf(world, readMuted(), event.phase, readInstallHintDismissed()));
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
@@ -236,6 +246,39 @@ export function restoreDayPhasePreference(
 ): void {
   const { dayPhase } = deserializePreferences(snapshot);
   if (dayPhase) clock.setPhase(dayPhase);
+}
+
+/** The parent-facing hint's dismissal state, shaped like the other controllers. */
+export interface InstallHintDismissal {
+  isDismissed(): boolean;
+  subscribe(listener: () => void): () => void;
+}
+
+/**
+ * Keeps the install-hint dismissal in storage. The parent's dismiss tap
+ * re-saves the FULL snapshot — never a partial write — so it cannot clobber a
+ * concurrent world edit or another preference. Only an actual change persists.
+ * A rejected save is caught: the hint stays dismissed for this session and the
+ * toy remains interactive, just as with mute and day phase.
+ */
+export function watchInstallHintPersistence(
+  hint: InstallHintDismissal,
+  world: WorldReader,
+  readMuted: () => boolean = () => false,
+  readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
+  save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+): () => void {
+  let lastPersisted = hint.isDismissed();
+  return hint.subscribe(() => {
+    const installHintDismissed = hint.isDismissed();
+    if (installHintDismissed === lastPersisted) return;
+    lastPersisted = installHintDismissed;
+    try {
+      void save(snapshotOf(world, readMuted(), readDayPhase(), installHintDismissed));
+    } catch {
+      // Storage is an enhancement; never make the toy world unusable.
+    }
+  });
 }
 
 /**
