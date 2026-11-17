@@ -6,9 +6,19 @@ import { createAudioController } from './audio/audio-controller';
 import { createHowlerVoice } from './audio/howler-voice';
 import type { DayPhase } from './core/day-clock';
 import { applyGrandfather, parseDisclosureState } from './core/disclosure';
+import {
+  createInsights,
+  endSession,
+  type InsightsState,
+  noteBoot,
+  noteCleanExit,
+  noteReset,
+  noteSaveOutcome,
+  startSession,
+} from './core/insights';
 import { buildExport, exportFileName } from './core/portable';
 import { recoveryNotice } from './core/recovery';
-import { deserializeWorld, serializeWorld } from './core/save';
+import { deserializeWorld, serializeWorld, type WorldSnapshot } from './core/save';
 import { cozyOval } from './core/starters';
 import {
   BOOT_GUARD_MS,
@@ -17,6 +27,7 @@ import {
   shouldReload,
 } from './core/update-state';
 import { initScene } from './scene/init-scene';
+import { loadInsights, saveInsights } from './state/insights-store';
 import {
   loadWorldRecovery,
   restoreDayPhasePreference,
@@ -67,7 +78,72 @@ if (root) {
       scene.subscribeDayPhase((phase) => listener({ phase })),
   };
 
-  void recoveryRead.then((recovery) => {
+  // Diagnostics state lives only at this boundary; the pure rules in
+  // core/insights decide every value. Storage helpers swallow their own
+  // failures, so none of this can break play.
+  let insights: InsightsState = createInsights();
+
+  const bootReady = (async () => {
+    const recovery = await recoveryRead;
+
+    // ---- Local insights: boundary-only capture ---------------------------
+    // Load the counters once, then record this boot. A running marker left by
+    // a killed tab counts as one unclean exit. `sessionStartedAt` is a live,
+    // in-page timestamp: never carry it across a page load, or a stale value
+    // would suppress the next session and inflate its duration.
+    const loaded = await loadInsights();
+    let booted = noteBoot({ ...loaded, sessionStartedAt: null });
+    if (recovery.status === 'restored') {
+      booted = noteSaveOutcome(booted, 'restored from backup');
+    }
+    insights = booted;
+    void saveInsights(insights);
+
+    /** Records each world save's outcome without ever throwing. */
+    const recordSave = async (snapshot: WorldSnapshot): Promise<boolean> => {
+      const ok = await saveWorldSnapshot(snapshot);
+      insights = noteSaveOutcome(insights, ok ? 'ok' : 'failed');
+      void saveInsights(insights);
+      return ok;
+    };
+
+    /** Opens a foreground session when the page is visible. */
+    const beginSession = (): void => {
+      if (document.visibilityState !== 'visible') return;
+      insights = startSession(insights, performance.now());
+    };
+
+    /** Closes any open session, marks a clean exit and persists once. */
+    const endInsights = (): void => {
+      const ended = endSession(insights, performance.now());
+      let next: InsightsState;
+      if (ended === insights) {
+        // Hidden and unload both fire on a tab close: once the session is
+        // closed and the marker is clear, skip the duplicate write.
+        if (!insights.running) return;
+        next = noteCleanExit(insights);
+      } else {
+        next = noteCleanExit(ended);
+      }
+      insights = next;
+      void saveInsights(insights);
+    };
+
+    // Wire the boundaries only after the boot read settles, so no event can
+    // be lost to a load race.
+    beginSession();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') beginSession();
+      else endInsights();
+    });
+    window.addEventListener('pagehide', endInsights);
+    window.addEventListener('beforeunload', endInsights);
+    world.onReset(() => {
+      insights = noteReset(insights);
+      void saveInsights(insights);
+    });
+
+    // ---- World boot hydration --------------------------------------------
     const snapshot = recovery.snapshot;
     recoveryLine = recoveryNotice(
       recovery.status,
@@ -102,16 +178,17 @@ if (root) {
     // already bound by the time storage answers — so restore it here, before
     // the watchers attach, or boot hydration could rewrite the phase.
     restoreDayPhasePreference(snapshot, dayClock);
-    watchDayPhasePersistence(dayClock, world, () => audio.isMuted());
+    watchDayPhasePersistence(dayClock, world, () => audio.isMuted(), recordSave);
     watchWorldPersistence(
       world,
       () => audio.isMuted(),
-      saveWorldSnapshot,
+      recordSave,
       () => dayClock.phase,
     );
-    watchMutePersistence(audio, world);
+    watchMutePersistence(audio, world, recordSave);
     if (!snapshot) {
       // The watchers only save on change — persist the seeded starter once.
+      // Kept as a plain save so a first boot still reports "No save yet."
       void saveWorldSnapshot(
         serializeWorld(
           world.pieces(),
@@ -123,7 +200,7 @@ if (root) {
         ),
       );
     }
-  });
+  })();
 
   // ---- PWA self-update: probe quietly, adopt when the table is quiet -----
   // Deployments install a new service worker, but the running page keeps its
@@ -241,8 +318,9 @@ if (root) {
         deliveries: world.deliveries(),
       }),
     });
-    // Reuse the boot read instead of probing storage a second time.
-    void recoveryRead.then(() => {
+    // Reuse the single boot flow instead of probing storage a second time, so
+    // readiness means hydration AND the insights boot have both settled.
+    void bootReady.then(() => {
       devWindow.__tinyTracksReady = true;
     });
   }

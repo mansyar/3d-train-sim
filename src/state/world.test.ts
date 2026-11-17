@@ -444,6 +444,48 @@ describe('world reset', () => {
 
     expect(listener).toHaveBeenCalledTimes(2);
   });
+
+  it('fires the explicit reset notification once per reset, separately from the world subscription', () => {
+    const store = createWorldStore();
+    const onReset = vi.fn();
+    const worldListener = vi.fn();
+    store.onReset(onReset);
+    store.subscribe(worldListener);
+
+    store.reset();
+
+    expect(onReset).toHaveBeenCalledTimes(1);
+    expect(worldListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not fire the reset notification for ordinary world changes', () => {
+    const store = createWorldStore();
+    const onReset = vi.fn();
+    store.onReset(onReset);
+
+    store.place('straight', ORIGIN, 0);
+    store.undo();
+    store.hydrate({
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+      pieces: [],
+      scenery: [],
+    });
+
+    expect(onReset).not.toHaveBeenCalled();
+  });
+
+  it('stops firing the reset notification after unsubscribe', () => {
+    const store = createWorldStore();
+    const onReset = vi.fn();
+    const unsubscribe = store.onReset(onReset);
+
+    unsubscribe();
+    store.reset();
+
+    expect(onReset).not.toHaveBeenCalled();
+  });
 });
 
 describe('river water rules', () => {

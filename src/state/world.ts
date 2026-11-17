@@ -106,6 +106,12 @@ export interface WorldStore {
   importWorld(data: WorldData): void;
   /** Returns the meadow to a factory-fresh world: empty, steam selected. */
   reset(): void;
+  /**
+   * Notifies exactly once per `reset()` call, separately from the general world
+   * subscription, so a full reset can be counted without inferring one from
+   * empty pieces (or counting it as an ordinary world change).
+   */
+  onReset(listener: () => void): () => void;
   subscribe(listener: WorldListener): () => void;
 }
 
@@ -148,6 +154,7 @@ export function createWorldStore(): WorldStore {
   let selectedTrain: TrainKind = 'steam';
   let consist: TrainConsist = defaultConsist();
   const listeners = new Set<WorldListener>();
+  const resetListeners = new Set<() => void>();
   let nextId = 1;
 
   const advanceId = (id: string): void => {
@@ -394,6 +401,7 @@ export function createWorldStore(): WorldStore {
       nextId = 1;
       pendingUndo = null;
       notify();
+      for (const listener of resetListeners) listener();
     },
 
     applyPreset(data) {
@@ -463,6 +471,13 @@ export function createWorldStore(): WorldStore {
       reverse();
       notify();
       return true;
+    },
+
+    onReset(listener) {
+      resetListeners.add(listener);
+      return () => {
+        resetListeners.delete(listener);
+      };
     },
 
     subscribe(listener) {
