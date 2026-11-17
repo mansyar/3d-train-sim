@@ -4,9 +4,10 @@ import { expect, test } from '@playwright/test';
 /**
  * Local insights (Phase 3): a read-only panel inside the existing 2 s-hold
  * parent tray. This journey proves the values are hidden before the hold,
- * present in six labelled rows after it, survive resets and a reload, and add
- * no network traffic. The counters are device diagnostics, not the clarity
- * audit's human-observed measures — no timing or storage size is asserted.
+ * present in six labelled rows after it, survive resets and a reload, keep the
+ * final session across a clean hide, and add no network traffic. The counters
+ * are device diagnostics, not the clarity audit's human-observed measures —
+ * no timing or storage size is asserted.
  */
 
 const waitForReady = async (page: Page): Promise<void> => {
@@ -119,6 +120,34 @@ test('insights stay behind the hold gate, persist, and send nothing off-device',
     await holdGate(page);
     const resetsAfterReload = Number.parseInt(await readValue(page, 'resets'), 10);
     expect(resetsAfterReload).toBe(resetsAfter);
+  });
+
+  await test.step('a clean hide persists the final session without an unclean exit', async () => {
+    const uncleanExitsBefore = await readValue(page, 'uncleanExits');
+    const sessionsBefore = Number.parseInt(await readValue(page, 'sessions'), 10);
+    expect(Number.isNaN(sessionsBefore)).toBe(false);
+
+    // Real DOM semantics: flip visibility to hidden and dispatch the very event
+    // endInsights() listens to, so the open session closes and the marker clears
+    // while an IndexedDB write can still commit (pagehide/beforeunload may not).
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await page.waitForTimeout(400); // let the insights write settle before reload
+
+    await page.reload();
+    await waitForReady(page);
+    await holdGate(page);
+
+    expect(await readValue(page, 'uncleanExits')).toBe(uncleanExitsBefore);
+    const sessionsAfter = Number.parseInt(await readValue(page, 'sessions'), 10);
+    expect(sessionsAfter).toBe(sessionsBefore + 1); // the completed session carried over
+    // The longest-session row is where the formatter's "No sessions yet." fallback lands.
+    expect(await readValue(page, 'longestSession')).not.toBe('No sessions yet.');
   });
 
   await test.step('every HTTP(S) request stayed on the app origin', async () => {
