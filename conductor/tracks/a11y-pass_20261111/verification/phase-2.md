@@ -64,3 +64,12 @@ phase's Touch list.
 - The ride scan uses the existing test route: `clearMeadow`-equivalent dev-handle reset, a 2×2 corner loop via `world.place`, `.ride-toggle` click, then assertions on `.is-riding` and `__tinyTracksScene.ridingTrainCount() === 1` before scanning.
 - `contrast.md` records one pre-existing low-contrast pair (`.insights-unavailable`, opacity 0.75 → 4.28:1) that is hidden in all four scanned states and was not reported by axe; per the "fix only where axe reports a violation" rule it was left unchanged and flagged for a future design pass.
 - Task commits: `5104acc` (P2.T1), `8cf2cbb` (P2.T2), `459532a` (P2.T3), `ebe1aed` (P2.T4). This evidence file follows in a separate documentation commit.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `42cadac` (no squash — the active goal prohibits `reset`; all five reported commits are retained)
+- **Tree / diff:** clean; `6b395d0..42cadac` limited to `e2e/a11y.spec.ts`, `src/ui/app.ts`, `src/style.css`, `conductor/product-guidelines.md`, `verification/contrast.md`, and this evidence file — all within Touches.
+- **Primary re-runs:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` exit 0 (1 passed); `pnpm check` exit 0 (Biome 192 files, tsc clean, Vitest 56 files / 988 tests).
+- **Acceptance:** AC-4 (four axe-clean tablet states), AC-5 (computed contrast ratios + axe `color-contrast` enabled), AC-6 (four fixes logged), AC-7 (guidelines line 13 records the settled parent-only zoom policy) verified. AC-2 focus ring also proven dynamically in the same spec.
+- **Deviations accepted:** `meta-viewport` replaces the brief's `viewport` rule id (axe-core 4.14) — same single disabled rule with direct zoom assertions. The hidden `.insights-unavailable` fallback pair remains a documented follow-up, not an axe finding.

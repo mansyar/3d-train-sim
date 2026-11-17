@@ -39,26 +39,24 @@
 - **Covers:** FR-4, FR-5, FR-6, FR-7, NFR-1, NFR-2, AC-4, AC-5, AC-6, AC-7
 - **Touches:** `e2e/a11y.spec.ts`, `src/ui/*.ts`, `src/style.css`, `conductor/product-guidelines.md`, `conductor/tracks/a11y-pass_20261111/verification/contrast.md`
 - **Verification:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Add the axe e2e spec for four tablet states** — covers: FR-4, AC-4
-  - [ ] **P2.T1.1: Scan the idle state**
-  - [ ] **P2.T1.2: Scan the toy drawer open state**
-  - [ ] **P2.T1.3: Scan the parent tray open state and assert zoom is enabled**
-  - [ ] **P2.T1.4: Scan the riding state**
-- [ ] **P2.T2: Fix axe findings in bounded UI scope** — covers: FR-5, AC-6
-  - [ ] **P2.T2.1: Apply minimal ARIA/label corrections and record each with file and reason in the evidence**
-- [ ] **P2.T3: Document contrast** — covers: FR-6, AC-5
-  - [ ] **P2.T3.1: Record palette token ratios and the color-contrast result in `verification/contrast.md`**
-- [ ] **P2.T4: Record the zoom resolution in the guidelines** — covers: FR-7, AC-7
-  - [ ] **P2.T4.1: Update the viewport rule in `conductor/product-guidelines.md` to the settled parent-only policy**
+- [x] **P2.T1: Add the axe e2e spec for four tablet states** — covers: FR-4, AC-4
+  - [x] **P2.T1.1: Scan the idle state**
+  - [x] **P2.T1.2: Scan the toy drawer open state**
+  - [x] **P2.T1.3: Scan the parent tray open state and assert zoom is enabled**
+  - [x] **P2.T1.4: Scan the riding state**
+- [x] **P2.T2: Fix axe findings in bounded UI scope** — covers: FR-5, AC-6
+  - [x] **P2.T2.1: Apply minimal ARIA/label corrections and record each with file and reason in the evidence**
+- [x] **P2.T3: Document contrast** — covers: FR-6, AC-5
+  - [x] **P2.T3.1: Record palette token ratios and the color-contrast result in `verification/contrast.md`**
+- [x] **P2.T4: Record the zoom resolution in the guidelines** — covers: FR-7, AC-7
+  - [x] **P2.T4.1: Update the viewport rule in `conductor/product-guidelines.md` to the settled parent-only policy**
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — four tablet states axe-clean with `color-contrast` enabled; four minimal ARIA/contrast fixes logged; computed token ratios recorded; parent-only zoom settled in guidelines. Axe e2e exit 0 (1 passed), `pnpm check` exit 0 (988 tests).
+**Checkpoint:** 42cadac
 **Evidence:** conductor/tracks/a11y-pass_20261111/verification/phase-2.md
--->
+**Deviation:** installed axe-core 4.14 rejects the literal rule id `viewport`; the spec disables the equivalent `meta-viewport` rule instead — still exactly one disabled, kid-mode zoom asserted directly. No squash: the active goal prohibits `reset`, and all five reported commits are retained.
 
 ## Phase 3: Roadmap sync and full gate
 
