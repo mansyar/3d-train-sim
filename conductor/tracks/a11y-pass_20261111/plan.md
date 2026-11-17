@@ -15,7 +15,7 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-1, NFR-3, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `conductor/tech-stack.md`, `src/style.css`, `src/ui/parent-gate.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add axe tooling and record the stack change** — covers: FR-1, NFR-4, AC-1
   - [ ] **P1.T1.1: Install `@axe-core/playwright` as a devDependency and commit the lockfile update**
