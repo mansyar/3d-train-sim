@@ -39,7 +39,7 @@
 - **Covers:** FR-4, FR-5, FR-6, FR-7, NFR-1, NFR-2, AC-4, AC-5, AC-6, AC-7
 - **Touches:** `e2e/a11y.spec.ts`, `src/ui/*.ts`, `src/style.css`, `conductor/product-guidelines.md`, `conductor/tracks/a11y-pass_20261111/verification/contrast.md`
 - **Verification:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Add the axe e2e spec for four tablet states** — covers: FR-4, AC-4
   - [ ] **P2.T1.1: Scan the idle state**
