@@ -4,14 +4,21 @@ import type { PickedItem } from '../core/meadow-grid';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
-import { createParentGate, type InsightsView } from './parent-gate';
+import {
+  createParentGate,
+  INSTALL_HINT_MARKUP,
+  type InsightsView,
+  type InstallHintView,
+  type InstallModeView,
+} from './parent-gate';
 import { createRideControls, RIDE_ICONS } from './ride-controls';
 import { createToyDrag } from './toy-drag';
 import { createToyDrawer, toyTabPanels, toyTabStrip } from './toy-drawer';
 import { nextDayIcon, PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 import { createTrainPicker } from './train-picker';
 
-export type { InsightsView };
+export { createInstallHintDismissal } from './parent-gate';
+export type { InsightsView, InstallHintView, InstallModeView };
 
 /**
  * The scene surface the controls wire against, declared structurally here
@@ -74,13 +81,17 @@ export interface AppOptions {
    * when the 2 s hold arms the tray — never on boot or per frame.
    */
   insights?: () => Promise<InsightsView> | InsightsView;
+  /** Install classification; the hint is absent entirely while standalone. */
+  installMode?: InstallModeView;
+  /** Parent dismissal state, wired to the full-snapshot save at the boundary. */
+  installHint?: InstallHintView;
 }
 
 /**
  * Writes the frame markup once and hands back the canvas the scene binds to.
  * No listeners and no scene: the controls wait until `initScene` has run.
  */
-export function mountShell(root: HTMLElement): HTMLCanvasElement {
+export function mountShell(root: HTMLElement, showInstallHint = true): HTMLCanvasElement {
   root.innerHTML = `
     <canvas class="scene-canvas" aria-label="Tiny Tracks 3D world"></canvas>
     <div class="toy-drawer" role="group" aria-label="Toybox" hidden>
@@ -112,6 +123,7 @@ export function mountShell(root: HTMLElement): HTMLCanvasElement {
         <button class="recovery-dismiss" type="button"
                 aria-label="Dismiss the save notice">OK</button>
       </div>
+      ${showInstallHint ? INSTALL_HINT_MARKUP : ''}
       <div class="insights-panel" role="group" aria-label="On-device play details for grown-ups">
         <p class="insights-heading">On this device</p>
         <dl class="insights-list" data-insights="list">
@@ -288,6 +300,8 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
     isReady: options.isReady,
     recoveryNote: options.recoveryNote,
     insights: options.insights,
+    installMode: options.installMode,
+    installHint: options.installHint,
     stopRide: scene.stopRide,
     isRiding: () => riding,
   });
