@@ -39,9 +39,9 @@ The primary appends after acceptance:
 - **Goal:** Counters persist in a separate IndexedDB store and all boundary hooks record sessions, resets, unclean exits and save outcomes without touching the world snapshot.
 - **Depends on:** Phase 1
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-7, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4, AC-6
-- **Touches:** `src/state/insights-store.ts`, `src/state/persistence.ts`, `src/main.ts`, `src/state/world.ts`
+- **Touches:** `src/state/insights-store.ts`, `src/state/insights-store.test.ts`, `src/state/persistence.ts`, `src/state/persistence.test.ts`, `src/main.ts`, `src/state/world.ts`, `src/state/world.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Add the separate insights store and database migration** — covers: FR-2, FR-5, FR-7, NFR-5, AC-2, AC-6
   - [ ] **P2.T1.1: Extend the existing database to version 2 with an `insights` object store** — load/save helpers never read or write world snapshot keys.
