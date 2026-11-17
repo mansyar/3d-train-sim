@@ -58,18 +58,16 @@
 - **Covers:** AC-2, AC-3, AC-4, AC-5, NFR-3
 - **Touches:** `e2e/install-onboarding.spec.ts`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/install-onboarding.spec.ts e2e/a11y.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Gating and kid-UI e2e assertions** — covers: AC-2, AC-3, AC-4
-  - [ ] **P3.T1.1: Hint absent before the hold; after the 2s hold the tray shows icon and iOS instruction, nested in `.preset-tray`**
-  - [ ] **P3.T1.2: Standalone emulation renders no hint and the kid-facing shell DOM is unchanged**
-- [ ] **P3.T2: Dismissal and reset e2e assertions** — covers: AC-5
-  - [ ] **P3.T2.1: Dismiss → reload → hidden; world reset → hint returns**
-- [ ] **P3.T3: Accessibility regression sweep** — covers: NFR-3
-  - [ ] **P3.T3.1: Existing axe sweep stays clean in four tablet states with the tray open**
+- [x] **P3.T1: Gating and kid-UI e2e assertions** — covers: AC-2, AC-3, AC-4
+  - [x] **P3.T1.1: Hint absent before the hold; after the 2s hold the tray shows icon and iOS instruction, nested in `.preset-tray`**
+  - [x] **P3.T1.2: Standalone emulation renders no hint and the kid-facing shell DOM is unchanged**
+- [x] **P3.T2: Dismissal and reset e2e assertions** — covers: AC-5
+  - [x] **P3.T2.1: Dismiss → reload → hidden; world reset → hint returns**
+- [x] **P3.T3: Accessibility regression sweep** — covers: NFR-3
+  - [x] **P3.T3.1: Existing axe sweep stays clean in four tablet states with the tray open**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified after one authorized rework — boot-rendered dismiss button now bound and the visible button text made axe-clean in `src/ui/parent-gate.ts`; e2e proves AC-2..AC-5 and the unmodified four-state axe sweep passes. `pnpm check`, `pnpm build`, and 4/4 Playwright tests green.
+**Checkpoint:** 290646a
 **Evidence:** conductor/tracks/install-onboarding_20261111/verification/phase-3.md
--->

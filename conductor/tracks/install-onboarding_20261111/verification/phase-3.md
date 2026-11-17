@@ -88,3 +88,9 @@ Final initial run: Biome/tsc/unit/build passed, Playwright 2 passed / 2 failed:
 - Standalone emulation uses only a scoped `matchMedia` wrapper plus `navigator.standalone`, with no source changes.
 - Console errors were clean in all three install-onboarding e2e tests.
 - The only remaining warnings are pre-existing Vite native-config and Three.js shadow-map deprecation notices.
+
+## Primary verification
+
+- **Command:** `pnpm check && pnpm build && pnpm exec playwright test e2e/install-onboarding.spec.ts e2e/a11y.spec.ts`
+- **Exit code:** 0
+- **Result:** pass. Biome checked 195 files with no fixes; `tsc --noEmit` clean; 57 test files / 1009 unit tests passed; production build succeeded; Playwright 4 passed / 0 failed in 43.0 s (tablet project) including the unmodified four-state axe sweep. Working tree clean; changed files in `a00605f..HEAD` are the e2e spec, the authorized rework fix in `src/ui/parent-gate.ts`, and this evidence file. Commits `b37327a`, `e8af823`, `0fc280d`, `1cef73f` match the rework report with no extras. Spot-checked both fixes in `src/ui/parent-gate.ts`: the boot-rendered dismiss button is bound exactly once via `bindHintDismiss`, and the visible button text `Dismiss` is contained in its accessible name. AC-2 through AC-5 and NFR-3 all have passing browser-level evidence.
