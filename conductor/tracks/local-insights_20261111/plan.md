@@ -72,17 +72,19 @@ The primary appends after acceptance:
 **Checkpoint:** b4f9998
 **Evidence:** conductor/tracks/local-insights_20261111/verification/phase-3.md
 
-<!--
-Review fixes are appended by `conductor-review` as:
-
 ## Phase R1: Review Fixes
 
-- **Goal:** Resolve review findings ...
+- **Goal:** Resolve the three review findings — untested v2 `upgrade` callback (F1), unload-time persistence of the final session and clean-exit marker (F2), and plural-minute wording (F3).
 - **Depends on:** Phase 3
-- **Covers:** review findings
-- **Touches:** ...
-- **Verification:** ...
-- **Status:** pending
+- **Covers:** F1, F2, F3 (FR-1, FR-3, FR-4, FR-5, NFR-5, AC-6)
+- **Touches:** `src/core/insights.ts`, `src/core/insights.test.ts`, `src/state/insights-store.test.ts`, `src/state/persistence.test.ts`, `src/main.ts`, `e2e/insights.spec.ts`
+- **Verification:** `pnpm check` and `pnpm exec playwright test e2e/insights.spec.ts`
+- **Status:** complete
 
-- [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
--->
+- [x] **R1.T1: Resolve F1** — capture the `upgrade` callback in both database helpers' tests; assert v2 and both stores from empty/v1/idempotent.
+- [x] **R1.T2: Resolve F2** — add a clean-hide → reload e2e assertion that `Unexpected closes` does not rise and the completed session carries over.
+- [x] **R1.T3: Resolve F3** — export a tested pure longest-session formatter with singular/plural wording and use it from `main.ts`.
+
+**Result:** verified — all three findings closed. v2 upgrade tests in both helpers (+8), clean-hide/reload e2e proof (+1 journey step), tested singular/plural formatter (+5 unit tests); `pnpm check` exit 0 (988 tests), Playwright 1 passed.
+**Checkpoint:** 9fc1c54
+**Evidence:** conductor/tracks/local-insights_20261111/verification/phase-r1.md

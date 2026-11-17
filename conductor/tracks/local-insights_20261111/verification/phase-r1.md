@@ -77,3 +77,15 @@ once and was fixed on its first retry.
 - `plan.md` was already marked `in_progress` by the primary before this phase
   began; it was deliberately left untouched and excluded from all commits.
 - This report is committed separately from the task commits as phase evidence.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `9fc1c54` (no squash — active goal prohibits `reset`; all four range commits were reported by the executor)
+- Tree status: clean before primary state edits; diff `75c813e..9fc1c54` limited to the six R1 code/test files plus this evidence file (in bounds).
+- `pnpm check` re-run by primary: exit 0 (Biome clean, tsc clean, Vitest 56 files / 988 tests).
+- `pnpm exec playwright test e2e/insights.spec.ts` re-run by primary: exit 0 — `ok 1 [tablet] ... (28.8s)`, 1 passed (51.8s).
+- F1 verified: both database helpers' `upgrade` callbacks are invoked by tests covering empty, v1 and idempotent states.
+- F2 verified: clean `visibilitychange → hidden`, reload and re-arm keeps `Unexpected closes` unchanged and carries the completed session over; no new local or network storage added.
+- F3 verified: `formatLongestSession()` is exported from pure core code with singular/plural exact-text tests; `main.ts` no longer holds a private copy.
+- Deviations: none.
