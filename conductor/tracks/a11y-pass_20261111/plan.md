@@ -66,7 +66,7 @@
 - **Covers:** FR-7, NFR-2, NFR-3, AC-7, AC-8
 - **Touches:** `conductor/product.md`, `conductor/tracks/a11y-pass_20261111/verification/integrated.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` and `pnpm build`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7, AC-7
 - [ ] **P3.T2: Run the full gate and write integrated evidence** — covers: NFR-2, NFR-3, AC-8
