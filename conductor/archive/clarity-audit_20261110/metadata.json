@@ -1,0 +1,32 @@
+{
+  "id": "clarity-audit_20261110",
+  "title": "Clarity Audit",
+  "type": "chore",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-16T23:03:54Z",
+  "updated_at": "2026-11-16T23:25:14Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/clarity-audit_20261110",
+  "base_branch": "main",
+  "base_sha": "f7156c0760fb792e1d9e977d59ece1682e98f5ae",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 3,
+    "tasks_total": 14,
+    "tasks_done": 14
+  },
+  "last_checkpoint": "ddccc17",
+  "review_verdict": "PASS WITH FINDINGS",
+  "review_rounds": 1,
+  "doc_sync": "cleared",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/76",
+  "pr_state": "merged",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-16T23:25:14Z",
+  "archive_path": "conductor/archive/clarity-audit_20261110"
+}
