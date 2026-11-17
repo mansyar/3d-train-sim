@@ -58,7 +58,7 @@
 - **Covers:** AC-2, AC-3, AC-4, AC-5, NFR-3
 - **Touches:** `e2e/install-onboarding.spec.ts`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/install-onboarding.spec.ts e2e/a11y.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Gating and kid-UI e2e assertions** — covers: AC-2, AC-3, AC-4
   - [ ] **P3.T1.1: Hint absent before the hold; after the 2s hold the tray shows icon and iOS instruction, nested in `.preset-tray`**
