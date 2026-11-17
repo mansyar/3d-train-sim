@@ -73,7 +73,7 @@ export const INSTALL_HINT_MARKUP = `
     <span class="install-hint-icon" aria-hidden="true">📲</span>
     <span class="install-hint-text">On iPhone or iPad: tap Share, then Add to Home Screen.</span>
     <button class="install-hint-dismiss" type="button"
-            aria-label="Dismiss the Add to Home Screen hint">OK</button>
+            aria-label="Dismiss the Add to Home Screen hint">Dismiss</button>
   </div>
 `;
 
@@ -166,6 +166,17 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
   const hintWanted = (): boolean =>
     !!installMode && !!installHint && !installMode.isInstalled() && !installHint.isDismissed();
 
+  const bindHintDismiss = (element: HTMLElement | null): void => {
+    element
+      ?.querySelector<HTMLButtonElement>('.install-hint-dismiss')
+      ?.addEventListener('click', () => installHint?.dismiss());
+  };
+
+  // Browsing boots write the hint into the shell before this gate mounts, so
+  // bind that button too — not only ones we insert later. Each element instance
+  // is bound exactly once: removal discards it, reinsertion creates a new one.
+  bindHintDismiss(hintElement);
+
   const refreshInstallHint = (): void => {
     if (!hintWanted()) {
       hintElement?.remove();
@@ -175,9 +186,7 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     if (hintElement) return;
     presetTray.insertAdjacentHTML('beforeend', INSTALL_HINT_MARKUP);
     hintElement = presetTray.querySelector<HTMLElement>('.install-hint');
-    hintElement
-      ?.querySelector<HTMLButtonElement>('.install-hint-dismiss')
-      ?.addEventListener('click', () => installHint?.dismiss());
+    bindHintDismiss(hintElement);
   };
 
   installMode?.subscribe(() => refreshInstallHint());
