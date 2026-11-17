@@ -69,7 +69,7 @@ The primary appends after acceptance:
 - [x] **P3.T3: Sync roadmap and parent docs** — covers: FR-8, AC-7
 
 **Result:** verified — read-only six-row panel behind the existing 2 s hold, local-only provider from Phase 2 state, Playwright journey proving hidden→armed→persist→same-origin traffic, and docs synced (`product.md` shipped marker applied by primary after executor permission denial). `pnpm check` exit 0 (975 tests); Playwright 1 passed (15.0s).
-**Checkpoint:** pending completion state commit
+**Checkpoint:** b4f9998
 **Evidence:** conductor/tracks/local-insights_20261111/verification/phase-3.md
 
 <!--

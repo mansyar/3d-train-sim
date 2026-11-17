@@ -102,7 +102,7 @@ second failed iteration of either command.
 ## Primary verification (4.7)
 
 - **Date:** 2026-11-17
-- **Checkpoint:** pending completion state commit (no squash — the active goal prohibits `reset`; all four range commits were reported by the executor)
+- **Checkpoint:** `b4f9998` (no squash — the active goal prohibits `reset`; all four range commits were reported by the executor)
 - **Permission-denied handling:** primary applied the single blocked `conductor/product.md` roadmap edit verbatim; no re-delegation was needed because it was the only outstanding item
 - **Working tree:** clean before the product-doc edit; `git diff --name-only a47e195..HEAD` contains only the seven files in Touches (plus the documented `src/main.ts` wiring deviation) and this evidence file
 - **Commands (re-run independently):** `pnpm check` exit 0 (Biome clean, tsc clean, Vitest 56 files / 975 tests); `pnpm exec playwright test e2e/insights.spec.ts` exit 0 (`ok 1 [tablet] … (15.0s)`, 1 passed in 24.7s)
