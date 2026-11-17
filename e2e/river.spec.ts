@@ -67,10 +67,13 @@ const seedSnapshot = (page: Page, snapshot: unknown): Promise<void> =>
   page.evaluate(
     (value) =>
       new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open('tiny-tracks', 1);
+        const open = indexedDB.open('tiny-tracks', 2);
         open.onupgradeneeded = () => {
           if (!open.result.objectStoreNames.contains('worlds')) {
             open.result.createObjectStore('worlds');
+          }
+          if (!open.result.objectStoreNames.contains('insights')) {
+            open.result.createObjectStore('insights');
           }
         };
         open.onerror = () => reject(open.error);

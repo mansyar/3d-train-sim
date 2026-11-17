@@ -44,7 +44,7 @@ The world snapshot, export format and kid-facing UI are unchanged.
 | `pnpm test:coverage` | exit 0 — 96.64% stmts / 90.22% branch / 97.29% funcs / 98.7% lines; `state` 93.52% / 82.29% |
 | `pnpm exec playwright test e2e/insights.spec.ts` | exit 0 — 1 passed: hidden → hold → six rows → resets → reload → clean hide → same-origin requests |
 | `pnpm build` | exit 0 — PWA precache 178 entries |
-| CI | pending on PR |
+| CI | first run failed only on `e2e/sun-moon.spec.ts` (helper pinned DB v1 after the v2 migration); helpers updated to v2 and re-run locally: `pnpm check` exit 0, affected e2e 3 passed; PR CI re-running |
 
 ## Media
 
@@ -68,6 +68,9 @@ See `review.md` and `verification/phase-r1.md`.
   after the executor's permission denial.
 - Playwright's per-test budget was raised from 90 s to 180 s after a one-off
   WebGL shader-compile stall; no assertion was weakened.
+- Post-archive CI fix: two e2e helpers that opened `tiny-tracks` at version 1
+  were updated to version 2 so the v2 insights migration cannot reject the
+  open; `river.spec.ts` now seeds both stores on upgrade.
 
 ## Follow-ups
 

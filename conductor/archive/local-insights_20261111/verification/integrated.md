@@ -53,3 +53,4 @@
 - The Playwright per-test budget was raised from 90 s to 180 s after a one-off WebGL shader-compile stall; no assertion was weakened.
 - No fabricated session timings or storage sizes; `readStorageEstimate()` is called only when the gated tray opens.
 - Review verdict PASS WITH FINDINGS (two Medium, one Low); all three resolved in Phase R1 as recorded in `review.md` and `verification/phase-r1.md`. No product, guideline or tech-stack change resulted from the review.
+- Post-archive CI follow-up: the first PR run failed only in `e2e/sun-moon.spec.ts` because its helper pinned the database to version 1, which is rejected after the v2 insights migration. The helper now opens version 2 and `e2e/river.spec.ts` seeds both stores at v2. Verified locally with `pnpm check` (exit 0) and `pnpm exec playwright test e2e/sun-moon.spec.ts e2e/river.spec.ts --project=tablet --project=phone` (3 passed in 53.5 s); no assertions were weakened.
