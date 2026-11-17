@@ -41,20 +41,17 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-7, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4, AC-6
 - **Touches:** `src/state/insights-store.ts`, `src/state/insights-store.test.ts`, `src/state/persistence.ts`, `src/state/persistence.test.ts`, `src/main.ts`, `src/state/world.ts`, `src/state/world.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Add the separate insights store and database migration** — covers: FR-2, FR-5, FR-7, NFR-5, AC-2, AC-6
-  - [ ] **P2.T1.1: Extend the existing database to version 2 with an `insights` object store** — load/save helpers never read or write world snapshot keys.
-- [ ] **P2.T2: Wire the capture boundaries** — covers: FR-1, FR-2, FR-3, FR-4, NFR-2, NFR-3, AC-1, AC-2, AC-3, AC-4
-  - [ ] **P2.T2.1: Session and unclean-exit markers** — boot marker, visibility/unload session close, clean-hide clear.
-  - [ ] **P2.T2.2: Reset hook, save outcome and quota probe** — reset increments the counter; last save outcome and estimate are recorded on tray open.
+- [x] **P2.T1: Add the separate insights store and database migration** — covers: FR-2, FR-5, FR-7, NFR-5, AC-2, AC-6
+  - [x] **P2.T1.1: Extend the existing database to version 2 with an `insights` object store** — load/save helpers never read or write world snapshot keys.
+- [x] **P2.T2: Wire the capture boundaries** — covers: FR-1, FR-2, FR-3, FR-4, NFR-2, NFR-3, AC-1, AC-2, AC-3, AC-4
+  - [x] **P2.T2.1: Session and unclean-exit markers** — boot marker, visibility/unload session close, clean-hide clear.
+  - [x] **P2.T2.2: Reset hook, save outcome and quota probe** — reset increments the counter; last save outcome and estimate are recorded on tray open.
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — v2 idempotent dual-store migration, defensive never-throwing load/save, `onReset` hook and boundary-only capture in `main.ts`; `pnpm check` exit 0 (Biome 190 files, tsc clean, Vitest 56 files / 975 tests). No code outside amended Touches; no network/identifier additions.
+**Checkpoint:** 302643e
 **Evidence:** conductor/tracks/local-insights_20261111/verification/phase-2.md
--->
 
 ## Phase 3: Gated panel, Playwright journey and docs
 

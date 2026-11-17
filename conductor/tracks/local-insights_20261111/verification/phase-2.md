@@ -81,3 +81,12 @@ was intentionally left untouched: the explicit `WorldStore.onReset` hook plus th
 - Phase 3 owns the gated tray panel and the `readStorageEstimate()` call on open,
   and proves browser-reload persistence via Playwright.
 - This report is committed separately from the task commits as phase evidence.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `302643e` (no squash — the active goal prohibits `reset`; all three range commits were reported by the executor)
+- **Working tree:** clean before verification; `git diff --name-only 3f3908b..HEAD` contains only the seven files in amended Touches plus this evidence file
+- **Commands:** `pnpm check` exit 0 (Biome clean, tsc clean, Vitest 56 files / 975 tests)
+- **Acceptance criteria:** AC-1/2/3/4/6 confirmed against `verification/phase-2.md` and source; no `fetch`, XHR, beacon, analytics, `localStorage` or `sessionStorage` additions found in `src/`; world snapshot/export isolation covered by unit tests
+- **Deviations:** none; no rework
