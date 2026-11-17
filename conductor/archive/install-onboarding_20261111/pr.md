@@ -56,7 +56,7 @@ storage keys, or viewport-policy changes.
 
 ## Media
 
-![Parent hold reveals the install hint; Dismiss removes it](.conductor/media/install-onboarding_20261111/install-hint.gif)
+![Parent hold reveals the install hint; Dismiss removes it](https://github.com/user-attachments/assets/45660b60-398d-444d-9439-cc95ba3c28fd)
 
 Three-frame GIF (kid shell → 2 s parent hold with icon, instruction and Dismiss → hint gone), captured at `05a73d4` on an iPad Mini viewport.
 

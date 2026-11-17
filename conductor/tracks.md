@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [install-onboarding_20261111](./tracks/install-onboarding_20261111/index.md) | Install Onboarding | Feature | in_progress |
+| [install-onboarding_20261111](./archive/install-onboarding_20261111/index.md) | Install Onboarding | Feature | archived |
 | [a11y-pass_20261111](./archive/a11y-pass_20261111/index.md) | Accessibility Pass | Feature | archived |
 | [local-insights_20261111](./archive/local-insights_20261111/index.md) | Local Insights | Feature | archived |
 | [clarity-audit_20261110](./archive/clarity-audit_20261110/index.md) | Clarity Audit | Chore | archived |
