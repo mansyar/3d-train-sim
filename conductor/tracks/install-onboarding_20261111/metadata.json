@@ -1,0 +1,31 @@
+{
+  "id": "install-onboarding_20261111",
+  "title": "Install Onboarding",
+  "type": "feature",
+  "status": "new",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-17T22:03:00Z",
+  "updated_at": "2026-11-17T22:03:00Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/install-onboarding_20261111",
+  "base_branch": "main",
+  "base_sha": "ecaed2971a308f0c529e07a51b848064e540d502",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 0,
+    "tasks_total": 19,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
