@@ -78,17 +78,20 @@
 **Evidence:** conductor/tracks/a11y-pass_20261111/verification/integrated.md
 **Deviations:** inherited from Phases 1 and 2 (renovate grouping, `meta-viewport` rule id, hidden `.insights-unavailable` follow-up); Phase 3 added none. No squash: the active goal prohibits `reset`, and both reported commits are retained.
 
-<!--
-Review fixes are appended by `conductor-review` as:
-
 ## Phase R1: Review Fixes
 
-- **Goal:** Resolve review findings ...
+- **Goal:** Resolve review finding F1 — dynamically prove the parent-only zoom policy is restored when the tray is dismissed, not just on reload.
 - **Depends on:** Phase 3
-- **Covers:** review findings
-- **Touches:** ...
-- **Verification:** ...
+- **Covers:** F1 (FR-3, AC-3)
+- **Touches:** `e2e/a11y.spec.ts`, `conductor/tracks/a11y-pass_20261111/verification/phase-r1.md`
+- **Verification:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` and `pnpm check`
 - **Status:** pending
 
-- [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
+- [ ] **R1.T1: Assert zoom restoration on tray disarm** — covers: F1
+
+<!--
+The primary appends after acceptance:
+**Result:** verified
+**Checkpoint:** <short-sha>
+**Evidence:** conductor/tracks/a11y-pass_20261111/verification/phase-r1.md
 -->
