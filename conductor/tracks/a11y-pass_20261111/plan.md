@@ -66,12 +66,17 @@
 - **Covers:** FR-7, NFR-2, NFR-3, AC-7, AC-8
 - **Touches:** `conductor/product.md`, `conductor/tracks/a11y-pass_20261111/verification/integrated.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` and `pnpm build`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7, AC-7
-- [ ] **P3.T2: Run the full gate and write integrated evidence** — covers: NFR-2, NFR-3, AC-8
-  - [ ] **P3.T2.1: Run `pnpm check`, the axe e2e spec and `pnpm build`**
-  - [ ] **P3.T2.2: Write `verification/integrated.md` with commands, exits, AC coverage and deviations**
+- [x] **P3.T1: Mark the roadmap row Shipped** — covers: FR-7, AC-7
+- [x] **P3.T2: Run the full gate and write integrated evidence** — covers: NFR-2, NFR-3, AC-8
+  - [x] **P3.T2.1: Run `pnpm check`, the axe e2e spec and `pnpm build`**
+  - [x] **P3.T2.2: Write `verification/integrated.md` with commands, exits, AC coverage and deviations**
+
+**Result:** verified — roadmap row marked Shipped 2026-11-17; `pnpm check` exit 0 (988 tests), axe e2e 1 passed, `pnpm build` exit 0, primary full Playwright matrix exit 0. AC-1..AC-8 covered in integrated evidence.
+**Checkpoint:** ecee2b2
+**Evidence:** conductor/tracks/a11y-pass_20261111/verification/integrated.md
+**Deviations:** inherited from Phases 1 and 2 (renovate grouping, `meta-viewport` rule id, hidden `.insights-unavailable` follow-up); Phase 3 added none. No squash: the active goal prohibits `reset`, and both reported commits are retained.
 
 <!--
 Review fixes are appended by `conductor-review` as:

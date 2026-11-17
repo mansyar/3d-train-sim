@@ -3,7 +3,7 @@
 - **Track:** `a11y-pass_20261111` — Accessibility Pass
 - **Branch:** `feat/a11y-pass_20261111`
 - **Base:** `0e985dbb1b7ce44b3523630e8c93857fecf0d2f8`
-- **Head:** `02f6779` (final implementation commit; this evidence file is committed immediately after)
+- **Head:** `ecee2b2` (final implementation commit; includes this integrated evidence)
 - **Date:** 2026-11-17
 - **Result:** `verified`
 
@@ -85,5 +85,13 @@ exited 0 on the final run; no fix retry was needed in this phase.
 - The Vite `configLoader: 'native'` warning is pre-existing and unrelated to this track.
 - Task commits: Phase 1 `868bd58`, `42c64c5`, `d5c97b3`, `f5338b1` (+ evidence `9d241f7`);
   Phase 2 `5104acc`, `8cf2cbb`, `459532a`, `ebe1aed` (+ evidence `42cadac`); Phase 3
-  `02f6779` (roadmap marker). This integrated evidence file follows in a separate
-  documentation commit.
+  `02f6779` (roadmap marker). This integrated evidence file is committed in `ecee2b2`.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `ecee2b2` (no squash — the active goal prohibits `reset`; both reported Phase 3 commits are retained)
+- **Tree / diff:** clean; `73ae204..ecee2b2` limited to `conductor/product.md` and `verification/integrated.md` — the declared Phase 3 Touches.
+- **Primary re-runs:** `pnpm check` exit 0; `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` exit 0 (1 passed); `pnpm build` exit 0. As an extra regression sweep the primary also ran the full Playwright matrix `pnpm exec playwright test --project=tablet --project=phone` exit 0.
+- **Acceptance:** AC-1..AC-8 confirmed against the committed artifacts; AC-7 marker verified at `conductor/product.md:112`, AC-2 and AC-4 verified dynamically by the axe spec, AC-8 traceability unchanged in `spec.md`.
+- **No new deviations:** all three inherited deviations are documented above; Phase 3 added none.
