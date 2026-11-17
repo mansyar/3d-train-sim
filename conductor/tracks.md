@@ -1,6 +1,6 @@
 # Tracks Registry — Tiny Tracks
 
-Registry of development tracks. One row per archived track; active tracks appear first with status `in_progress`.
+Registry of development tracks. One row per archived track; active tracks appear first with status `in_progress`. Status values are `new`, `in_progress` and `archived`; `archived` is this registry's completion marker (the `[x]` equivalent in generic Conductor templates).
 
 | Track | Title | Type | Status |
 |---|---|---|---|
