@@ -6,9 +6,9 @@
 - **Branch:** `feat/local-insights_20261111`
 - **Base commit:** `a47e19501b86a91855d0897e1de3aaef65ed0e36`
 - **Head commit:** `22b50704c65220b67f885ca3fd783ae9dc0c3ba3`
-- **Result:** blocked — all code, unit checks and the Playwright journey pass; the
-  `conductor/product.md` roadmap edit (one line of P3.T3) was denied by the
-  executor's tool permissions and is handed back to the primary agent.
+- **Result:** verified — all code, unit checks and the Playwright journey pass; the
+  blocked `conductor/product.md` roadmap edit was applied by the primary agent
+  and independently re-verified.
 
 ## Summary
 
@@ -50,7 +50,7 @@ second failed iteration of either command.
 | AC-4 | Panel renders usage/quota and last-save outcome; an unavailable estimate renders plainly rather than throwing. | `src/main.ts` `insightsProvider()` builds `storage` from `formatStorageEstimate(await readStorageEstimate())` and `lastSave` from `formatSaveOutcome(insights.lastSaveOutcome)`. Failure/absence returns `undefined` → `undefined` → the plain "Storage information is unavailable." line; `src/ui/parent-gate.ts` `renderInsights()` writes values with `textContent` and wraps the whole refresh in try/catch. The browser snapshot captured during the transient Playwright stall showed all six rows populated, including the unavailable-storage line. | verified |
 | AC-5 | Values hidden until the 2 s hold arms; visible in tray; no kid-facing control exposes them. | `e2e/insights.spec.ts` first step asserts `.preset-tray`, `.insights-panel` and a diagnostic row are hidden before the hold; `holdGate()` uses a real pointer hold and then asserts the tray and panel are visible. The panel assertion checks all six `<dt>` labels appear exactly once and that the panel contains zero `button, input, select, textarea, [role="button"]`. The panel markup sits inside the preset tray, and `armConfirm()` is the only caller of `refreshInsights()`. | verified |
 | AC-6 | `pnpm check` exits 0; no fetch/XHR/analytics addition; world export fixture unchanged. | Final `pnpm check` exit 0 (975/975 tests, including `no-external-urls`, `import-graph` and `boot-order`). No `fetch`, XHR, beacon, analytics or identifier was added; the panel reads only the local `insights` closure and `navigator.storage.estimate()`. Export/snapshot code and fixtures are untouched by this phase. | verified |
-| AC-7 | Roadmap row carries shipped marker; README/CHANGELOG mention the parent panel. | `README.md` and `CHANGELOG.md` carry parent-worded notes (commits `22b5070`). `conductor/product.md` line 110 still lacks the `**Shipped 2026-11-17**` marker: the `edit` call returned `permission.rejected` and was not worked around. | blocked |
+| AC-7 | Roadmap row carries shipped marker; README/CHANGELOG mention the parent panel. | `README.md` and `CHANGELOG.md` carry parent-worded notes (commit `22b5070`). `conductor/product.md` line 110 now carries `**Shipped 2026-11-17**` plus the parent-facing summary, applied by the primary agent as the approved FR-8/P3.T3 change. | verified |
 | AC-8 | Every AC traces to at least one FR/NFR ID. | `spec.md` acceptance table (AC-4→FR-4/NFR-5, AC-5→FR-6/NFR-4, AC-6→FR-7/NFR-1/NFR-2, AC-7→FR-8) is unchanged and still satisfies the traceability requirement. | verified |
 
 ## Evidence paths
@@ -79,12 +79,10 @@ second failed iteration of either command.
 
 ## Blockers
 
-- `conductor/product.md` (line 110, the `local-insights_20261111` roadmap row) —
-  the edit tool returned `permission.rejected` ("Permission denied: edit"). The
-  one-line change adds `**Shipped 2026-11-17**` plus a short parent-facing summary
-  to satisfy AC-7 / FR-8. The primary agent owns this Conductor-owned product doc
-  and should apply it. Expected result: the roadmap row is marked shipped and no
-  other Conductor state file is touched.
+- Resolved: `conductor/product.md` (line 110) was denied to the phase executor
+  ("Permission denied: edit"). The primary agent applied exactly the expected
+  one-line change — `**Shipped 2026-11-17**` plus a short parent-facing summary —
+  with no other Conductor state file touched. AC-7 is now verified.
 
 ## Notes
 
@@ -100,3 +98,13 @@ second failed iteration of either command.
   WebGL page loads can be delayed by shader compilation on this runner; no hold
   duration was shortened and no assertion was weakened.
 - This report is committed separately from the task commits as phase evidence.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** pending completion state commit (no squash — the active goal prohibits `reset`; all four range commits were reported by the executor)
+- **Permission-denied handling:** primary applied the single blocked `conductor/product.md` roadmap edit verbatim; no re-delegation was needed because it was the only outstanding item
+- **Working tree:** clean before the product-doc edit; `git diff --name-only a47e195..HEAD` contains only the seven files in Touches (plus the documented `src/main.ts` wiring deviation) and this evidence file
+- **Commands (re-run independently):** `pnpm check` exit 0 (Biome clean, tsc clean, Vitest 56 files / 975 tests); `pnpm exec playwright test e2e/insights.spec.ts` exit 0 (`ok 1 [tablet] … (15.0s)`, 1 passed in 24.7s)
+- **Acceptance criteria:** AC-4, AC-5, AC-6, AC-7 and AC-8 verified; no `fetch`, XHR, beacon, analytics or identifier added under `src/`; world snapshot/export code untouched
+- **Deviations:** accepted — `src/main.ts` (outside nominal Touches) holds only the required view provider and local longest-session formatter; the per-test Playwright budget was raised from 90 s to 180 s after a one-off shader stall with no assertion weakened

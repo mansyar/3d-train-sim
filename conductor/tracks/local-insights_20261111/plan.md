@@ -60,13 +60,17 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-6, FR-7, FR-8, NFR-2, NFR-4, NFR-5, AC-4, AC-5, AC-6, AC-7, AC-8
 - **Touches:** `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`, `e2e/insights.spec.ts`, `conductor/product.md`, `README.md`, `CHANGELOG.md`
 - **Verification:** `pnpm check` and `pnpm exec playwright test e2e/insights.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Add the read-only panel inside the parent tray** — covers: FR-4, FR-6, NFR-4, NFR-5, AC-4, AC-5
-  - [ ] **P3.T1.1: Markup and styles** — text-only rows for sessions, longest, resets, unexpected closes and storage health; no kid-facing control.
-- [ ] **P3.T2: Prove the gate in Playwright** — covers: FR-6, NFR-4, AC-5, AC-6
-  - [ ] **P3.T2.1: Journey** — values hidden before the hold, visible after it, no network requests added.
-- [ ] **P3.T3: Sync roadmap and parent docs** — covers: FR-8, AC-7
+- [x] **P3.T1: Add the read-only panel inside the parent tray** — covers: FR-4, FR-6, NFR-4, NFR-5, AC-4, AC-5
+  - [x] **P3.T1.1: Markup and styles** — text-only rows for sessions, longest, resets, unexpected closes and storage health; no kid-facing control.
+- [x] **P3.T2: Prove the gate in Playwright** — covers: FR-6, NFR-4, AC-5, AC-6
+  - [x] **P3.T2.1: Journey** — values hidden before the hold, visible after it, no network requests added.
+- [x] **P3.T3: Sync roadmap and parent docs** — covers: FR-8, AC-7
+
+**Result:** verified — read-only six-row panel behind the existing 2 s hold, local-only provider from Phase 2 state, Playwright journey proving hidden→armed→persist→same-origin traffic, and docs synced (`product.md` shipped marker applied by primary after executor permission denial). `pnpm check` exit 0 (975 tests); Playwright 1 passed (15.0s).
+**Checkpoint:** pending completion state commit
+**Evidence:** conductor/tracks/local-insights_20261111/verification/phase-3.md
 
 <!--
 Review fixes are appended by `conductor-review` as:
