@@ -84,7 +84,7 @@ export function mountShell(root: HTMLElement): HTMLCanvasElement {
   root.innerHTML = `
     <canvas class="scene-canvas" aria-label="Tiny Tracks 3D world"></canvas>
     <div class="toy-drawer" role="group" aria-label="Toybox" hidden>
-      <div class="drawer-tabs" role="tablist" aria-label="Toy groups">${toyTabStrip}</div>
+      <div class="drawer-tabs" role="group" aria-label="Toy groups">${toyTabStrip}</div>
       ${toyTabPanels}
     </div>
     ${import.meta.env.DEV ? '<button class="grid-toggle" type="button" aria-label="Toggle the placement grid" aria-pressed="false">#</button>' : ''}
@@ -102,9 +102,9 @@ export function mountShell(root: HTMLElement): HTMLCanvasElement {
       <button class="preset-pick" type="button" data-preset="hilltop-junction"
               aria-label="Build the hilltop junction starter railway">${PIECE_ICONS.switch}</button>
       <button class="portable-export" type="button"
-              aria-label="Save the meadow as a file">💾 Save meadow</button>
+              aria-label="Save meadow — save the meadow as a file">💾 Save meadow</button>
       <button class="portable-import" type="button"
-              aria-label="Load a meadow from a file">📂 Load meadow</button>
+              aria-label="Load meadow — load a meadow from a file">📂 Load meadow</button>
       <input class="portable-import-input" type="file" accept="application/json,.json" hidden>
       <div class="portable-note" role="status" hidden><span class="portable-note-text"></span></div>
       <div class="recovery-note" role="status" hidden>
