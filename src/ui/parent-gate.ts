@@ -4,6 +4,20 @@ import { STARTER_PRESETS } from '../core/starters';
 import type { WorldStore } from '../state/world';
 import { readWorldFile, saveWorldFile } from './portable-file';
 
+/**
+ * The plain, read-only values the parent panel renders. Every field is a string
+ * or number built at the boundary by `main.ts`; no mutable state and no error
+ * content ever crosses into the UI layer.
+ */
+export interface InsightsView {
+  sessions: number;
+  longestSession: string;
+  resets: number;
+  uncleanExits: number;
+  storage: string;
+  lastSave: string;
+}
+
 export interface ParentGateDeps {
   world: WorldStore;
   audio: AudioController;
@@ -15,6 +29,11 @@ export interface ParentGateDeps {
   isReady?: (() => boolean) | undefined;
   /** Supplies the grown-up recovery line; read as the tray opens. */
   recoveryNote?: (() => string | null) | undefined;
+  /**
+   * Lazy source for the read-only on-device diagnostics. Called only when the
+   * 2 s hold arms the tray — never on boot, never per frame.
+   */
+  insights?: (() => Promise<InsightsView> | InsightsView) | undefined;
 }
 
 export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void {
@@ -73,6 +92,68 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     if (recoveryNote) recoveryNote.hidden = true;
   });
 
+  // ---- On-device insights: read-only, filled only as the tray opens --------
+  // The panel lives inside the 2 s-hold tray, so a toddler can never reach it.
+  // Its provider is lazy and async: the browser quota estimate is probed only
+  // here, never on boot or per frame. A stale resolve (tray closed or reopened
+  // since) is ignored, and a rejection shows one plain unavailable line.
+  const insightsPanel = presetTray.querySelector<HTMLDivElement>('.insights-panel');
+  const insightsList = insightsPanel?.querySelector<HTMLElement>('[data-insights="list"]');
+  const insightsUnavailable = insightsPanel?.querySelector<HTMLElement>(
+    '[data-insights="unavailable"]',
+  );
+  let insightsGeneration = 0;
+
+  const insightValue = (key: string): HTMLElement | null =>
+    insightsPanel?.querySelector<HTMLElement>(`[data-insights="${key}"]`) ?? null;
+
+  const renderInsights = (view: InsightsView): void => {
+    if (!insightsList || !insightsUnavailable) return;
+    const rows: Array<[string, string | number]> = [
+      ['sessions', view.sessions],
+      ['longestSession', view.longestSession],
+      ['resets', view.resets],
+      ['uncleanExits', view.uncleanExits],
+      ['storage', view.storage],
+      ['lastSave', view.lastSave],
+    ];
+    // textContent only — diagnostics are plain data, never markup.
+    for (const [key, value] of rows) {
+      const element = insightValue(key);
+      if (element) element.textContent = String(value);
+    }
+    insightsList.hidden = false;
+    insightsUnavailable.hidden = true;
+  };
+
+  const showInsightsUnavailable = (): void => {
+    if (!insightsList || !insightsUnavailable) return;
+    insightsList.hidden = true;
+    insightsUnavailable.hidden = false;
+  };
+
+  const refreshInsights = (): void => {
+    if (!deps.insights) return;
+    const generation = ++insightsGeneration;
+    let result: Promise<InsightsView> | InsightsView;
+    try {
+      result = deps.insights();
+    } catch {
+      showInsightsUnavailable();
+      return;
+    }
+    void Promise.resolve(result).then(
+      (view) => {
+        if (generation !== insightsGeneration || presetTray.hidden) return;
+        renderInsights(view);
+      },
+      () => {
+        if (generation !== insightsGeneration || presetTray.hidden) return;
+        showInsightsUnavailable();
+      },
+    );
+  };
+
   const HOLD_MS = 2000;
   const DRIFT_PX = 48;
   const HOLD_LABEL = 'Parent gate — press and hold to reset the world';
@@ -103,6 +184,7 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     presetTray.classList.remove('is-reporting');
     refreshRecoveryNote();
     clearPortableNote();
+    refreshInsights();
   };
 
   const disarmConfirm = () => {

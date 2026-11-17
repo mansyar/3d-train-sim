@@ -57,7 +57,7 @@ const storedPhase = (page: import('@playwright/test').Page) =>
   page.evaluate(
     () =>
       new Promise<string | null>((resolve, reject) => {
-        const open = indexedDB.open('tiny-tracks', 1);
+        const open = indexedDB.open('tiny-tracks', 2);
         open.onerror = () => reject(new Error('storage open failed'));
         open.onsuccess = () => {
           const read = open.result
@@ -136,7 +136,7 @@ test('the sun/moon button turns the day, previews the next phase, and survives a
     await page.evaluate(
       () =>
         new Promise<void>((resolve, reject) => {
-          const open = indexedDB.open('tiny-tracks', 1);
+          const open = indexedDB.open('tiny-tracks', 2);
           open.onerror = () => reject(new Error('storage open failed'));
           open.onsuccess = () => {
             const store = open.result.transaction('worlds', 'readwrite').objectStore('worlds');
