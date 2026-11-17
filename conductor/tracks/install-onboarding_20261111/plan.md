@@ -15,7 +15,7 @@
 - **Covers:** FR-1, FR-6, NFR-1, NFR-2, AC-1, AC-6
 - **Touches:** `src/core/install-mode.ts`, `src/core/install-mode.test.ts`, `src/core/save.ts`, `src/core/save.test.ts`, `src/state/persistence.ts`, `src/state/persistence.test.ts`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Pure install-mode classifier** — covers: FR-1
   - [ ] **P1.T1.1: Classify from an injectable display-mode query and `navigator.standalone`, tolerating missing APIs and non-browser environments**
