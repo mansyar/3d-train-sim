@@ -14,13 +14,18 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, NFR-1, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4, AC-8
 - **Touches:** `src/core/insights.ts`, `src/core/insights.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Red — write failing tests for the insights model and clock rules** — covers: FR-1, FR-2, FR-3, FR-4, NFR-1, AC-1, AC-2, AC-3, AC-4, AC-8
-  - [ ] **P1.T1.1: Session clock cases** — foreground start/hide end, duplicate visible, zero-duration guard, longest-session update.
-  - [ ] **P1.T1.2: Counter cases** — reset increment, dirty-boot increment and clean-hide clear, last save outcome, unavailable estimate, negative-duration guard.
-- [ ] **P1.T2: Green — implement the pure insights model** — covers: FR-1, FR-2, FR-3, FR-4, NFR-1, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4
-  - [ ] **P1.T2.1: State shape and reducers** — counters, longest duration, save outcome, plain-word formatting helpers.
+- [x] **P1.T1: Red — write failing tests for the insights model and clock rules** — covers: FR-1, FR-2, FR-3, FR-4, NFR-1, AC-1, AC-2, AC-3, AC-4, AC-8
+  - [x] **P1.T1.1: Session clock cases** — foreground start/hide end, duplicate visible, zero-duration guard, longest-session update.
+  - [x] **P1.T1.2: Counter cases** — reset increment, dirty-boot increment and clean-hide clear, last save outcome, unavailable estimate, negative-duration guard.
+- [x] **P1.T2: Green — implement the pure insights model** — covers: FR-1, FR-2, FR-3, FR-4, NFR-1, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4
+  - [x] **P1.T2.1: State shape and reducers** — counters, longest duration, save outcome, plain-word formatting helpers.
+
+**Result:** verified
+**Checkpoint:** 3315635
+**Evidence:** conductor/tracks/local-insights_20261111/verification/phase-1.md
+**Note:** No squash — the active goal prohibits `reset`; the reported Red, Green and evidence commits are retained.
 
 <!--
 The primary appends after acceptance:

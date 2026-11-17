@@ -61,3 +61,18 @@ None. Changes stayed within `src/core/insights.ts` and `src/core/insights.test.t
 - AC-2's reload proof, AC-3's real hide/unload wiring and AC-4's DOM panel are
   intentionally deferred to Phases 2 and 3 per the plan.
 - This report is committed separately from the task commits as the phase evidence.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `3315635` (no squash — the active goal prohibits `reset`; all
+  three commits in the range were reported by the executor).
+- **Working tree:** clean after the executor's commits.
+- **Diff:** `1d6943419ba272c64b7e0612695d17077f244e33..HEAD` contains only
+  `src/core/insights.ts`, `src/core/insights.test.ts` and this evidence file —
+  within Touches and evidence.
+- **Command:** `pnpm check` — exit 0 (Biome clean, `tsc` clean, Vitest 55 files /
+  955 tests passed).
+- **Acceptance:** AC-1/AC-2/AC-3/AC-4/AC-8 confirmed at unit scope; persistence,
+  boot wiring and DOM rendering are explicitly assigned to Phases 2–3.
+- **Deviations:** none.
