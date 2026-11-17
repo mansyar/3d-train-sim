@@ -85,13 +85,11 @@
 - **Covers:** F1 (FR-3, AC-3)
 - **Touches:** `e2e/a11y.spec.ts`, `conductor/tracks/a11y-pass_20261111/verification/phase-r1.md`
 - **Verification:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` and `pnpm check`
-- **Status:** pending
+- **Status:** complete
 
-- [ ] **R1.T1: Assert zoom restoration on tray disarm** — covers: F1
+- [x] **R1.T1: Assert zoom restoration on tray disarm** — covers: F1
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — disarm zoom assertion added to `e2e/a11y.spec.ts` (+11 lines, no assertions weakened); axe e2e exit 0 (1 passed), `pnpm check` exit 0 (988 tests); F1 re-reviewed as PASS with no new findings.
+**Checkpoint:** 37e65ec
 **Evidence:** conductor/tracks/a11y-pass_20261111/verification/phase-r1.md
--->
+**Re-review:** PASS in `review.md` round 2. No squash — the active goal prohibits `reset`; both reported commits are retained.

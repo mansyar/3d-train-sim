@@ -43,3 +43,12 @@ No assertion was weakened or removed. The existing tray-open axe scan, the `user
 - Product source under `src/**`, the spec, review verdict files, `plan.md`, and all other tests were left unchanged.
 - The tap-outside path exercises `disarmConfirm()`; the `clearPortableReport() → setParentZoom(false)` path remains code-reviewed only, consistent with the scope of F1.
 - Commit rule observed: test change committed with a conventional `test(a11y):` message; this evidence file is committed separately.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `37e65ec` (no squash — the active goal prohibits `reset`; both reported commits retained)
+- **Tree / diff:** clean; `f6aa8fc..37e65ec` limited to `e2e/a11y.spec.ts` (+11, no deletions) and this evidence file — the declared R1 Touches.
+- **Primary re-runs:** `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` exit 0 (1 passed); `pnpm check` exit 0 (Biome 192 files, tsc clean, Vitest 56 files / 988 tests).
+- **Re-review:** two independent read-only re-reviews of the R1 diff returned PASS — F1 resolved, no new findings, existing assertions unchanged, no production code changed (`review.md` round 2).
+- **Deviations:** none.
