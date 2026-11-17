@@ -85,6 +85,17 @@ test('four tablet states are axe-clean with visible focus and parent-only zoom @
     );
     const results = await scan(page);
     expect(results.violations).toEqual([]);
+
+    // F1 / AC-3: dismissing the tray (a tap outside both the gate and tray)
+    // must restore the kid-safe `user-scalable=no` viewport — not just reload.
+    // (5,5) sits above/left of the gate at (12,12), so it disarms via the
+    // window pointerdown handler in src/ui/parent-gate.ts.
+    await page.mouse.click(5, 5);
+    await expect(page.locator('.preset-tray')).toBeHidden();
+    await expect(page.locator('meta[name="viewport"]')).toHaveAttribute(
+      'content',
+      /user-scalable=no/,
+    );
   });
 
   await test.step('AC-4: riding state has zero axe violations behind a real ride', async () => {
