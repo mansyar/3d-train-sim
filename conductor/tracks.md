@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [local-insights_20261111](./tracks/local-insights_20261111/index.md) | Local Insights | Feature | new |
 | [clarity-audit_20261110](./archive/clarity-audit_20261110/index.md) | Clarity Audit | Chore | archived |
 | [progressive-disclosure_20261110](./archive/progressive-disclosure_20261110/index.md) | Progressive Disclosure | Feature | archived |
 | [single-train-driver-camera_20261110](./archive/single-train-driver-camera_20261110/index.md) | Single Train and Driver Camera | Feature | archived |
