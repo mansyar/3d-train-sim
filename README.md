@@ -38,6 +38,11 @@ Open a starter railway from the picture gallery behind the parent gate,
 or start from an empty meadow and build your own. Worlds autosave, so
 nothing is ever lost.
 
+Grown-ups can press and hold the ♻️ button for two seconds to see a few
+simple play details on this device — how many sessions there have been,
+the longest one, resets, unexpected closes, and whether saves are healthy.
+It's a quiet, read-only note just for you; nothing is sent anywhere.
+
 ## For developers
 
 Built with TypeScript, Three.js, Vite, Howler.js, and IndexedDB, as an

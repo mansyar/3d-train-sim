@@ -9,6 +9,14 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Added
+- **A little report for grown-ups, hidden behind the parent gate.** Press and
+  hold the ♻️ button for two seconds and you'll find a short, read-only note
+  about this device: how many play sessions there have been, the longest one,
+  how many times the meadow was reset, how many times it closed unexpectedly,
+  and whether saves are healthy. It stays entirely on this device — nothing
+  is sent anywhere — and nothing changes for little ones.
+
 ## [0.12.0] - 2026-11-17
 
 ### Added
