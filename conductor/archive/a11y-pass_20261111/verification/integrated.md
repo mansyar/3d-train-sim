@@ -99,3 +99,14 @@ exited 0 on the final run; no fix retry was needed in this phase.
 - **Primary re-runs:** `pnpm check` exit 0; `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` exit 0 (1 passed); `pnpm build` exit 0. As an extra regression sweep the primary also ran the full Playwright matrix `pnpm exec playwright test --project=tablet --project=phone` exit 0.
 - **Acceptance:** AC-1..AC-8 confirmed against the committed artifacts; AC-7 marker verified at `conductor/product.md:112`, AC-2 and AC-4 verified dynamically by the axe spec, AC-8 traceability unchanged in `spec.md`.
 - **No new deviations:** all three inherited deviations are documented above; Phase 3 added none.
+
+## Post-archive CI follow-up
+
+The first PR #78 CI run failed only in the tablet axe spec's AC-2 pointer-quiet
+assertion: clicking the already keyboard-focused `.whistle-toot` button can
+retain keyboard modality and match `:focus-visible`, so the assertion is flaky
+in CI even though it passed locally. The test now blurs the active element
+before the pointer click, making it a genuine pointer-tap check. Primary
+verification: `pnpm check` exit 0 and three consecutive
+`pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` runs all exit 0.
+No assertion was weakened and no production code changed.

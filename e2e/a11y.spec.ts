@@ -158,6 +158,12 @@ test('four tablet states are axe-clean with visible focus and parent-only zoom @
     expect(ring.outlineWidth, 'keyboard focus outline width').toBe('3px');
 
     // The same control, reached by pointer, must not match :focus-visible.
+    // Blur first: clicking an element that is already keyboard-focused keeps the
+    // keyboard modality and can leave :focus-visible set (seen as a CI flake),
+    // which is not the pointer-tap case this assertion is about.
+    await page.evaluate(() => {
+      (document.activeElement instanceof HTMLElement ? document.activeElement : undefined)?.blur();
+    });
     await page.locator(probe).click();
     const focusVisible = await page
       .locator(probe)

@@ -46,7 +46,7 @@ transmitted off-device and the production world/export format is unchanged.
 | `pnpm exec playwright test e2e/a11y.spec.ts --project=tablet` | exit 0 — 1 passed, four axe-clean states + focus/zoom/disarm assertions |
 | `pnpm exec playwright test --project=tablet --project=phone` | exit 0 — full matrix green |
 | `pnpm build` | exit 0 — 114 modules, PWA precache 178 entries |
-| CI | see checks on this pull request |
+| CI | first run hit a flaky pointer-quiet assertion; test hardened (blur before pointer click) and CI re-run — see checks on this pull request |
 
 ## Media
 
@@ -74,6 +74,9 @@ re-review returned PASS with no new findings. See `review.md` and
 - `conductor-phase` cannot edit `conductor/**` outside `verification/**`;
   `general` executors ran the phases. Task commits were retained (no squash)
   because the active goal prohibits `reset`.
+- Post-archive CI flake: the AC-2 pointer-quiet probe now blurs the previously
+  keyboard-focused button before clicking it, so the check tests a real pointer
+  tap rather than inherited keyboard modality. Test-only change.
 
 ## Follow-ups
 
