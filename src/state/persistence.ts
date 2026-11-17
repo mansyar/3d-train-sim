@@ -1,6 +1,7 @@
 import { type DBSchema, openDB } from 'idb';
 import { type DayPhase, DEFAULT_DAY_PHASE } from '../core/day-clock';
 import type { DisclosureState } from '../core/disclosure';
+import type { InsightsState } from '../core/insights';
 import {
   deserializePreferences,
   parseWorldSnapshot,
@@ -15,7 +16,10 @@ import type { TrainKind } from '../core/trains';
 import type { TrainConsist } from '../core/wagons';
 
 const DATABASE_NAME = 'tiny-tracks';
-const DATABASE_VERSION = 1;
+// Version 2 adds the separate `insights` store. The upgrade is idempotent and
+// creates BOTH stores: whichever helper opens first owns the migration, so the
+// world and diagnostics stores can never end up in different database versions.
+const DATABASE_VERSION = 2;
 const WORLD_KEY = 'current';
 const PREVIOUS_KEY = 'previous';
 
@@ -24,12 +28,17 @@ interface TinyTracksDatabase extends DBSchema {
     key: string;
     value: WorldSnapshot;
   };
+  insights: {
+    key: string;
+    value: InsightsState;
+  };
 }
 
 async function database(): Promise<ReturnType<typeof openDB<TinyTracksDatabase>>> {
   return openDB<TinyTracksDatabase>(DATABASE_NAME, DATABASE_VERSION, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('worlds')) db.createObjectStore('worlds');
+      if (!db.objectStoreNames.contains('insights')) db.createObjectStore('insights');
     },
   });
 }
@@ -234,9 +243,11 @@ export function restoreDayPhasePreference(
  * share a single `readwrite` transaction, so an interrupted save leaves a
  * consistent pair: either the new world plus its predecessor, or neither. A
  * prior payload that parses as an empty salvage is never promoted — corrupt
- * bytes must not replace a good backup. Storage failures stay non-fatal.
+ * bytes must not replace a good backup. Storage failures stay non-fatal: the
+ * boolean return reports the outcome to the insights capture boundary without
+ * changing the write path or throwing at any existing caller.
  */
-export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> {
+export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<boolean> {
   try {
     const db = await database();
     try {
@@ -247,10 +258,12 @@ export async function saveWorldSnapshot(snapshot: WorldSnapshot): Promise<void> 
       }
       await tx.store.put(snapshot, WORLD_KEY);
       await tx.done;
+      return true;
     } finally {
       db.close();
     }
   } catch {
     // Storage is an enhancement; never make the toy world unusable.
+    return false;
   }
 }

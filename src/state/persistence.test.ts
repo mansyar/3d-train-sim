@@ -575,7 +575,7 @@ describe('indexeddb storage', () => {
     openDBMock.mockResolvedValue(db as never);
     const next: WorldSnapshot = { ...stored, train: 'steam' };
 
-    await saveWorldSnapshot(next);
+    await expect(saveWorldSnapshot(next)).resolves.toBe(true);
 
     expect(db.transaction).toHaveBeenCalledTimes(1);
     expect(db.transaction).toHaveBeenCalledWith('worlds', 'readwrite');
@@ -592,7 +592,7 @@ describe('indexeddb storage', () => {
     const db = makeDb();
     openDBMock.mockResolvedValue(db as never);
 
-    await saveWorldSnapshot(stored);
+    await expect(saveWorldSnapshot(stored)).resolves.toBe(true);
 
     expect(db.store.put).toHaveBeenCalledTimes(1);
     expect(db.store.put).toHaveBeenCalledWith(stored, 'current');
@@ -648,7 +648,7 @@ describe('indexeddb storage', () => {
     openDBMock.mockResolvedValue(db as never);
     const next: WorldSnapshot = { ...stored, train: 'steam' };
 
-    await expect(saveWorldSnapshot(next)).resolves.toBeUndefined();
+    await expect(saveWorldSnapshot(next)).resolves.toBe(false);
 
     // Both writes were staged, but the aborted transaction committed neither.
     expect(db.store.put).toHaveBeenCalledTimes(2);
@@ -666,13 +666,13 @@ describe('indexeddb storage', () => {
     };
 
     openDBMock.mockRejectedValue(new Error('quota exceeded'));
-    await expect(saveWorldSnapshot(snapshot)).resolves.toBeUndefined();
+    await expect(saveWorldSnapshot(snapshot)).resolves.toBe(false);
 
     const db = makeDb();
     db.transaction.mockImplementation(() => {
       throw new Error('transaction blocked');
     });
     openDBMock.mockResolvedValue(db as never);
-    await expect(saveWorldSnapshot(snapshot)).resolves.toBeUndefined();
+    await expect(saveWorldSnapshot(snapshot)).resolves.toBe(false);
   });
 });
