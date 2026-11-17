@@ -37,7 +37,7 @@
 - **Covers:** FR-2, FR-3, FR-4, FR-5, NFR-3, NFR-4
 - **Touches:** `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`, `src/main.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Gated tray hint markup and styling** — covers: FR-3, FR-4
   - [ ] **P2.T1.1: Add an icon-led hint line with a short parent instruction and a labelled dismiss control inside `.preset-tray`**
