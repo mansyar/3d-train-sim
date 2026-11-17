@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createInsights,
   endSession,
+  formatLongestSession,
   formatSaveOutcome,
   formatStorageEstimate,
   noteBoot,
@@ -156,5 +157,31 @@ describe('formatStorageEstimate', () => {
     expect(formatStorageEstimate({ usage: Number.NaN, quota: Number.POSITIVE_INFINITY })).toBe(
       'Storage information is unavailable.',
     );
+  });
+});
+
+describe('formatLongestSession', () => {
+  it('uses singular units for exactly one minute and one second', () => {
+    expect(formatLongestSession(60_000)).toBe('1 minute.');
+    expect(formatLongestSession(1_000)).toBe('1 second.');
+  });
+
+  it('uses singular minutes with a singular remaining second', () => {
+    expect(formatLongestSession(61_000)).toBe('1 minute 1 second.');
+  });
+
+  it('uses plural minutes with a plural remaining second', () => {
+    expect(formatLongestSession(90_000)).toBe('1 minute 30 seconds.');
+  });
+
+  it('keeps plural seconds below a minute', () => {
+    expect(formatLongestSession(30_000)).toBe('30 seconds.');
+  });
+
+  it('reports no sessions for zero, negative and non-finite durations', () => {
+    expect(formatLongestSession(0)).toBe('No sessions yet.');
+    expect(formatLongestSession(-1)).toBe('No sessions yet.');
+    expect(formatLongestSession(Number.NaN)).toBe('No sessions yet.');
+    expect(formatLongestSession(Number.POSITIVE_INFINITY)).toBe('No sessions yet.');
   });
 });

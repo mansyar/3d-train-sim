@@ -9,6 +9,7 @@ import { applyGrandfather, parseDisclosureState } from './core/disclosure';
 import {
   createInsights,
   endSession,
+  formatLongestSession,
   formatSaveOutcome,
   formatStorageEstimate,
   type InsightsState,
@@ -85,16 +86,6 @@ if (root) {
   // failures, so none of this can break play.
   let insights: InsightsState = createInsights();
 
-  /** Parent words for the longest foreground session; no invented categories. */
-  const formatLongestSession = (ms: number): string => {
-    if (!Number.isFinite(ms) || ms <= 0) return 'No sessions yet.';
-    const seconds = Math.round(ms / 1000);
-    if (seconds < 60) return `${seconds} seconds.`;
-    const minutes = Math.floor(seconds / 60);
-    const rest = seconds % 60;
-    return rest === 0 ? `${minutes} minutes.` : `${minutes} minutes ${rest} seconds.`;
-  };
-
   /**
    * The parent tray reads a fresh snapshot only when the 2 s hold arms it. The
    * quota probe is async; every value is plain data built from the closure
@@ -142,7 +133,14 @@ if (root) {
       insights = startSession(insights, performance.now());
     };
 
-    /** Closes any open session, marks a clean exit and persists once. */
+    /**
+     * Closes any open session, marks a clean exit and persists once.
+     * `visibilitychange → hidden` is the reliable early persist point during
+     * unload: it runs while IndexedDB writes still have time to commit. The
+     * later `pagehide`/`beforeunload` calls find the marker already clear and
+     * return through the `running` guard, so the final session and clean-exit
+     * marker are written once, before the page is torn down.
+     */
     const endInsights = (): void => {
       const ended = endSession(insights, performance.now());
       let next: InsightsState;

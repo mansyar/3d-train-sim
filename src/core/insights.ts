@@ -116,3 +116,16 @@ export function formatStorageEstimate(estimate?: StorageEstimate): string {
   const quotaMb = Math.round(estimate.quota / BYTES_PER_MB);
   return `About ${usageMb} MB used of ${quotaMb} MB available.`;
 }
+
+/** Renders the longest foreground session in parent words, with singular/plural units. */
+export function formatLongestSession(ms: number): string {
+  if (!Number.isFinite(ms) || ms <= 0) return 'No sessions yet.';
+  const seconds = Math.round(ms / 1000);
+  if (seconds < 60) return seconds === 1 ? '1 second.' : `${seconds} seconds.`;
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  const minutePart = minutes === 1 ? '1 minute' : `${minutes} minutes`;
+  if (rest === 0) return `${minutePart}.`;
+  const secondPart = rest === 1 ? '1 second' : `${rest} seconds`;
+  return `${minutePart} ${secondPart}.`;
+}
