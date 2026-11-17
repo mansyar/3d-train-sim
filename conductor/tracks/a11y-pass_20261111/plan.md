@@ -15,23 +15,21 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-1, NFR-3, NFR-4, AC-1, AC-2, AC-3
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `conductor/tech-stack.md`, `src/style.css`, `src/ui/parent-gate.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Add axe tooling and record the stack change** — covers: FR-1, NFR-4, AC-1
-  - [ ] **P1.T1.1: Install `@axe-core/playwright` as a devDependency and commit the lockfile update**
-  - [ ] **P1.T1.2: Document the dev-only e2e tool in `conductor/tech-stack.md`**
-- [ ] **P1.T2: Add visible keyboard focus styling** — covers: FR-2, NFR-1, NFR-3, AC-2
-  - [ ] **P1.T2.1: Add a `:focus-visible` ring using existing tokens with a clear offset; keep pointer focus quiet and target sizes unchanged**
-- [ ] **P1.T3: Settle the parent-only zoom policy** — covers: FR-3, NFR-1, AC-3
-  - [ ] **P1.T3.1: Add a viewport helper with the default kid-safe content string**
-  - [ ] **P1.T3.2: Apply the policy on every tray show/hide path, including the portable-note path, so reload restores no-zoom**
+- [x] **P1.T1: Add axe tooling and record the stack change** — covers: FR-1, NFR-4, AC-1
+  - [x] **P1.T1.1: Install `@axe-core/playwright` as a devDependency and commit the lockfile update**
+  - [x] **P1.T1.2: Document the dev-only e2e tool in `conductor/tech-stack.md`**
+- [x] **P1.T2: Add visible keyboard focus styling** — covers: FR-2, NFR-1, NFR-3, AC-2
+  - [x] **P1.T2.1: Add a `:focus-visible` ring using existing tokens with a clear offset; keep pointer focus quiet and target sizes unchanged**
+- [x] **P1.T3: Settle the parent-only zoom policy** — covers: FR-3, NFR-1, AC-3
+  - [x] **P1.T3.1: Add a viewport helper with the default kid-safe content string**
+  - [x] **P1.T3.2: Apply the policy on every tray show/hide path, including the portable-note path, so reload restores no-zoom**
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/a11y-pass_20261111/verification/phase-1.md
--->
+**Result:** verified — axe devDependency and dated tech-stack note added; `:focus-visible` ring on all buttons and canvas; viewport zoom enabled only while the parent tray is visible; `pnpm check` exit 0 (988 tests).
+**Checkpoint:** `9d241f7`
+**Evidence:** `conductor/tracks/a11y-pass_20261111/verification/phase-1.md`
+**Deviation:** `renovate.json` grouped the new devDependency with existing test tooling — required by `src/core/renovate-config.test.ts`, smallest necessary edit. No squash: the active goal prohibits `reset`, and all five reported commits are retained.
 
 ## Phase 2: Axe sweep and bounded fixes
 

@@ -67,3 +67,19 @@ Task commits:
   required for the representative-button control in AC-2.
 - `vitest run` emitted a pre-existing Vite `configLoader: 'native'` warning; it is unrelated to this
   phase and did not affect the exit code.
+
+## Primary verification (4.7)
+
+- **Date:** 2026-11-17
+- **Checkpoint:** `9d241f7` (no squash: the active goal prohibits `reset`; all five commits in
+  `16d0490..9d241f7` were reported by the executor).
+- **Tree:** `git status --porcelain` clean after the executor's commits.
+- **Diff:** `git diff --name-only 16d049043e30c5141086cb8a8645611d89bdb865..HEAD` listed only the
+  five Touches files, the accepted `renovate.json` deviation and this evidence file.
+- **Command:** `pnpm check` — exit 0 (primary re-run, 988 unit tests green).
+- **AC check:** AC-1 (devDependency + tech-stack note + green gate), AC-2 (focus ring by keyboard,
+  quiet pointer focus, no target change), AC-3 (kid-safe default, parent-only zoom via four call
+  sites, no persistence) verified against the reported evidence and source.
+- **Deviations:** accepted `renovate.json` grouping; `index.html` intentionally untouched; canvas
+  has no `tabindex`, so its `:focus-visible` rule is inert today but harmless and all actual
+  controls are buttons.
