@@ -9,6 +9,8 @@ import { applyGrandfather, parseDisclosureState } from './core/disclosure';
 import {
   createInsights,
   endSession,
+  formatSaveOutcome,
+  formatStorageEstimate,
   type InsightsState,
   noteBoot,
   noteCleanExit,
@@ -27,7 +29,7 @@ import {
   shouldReload,
 } from './core/update-state';
 import { initScene } from './scene/init-scene';
-import { loadInsights, saveInsights } from './state/insights-store';
+import { loadInsights, readStorageEstimate, saveInsights } from './state/insights-store';
 import {
   loadWorldRecovery,
   restoreDayPhasePreference,
@@ -38,7 +40,7 @@ import {
   watchWorldPersistence,
 } from './state/persistence';
 import { createWorldStore } from './state/world';
-import { mountControls, mountShell } from './ui/app';
+import { type InsightsView, mountControls, mountShell } from './ui/app';
 
 import './style.css';
 
@@ -82,6 +84,33 @@ if (root) {
   // core/insights decide every value. Storage helpers swallow their own
   // failures, so none of this can break play.
   let insights: InsightsState = createInsights();
+
+  /** Parent words for the longest foreground session; no invented categories. */
+  const formatLongestSession = (ms: number): string => {
+    if (!Number.isFinite(ms) || ms <= 0) return 'No sessions yet.';
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) return `${seconds} seconds.`;
+    const minutes = Math.floor(seconds / 60);
+    const rest = seconds % 60;
+    return rest === 0 ? `${minutes} minutes.` : `${minutes} minutes ${rest} seconds.`;
+  };
+
+  /**
+   * The parent tray reads a fresh snapshot only when the 2 s hold arms it. The
+   * quota probe is async; every value is plain data built from the closure
+   * insights state, with none of the audit's human-observed measures inferred.
+   */
+  const insightsProvider = async (): Promise<InsightsView> => {
+    const estimate = await readStorageEstimate();
+    return {
+      sessions: insights.sessions,
+      longestSession: formatLongestSession(insights.longestSessionMs),
+      resets: insights.resets,
+      uncleanExits: insights.uncleanExits,
+      storage: formatStorageEstimate(estimate),
+      lastSave: formatSaveOutcome(insights.lastSaveOutcome),
+    };
+  };
 
   const bootReady = (async () => {
     const recovery = await recoveryRead;
@@ -292,6 +321,7 @@ if (root) {
     scene,
     isReady: () => !restoring,
     recoveryNote: () => recoveryLine,
+    insights: insightsProvider,
   });
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly and

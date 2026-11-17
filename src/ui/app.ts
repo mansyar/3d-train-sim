@@ -4,12 +4,14 @@ import type { PickedItem } from '../core/meadow-grid';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
-import { createParentGate } from './parent-gate';
+import { createParentGate, type InsightsView } from './parent-gate';
 import { createRideControls, RIDE_ICONS } from './ride-controls';
 import { createToyDrag } from './toy-drag';
 import { createToyDrawer, toyTabPanels, toyTabStrip } from './toy-drawer';
 import { nextDayIcon, PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 import { createTrainPicker } from './train-picker';
+
+export type { InsightsView };
 
 /**
  * The scene surface the controls wire against, declared structurally here
@@ -67,6 +69,11 @@ export interface AppOptions {
    * boot read settles after mount, so the gate asks lazily when it opens.
    */
   recoveryNote?: () => string | null;
+  /**
+   * Lazy, read-only on-device diagnostics for the parent tray. Called only
+   * when the 2 s hold arms the tray — never on boot or per frame.
+   */
+  insights?: () => Promise<InsightsView> | InsightsView;
 }
 
 /**
@@ -104,6 +111,18 @@ export function mountShell(root: HTMLElement): HTMLCanvasElement {
         <span class="recovery-note-text"></span>
         <button class="recovery-dismiss" type="button"
                 aria-label="Dismiss the save notice">OK</button>
+      </div>
+      <div class="insights-panel" role="group" aria-label="On-device play details for grown-ups">
+        <p class="insights-heading">On this device</p>
+        <dl class="insights-list" data-insights="list">
+          <div class="insights-row"><dt>Sessions</dt><dd data-insights="sessions"></dd></div>
+          <div class="insights-row"><dt>Longest session</dt><dd data-insights="longestSession"></dd></div>
+          <div class="insights-row"><dt>Resets</dt><dd data-insights="resets"></dd></div>
+          <div class="insights-row"><dt>Unexpected closes</dt><dd data-insights="uncleanExits"></dd></div>
+          <div class="insights-row"><dt>Storage</dt><dd data-insights="storage"></dd></div>
+          <div class="insights-row"><dt>Last save</dt><dd data-insights="lastSave"></dd></div>
+        </dl>
+        <p class="insights-unavailable" data-insights="unavailable" hidden>Play details are unavailable right now.</p>
       </div>
       <span class="app-version">v${__APP_VERSION__}</span>
     </div>
@@ -268,6 +287,7 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
     audio: options.audio,
     isReady: options.isReady,
     recoveryNote: options.recoveryNote,
+    insights: options.insights,
     stopRide: scene.stopRide,
     isRiding: () => riding,
   });
