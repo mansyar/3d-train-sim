@@ -37,20 +37,18 @@
 - **Covers:** FR-2, FR-3, FR-4, FR-5, NFR-3, NFR-4
 - **Touches:** `src/ui/app.ts`, `src/ui/parent-gate.ts`, `src/style.css`, `src/main.ts`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Gated tray hint markup and styling** — covers: FR-3, FR-4
-  - [ ] **P2.T1.1: Add an icon-led hint line with a short parent instruction and a labelled dismiss control inside `.preset-tray`**
-  - [ ] **P2.T1.2: Style per parent-tray conventions with `:focus-visible`; leave the kid shell untouched**
-- [ ] **P2.T2: Boot and media-change gating with dismissal wiring** — covers: FR-2, FR-5
-  - [ ] **P2.T2.1: Hide the hint when standalone; show it only when browsing and not dismissed; react to media-query changes without reload**
-  - [ ] **P2.T2.2: Dismiss writes the preference and hides the hint immediately; a world reset restores it**
+- [x] **P2.T1: Gated tray hint markup and styling** — covers: FR-3, FR-4
+  - [x] **P2.T1.1: Add an icon-led hint line with a short parent instruction and a labelled dismiss control inside `.preset-tray`**
+  - [x] **P2.T1.2: Style per parent-tray conventions with `:focus-visible`; leave the kid shell untouched**
+- [x] **P2.T2: Boot and media-change gating with dismissal wiring** — covers: FR-2, FR-5
+  - [x] **P2.T2.1: Hide the hint when standalone; show it only when browsing and not dismissed; react to media-query changes without reload**
+  - [x] **P2.T2.2: Dismiss writes the preference and hides the hint immediately; a world reset restores it**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — `.install-hint` lives only inside the 2 s-hold tray, is removed from the DOM when installed or dismissed, and dismissal is restored from the snapshot before watchers attach, cleared on reset, and saved through full snapshots. `pnpm check` exits 0 (1009 tests).
+**Checkpoint:** f840407
 **Evidence:** conductor/tracks/install-onboarding_20261111/verification/phase-2.md
--->
 
 ## Phase 3: E2E verification
 

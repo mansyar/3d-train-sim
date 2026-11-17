@@ -48,3 +48,9 @@ None. All changes stayed within the phase Touches.
 - The browser probe is built inside `main.ts` at runtime (never at module load): missing `matchMedia` reads as `null`, `navigator.standalone` is read defensively, and media changes subscribe via `addEventListener('change')` with the deprecated `addListener` fallback for older Safari.
 - No telemetry, new storage keys, user-agent sniffing, `beforeinstallprompt`, service-worker, manifest, or viewport changes were introduced.
 - First `pnpm check` run found only Biome import/format ordering; applied its exact suggestions, and the second run passed with exit 0.
+
+## Primary verification
+
+- **Command:** `pnpm check`
+- **Exit code:** 0
+- **Result:** pass. Biome checked 194 files with no fixes; `tsc --noEmit` clean; 57 test files / 1009 unit tests passed. Working tree clean; changed files in `07e7859..HEAD` match the phase Touches plus this evidence file; commits `8ca6bf0`, `a68bcbc`, `009cb15` match the subagent report with no extras. Spot-checked `src/main.ts` (runtime-only browser probe, dismissal restored before watchers, `world.onReset` clears it), `src/ui/parent-gate.ts` (evented dismiss controller, literal text, `.install-hint` removed from the DOM when installed/dismissed) and `src/style.css` within phase scope. E2E assertions for AC-2..AC-5 remain Phase 3.
