@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [a11y-pass_20261111](./tracks/a11y-pass_20261111/index.md) | Accessibility Pass | Feature | new |
 | [local-insights_20261111](./archive/local-insights_20261111/index.md) | Local Insights | Feature | archived |
 | [clarity-audit_20261110](./archive/clarity-audit_20261110/index.md) | Clarity Audit | Chore | archived |
 | [progressive-disclosure_20261110](./archive/progressive-disclosure_20261110/index.md) | Progressive Disclosure | Feature | archived |
