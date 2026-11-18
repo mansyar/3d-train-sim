@@ -36,7 +36,7 @@ CI runs `pnpm biome check .` and `tsc --noEmit` before tests — both must pass.
 
 ## Package manager
 
-pnpm ^12 — strict, fast, workspace-ready if tracks ever split.
+pnpm ^12 — strict, fast, workspace-ready if tracks ever split. Pinned to 12.21.0 in `package.json` on 2026-11-18 (`audit-gate-picomatch_20261118`); upgraded from 11.24.0 with a mechanically regenerated lockfile and one dated `audit.ignore` exception in `pnpm-workspace.yaml`. Workspace settings live in `pnpm-workspace.yaml`, not `package.json`.
 
 ## Testing
 
