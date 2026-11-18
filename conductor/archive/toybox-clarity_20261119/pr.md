@@ -62,7 +62,7 @@ Dense toybox tabs now show four pieces at a time with page dots and swipe, with 
 
 Captured at `5b99cdd` on `feat/toybox-clarity_20261119`: the Rails tab shows four icon-only pieces and three page dots; page three shows the reduced final page; a lifted placed piece shows the beyond-board removal preview with the undo control still available.
 
-![Toybox paging and outside-board removal](.conductor/media/toybox-clarity_20261119/toybox-clarity.gif)
+![Toybox paging and outside-board removal](https://github.com/user-attachments/assets/6a362eec-b499-48c3-9144-e4cdf839ad09)
 
 ## Review
 
