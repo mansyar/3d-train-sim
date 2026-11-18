@@ -77,3 +77,18 @@ Review fixes are appended by `conductor-review` as:
 **Result:** verified  
 **Checkpoint:** `6ba1ffe5e116924eafb8f65bb5c12e2e9965c62d`  
 **Evidence:** `conductor/tracks/perf-budget_20261111/verification/phase-2.md`
+
+## Phase R1: Review Fixes
+
+- **Goal:** Recalibrate the FPS floor against the authoritative GitHub CI
+  observation (e2e shard 1/2 failed at 2.65 ticks/s against the local-calibrated
+  floor of 15) and re-prove both hard-gate failure paths.
+- **Depends on:** Phase 2
+- **Covers:** FR-4, FR-5, NFR-5, AC-4, AC-5, AC-6
+- **Touches:** `e2e/perf-budget.spec.ts`,
+  `conductor/tracks/perf-budget_20261111/verification/phase-R1.md`
+- **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/frame-contract.spec.ts`
+- **Status:** pending
+
+- [ ] **R1.T1: Recalibrate the floor from the six CI samples** — covers: FR-4, NFR-5, AC-4
+  - [ ] **R1.T1.1: Replace the constant and derivation comment, update the low-tick negative proof, and record the GitHub CI samples and new headroom in evidence** — covers: FR-5, AC-5, AC-6
