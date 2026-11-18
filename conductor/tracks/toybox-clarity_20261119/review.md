@@ -91,7 +91,7 @@ Station cargo visuals, richer sky, longer trains, new piece types, release workf
 
 ## Doc sync
 
-pending — roadmap annotation was added pre-review; post-review sync will confirm it and update this line.
+updated — roadmap annotation was added pre-review; post-review sync confirms the shipped row, spec, plan, and evidence remain consistent and no further doc change is needed.
 
 ## History
 
