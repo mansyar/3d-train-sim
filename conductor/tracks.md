@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [toybox-clarity_20261119](./tracks/toybox-clarity_20261119/index.md) | Toybox Clarity and Outside-Drag Removal | Feature | new |
+| [toybox-clarity_20261119](./tracks/toybox-clarity_20261119/index.md) | Toybox Clarity and Outside-Drag Removal | Feature | in_progress |
 | [release-v0.13.0_20261118](./archive/release-v0.13.0_20261118/index.md) | Release v0.13.0 | Chore | archived |
 | [perf-budget_20261111](./archive/perf-budget_20261111/index.md) | Performance Budget | Feature | archived |
 | [audit-gate-picomatch_20261118](./archive/audit-gate-picomatch_20261118/index.md) | Pnpm 12 Toolchain and Audit Gate | Chore | archived |
