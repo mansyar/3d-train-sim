@@ -1,8 +1,25 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { createDisclosureState, recordCompletedRide } from './disclosure';
-import { DRAWER_TABS, drawerTabs, tabForKind } from './drawer';
+import { createDisclosureState, type DisclosureState, recordCompletedRide } from './disclosure';
+import {
+  DRAWER_TABS,
+  type DrawerTabId,
+  drawerPages,
+  drawerTabs,
+  PAGE_SIZE,
+  PAGED_TABS,
+  tabForKind,
+} from './drawer';
+import { PIECE_TYPES } from './pieces';
 import { SCENERY_KINDS } from './scenery';
 import type { PieceType } from './track-graph';
+
+/** Read one tab's toy kinds, optionally under a disclosure state. */
+const kindsOn = (id: DrawerTabId, state?: DisclosureState) => {
+  const tab = drawerTabs(state).find((entry) => entry.id === id);
+  if (!tab) throw new Error(`unknown drawer tab: ${id}`);
+  return tab.kinds;
+};
 
 describe('drawerTabs', () => {
   it('exposes exactly the five toddler tabs in order', () => {
@@ -107,6 +124,65 @@ describe('drawerTabs disclosure gating', () => {
     let state = createDisclosureState();
     for (let ride = 0; ride < 3; ride += 1) state = recordCompletedRide(state);
     expect(drawerTabs(state)).toEqual(drawerTabs());
+  });
+});
+
+describe('drawerPages', () => {
+  it('pages dense tabs into no more than PAGE_SIZE slots each (AC-1)', () => {
+    for (const id of PAGED_TABS) {
+      const pages = drawerPages(kindsOn(id), id);
+      expect(pages.length, `${id} should need more than one page`).toBeGreaterThan(1);
+      for (const page of pages) {
+        expect(page.length, `${id} page exceeded PAGE_SIZE`).toBeLessThanOrEqual(PAGE_SIZE);
+      }
+    }
+  });
+
+  it('makes full pages plus a partial final page for Rails and Adventure', () => {
+    expect(drawerPages(kindsOn('rails'), 'rails').map((page) => page.length)).toEqual([4, 4, 2]);
+    expect(drawerPages(kindsOn('adventure'), 'adventure').map((page) => page.length)).toEqual([
+      4, 4, 1,
+    ]);
+  });
+
+  it('makes a full page plus a partial final page for Town', () => {
+    expect(drawerPages(kindsOn('town'), 'town').map((page) => page.length)).toEqual([4, 3]);
+  });
+
+  it('keeps Nature and Critters on a single page with every kind', () => {
+    for (const id of ['nature', 'critter'] as const) {
+      const pages = drawerPages(kindsOn(id), id);
+      expect(pages).toHaveLength(1);
+      expect(pages[0]).toEqual(kindsOn(id));
+    }
+  });
+
+  it('pages only the kinds disclosure leaves visible', () => {
+    expect(drawerPages(kindsOn('rails', createDisclosureState()), 'rails')).toEqual(
+      drawerPages(kindsOn('rails'), 'rails'),
+    );
+    expect(
+      drawerPages(kindsOn('adventure', createDisclosureState()), 'adventure').map(
+        (page) => page.length,
+      ),
+    ).toEqual([4, 3]);
+    expect(
+      drawerPages(kindsOn('town', createDisclosureState()), 'town').map((page) => page.length),
+    ).toEqual([4, 2]);
+  });
+});
+
+// Read as text: src/core must never import from src/ui (import-graph guard).
+describe('generated piece icons', () => {
+  const source = new URL('../ui/generated-piece-icons.ts', import.meta.url);
+
+  it('has a static SVG for every PieceType', () => {
+    const icons = readFileSync(source, 'utf8');
+    for (const kind of PIECE_TYPES) {
+      const key = /^[A-Za-z][A-Za-z0-9]*$/.test(kind) ? kind : `'${kind}'`;
+      expect(icons, `no generated icon for ${kind}`).toMatch(new RegExp(`^  ${key}: \``, 'm'));
+    }
+    expect(icons.match(/<svg viewBox="0 0 48 48"/g)).toHaveLength(PIECE_TYPES.length);
   });
 });
 
