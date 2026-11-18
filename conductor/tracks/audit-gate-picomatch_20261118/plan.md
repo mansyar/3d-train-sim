@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-4, NFR-2, NFR-4, AC-1, AC-2, AC-3, AC-5
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`
 - **Verification:** `pnpm install --frozen-lockfile && pnpm audit --audit-level=high && pnpm check && pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Pin pnpm 12.21.0** — covers: FR-1
   - [ ] **P1.T1.1:** Set `packageManager` to `pnpm@12.21.0` in `package.json`
