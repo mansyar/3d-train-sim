@@ -79,7 +79,7 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** FR-2, FR-3, FR-8, NFR-6, AC-2, AC-10
 - **Touches:** `e2e/toybox-clarity.spec.ts`, `scripts/generate-piece-icons.mjs`, `src/ui/generated-piece-icons.ts`, `src/core/drawer.test.ts`, `verification/phase-R1.md`
 - **Verification:** `node scripts/generate-piece-icons.mjs --check && pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R1.T1: Assert tab-switch page memory** — covers: FR-2, FR-3, AC-2
   - [ ] **R1.T1.1: Extend the paging test to switch to Nature and back to Rails, asserting the remembered dot's aria-current and viewport slots**
