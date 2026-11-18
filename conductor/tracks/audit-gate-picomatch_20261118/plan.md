@@ -35,7 +35,7 @@
 - **Covers:** FR-3, FR-6, NFR-1, NFR-3, AC-4, AC-8
 - **Touches:** `.github/workflows/ci.yml`, `conductor/tech-stack.md`, `CONTRIBUTING.md`, `Dockerfile`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Refresh the CI audit comment** — covers: FR-3
   - [ ] **P2.T1.1:** Replace the `auditConfig.ignoreCves` guidance in `ci.yml` with the `audit.ignore` policy (still dated, GHSA-named, track-named, never broad/dev-only)
