@@ -11,7 +11,7 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-1, NFR-2, NFR-3, AC-1, AC-2, AC-3
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.13.0_20261118/verification/phase-1.md`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Bump the release version** — covers: FR-1
   - [ ] **P1.T1.1: Change `package.json` version from `0.12.0` to `0.13.0`.**
