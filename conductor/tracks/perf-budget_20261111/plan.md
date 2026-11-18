@@ -14,17 +14,17 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4
 - **Touches:** `src/main.ts`, `e2e/perf-budget-observe.spec.ts`, `conductor/tracks/perf-budget_20261111/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget-observe.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Add dev-only interactive mark** — covers: FR-1, NFR-2, AC-1, AC-2
-  - [ ] **P1.T1.1: Mark the boot-ready path** — covers: FR-1, AC-1
-  - [ ] **P1.T1.2: Guard with import.meta.env.DEV and confirm absence from dist/** — covers: FR-1, NFR-2, AC-2
-- [ ] **P1.T2: Add tablet observation spec** — covers: FR-2, FR-3, NFR-5, AC-1, AC-3, AC-4
-  - [ ] **P1.T2.1: Assert interactive mark ≤ 5000 ms in a tablet @ci test** — covers: FR-2, AC-1, AC-3
-  - [ ] **P1.T2.2: Sample frameSystems tick counters and record three ticks/second values** — covers: FR-3, NFR-5, AC-4
-- [ ] **P1.T3: Prove production safety and local green** — covers: FR-6, NFR-1, NFR-3, AC-2, AC-7, AC-8
-  - [ ] **P1.T3.1: Build, grep dist for the mark name and confirm no UI/threshold change** — covers: FR-6, NFR-2, NFR-3, AC-2, AC-8
-  - [ ] **P1.T3.2: Run the exact Phase 1 verification command and record output** — covers: NFR-1, AC-7
+- [x] **P1.T1: Add dev-only interactive mark** — covers: FR-1, NFR-2, AC-1, AC-2
+  - [x] **P1.T1.1: Mark the boot-ready path** — covers: FR-1, AC-1
+  - [x] **P1.T1.2: Guard with import.meta.env.DEV and confirm absence from dist/** — covers: FR-1, NFR-2, AC-2
+- [x] **P1.T2: Add tablet observation spec** — covers: FR-2, FR-3, NFR-5, AC-1, AC-3, AC-4
+  - [x] **P1.T2.1: Assert interactive mark ≤ 5000 ms in a tablet @ci test** — covers: FR-2, AC-1, AC-3
+  - [x] **P1.T2.2: Sample frameSystems tick counters and record three ticks/second values** — covers: FR-3, NFR-5, AC-4
+- [x] **P1.T3: Prove production safety and local green** — covers: FR-6, NFR-1, NFR-3, AC-2, AC-7, AC-8
+  - [x] **P1.T3.1: Build, grep dist for the mark name and confirm no UI/threshold change** — covers: FR-6, NFR-2, NFR-3, AC-2, AC-8
+  - [x] **P1.T3.2: Run the exact Phase 1 verification command and record output** — covers: NFR-1, AC-7
 
 <!--
 The primary appends after acceptance:
@@ -32,6 +32,10 @@ The primary appends after acceptance:
 **Checkpoint:** <short-sha>
 **Evidence:** conductor/tracks/perf-budget_20261111/verification/phase-1.md
 -->
+
+**Result:** verified  
+**Checkpoint:** `4f5eb3a7aee92d179134bbedf89252a073f6fca3`  
+**Evidence:** `conductor/tracks/perf-budget_20261111/verification/phase-1.md`
 
 ## Phase 2: Calibrated FPS floor and hard gate
 
