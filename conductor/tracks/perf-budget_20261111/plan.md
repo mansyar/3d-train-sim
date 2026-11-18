@@ -44,20 +44,20 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-5, FR-6, NFR-1, NFR-4, NFR-5, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9
 - **Touches:** `e2e/perf-budget.spec.ts`, `conductor/tracks/perf-budget_20261111/verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/frame-contract.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Derive and document the floor** — covers: FR-4, NFR-5, AC-4
-  - [ ] **P2.T1.1: Record minimum observed ticks/second and headroom subtraction in evidence** — covers: FR-4, NFR-5, AC-4
-  - [ ] **P2.T1.2: State the calibrated floor as a named constant with the derivation comment** — covers: FR-4, AC-4
-- [ ] **P2.T2: Add hard gate spec** — covers: FR-4, FR-5, AC-4, AC-5, AC-6
-  - [ ] **P2.T2.1: Assert interactive mark ≤ 5000 ms and ticks/second ≥ floor in one tablet @ci test** — covers: FR-2, FR-4, AC-1, AC-4
-  - [ ] **P2.T2.2: Fail closed when either the mark or tick counters are missing** — covers: FR-5, AC-5, AC-6
-- [ ] **P2.T3: Prove both failure paths** — covers: FR-5, AC-5, AC-6
-  - [ ] **P2.T3.1: Temporarily force a late mark and record the failing run** — covers: FR-5, AC-6
-  - [ ] **P2.T3.2: Temporarily force a low tick count and record the failing run** — covers: FR-5, AC-5
-- [ ] **P2.T4: Confirm full matrix and scope** — covers: FR-6, NFR-1, NFR-4, AC-7, AC-8, AC-9
-  - [ ] **P2.T4.1: Run the exact Phase 2 verification command and record output** — covers: NFR-1, AC-7
-  - [ ] **P2.T4.2: Record that manual-device feel remains human-only and the diff is production-safe** — covers: FR-6, NFR-4, AC-8, AC-9
+- [x] **P2.T1: Derive and document the floor** — covers: FR-4, NFR-5, AC-4
+  - [x] **P2.T1.1: Record minimum observed ticks/second and headroom subtraction in evidence** — covers: FR-4, NFR-5, AC-4
+  - [x] **P2.T1.2: State the calibrated floor as a named constant with the derivation comment** — covers: FR-4, AC-4
+- [x] **P2.T2: Add hard gate spec** — covers: FR-4, FR-5, AC-4, AC-5, AC-6
+  - [x] **P2.T2.1: Assert interactive mark ≤ 5000 ms and ticks/second ≥ floor in one tablet @ci test** — covers: FR-2, FR-4, AC-1, AC-4
+  - [x] **P2.T2.2: Fail closed when either the mark or tick counters are missing** — covers: FR-5, AC-5, AC-6
+- [x] **P2.T3: Prove both failure paths** — covers: FR-5, AC-5, AC-6
+  - [x] **P2.T3.1: Temporarily force a late mark and record the failing run** — covers: FR-5, AC-6
+  - [x] **P2.T3.2: Temporarily force a low tick count and record the failing run** — covers: FR-5, AC-5
+- [x] **P2.T4: Confirm full matrix and scope** — covers: FR-6, NFR-1, NFR-4, AC-7, AC-8, AC-9
+  - [x] **P2.T4.1: Run the exact Phase 2 verification command and record output** — covers: NFR-1, AC-7
+  - [x] **P2.T4.2: Record that manual-device feel remains human-only and the diff is production-safe** — covers: FR-6, NFR-4, AC-8, AC-9
 
 <!--
 Review fixes are appended by `conductor-review` as:
@@ -73,3 +73,7 @@ Review fixes are appended by `conductor-review` as:
 
 - [ ] **R1.T1: Resolve <finding ID>** — covers: <finding ID>
 -->
+
+**Result:** verified  
+**Checkpoint:** `6ba1ffe5e116924eafb8f65bb5c12e2e9965c62d`  
+**Evidence:** `conductor/tracks/perf-budget_20261111/verification/phase-2.md`
