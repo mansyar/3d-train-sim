@@ -9,6 +9,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-11-18
+
 ### Added
 - **A little report for grown-ups, hidden behind the parent gate.** Press and
   hold the ♻️ button for two seconds and you'll find a short, read-only note
@@ -16,6 +18,21 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
   how many times the meadow was reset, how many times it closed unexpectedly,
   and whether saves are healthy. It stays entirely on this device — nothing
   is sent anywhere — and nothing changes for little ones.
+- **A helping hand when adding the app to the home screen.** Grown-ups now get
+  a friendly hint while adding Tiny Tracks to a tablet or phone, so setting it
+  up is easy and the children's play is never interrupted.
+- **Clearer keyboard focus, and zoom only while the parent tray is open.**
+  Grown-ups using a keyboard can see where they are more easily, and zoom is
+  available only inside the parent area — little ones still get the steady,
+  full-screen train table they know.
+
+### Changed
+- **Behind the scenes, the tools that build and check the app have been
+  updated, along with their safety checks.** Nothing your child sees or does
+  on the train table has changed.
+- **A new behind-the-scenes guard keeps startup fast.** Every update is now
+  checked so the table keeps opening quickly — no new buttons or behaviour for
+  little ones.
 
 ## [0.12.0] - 2026-11-17
 
@@ -331,7 +348,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/mansyar/3d-train-sim/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mansyar/3d-train-sim/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/mansyar/3d-train-sim/compare/v0.9.0...v0.10.0
