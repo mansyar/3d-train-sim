@@ -34,17 +34,17 @@
 - **Covers:** FR-4, FR-5, NFR-4, AC-4, AC-5
 - **Touches:** `conductor/tracks/release-v0.13.0_20261118/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Run the full configured verification matrix** — covers: FR-4
-  - [ ] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
-  - [ ] **P2.T1.2: Record exact commands, results, and file/test counts in `verification/integrated.md`.**
-  - [ ] **P2.T1.3: Confirm the diff remains limited to the Phase 1 files and Conductor evidence.**
-- [ ] **P2.T2: Assemble release PR inputs** — covers: FR-5
-  - [ ] **P2.T2.1: Record the release summary, phase checkpoints, verification table, and tag-approval gate for the primary to place in `pr.md`.**
+- [x] **P2.T1: Run the full configured verification matrix** — covers: FR-4
+  - [x] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
+  - [x] **P2.T1.2: Record exact commands, results, and file/test counts in `verification/integrated.md`.**
+  - [x] **P2.T1.3: Confirm the diff remains limited to the Phase 1 files and Conductor evidence.**
+- [x] **P2.T2: Assemble release PR inputs** — covers: FR-5
+  - [x] **P2.T2.1: Record the release summary, phase checkpoints, verification table, and tag-approval gate for the primary to place in `pr.md`.**
 
-**Result:** pending
-**Checkpoint:** pending
+**Result:** verified — full configured matrix passed on the final release-branch content; release PR inputs and tag-approval gate recorded.
+**Checkpoint:** `bf861e20766d82bff6b38540855f2474ab02e0ff`
 **Evidence:** `conductor/tracks/release-v0.13.0_20261118/verification/integrated.md`
 
 ## Release Tag Gate (post-merge, not a phase)
