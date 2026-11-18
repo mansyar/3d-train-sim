@@ -88,7 +88,7 @@ Review fixes are appended by `conductor-review` as:
 - **Touches:** `e2e/perf-budget.spec.ts`,
   `conductor/tracks/perf-budget_20261111/verification/phase-R1.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/frame-contract.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R1.T1: Recalibrate the floor from the six CI samples** — covers: FR-4, NFR-5, AC-4
   - [ ] **R1.T1.1: Replace the constant and derivation comment, update the low-tick negative proof, and record the GitHub CI samples and new headroom in evidence** — covers: FR-5, AC-5, AC-6
