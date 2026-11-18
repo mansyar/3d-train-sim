@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-18T21:42:16Z",
-  "updated_at": "2026-11-18T21:58:09Z",
+  "updated_at": "2026-11-18T22:27:18Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/toybox-clarity_20261119",
@@ -14,11 +14,11 @@
   "base_sha": "6d762f35363010f0abd6f360850fa060d414b6ad",
   "progress": {
     "phases_total": 2,
-    "phases_verified": 1,
+    "phases_verified": 2,
     "tasks_total": 22,
-    "tasks_done": 8
+    "tasks_done": 22
   },
-  "last_checkpoint": "6fbbe35740af28388ba112b1050f8ddaf80f4838",
+  "last_checkpoint": "475bbe0b1390c1020e9f2d3ec2ed9a44c9d3b938",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

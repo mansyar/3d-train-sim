@@ -36,22 +36,26 @@
 - **Covers:** FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, NFR-2, NFR-3, NFR-4, NFR-5, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9
 - **Touches:** `src/ui/toy-drawer.ts`, `src/ui/toy-drag.ts`, `src/ui/app.ts`, `src/style.css`, `src/scene/track-ghost.ts`, `playwright.config.ts`, `e2e/toybox-clarity.spec.ts`, `e2e/smoke.spec.ts`, `e2e/undo.spec.ts`, `e2e/ride-toybox-flow.spec.ts`, `e2e/prod.spec.ts`, `conductor/tracks/toybox-clarity_20261119/verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/undo.spec.ts e2e/ride-toybox-flow.spec.ts e2e/a11y.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Render and wire paged drawer pages** — covers: FR-2
-  - [ ] **P2.T1.1: Render page dots with accessible names and only the current page's slots**
-  - [ ] **P2.T1.2: Wire dot taps and swipe gestures on empty drawer space, keeping piece-slot pointerdown as a placement drag**
-  - [ ] **P2.T1.3: Clamp current page when disclosure unlock changes the visible item set**
-  - [ ] **P2.T1.4: Keep selected page per tab for the session and reset it after reload**
-- [ ] **P2.T2: Replace trash with outside-board removal** — covers: FR-4
-  - [ ] **P2.T2.1: Add a visible removable preview when a lifted placed piece or scenery item is beyond the board edge**
-  - [ ] **P2.T2.2: Remove on release outside, cancel on re-entry, and cancel (never remove) for new toys dragged from the drawer**
-  - [ ] **P2.T2.3: Add the soft removal animation and one-tap undo restoration**
-  - [ ] **P2.T2.4: Remove `.trash-slot` markup, styles, wiring, and active e2e selectors without disabling tests**
-- [ ] **P2.T3: Verify tablet and phone behaviour** — covers: FR-7
-  - [ ] **P2.T3.1: Add `@smoke`-tagged e2e coverage for paging, drag isolation, outside removal, cancel paths, new-toy safety, undo, and absent trash bin**
-  - [ ] **P2.T3.2: Include the new spec in the phone allowlist and update existing smoke/undo/ride-toybox-flow specs while leaving a11y spec unmodified**
-  - [ ] **P2.T3.3: Record the full verification matrix and scope check in phase evidence**
+- [x] **P2.T1: Render and wire paged drawer pages** — covers: FR-2
+  - [x] **P2.T1.1: Render page dots with accessible names and only the current page's slots**
+  - [x] **P2.T1.2: Wire dot taps and swipe gestures on empty drawer space, keeping piece-slot pointerdown as a placement drag**
+  - [x] **P2.T1.3: Clamp current page when disclosure unlock changes the visible item set**
+  - [x] **P2.T1.4: Keep selected page per tab for the session and reset it after reload**
+- [x] **P2.T2: Replace trash with outside-board removal** — covers: FR-4
+  - [x] **P2.T2.1: Add a visible removable preview when a lifted placed piece or scenery item is beyond the board edge**
+  - [x] **P2.T2.2: Remove on release outside, cancel on re-entry, and cancel (never remove) for new toys dragged from the drawer**
+  - [x] **P2.T2.3: Add the soft removal animation and one-tap undo restoration**
+  - [x] **P2.T2.4: Remove `.trash-slot` markup, styles, wiring, and active e2e selectors without disabling tests**
+- [x] **P2.T3: Verify tablet and phone behaviour** — covers: FR-7
+  - [x] **P2.T3.1: Add `@smoke`-tagged e2e coverage for paging, drag isolation, outside removal, cancel paths, new-toy safety, undo, and absent trash bin**
+  - [x] **P2.T3.2: Include the new spec in the phone allowlist and update existing smoke/undo/ride-toybox-flow specs while leaving a11y spec unmodified**
+  - [x] **P2.T3.3: Record the full verification matrix and scope check in phase evidence**
+
+- **Result:** verified — paged drawer and outside-board removal pass on tablet and phone; trash bin is gone with one-tap undo intact.
+- **Checkpoint:** `475bbe0b1390c1020e9f2d3ec2ed9a44c9d3b938`
+- **Evidence:** `conductor/tracks/toybox-clarity_20261119/verification/phase-2.md`
 
 <!--
 Review fixes are appended by `conductor-review` as:
