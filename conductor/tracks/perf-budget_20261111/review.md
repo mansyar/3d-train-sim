@@ -100,7 +100,8 @@ triggers a fix round rather than a waiver.
 
 ## Doc sync
 
-pending
+`updated` — pre-review sync added the shipped annotation to `conductor/product.md`;
+post-review sync confirmed no further doc change is needed.
 
 ## History
 
