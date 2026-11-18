@@ -14,22 +14,19 @@
 - **Covers:** FR-1, FR-2, FR-4, NFR-2, NFR-4, AC-1, AC-2, AC-3, AC-5
 - **Touches:** `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`
 - **Verification:** `pnpm install --frozen-lockfile && pnpm audit --audit-level=high && pnpm check && pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Pin pnpm 12.21.0** — covers: FR-1
-  - [ ] **P1.T1.1:** Set `packageManager` to `pnpm@12.21.0` in `package.json`
-  - [ ] **P1.T1.2:** Run the install with pnpm 12.21.0 (self-update/corepack); keep any mechanical `pnpm-lock.yaml` rewrite and record it in evidence
-- [ ] **P1.T2: Add the single audit exception** — covers: FR-2
-  - [ ] **P1.T2.1:** Add `audit.ignore: [GHSA-fc5q-39xc-vjpf]` to `pnpm-workspace.yaml` using the current pnpm 11/12 key
-  - [ ] **P1.T2.2:** Comment it with date `2026-11-18`, this track id, the advisory, and removal when upstream publishes a fix
-  - [ ] **P1.T2.3:** Confirm no other ignore entries, no broad path/dev-only exemption, and no change to `audit.level`
+- [x] **P1.T1: Pin pnpm 12.21.0** — covers: FR-1
+  - [x] **P1.T1.1:** Set `packageManager` to `pnpm@12.21.0` in `package.json`
+  - [x] **P1.T1.2:** Run the install with pnpm 12.21.0 (self-update/corepack); keep any mechanical `pnpm-lock.yaml` rewrite and record it in evidence
+- [x] **P1.T2: Add the single audit exception** — covers: FR-2
+  - [x] **P1.T2.1:** Add `audit.ignore: [GHSA-fc5q-39xc-vjpf]` to `pnpm-workspace.yaml` using the current pnpm 11/12 key
+  - [x] **P1.T2.2:** Comment it with date `2026-11-18`, this track id, the advisory, and removal when upstream publishes a fix
+  - [x] **P1.T2.3:** Confirm no other ignore entries, no broad path/dev-only exemption, and no change to `audit.level`
 
-<!--
-The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/audit-gate-picomatch_20261118/verification/phase-1.md
--->
+**Checkpoint:** `81d6c871795ccc4d7d95fd6a5dc8da7baada04dc`
+**Evidence:** `conductor/tracks/audit-gate-picomatch_20261118/verification/phase-1.md`
 
 ## Phase 2: Coherent pnpm 12 documentation and CI comments
 
