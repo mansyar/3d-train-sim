@@ -79,9 +79,13 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** FR-2, FR-3, FR-8, NFR-6, AC-2, AC-10
 - **Touches:** `e2e/toybox-clarity.spec.ts`, `scripts/generate-piece-icons.mjs`, `src/ui/generated-piece-icons.ts`, `src/core/drawer.test.ts`, `verification/phase-R1.md`
 - **Verification:** `node scripts/generate-piece-icons.mjs --check && pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R1.T1: Assert tab-switch page memory** — covers: FR-2, FR-3, AC-2
-  - [ ] **R1.T1.1: Extend the paging test to switch to Nature and back to Rails, asserting the remembered dot's aria-current and viewport slots**
-- [ ] **R1.T2: Differentiate colliding generated icons** — covers: FR-8, NFR-6, AC-10
-  - [ ] **R1.T2.1: Apply deterministic per-piece framing/line-weight tweaks to colliding hulls, regenerate the icon module, and assert no two PieceTypes sharing a drawer page have identical icon strings**
+- [x] **R1.T1: Assert tab-switch page memory** — covers: FR-2, FR-3, AC-2
+  - [x] **R1.T1.1: Extend the paging test to switch to Nature and back to Rails, asserting the remembered dot's aria-current and viewport slots**
+- [x] **R1.T2: Differentiate colliding generated icons** — covers: FR-8, NFR-6, AC-10
+  - [x] **R1.T2.1: Apply deterministic per-piece framing/line-weight tweaks to colliding hulls, regenerate the icon module, and assert no two PieceTypes sharing a drawer page have identical icon strings**
+
+- **Result:** verified — F1 and F2 resolved; tab-switch page memory is asserted and generated icons are distinct within every drawer tab.
+- **Checkpoint:** `d110f58f7bac3127b1be5d3771e0ebba662830e1`
+- **Evidence:** `conductor/tracks/toybox-clarity_20261119/verification/phase-R1.md`
