@@ -3,9 +3,9 @@ import { expect, type Page, test } from '@playwright/test';
 /**
  * Performance-budget hard gate (Phase 2). Unlike the observation spec, this one
  * fails the Playwright job when the dev interactive mark is late or the live
- * frame loop cannot sustain the calibrated ticks/second floor. The floor comes
- * from Phase 1 samples recorded in
- * `conductor/tracks/perf-budget_20261111/verification/phase-1.md`.
+ * frame loop cannot sustain the calibrated ticks/second floor. The floor is
+ * recalibrated against GitHub CI samples recorded in
+ * `conductor/tracks/perf-budget_20261111/verification/phase-R1.md`.
  */
 
 const MARK_NAME = 'tiny-tracks-interactive';
@@ -14,11 +14,15 @@ const SAMPLE_WINDOW_MS = 2000;
 const SAMPLE_COUNT = 3;
 
 /**
- * Floor derived from six Phase 1 ticks/second samples: min 20.70, population
- * σ 2.49; `min − 2σ = 20.70 − 4.99 = 15.71`, rounded down to a clean 15. Raw
- * samples and derivation live in `verification/phase-1.md` (and phase-2.md).
+ * Floor derived from six GitHub CI ticks/second samples (run 44283047563,
+ * shard 1/2): observation 2.79, 2.74, 2.72; hard-gate 2.65, 2.71, 2.67.
+ * min 2.65, mean 2.7133, population σ 0.0457;
+ * `min − 2σ = 2.65 − 0.0914 = 2.5586`, rounded down to 2.5. Headroom on the
+ * minimum sample is 0.15 ticks/s (~5.7%). The old floor of 15 was calibrated
+ * from local software-rendered samples; authoritative GitHub CI software
+ * rendering sustains only ~2.65–2.79. Raw samples live in `verification/phase-R1.md`.
  */
-const FPS_FLOOR_TICKS_PER_SECOND = 15;
+const FPS_FLOOR_TICKS_PER_SECOND = 2.5;
 
 type FrameSystemSnapshot = Array<{ name: string; ticks: number }>;
 
@@ -185,8 +189,8 @@ test('a deliberately late interactive mark fails the interactive assertion @ci',
 });
 
 test('a deliberately low tick count fails the FPS assertion @ci', () => {
-  const input: BudgetInput = { markMs: 1000, ticksPerSecond: 14.9 };
-  const expected = `frame ticks/second 14.9 below floor ${FPS_FLOOR_TICKS_PER_SECOND}`;
+  const input: BudgetInput = { markMs: 1000, ticksPerSecond: 2.4 };
+  const expected = `frame ticks/second 2.4 below floor ${FPS_FLOOR_TICKS_PER_SECOND}`;
   const message = captureThrow(input);
   console.log(`low-tick negative run threw: ${message}`);
   expect(message).toBe(expected);
