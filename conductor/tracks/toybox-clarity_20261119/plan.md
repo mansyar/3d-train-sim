@@ -34,7 +34,7 @@
 - **Goal:** Prove on tablet and phone that dense tabs page by dots/swipe, placed toys can be removed by dragging beyond the board, and the trash bin is gone with undo intact.
 - **Depends on:** Phase 1
 - **Covers:** FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, NFR-2, NFR-3, NFR-4, NFR-5, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9
-- **Touches:** `src/ui/toy-drawer.ts`, `src/ui/toy-drag.ts`, `src/ui/app.ts`, `src/style.css`, `src/scene/track-ghost.ts`, `playwright.config.ts`, `e2e/toybox-clarity.spec.ts`, `e2e/smoke.spec.ts`, `e2e/undo.spec.ts`, `e2e/ride-toybox-flow.spec.ts`, `conductor/tracks/toybox-clarity_20261119/verification/phase-2.md`
+- **Touches:** `src/ui/toy-drawer.ts`, `src/ui/toy-drag.ts`, `src/ui/app.ts`, `src/style.css`, `src/scene/track-ghost.ts`, `playwright.config.ts`, `e2e/toybox-clarity.spec.ts`, `e2e/smoke.spec.ts`, `e2e/undo.spec.ts`, `e2e/ride-toybox-flow.spec.ts`, `e2e/prod.spec.ts`, `conductor/tracks/toybox-clarity_20261119/verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/undo.spec.ts e2e/ride-toybox-flow.spec.ts e2e/a11y.spec.ts`
 - **Status:** in_progress
 
