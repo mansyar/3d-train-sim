@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4
 - **Touches:** `src/main.ts`, `e2e/perf-budget-observe.spec.ts`, `conductor/tracks/perf-budget_20261111/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget-observe.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add dev-only interactive mark** — covers: FR-1, NFR-2, AC-1, AC-2
   - [ ] **P1.T1.1: Mark the boot-ready path** — covers: FR-1, AC-1
