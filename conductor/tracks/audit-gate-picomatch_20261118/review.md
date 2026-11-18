@@ -84,7 +84,7 @@ Both phases are complete: each has a `Result`, `Checkpoint` and `Evidence` entry
 
 ## Doc sync
 
-`updated` — pre-review doc sync added the dated pnpm 12 note in `conductor/tech-stack.md`; post-review sync requires no further change.
+`updated` — pre-review doc sync added the dated pnpm 12 note in `conductor/tech-stack.md`; post-review sync confirmed no further doc change is needed.
 
 ## History
 
