@@ -34,7 +34,7 @@
 - **Covers:** FR-4, FR-5, NFR-4, AC-4, AC-5
 - **Touches:** `conductor/tracks/release-v0.13.0_20261118/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Run the full configured verification matrix** — covers: FR-4
   - [ ] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
