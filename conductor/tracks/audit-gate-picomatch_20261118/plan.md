@@ -35,15 +35,19 @@
 - **Covers:** FR-3, FR-6, NFR-1, NFR-3, AC-4, AC-8
 - **Touches:** `.github/workflows/ci.yml`, `conductor/tech-stack.md`, `CONTRIBUTING.md`, `Dockerfile`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Refresh the CI audit comment** — covers: FR-3
-  - [ ] **P2.T1.1:** Replace the `auditConfig.ignoreCves` guidance in `ci.yml` with the `audit.ignore` policy (still dated, GHSA-named, track-named, never broad/dev-only)
-- [ ] **P2.T2: Refresh tech-stack pin and audit policy** — covers: FR-3
-  - [ ] **P2.T2.1:** Change the pnpm pin note to `pnpm ^12` / 12.21.0 and the audit exception key to `audit.ignore`
-- [ ] **P2.T3: Refresh contributor and Docker wording** — covers: FR-3
-  - [ ] **P2.T3.1:** `CONTRIBUTING.md`: pnpm 12 setup and `audit.ignore` policy
-  - [ ] **P2.T3.2:** `Dockerfile`: stop calling `pnpm-workspace.yaml` a pnpm 11 settings file
+- [x] **P2.T1: Refresh the CI audit comment** — covers: FR-3
+  - [x] **P2.T1.1:** Replace the `auditConfig.ignoreCves` guidance in `ci.yml` with the `audit.ignore` policy (still dated, GHSA-named, track-named, never broad/dev-only)
+- [x] **P2.T2: Refresh tech-stack pin and audit policy** — covers: FR-3
+  - [x] **P2.T2.1:** Change the pnpm pin note to `pnpm ^12` / 12.21.0 and the audit exception key to `audit.ignore`
+- [x] **P2.T3: Refresh contributor and Docker wording** — covers: FR-3
+  - [x] **P2.T3.1:** `CONTRIBUTING.md`: pnpm 12 setup and `audit.ignore` policy
+  - [x] **P2.T3.2:** `Dockerfile`: stop calling `pnpm-workspace.yaml` a pnpm 11 settings file
+
+**Result:** verified
+**Checkpoint:** `6f0a8e0ec996a14e684498e09807e2f4b53b5ed0`
+**Evidence:** `conductor/tracks/audit-gate-picomatch_20261118/verification/phase-2.md`
 
 <!--
 Review fixes are appended by `conductor-review` as:
