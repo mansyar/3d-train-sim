@@ -184,6 +184,27 @@ describe('generated piece icons', () => {
     }
     expect(icons.match(/<svg viewBox="0 0 48 48"/g)).toHaveLength(PIECE_TYPES.length);
   });
+
+  it('gives every PieceType on a tab a distinct generated icon', () => {
+    const icons = new Map<string, string>();
+    for (const match of readFileSync(source, 'utf8').matchAll(
+      /^ {2}(?:'([^']+)'|([A-Za-z][\w-]*)): `([\s\S]*?)`,$/gm,
+    )) {
+      const key = match[1] ?? match[2];
+      const svg = match[3];
+      if (key !== undefined && svg !== undefined) icons.set(key, svg);
+    }
+    for (const tab of drawerTabs()) {
+      const seen = new Map<string, string>();
+      for (const kind of PIECE_TYPES.filter((piece) => tabForKind(piece) === tab.id)) {
+        const icon = icons.get(kind);
+        if (icon === undefined) throw new Error(`no generated icon for ${kind}`);
+        const duplicate = seen.get(icon);
+        expect(duplicate, `${kind} shares its ${tab.id} icon with ${duplicate}`).toBeUndefined();
+        seen.set(icon, kind);
+      }
+    }
+  });
 });
 
 describe('tabForKind', () => {

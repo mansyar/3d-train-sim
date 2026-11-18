@@ -32,9 +32,9 @@ export const PIECE_ICONS: Record<PieceType, string> = {
     </svg>`,
   bridge: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <polygon points="19.34,7.3 20.74,5 27.26,5 28.66,7.3 28.66,41.07 27.26,43 20.74,43 19.34,41.07" fill="var(--toy-cream)"
-               stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
-      <polygon points="21.2,14.02 22.04,12.64 25.96,12.64 26.8,14.02 26.8,34.28 25.96,35.44 22.04,35.44 21.2,34.28" fill="var(--toy-steel)" opacity=".55"/>
+      <polygon points="19.81,8.98 21.07,6.91 26.93,6.91 28.19,8.98 28.19,39.37 26.93,41.11 21.07,41.11 19.81,39.37" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="3.5" stroke-linejoin="round"/>
+      <polygon points="21.07,13.51 21.95,12.06 26.05,12.06 26.93,13.51 26.93,34.79 26.05,36 21.95,36 21.07,34.79" fill="var(--toy-steel)" opacity=".55"/>
     </svg>`,
   tunnel: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -50,9 +50,9 @@ export const PIECE_ICONS: Record<PieceType, string> = {
     </svg>`,
   hill: `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <polygon points="15.08,13.4 19.91,5.73 21.4,5 26.6,5 28.09,5.73 32.92,13.4 32.92,43 15.08,43" fill="var(--toy-cream)"
-               stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
-      <polygon points="18.65,14.75 21.55,10.15 22.44,9.71 25.56,9.71 26.45,10.15 29.35,14.75 29.35,32.51 18.65,32.51" fill="var(--toy-steel)" opacity=".55"/>
+      <polygon points="15.97,13.74 20.32,6.84 21.66,6.18 26.34,6.18 27.68,6.84 32.03,13.74 32.03,40.38 15.97,40.38" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="3.5" stroke-linejoin="round"/>
+      <polygon points="18.38,14.65 21.42,9.82 22.36,9.36 25.64,9.36 26.58,9.82 29.62,14.65 29.62,33.3 18.38,33.3" fill="var(--toy-steel)" opacity=".55"/>
     </svg>`,
   'slope-down': `
     <svg viewBox="0 0 48 48" aria-hidden="true">
@@ -68,15 +68,15 @@ export const PIECE_ICONS: Record<PieceType, string> = {
     </svg>`,
   'hill-half': `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <polygon points="14.24,10.61 19.52,5.8 21.15,5 26.85,5 28.48,5.8 33.76,10.61 33.76,43 14.24,43" fill="var(--toy-cream)"
-               stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
-      <polygon points="18.14,12.81 21.31,9.92 22.29,9.44 25.71,9.44 26.69,9.92 29.86,12.81 29.86,32.24 18.14,32.24" fill="var(--toy-steel)" opacity=".55"/>
+      <polygon points="15.22,11.16 19.97,6.83 21.43,6.11 26.57,6.11 28.03,6.83 32.78,11.16 32.78,40.31 15.22,40.31" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="3.5" stroke-linejoin="round"/>
+      <polygon points="17.85,12.64 21.18,9.61 22.2,9.11 25.8,9.11 26.82,9.61 30.15,12.64 30.15,33.05 17.85,33.05" fill="var(--toy-steel)" opacity=".55"/>
     </svg>`,
   'bump-down': `
     <svg viewBox="0 0 48 48" aria-hidden="true">
-      <polygon points="13.22,7.25 20.86,5 27.14,5 34.78,7.25 34.78,43 13.22,43" fill="var(--toy-cream)"
-               stroke="var(--toy-brown)" stroke-width="3" stroke-linejoin="round"/>
-      <polygon points="17.53,11.72 22.12,10.37 25.88,10.37 30.47,11.72 30.47,33.17 17.53,33.17" fill="var(--toy-steel)" opacity=".55"/>
+      <polygon points="14.3,8.37 21.17,6.34 26.83,6.34 33.7,8.37 33.7,40.54 14.3,40.54" fill="var(--toy-cream)"
+               stroke="var(--toy-brown)" stroke-width="3.5" stroke-linejoin="round"/>
+      <polygon points="17.21,11.38 22.02,9.96 25.98,9.96 30.79,11.38 30.79,33.9 17.21,33.9" fill="var(--toy-steel)" opacity=".55"/>
     </svg>`,
   'corner-up': `
     <svg viewBox="0 0 48 48" aria-hidden="true">

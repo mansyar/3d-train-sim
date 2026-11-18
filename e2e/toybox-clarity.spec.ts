@@ -139,6 +139,12 @@ test('dense tabs page by dots and swipes, four slots to a viewport @smoke', asyn
   await page.click('.drawer-tab[data-tab="nature"]');
   await expect(page.locator('.drawer-panel[data-panel="nature"] .page-dot')).toHaveCount(0);
   expect(await slotsInViewport(page, 'nature')).toHaveLength(3);
+
+  // Switching tabs and back keeps the remembered Rails page for the session.
+  await page.click('.drawer-tab[data-tab="rails"]');
+  await expect(rails.locator('.page-dot').nth(1)).toHaveAttribute('aria-current', 'page');
+  expect(await slotsInViewport(page, 'rails')).toHaveLength(4);
+
   await page.click('.drawer-tab[data-tab="critter"]');
   await expect(page.locator('.drawer-panel[data-panel="critter"] .page-dot')).toHaveCount(0);
 
