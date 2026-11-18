@@ -411,6 +411,9 @@ if (root) {
     // Reuse the single boot flow instead of probing storage a second time, so
     // readiness means hydration AND the insights boot have both settled.
     void bootReady.then(() => {
+      // Dev/e2e witness for the interactive-start budget spec; relative to
+      // navigation start and absent from production via import.meta.env.DEV.
+      performance.mark('tiny-tracks-interactive');
       devWindow.__tinyTracksReady = true;
     });
   }
