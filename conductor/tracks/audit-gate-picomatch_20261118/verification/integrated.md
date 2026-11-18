@@ -2,7 +2,7 @@
 
 - **Track:** Pnpm 12 Toolchain and Audit Gate
 - **Branch:** `chore/audit-gate-picomatch_20261118`
-- **Head:** `8204253` (state commit after both phase checkpoints `81d6c87` and `6f0a8e0`)
+- **Head:** `4caa716` (post-doc-sync HEAD; phase checkpoints `81d6c87` and `6f0a8e0`)
 - **Date:** 2026-11-18
 - **Result:** **pass**
 
@@ -24,7 +24,7 @@ The final tree pins pnpm 12.21.0, carries a single dated `audit.ignore` exceptio
 | Frozen install | `pnpm install --frozen-lockfile` | 0 | Clean with pnpm v12.21.0 (Phase 1 verification). |
 | Stale-doc scan | `grep -rInE 'auditConfig\.ignoreCves|pnpm 11|pnpm \^11'` over the four Touches files | 1 | No matches. |
 
-The integrated matrix above was run on the final tree as one chain: `pnpm exec biome check . && pnpm exec tsc --noEmit && pnpm test && pnpm test:coverage && pnpm build && pnpm exec playwright test` (exit 0).
+The integrated matrix above was run on the final tree as one chain: `pnpm exec biome check . && pnpm exec tsc --noEmit && pnpm test && pnpm test:coverage && pnpm build && pnpm exec playwright test` (exit 0). After the doc-sync commit `4caa716`, the whole chain plus `pnpm audit --audit-level=high` was re-run on that exact HEAD: exit 0, 68 e2e passed / 1 pre-existing `@ci` skip in 8.6 min, audit as above. No code changed between the two runs; the second run is the review authority.
 
 ## Scope check
 
