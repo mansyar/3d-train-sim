@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-8, NFR-1, NFR-6, AC-1, AC-10
 - **Touches:** `src/core/drawer.ts`, `src/core/drawer.test.ts`, `scripts/generate-piece-icons.mjs`, `src/ui/generated-piece-icons.ts`, `src/ui/toy-icons.ts`, `conductor/tracks/toybox-clarity_20261119/verification/phase-1.md`
 - **Verification:** `node scripts/generate-piece-icons.mjs --check && pnpm check && pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add a pure paged drawer model** — covers: FR-1
   - [ ] **P1.T1.1: Add page size and page-slicing helpers for dense tabs while leaving Nature and Critters single-page**
