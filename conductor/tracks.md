@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [audit-gate-picomatch_20261118](./tracks/audit-gate-picomatch_20261118/index.md) | Pnpm 12 Toolchain and Audit Gate | Chore | in_progress |
+| [audit-gate-picomatch_20261118](./archive/audit-gate-picomatch_20261118/index.md) | Pnpm 12 Toolchain and Audit Gate | Chore | archived |
 | [install-onboarding_20261111](./archive/install-onboarding_20261111/index.md) | Install Onboarding | Feature | archived |
 | [a11y-pass_20261111](./archive/a11y-pass_20261111/index.md) | Accessibility Pass | Feature | archived |
 | [local-insights_20261111](./archive/local-insights_20261111/index.md) | Local Insights | Feature | archived |
