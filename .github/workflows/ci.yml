@@ -91,7 +91,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Red on a high or critical advisory anywhere in the tree. An advisory
-      # with no fixed version yet gets a dated `auditConfig.ignoreCves` entry in
+      # with no fixed version yet gets a dated `audit.ignore` entry in
       # pnpm-workspace.yaml beside the advisory id and the track that clears it —
       # never a broad path or a dev-only exemption.
       - name: Audit gate
