@@ -18,6 +18,65 @@ export interface InsightsView {
   lastSave: string;
 }
 
+/** The install classification the gated tray reads; no DOM or globals here. */
+export interface InstallModeView {
+  isInstalled(): boolean;
+  subscribe(listener: (installed: boolean) => void): () => void;
+}
+
+/** The parent's install-hint dismissal state and action. */
+export interface InstallHintView {
+  isDismissed(): boolean;
+  subscribe(listener: () => void): () => void;
+  dismiss(): void;
+}
+
+/**
+ * Evented dismissal state for the parent's hint. It lives here, not in
+ * `main.ts`, because the boot-order guard forbids listener collections there.
+ * `restore` applies a persisted value without saving; `dismiss` is the one
+ * parent action and notifies both the tray and the storage watcher.
+ */
+export function createInstallHintDismissal(initial = false) {
+  let dismissed = initial;
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) listener();
+  };
+  return {
+    isDismissed: () => dismissed,
+    subscribe(listener: () => void) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    restore(value: boolean) {
+      if (dismissed === value) return;
+      dismissed = value;
+      notify();
+    },
+    dismiss() {
+      if (dismissed) return;
+      dismissed = true;
+      notify();
+    },
+  };
+}
+
+/**
+ * The parent-only install hint, inserted into the gated tray only while the
+ * toy is browsing and undismissed. Text is literal — no data is interpolated.
+ */
+export const INSTALL_HINT_MARKUP = `
+  <div class="install-hint" role="status">
+    <span class="install-hint-icon" aria-hidden="true">📲</span>
+    <span class="install-hint-text">On iPhone or iPad: tap Share, then Add to Home Screen.</span>
+    <button class="install-hint-dismiss" type="button"
+            aria-label="Dismiss the Add to Home Screen hint">Dismiss</button>
+  </div>
+`;
+
 export interface ParentGateDeps {
   world: WorldStore;
   audio: AudioController;
@@ -34,6 +93,10 @@ export interface ParentGateDeps {
    * 2 s hold arms the tray — never on boot, never per frame.
    */
   insights?: (() => Promise<InsightsView> | InsightsView) | undefined;
+  /** Install mode: the hint element is absent from the DOM while standalone. */
+  installMode?: InstallModeView | undefined;
+  /** Parent's dismissal state; dismissing hides the hint at once. */
+  installHint?: InstallHintView | undefined;
 }
 
 export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void {
@@ -91,6 +154,44 @@ export function createParentGate(root: HTMLElement, deps: ParentGateDeps): void 
     recoveryDismissed = true;
     if (recoveryNote) recoveryNote.hidden = true;
   });
+
+  // ---- Install hint: parent-only, and absent from the DOM when installed --
+  // The element is created on demand inside the gated tray. Removing it (not
+  // merely hiding it) is what keeps it out of the DOM in standalone mode and
+  // after a dismissal, so the kid-facing surface never gains a word.
+  const installMode = deps.installMode;
+  const installHint = deps.installHint;
+  let hintElement = presetTray.querySelector<HTMLElement>('.install-hint');
+
+  const hintWanted = (): boolean =>
+    !!installMode && !!installHint && !installMode.isInstalled() && !installHint.isDismissed();
+
+  const bindHintDismiss = (element: HTMLElement | null): void => {
+    element
+      ?.querySelector<HTMLButtonElement>('.install-hint-dismiss')
+      ?.addEventListener('click', () => installHint?.dismiss());
+  };
+
+  // Browsing boots write the hint into the shell before this gate mounts, so
+  // bind that button too — not only ones we insert later. Each element instance
+  // is bound exactly once: removal discards it, reinsertion creates a new one.
+  bindHintDismiss(hintElement);
+
+  const refreshInstallHint = (): void => {
+    if (!hintWanted()) {
+      hintElement?.remove();
+      hintElement = null;
+      return;
+    }
+    if (hintElement) return;
+    presetTray.insertAdjacentHTML('beforeend', INSTALL_HINT_MARKUP);
+    hintElement = presetTray.querySelector<HTMLElement>('.install-hint');
+    bindHintDismiss(hintElement);
+  };
+
+  installMode?.subscribe(() => refreshInstallHint());
+  installHint?.subscribe(() => refreshInstallHint());
+  refreshInstallHint();
 
   // ---- On-device insights: read-only, filled only as the tray opens --------
   // The panel lives inside the 2 s-hold tray, so a toddler can never reach it.

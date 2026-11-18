@@ -19,9 +19,15 @@ import {
   noteSaveOutcome,
   startSession,
 } from './core/insights';
+import { createInstallModeDetector, type InstallProbe } from './core/install-mode';
 import { buildExport, exportFileName } from './core/portable';
 import { recoveryNotice } from './core/recovery';
-import { deserializeWorld, serializeWorld, type WorldSnapshot } from './core/save';
+import {
+  deserializePreferences,
+  deserializeWorld,
+  serializeWorld,
+  type WorldSnapshot,
+} from './core/save';
 import { cozyOval } from './core/starters';
 import {
   BOOT_GUARD_MS,
@@ -37,11 +43,12 @@ import {
   restoreMutePreference,
   saveWorldSnapshot,
   watchDayPhasePersistence,
+  watchInstallHintPersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './state/persistence';
 import { createWorldStore } from './state/world';
-import { type InsightsView, mountControls, mountShell } from './ui/app';
+import { createInstallHintDismissal, type InsightsView, mountControls, mountShell } from './ui/app';
 
 import './style.css';
 
@@ -59,11 +66,44 @@ if (root) {
   let recoveryLine: string | null = null;
   const recoveryRead = loadWorldRecovery();
 
+  // ---- Install mode: the browser probe, built at the boundary ------------
+  // Core stays pure; only this module reads browser globals, and only while
+  // the app is running — never at module load. Missing APIs read as browsing.
+  const installProbe: InstallProbe = {
+    signals: () => {
+      const media =
+        typeof window.matchMedia === 'function'
+          ? window.matchMedia('(display-mode: standalone)')
+          : null;
+      return {
+        displayModeStandalone: media ? media.matches : null,
+        navigatorStandalone: (navigator as { standalone?: boolean }).standalone,
+      };
+    },
+    onDisplayModeChange: (listener) => {
+      const media =
+        typeof window.matchMedia === 'function'
+          ? window.matchMedia('(display-mode: standalone)')
+          : null;
+      if (!media) return () => undefined;
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', listener);
+        return () => media.removeEventListener('change', listener);
+      }
+      // Older Safari only has the deprecated addListener/removeListener pair.
+      media.addListener(listener);
+      return () => media.removeListener(listener);
+    },
+  };
+  const installMode = createInstallModeDetector(installProbe);
+  const installHint = createInstallHintDismissal();
+
   // ---- Boot order: shell → scene → controls ------------------------------
   // The frame is markup only, so the canvas exists before the scene binds and
   // every control below wires against a live SceneHandle — no queue, no
   // late-bind unsubscribe, no fallback. The type checker enforces the order.
-  const canvas = mountShell(root);
+  // The hint markup is only written when browsing: standalone never inserts it.
+  const canvas = mountShell(root, !installMode.isInstalled());
   const scene = initScene(canvas, world, audio);
 
   /**
@@ -205,14 +245,34 @@ if (root) {
     // already bound by the time storage answers — so restore it here, before
     // the watchers attach, or boot hydration could rewrite the phase.
     restoreDayPhasePreference(snapshot, dayClock);
-    watchDayPhasePersistence(dayClock, world, () => audio.isMuted(), recordSave);
+    // The dismissal rides in the same snapshot. Restore it before the watchers
+    // attach so boot hydration never rewrites storage, just like mute and phase.
+    installHint.restore(deserializePreferences(snapshot).installHintDismissed === true);
+    watchDayPhasePersistence(
+      dayClock,
+      world,
+      () => audio.isMuted(),
+      recordSave,
+      installHint.isDismissed,
+    );
     watchWorldPersistence(
       world,
       () => audio.isMuted(),
       recordSave,
       () => dayClock.phase,
+      installHint.isDismissed,
     );
-    watchMutePersistence(audio, world, recordSave);
+    watchMutePersistence(audio, world, recordSave, () => dayClock.phase, installHint.isDismissed);
+    watchInstallHintPersistence(
+      installHint,
+      world,
+      () => audio.isMuted(),
+      () => dayClock.phase,
+      recordSave,
+    );
+    // A reset clears every preference, so the parent's dismissal clears too
+    // and the hint comes back with the fresh meadow.
+    world.onReset(() => installHint.restore(false));
     if (!snapshot) {
       // The watchers only save on change — persist the seeded starter once.
       // Kept as a plain save so a first boot still reports "No save yet."
@@ -320,6 +380,8 @@ if (root) {
     isReady: () => !restoring,
     recoveryNote: () => recoveryLine,
     insights: insightsProvider,
+    installMode,
+    installHint,
   });
 
   // Dev-only handle: lets Playwright smoke tests place pieces directly and

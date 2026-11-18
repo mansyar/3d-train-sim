@@ -32,6 +32,11 @@ export interface DevicePreferences {
    * older snapshots, which simply start at the default mid-morning.
    */
   dayPhase?: DayPhase;
+  /**
+   * Set once a parent dismisses the Add-to-Home-Screen hint. Absent means the
+   * parent has not dismissed it, so the hint may still be shown when browsing.
+   */
+  installHintDismissed?: boolean;
 }
 
 export interface WorldSnapshot {
@@ -71,6 +76,7 @@ export function serializeWorld(
   consist: TrainConsist = defaultConsist(),
   dayPhase?: DayPhase,
   disclosure?: DisclosureState,
+  installHintDismissed = false,
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -88,11 +94,15 @@ export function serializeWorld(
     })),
     train,
   };
-  // Sound-on is the default and mid-morning is where every day starts, so
-  // both are omitted to keep snapshots minimal.
+  // Sound-on, mid-morning, and an undismissed hint are the defaults, so all
+  // three are omitted to keep snapshots minimal.
   const chosen = dayPhase && dayPhase !== DEFAULT_DAY_PHASE ? dayPhase : undefined;
-  if (muted || chosen) {
-    snapshot.preferences = { muted, ...(chosen ? { dayPhase: chosen } : {}) };
+  if (muted || chosen || installHintDismissed) {
+    snapshot.preferences = {
+      muted,
+      ...(chosen ? { dayPhase: chosen } : {}),
+      ...(installHintDismissed ? { installHintDismissed: true } : {}),
+    };
   }
   // Same for an empty delivery ledger.
   if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
@@ -261,7 +271,14 @@ export function deserializePreferences(value: unknown): DevicePreferences {
   // A phase the child never chose, or one this build does not know, is simply
   // dropped — the day then starts at its default mid-morning.
   const dayPhase = parseDayPhase(preferences.dayPhase);
-  return dayPhase ? { muted, dayPhase } : { muted };
+  // Only an explicit `true` counts as dismissed. Missing or malformed values
+  // default to false, so a bad save can never hide the hint for good.
+  const installHintDismissed = preferences.installHintDismissed === true;
+  return {
+    muted,
+    ...(dayPhase ? { dayPhase } : {}),
+    ...(installHintDismissed ? { installHintDismissed: true } : {}),
+  };
 }
 
 function parseDayPhase(value: unknown): DayPhase | undefined {

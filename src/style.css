@@ -765,6 +765,46 @@ button:focus-visible {
   padding: 0 12px;
 }
 
+/* The install tip is a quiet parent line like the recovery note, inserted in
+   the 2 s-hold tray only while browsing and undismissed. It inherits the shared
+   button:focus-visible ring below; no kid-facing control is added. */
+.install-hint {
+  align-items: center;
+  background: var(--toy-cream);
+  border: 2px solid var(--toy-steel);
+  border-radius: 12px;
+  color: var(--toy-brown);
+  display: flex;
+  flex-basis: 100%;
+  font-size: 15px;
+  gap: 12px;
+  line-height: 1.35;
+  max-width: 340px;
+  padding: 10px 12px;
+}
+
+.install-hint-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.install-hint-text {
+  flex: 1;
+}
+
+.install-hint-dismiss {
+  background: #fff;
+  border: 2px solid var(--toy-steel);
+  border-radius: 8px;
+  color: var(--toy-brown);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 12px;
+}
+
 .preset-pick {
   background: var(--toy-cream);
   border: 3px solid var(--toy-brown);
@@ -816,7 +856,8 @@ button:focus-visible {
 .preset-tray.is-reporting .preset-pick,
 .preset-tray.is-reporting .portable-export,
 .preset-tray.is-reporting .portable-import,
-.preset-tray.is-reporting .recovery-note {
+.preset-tray.is-reporting .recovery-note,
+.preset-tray.is-reporting .install-hint {
   display: none;
 }
 

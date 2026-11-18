@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createDayClock, DAY_LENGTH_MS } from '../core/day-clock';
+import { createDayClock, DAY_LENGTH_MS, type DayPhase } from '../core/day-clock';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
 import { defaultConsist } from '../core/wagons';
 import {
@@ -10,6 +10,7 @@ import {
   restoreMutePreference,
   saveWorldSnapshot,
   watchDayPhasePersistence,
+  watchInstallHintPersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './persistence';
@@ -133,6 +134,30 @@ const makeAudio = () => {
         notify = null;
       };
     },
+    emit: () => {
+      notify?.();
+    },
+  };
+};
+
+/** A stand-in for the parent-facing install hint controller. */
+const makeHint = () => {
+  let dismissed = false;
+  let notify: (() => void) | null = null;
+  return {
+    isDismissed: () => dismissed,
+    subscribe: (listener: () => void) => {
+      notify = listener;
+      return () => {
+        notify = null;
+      };
+    },
+    dismiss: vi.fn(() => {
+      dismissed = true;
+    }),
+    restore: vi.fn(() => {
+      dismissed = false;
+    }),
     emit: () => {
       notify?.();
     },
@@ -360,6 +385,115 @@ describe('day-phase preference', () => {
       muted: false,
       dayPhase: 'dusk',
     });
+  });
+});
+
+describe('install-hint dismissal preference', () => {
+  const dusk = (): DayPhase => 'dusk';
+
+  it('saves the dismissal through a full snapshot, once per actual change', () => {
+    const hint = makeHint();
+    const audio = makeAudio();
+    audio.setMuted(true);
+    const store = createWorldStore();
+    store.place('straight', ORIGIN, 0);
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchInstallHintPersistence(hint, store, () => audio.isMuted(), dusk, save);
+
+    // A notification that does not change the flag must not persist.
+    hint.emit();
+    expect(save).not.toHaveBeenCalled();
+
+    hint.dismiss();
+    hint.emit();
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      version: 3,
+      pieces: [{ type: 'straight', cell: ORIGIN }],
+    });
+    expect(deserializePreferences(save.mock.calls[0]?.[0])).toEqual({
+      muted: true,
+      dayPhase: 'dusk',
+      installHintDismissed: true,
+    });
+
+    hint.emit();
+    expect(save).toHaveBeenCalledTimes(1);
+  });
+
+  it('omits the flag again when a dismissal is somehow reversed', () => {
+    const hint = makeHint();
+    const store = createWorldStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchInstallHintPersistence(hint, store, () => false, dusk, save);
+
+    hint.dismiss();
+    hint.emit();
+    hint.restore();
+    hint.emit();
+
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(deserializePreferences(save.mock.calls[1]?.[0])).toEqual({
+      muted: false,
+      dayPhase: 'dusk',
+    });
+  });
+
+  it('treats a rejected save as non-fatal and leaves the dismissal resolved', () => {
+    const hint = makeHint();
+    const store = createWorldStore();
+    let calls = 0;
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>(() => {
+      calls += 1;
+      if (calls === 1) throw new Error('quota exceeded');
+    });
+    watchInstallHintPersistence(hint, store, () => false, dusk, save);
+
+    hint.dismiss();
+    expect(() => hint.emit()).not.toThrow();
+    // The parent's choice stands even though storage rejected the write.
+    expect(hint.isDismissed()).toBe(true);
+
+    // The toy stays interactive: later changes still attempt a save.
+    hint.restore();
+    expect(() => hint.emit()).not.toThrow();
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops persisting once its unsubscribe runs', () => {
+    const hint = makeHint();
+    const store = createWorldStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    const off = watchInstallHintPersistence(hint, store, () => false, dusk, save);
+
+    off();
+    hint.dismiss();
+    hint.emit();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('carries the dismissal into world, mute, and day-phase saves', () => {
+    const hint = makeHint();
+    hint.dismiss();
+    const store = createWorldStore();
+    const audio = makeAudio();
+    const clock = createDayClock({ now: () => 0 });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+
+    watchWorldPersistence(store, () => audio.isMuted(), save, dusk, hint.isDismissed);
+    watchMutePersistence(audio, store, save, dusk, hint.isDismissed);
+    watchDayPhasePersistence(clock, store, () => audio.isMuted(), save, hint.isDismissed);
+
+    store.place('straight', ORIGIN, 0);
+    expect(deserializePreferences(save.mock.calls[0]?.[0]).installHintDismissed).toBe(true);
+
+    audio.setMuted(true);
+    audio.emit();
+    expect(deserializePreferences(save.mock.calls[1]?.[0]).installHintDismissed).toBe(true);
+
+    clock.advancePhase();
+    clock.tick();
+    expect(deserializePreferences(save.mock.calls[2]?.[0]).installHintDismissed).toBe(true);
   });
 });
 

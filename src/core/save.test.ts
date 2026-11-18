@@ -1091,6 +1091,62 @@ describe('device preferences', () => {
   });
 });
 
+describe('install-hint dismissal preference', () => {
+  it('persists the flag only when the parent has dismissed the hint', () => {
+    const dismissed = serializeWorld(
+      pieces,
+      [],
+      'steam',
+      false,
+      {},
+      defaultConsist(),
+      undefined,
+      undefined,
+      true,
+    );
+
+    expect(dismissed.preferences).toEqual({ muted: false, installHintDismissed: true });
+    expect(JSON.parse(JSON.stringify(dismissed))).toEqual(dismissed);
+    expect(serializeWorld(pieces, [], 'steam').preferences).toBeUndefined();
+  });
+
+  it('round-trips dismissal alongside the other preferences', () => {
+    const snapshot = serializeWorld(
+      pieces,
+      [],
+      'steam',
+      true,
+      {},
+      defaultConsist(),
+      'dusk',
+      undefined,
+      true,
+    );
+
+    expect(deserializePreferences(snapshot)).toEqual({
+      muted: true,
+      dayPhase: 'dusk',
+      installHintDismissed: true,
+    });
+  });
+
+  it('defaults missing and malformed values to not-dismissed', () => {
+    const malformed: unknown[] = [null, 'yes', 1, 0, {}, [], false];
+
+    for (const installHintDismissed of malformed) {
+      expect(
+        deserializePreferences({
+          version: 3,
+          pieces,
+          scenery,
+          preferences: { muted: true, installHintDismissed },
+        }),
+      ).toEqual({ muted: true });
+    }
+    expect(deserializePreferences({ version: 1, pieces, scenery })).toEqual({ muted: false });
+  });
+});
+
 describe('day-phase preference', () => {
   it('serializes the day phase alongside the mute preference', () => {
     const snapshot = serializeWorld(pieces, [], 'steam', false, {}, defaultConsist(), 'dusk');
