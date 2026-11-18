@@ -14,22 +14,20 @@
 - **Covers:** FR-1, FR-8, NFR-1, NFR-6, AC-1, AC-10
 - **Touches:** `src/core/drawer.ts`, `src/core/drawer.test.ts`, `scripts/generate-piece-icons.mjs`, `src/ui/generated-piece-icons.ts`, `src/ui/toy-icons.ts`, `conductor/tracks/toybox-clarity_20261119/verification/phase-1.md`
 - **Verification:** `node scripts/generate-piece-icons.mjs --check && pnpm check && pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Add a pure paged drawer model** — covers: FR-1
-  - [ ] **P1.T1.1: Add page size and page-slicing helpers for dense tabs while leaving Nature and Critters single-page**
-  - [ ] **P1.T1.2: Keep disclosure filtering and MAX_PIECES cap inputs unchanged**
-  - [ ] **P1.T1.3: Unit-test full pages, partial final pages, and single-page tabs**
-- [ ] **P1.T2: Generate piece icons from shipped geometry** — covers: FR-8
-  - [ ] **P1.T2.1: Add a dev-only generator that reads the shipped GLB piece models and emits committed `src/ui/generated-piece-icons.ts` SVGs**
-  - [ ] **P1.T2.2: Re-export generated `PIECE_ICONS` from `src/ui/toy-icons.ts` without changing `SCENERY_ICONS`**
-  - [ ] **P1.T2.3: Add a deterministic `--check` mode and a unit assertion that every `PieceType` has a generated SVG**
+- [x] **P1.T1: Add a pure paged drawer model** — covers: FR-1
+  - [x] **P1.T1.1: Add page size and page-slicing helpers for dense tabs while leaving Nature and Critters single-page**
+  - [x] **P1.T1.2: Keep disclosure filtering and MAX_PIECES cap inputs unchanged**
+  - [x] **P1.T1.3: Unit-test full pages, partial final pages, and single-page tabs**
+- [x] **P1.T2: Generate piece icons from shipped geometry** — covers: FR-8
+  - [x] **P1.T2.1: Add a dev-only generator that reads the shipped GLB piece models and emits committed `src/ui/generated-piece-icons.ts` SVGs**
+  - [x] **P1.T2.2: Re-export generated `PIECE_ICONS` from `src/ui/toy-icons.ts` without changing `SCENERY_ICONS`**
+  - [x] **P1.T2.3: Add a deterministic `--check` mode and a unit assertion that every `PieceType` has a generated SVG**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — deterministic GLB-derived icons and the pure paging model pass the exact phase verification command.
+**Checkpoint:** `6fbbe35`
 **Evidence:** conductor/tracks/toybox-clarity_20261119/verification/phase-1.md
--->
 
 ## Phase 2: Paged drawer UI and outside-drag removal
 
