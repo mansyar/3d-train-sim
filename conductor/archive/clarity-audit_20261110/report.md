@@ -50,6 +50,19 @@ an invented number. All slots stay **not measured** until observations exist.
 | 4 | — | not measured | not measured | — |
 | 5 | — | not measured | not measured | — |
 
+## Informal parent-reported friction notes (not measured results)
+
+Added 2026-11-19 from anonymous parent feedback while dogfooding v0.13.0.
+These are qualitative notes only: no session was timed, no child was named, and
+no affected-child count or severity ranking is asserted. The measured cells in
+the tables above remain **not measured**, and no three-child gate is claimed.
+
+- **Toybox density** — too many track pieces are visible in a small UI; the SVG icons make choosing harder. Parent suggested grouping into smaller chunks.
+- **Removing placed track** — child had difficulty deleting a placed track piece.
+- **Station cargo** — picking up a box at one station and delivering it at another does not look natural.
+- **Sky detail** — parent would like richer sky visuals such as clouds, sun, and thunder.
+- **Train length** — parent would like the possibility of a longer train.
+
 ## Traceability (NFR-3)
 
 | Criterion | Requirement | Satisfied by |
