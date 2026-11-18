@@ -11,20 +11,20 @@
 - **Covers:** FR-1, FR-2, FR-3, NFR-1, NFR-2, NFR-3, AC-1, AC-2, AC-3
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.13.0_20261118/verification/phase-1.md`
 - **Verification:** `pnpm check`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Bump the release version** — covers: FR-1
-  - [ ] **P1.T1.1: Change `package.json` version from `0.12.0` to `0.13.0`.**
-  - [ ] **P1.T1.2: Check that remaining `0.12.0` strings occur only in CHANGELOG history, archives, or this track's prose.**
-- [ ] **P1.T2: Curate the parent-facing CHANGELOG** — covers: FR-2
-  - [ ] **P1.T2.1: Promote `[Unreleased]` into `## [0.13.0] - 2026-11-18` with notes for local insights, install onboarding, a11y polish, pnpm/audit, and the perf gate; leave an empty `[Unreleased]`.**
-  - [ ] **P1.T2.2: Refresh compare links: `[Unreleased]` → `v0.13.0...HEAD`, add `[0.13.0]` → `v0.12.0...v0.13.0`.**
-- [ ] **P1.T3: Retarget the clarity baseline label** — covers: FR-3
-  - [ ] **P1.T3.1: Replace v0.12.0 with v0.13.0 in the comparison artifact title, section heading, table heading, and baseline prose.**
-  - [ ] **P1.T3.2: Confirm every measured value remains `awaiting observation` and no number was added.**
+- [x] **P1.T1: Bump the release version** — covers: FR-1
+  - [x] **P1.T1.1: Change `package.json` version from `0.12.0` to `0.13.0`.**
+  - [x] **P1.T1.2: Check that remaining `0.12.0` strings occur only in CHANGELOG history, archives, or this track's prose.**
+- [x] **P1.T2: Curate the parent-facing CHANGELOG** — covers: FR-2
+  - [x] **P1.T2.1: Promote `[Unreleased]` into `## [0.13.0] - 2026-11-18` with notes for local insights, install onboarding, a11y polish, pnpm/audit, and the perf gate; leave an empty `[Unreleased]`.**
+  - [x] **P1.T2.2: Refresh compare links: `[Unreleased]` → `v0.13.0...HEAD`, add `[0.13.0]` → `v0.12.0...v0.13.0`.**
+- [x] **P1.T3: Retarget the clarity baseline label** — covers: FR-3
+  - [x] **P1.T3.1: Replace v0.12.0 with v0.13.0 in the comparison artifact title, section heading, table heading, and baseline prose.**
+  - [x] **P1.T3.2: Confirm every measured value remains `awaiting observation` and no number was added.**
 
-**Result:** pending
-**Checkpoint:** pending
+**Result:** verified — package.json, CHANGELOG.md, and the clarity comparison artifact consistently describe v0.13.0; `pnpm check` passed.
+**Checkpoint:** `b764c050ffbbb3998b35e81744166489ad3a2724`
 **Evidence:** `conductor/tracks/release-v0.13.0_20261118/verification/phase-1.md`
 
 ## Phase 2: Pre-merge Verification
