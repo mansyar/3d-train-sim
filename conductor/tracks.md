@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [perf-budget_20261111](./archive/perf-budget_20261111/index.md) | Performance Budget | Feature | archived |
 | [audit-gate-picomatch_20261118](./archive/audit-gate-picomatch_20261118/index.md) | Pnpm 12 Toolchain and Audit Gate | Chore | archived |
 | [install-onboarding_20261111](./archive/install-onboarding_20261111/index.md) | Install Onboarding | Feature | archived |
 | [a11y-pass_20261111](./archive/a11y-pass_20261111/index.md) | Accessibility Pass | Feature | archived |
