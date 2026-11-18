@@ -93,8 +93,9 @@ The `v0.13.0` tag must not be pushed until after merge and explicit approval.
 ## Doc sync
 
 `updated` — pre-review doc sync retargeted the clarity artifact annotation in
-`conductor/product.md:108` to v0.13.0 with no audit values; post-review sync confirmed no
-further doc change is needed.
+`conductor/product.md:108` to v0.13.0 with no audit values; post-review sync at
+`2026-11-18T12:25:28Z` verified that the version, changelog, comparison labels, and
+doc references remain consistent and that no further doc change is needed.
 
 ## History
 
