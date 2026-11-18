@@ -44,7 +44,7 @@ The primary appends after acceptance:
 - **Covers:** FR-4, FR-5, FR-6, NFR-1, NFR-4, NFR-5, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9
 - **Touches:** `e2e/perf-budget.spec.ts`, `conductor/tracks/perf-budget_20261111/verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/frame-contract.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Derive and document the floor** — covers: FR-4, NFR-5, AC-4
   - [ ] **P2.T1.1: Record minimum observed ticks/second and headroom subtraction in evidence** — covers: FR-4, NFR-5, AC-4
