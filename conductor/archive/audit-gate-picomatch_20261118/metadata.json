@@ -1,0 +1,31 @@
+{
+  "id": "audit-gate-picomatch_20261118",
+  "title": "Pnpm 12 Toolchain and Audit Gate",
+  "type": "chore",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-18T04:22:57Z",
+  "updated_at": "2026-11-18T16:10:00Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/audit-gate-picomatch_20261118",
+  "base_branch": "main",
+  "base_sha": "6bb8b93e3591d61be340455e7fd6a23d29645b4b",
+  "progress": {
+    "phases_total": 2,
+    "phases_verified": 2,
+    "tasks_total": 14,
+    "tasks_done": 14
+  },
+  "last_checkpoint": "6f0a8e0ec996a14e684498e09807e2f4b53b5ed0",
+  "review_verdict": "PASS",
+  "review_rounds": 1,
+  "doc_sync": "updated",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/80",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-18T16:10:00Z",
+  "archive_path": "conductor/archive/audit-gate-picomatch_20261118"
+}

@@ -6,7 +6,7 @@ folder — start with [`conductor/workflow.md`](conductor/workflow.md).
 
 ## Dev setup
 
-- **Node ≥ 24** and **pnpm 11** (`corepack` or `npm i -g pnpm`)
+- **Node ≥ 24** and **pnpm 12** (`corepack` or `npm i -g pnpm`)
 - `pnpm install`
 - `pnpm dev` — Vite dev server
 - Node 24 LTS on Windows/macOS/Linux; a tablet or browser touch
@@ -39,7 +39,7 @@ never automerge a major. `three` travels with `@types/three`, and
 to happen, and the guard test in `src/core/renovate-config.test.ts` refuses it.
 
 If `pnpm audit` fails on an advisory with no fixed version yet, the only allowed
-silence is a dated `auditConfig.ignoreCves` entry in `pnpm-workspace.yaml`
+silence is a dated `audit.ignore` entry in `pnpm-workspace.yaml`
 naming the advisory id and the track that will clear it.
 
 ## The conductor workflow
