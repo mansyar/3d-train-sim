@@ -19,3 +19,10 @@ overrides:
   # minimatch@5 requires the callable 2.x shape, minimatch@10 uses the 5.x namespace.
   "minimatch@5>brace-expansion": ">=2.1.7 <3"
   "minimatch@10>brace-expansion": ">=5.0.11"
+
+# 2026-11-18 — GHSA-fc5q-39xc-vjpf — audit-gate-picomatch_20261118
+# Dev-only transitive (vitest > vite > picomatch); no patched version published.
+# Remove this entry when upstream publishes a fix, then re-run pnpm audit.
+audit:
+  ignore:
+    - GHSA-fc5q-39xc-vjpf
