@@ -8,8 +8,9 @@
 - **Actual HEAD at phase start:** `9fb2bb9` (`conductor(plan): Mark Phase R1 as in progress`)
   — the primary added this state commit after the brief was written; it is a
   Conductor-state-only commit and is not part of this fix.
-- **Head commit (code):** `6d91178` (`fix(perf): recalibrate FPS floor to 2.5 ticks/s from GitHub CI samples`)
-- **Head commit (evidence):** this file, committed immediately after `6d91178`.
+- **Squashed fix checkpoint:** `4729935` (`fix(perf): recalibrate FPS floor to 2.5 ticks/s from GitHub CI samples`)
+- **Primary verification:** re-run against the identical squashed fix content; the
+  final docs commit on this branch is `fc8d97e`.
 
 ## Result
 
@@ -216,9 +217,11 @@ for this fix; it was not attempted or changed here.
 ## Primary verification
 
 - Clean worktree; diff `9fb2bb9f3ae1453cc69d5c3489c62d43ec6f2f78..HEAD` =
-  exactly `e2e/perf-budget.spec.ts` and this evidence file; reported commits
-  `6d91178`, `5da2d9b` matched `git log`; no merges.
-- Re-ran exact verification with `CI=1` on final HEAD `5da2d9b`:
+  exactly `e2e/perf-budget.spec.ts` and this evidence file. The two pre-squash
+  commits reported by the fixer were squashed into reachable checkpoint
+  `4729935`; no merges.
+- Re-ran exact verification with `CI=1` against the identical final R1 fix
+  content (squashed checkpoint `4729935`; docs commit `fc8d97e`):
   `pnpm check && pnpm build && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/frame-contract.spec.ts`
   → exit 0. Biome 197 files clean, tsc clean, 57 files / 1009 tests, Vite + PWA
   build (178 precache entries), Playwright 4 passed in 10.4 s.
