@@ -21,7 +21,8 @@ test('production build mounts no debug grid toggle and keeps the shell', async (
   await expect(page.locator('.toybox-rail')).toBeVisible();
   await expect(page.locator('.toy-slot')).toHaveCount(2);
   await expect(page.locator('.parent-gate')).toBeVisible();
-  await expect(page.locator('.trash-slot')).toBeVisible();
+  // Toys are removed by dragging past the board — there is no bin on the rail.
+  await expect(page.locator('.trash-slot')).toHaveCount(0);
 
   // The app boots with a clean console.
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);

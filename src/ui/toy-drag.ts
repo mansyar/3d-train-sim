@@ -25,7 +25,7 @@ export interface ToyDragDeps {
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   /** End the preview. */
   endGhost(): void;
-  /** The placed toy under a screen point, for relocate/trash drags. */
+  /** The placed toy under a screen point, for relocate/removal drags. */
   pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** Hide/show a placed clone (the ghost stands in while it is dragged). */
   setPieceVisible(id: string, visible: boolean): void;
@@ -46,7 +46,7 @@ export interface ToyDrag {
 export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): ToyDrag {
   // ---- Drag-from-drawer: the real model previews in the 3D scene ---------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or
-  // trash); null ⇒ a fresh toy from the drawer.
+  // remove beyond the board); null ⇒ a fresh toy from the drawer.
   let drag: {
     kind: PieceType | SceneryKind;
     rotation: Rotation;
@@ -57,7 +57,7 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     homeCell: Cell;
   } | null = null;
   let lastPointer = { x: -1000, y: -1000 };
-  /** Fingers stray past the "rotate tap" limit before they may drag/trash. */
+  /** Fingers stray past the "rotate tap" limit before they may drag/remove. */
   const TAP_DRAG_PX = 12;
   // A just-pressed placed toy, awaiting either a tap (rotate in place) or
   // enough movement to become a relocate drag. null when idle.
@@ -68,7 +68,7 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
 
   // Pressing a placed toy does NOT lift it yet: a release without movement is
   // a rotate tap, and only movement past TAP_DRAG_PX turns the press into a
-  // lift-drag (relocate or trash). Light taps no longer lift pieces.
+  // lift-drag (relocate or remove). Light taps no longer lift pieces.
   canvas.addEventListener('pointerdown', (event) => {
     if (drag || pressed || deps.isRiding() || (deps.isReady && !deps.isReady())) return;
     const picked = deps.pickPiece(event.clientX, event.clientY);
@@ -151,10 +151,9 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     placeChip(picked.cell.x, picked.cell.y);
   };
 
-  // ---- Delete-on-the-toy: a ✕ chip beside the lifted toy, plus a trash
-  // bin that reacts while a lifted toy aims at it ---------------------------
-  // Lifting a placed toy shows the chip; tapping it bins the toy silently
-  // (same convention as a trash drop — no scolding sounds).
+  // ---- Delete-on-the-toy: a ✕ chip beside the lifted toy -------------------
+  // Lifting a placed toy shows the chip; tapping it removes the toy silently
+  // (same convention as an outside-board drop — no scolding sounds).
   const deleteChip = document.createElement('button');
   deleteChip.className = 'delete-chip';
   deleteChip.type = 'button';
@@ -192,9 +191,10 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     deps.endGhost();
     drag = null;
     hideChip();
-    setTrashHover(false);
+    hideRemovalPreview();
     if (isPieceKind(kind)) deps.world.remove(id);
     else deps.world.removeScenery(id);
+    removalPuff(lastPointer.x, lastPointer.y);
     deps.setPieceVisible(id, true); // Already removed — reconcile is a no-op.
   };
 
@@ -210,26 +210,6 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     event.preventDefault();
     deleteDraggedToy();
   });
-
-  // The trash bin grows while a lifted toy aims at it, and its invisible hit
-  // zone widens so a near miss still counts.
-  const trashSlot = deps.root.querySelector<HTMLButtonElement>('.trash-slot');
-  if (!trashSlot) {
-    throw new Error('trash slot missing from app frame');
-  }
-  const TRASH_ZONE_PX = 24;
-  const nearTrash = (clientX: number, clientY: number) => {
-    const rect = trashSlot.getBoundingClientRect();
-    return (
-      clientX >= rect.left - TRASH_ZONE_PX &&
-      clientX <= rect.right + TRASH_ZONE_PX &&
-      clientY >= rect.top - TRASH_ZONE_PX &&
-      clientY <= rect.bottom + TRASH_ZONE_PX
-    );
-  };
-  const setTrashHover = (hovering: boolean) => {
-    trashSlot.classList.toggle('is-hovering', hovering);
-  };
 
   const ping = (clientX: number, clientY: number) => {
     const ping = document.createElement('div');
@@ -247,9 +227,46 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     wobble.addEventListener('animationend', () => wobble.remove());
   };
 
-  // A ride began mid-gesture (a second finger on ▶): drop the press or
-  // drag, commit nothing, and never stop the train.
-  const cancelForRide = () => {
+  // A lifted placed toy beyond the board gets a soft ring. Re-entry before
+  // release puts the ring away — the toy is only removed on an outside drop.
+  const removalPreview = document.createElement('div');
+  removalPreview.className = 'removal-preview';
+  removalPreview.hidden = true;
+  deps.root.append(removalPreview);
+
+  const hideRemovalPreview = () => {
+    removalPreview.hidden = true;
+  };
+
+  /** True when the point sits over the toybox chrome, never a drop target. */
+  const overUiAt = (clientX: number, clientY: number) => {
+    const dropTarget = document.elementFromPoint(clientX, clientY);
+    return dropTarget?.closest('.toybox-rail, .toy-drawer, .train-drawer') !== null;
+  };
+
+  /** A lifted placed toy, past the board edge → the removable preview shows. */
+  const isBeyondBoard = (clientX: number, clientY: number) =>
+    deps.cellFromPoint(clientX, clientY) === null && !overUiAt(clientX, clientY);
+
+  const updateRemovalPreview = (clientX: number, clientY: number) => {
+    if (!drag?.pickedId || !isBeyondBoard(clientX, clientY)) {
+      hideRemovalPreview();
+      return;
+    }
+    removalPreview.hidden = false;
+    removalPreview.style.translate = `${clientX - 48}px ${clientY - 48}px`;
+  };
+
+  const removalPuff = (clientX: number, clientY: number) => {
+    const puff = document.createElement('div');
+    puff.className = 'removal-puff';
+    puff.style.translate = `${clientX - 48}px ${clientY - 48}px`;
+    deps.root.append(puff);
+    puff.addEventListener('animationend', () => puff.remove());
+  };
+
+  /** Abandon a gesture without committing — ride start, pointer loss or blur. */
+  const cancelDrag = () => {
     pressed = null;
     if (drag) {
       if (drag.pickedId) deps.setPieceVisible(drag.pickedId, true);
@@ -257,42 +274,52 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
       drag = null;
     }
     hideChip();
-    setTrashHover(false);
+    hideRemovalPreview();
   };
+
+  // A ride began mid-gesture (a second finger on ▶): drop the press or
+  // drag, commit nothing, and never stop the train.
+  const cancelForRide = cancelDrag;
+
   const endDrag = (clientX: number, clientY: number) => {
     if (!drag) return;
     hideChip();
-    setTrashHover(false);
+    hideRemovalPreview();
     const { kind, rotation, pickedId } = drag;
     const cell = deps.cellFromPoint(clientX, clientY);
     let settled = false;
-    let binned = false;
+    let removed = false;
     if (pickedId === null) {
+      // A fresh toy outside the board is simply cancelled — never removed.
       settled =
         cell !== null &&
         (isPieceKind(kind)
           ? deps.world.place(kind, cell, rotation)
           : deps.world.placeScenery(kind, cell, rotation)) === 'placed';
+    } else if (cell === null && !overUiAt(clientX, clientY)) {
+      // Beyond the board: the same remove path the bin used, with undo intact.
+      if (isPieceKind(kind)) deps.world.remove(pickedId);
+      else deps.world.removeScenery(pickedId);
+      settled = true;
+      removed = true;
+      deps.setPieceVisible(pickedId, true); // Reconcile already removed it.
+    } else if (cell && !overUiAt(clientX, clientY)) {
+      // Chrome drops never relocate — the bottom row hides behind the rail.
+      settled =
+        (isPieceKind(kind)
+          ? deps.world.relocate(pickedId, cell, rotation)
+          : deps.world.relocateScenery(pickedId, cell, rotation)) === 'placed';
+      deps.setPieceVisible(pickedId, true);
     } else {
-      const overTrash = nearTrash(clientX, clientY);
-      if (overTrash) {
-        if (isPieceKind(kind)) deps.world.remove(pickedId);
-        else deps.world.removeScenery(pickedId);
-        settled = true; // Binned.
-        binned = true;
-      } else if (cell && !overToolbarAt(clientX, clientY)) {
-        // Toolbar drops never relocate — the bottom grid row hides behind the
-        // rail, so the toy wobble-returns to its cell instead.
-        settled =
-          (isPieceKind(kind)
-            ? deps.world.relocate(pickedId, cell, rotation)
-            : deps.world.relocateScenery(pickedId, cell, rotation)) === 'placed';
-      }
-      deps.setPieceVisible(pickedId, true); // Reconcile already moved or removed it.
+      deps.setPieceVisible(pickedId, true);
     }
     if (settled) {
-      ping(clientX, clientY);
-      if (!binned) deps.audio.ding(); // Trash drops stay silent — no scolding sounds.
+      if (removed) {
+        removalPuff(clientX, clientY); // Soft puff; removals stay silent.
+      } else {
+        ping(clientX, clientY);
+        deps.audio.ding();
+      }
     } else {
       wobbleReturn(clientX, clientY);
       deps.audio.thunk(); // A soft knock for a drop that bounced home — never a scolding.
@@ -301,25 +328,19 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
     drag = null;
   };
 
-  /** True when the screen point sits over the toybox rail (toolbar drops wobble home). */
-  const overToolbarAt = (clientX: number, clientY: number) => {
-    const dropTarget = document.elementFromPoint(clientX, clientY);
-    return dropTarget?.closest('.toybox-rail') !== null;
-  };
-
   window.addEventListener('pointermove', (event) => {
     lastPointer = { x: event.clientX, y: event.clientY };
     if (drag) {
       moveDrag(event.clientX, event.clientY);
       if (drag.pickedId) {
         // The ✕ chip stays put beside the toy's home cell — a fixed target the
-        // finger can hit; the bin cheers the toy on as it approaches.
+        // finger can hit; the ring appears only past the board edge.
         placeChip(drag.homeCell.x, drag.homeCell.y);
-        setTrashHover(nearTrash(event.clientX, event.clientY));
+        updateRemovalPreview(event.clientX, event.clientY);
       }
       return;
     }
-    // A press that wanders past the tap limit becomes a relocate/trash drag.
+    // A press that wanders past the tap limit becomes a relocate/removal drag.
     if (!pressed) return;
     const distance = Math.hypot(event.clientX - pressed.startX, event.clientY - pressed.startY);
     if (distance > TAP_DRAG_PX) {
@@ -331,16 +352,7 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
   });
   window.addEventListener('pointerup', (event) => {
     if (riding) {
-      // A ride began mid-gesture (a second finger on ▶): drop the press or
-      // drag, commit nothing, and never stop the train.
-      pressed = null;
-      if (drag) {
-        if (drag.pickedId) deps.setPieceVisible(drag.pickedId, true);
-        deps.endGhost();
-        drag = null;
-      }
-      hideChip();
-      setTrashHover(false);
+      cancelDrag();
       return;
     }
     if (pressed) {
@@ -355,15 +367,14 @@ export function createToyDrag(canvas: HTMLCanvasElement, deps: ToyDragDeps): Toy
       endDrag(event.clientX, event.clientY);
     }
   });
-  window.addEventListener('pointercancel', () => {
-    pressed = null;
-    if (drag) endDrag(-1000, -1000);
-  });
+  window.addEventListener('pointercancel', cancelDrag);
+  window.addEventListener('blur', cancelDrag);
   window.addEventListener('keydown', (event) => {
     if (event.key !== 'r' && event.key !== 'R') return;
     if (!drag) return;
     stepRotation();
     moveDrag(lastPointer.x, lastPointer.y);
+    if (drag.pickedId) updateRemovalPreview(lastPointer.x, lastPointer.y);
   });
 
   return { beginDrag, cancelForRide, hideChip, ping };

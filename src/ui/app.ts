@@ -33,7 +33,7 @@ export interface SceneControls {
   beginGhost(kind: PieceType | SceneryKind): void;
   moveGhost(cell: Cell | null, rotation: Rotation, valid: boolean): void;
   endGhost(): void;
-  /** The placed piece under a screen point, for relocate/trash drags. */
+  /** The placed piece under a screen point, for relocate/removal drags. */
   pickPiece(clientX: number, clientY: number): PickedItem | null;
   /** The screen-space center of a meadow cell, for anchoring the ✕ chip. */
   cellToScreen(cell: Cell): { x: number; y: number } | null;
@@ -151,8 +151,6 @@ export function mountShell(root: HTMLElement, showInstallHint = true): HTMLCanva
               aria-label="Turn the day to the next time of day">🌙</button>
       <button class="mute-toggle" type="button" aria-pressed="false"
               aria-label="Mute the sounds">🔊</button>
-      <button class="trash-slot" type="button"
-              aria-label="Trash bin — drop a track piece here to remove it">🗑️</button>
       <button class="undo-toggle" type="button"
               aria-label="Take back the last change" hidden>↩️</button>
     </div>
@@ -175,7 +173,6 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
   const drawer = root.querySelector<HTMLDivElement>('.toy-drawer');
   const toysSlot = root.querySelector<HTMLButtonElement>('[data-drawer="toys"]');
   const trainSlot = root.querySelector<HTMLButtonElement>('[data-drawer="trains"]');
-  const trashSlot = root.querySelector<HTMLButtonElement>('.trash-slot');
   // Reduced motion: no pop/bounce animation, dings stay. Sampled once.
   const prefersStill = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const trainPicker = createTrainPicker(root, {
@@ -184,7 +181,7 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
     isReady: options.isReady,
     prefersStill,
   });
-  if (!drawer || !toysSlot || !trainSlot || !trashSlot) {
+  if (!drawer || !toysSlot || !trainSlot) {
     throw new Error('toybox chrome missing from app frame');
   }
 
@@ -227,7 +224,7 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
   });
   // ---- Drag machine wiring: the drag lives in toy-drag.ts ----------------
   // pickedId set ⇒ the drag moves an existing placed toy (relocate or
-  // trash); null ⇒ a fresh toy from the drawer. The scene facade calls
+  // remove beyond the board); null ⇒ a fresh toy from the drawer. The scene facade calls
   // and the `riding` flag pass through deps.
   const toyDrag = createToyDrag(canvas, {
     root,
@@ -288,7 +285,6 @@ export function mountControls(root: HTMLElement, options: AppOptions): void {
     if (riding) setDrawer(null);
     toysSlot.hidden = riding;
     trainSlot.hidden = riding;
-    trashSlot.hidden = riding;
     if (gridToggle) gridToggle.hidden = riding;
     toyDrag.hideChip();
     rideControls.refreshUndo();
