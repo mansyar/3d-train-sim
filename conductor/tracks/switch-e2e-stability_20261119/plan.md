@@ -1,0 +1,77 @@
+# Switch E2E Stability and Release v0.14.1 — Implementation Plan
+
+> **Branch:** `fix/switch-e2e-stability_20261119`
+> **Base:** `main` @ `1ad84b2e996934532f54c6ddb1804366ca5fc2c9`
+>
+> Phase states are `pending`, `in_progress`, `verified`, `failed`, or `blocked`.
+> Only the primary agent writes this file. Phase subagents report results and the
+> primary records them.
+
+## Phase 1: Frame-aware slip-road sampling
+
+- **Goal:** Replace the fixed wall-clock slip-road sampler with frame/ride-progress-aware sampling and prove the old CI failure case is fixed without weakening the three-road/three-blade assertion.
+- **Depends on:** none
+- **Covers:** FR-1, FR-2, NFR-1, NFR-2, AC-1, AC-2
+- **Touches:** `e2e/switches.spec.ts`, `e2e/helpers.ts`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-1.md`
+- **Verification:** `pnpm check && pnpm exec playwright test e2e/switches.spec.ts --repeat-each=3`
+- **Status:** pending
+
+- [ ] **P1.T1: Make slip sampling frame-aware** — covers: FR-1
+  - [ ] **P1.T1.1: Replace the fixed 320 × 400 ms polling loop with sampling tied to frame or ride progress, retaining a bounded safety timeout.**
+  - [ ] **P1.T1.2: Preserve the exact required blade keys `0.000`, `-0.210`, `0.210` and road keys `0.000`, `-1.571`, `1.571`, and include frame progress in failure diagnostics.**
+- [ ] **P1.T2: Prove the regression** — covers: FR-2
+  - [ ] **P1.T2.1: Add a focused regression case that reproduces the old missing-road condition and fails against the old sampler but passes with the new sampler, without weakening the active assertion.**
+  - [ ] **P1.T2.2: Record the before/after regression output and the three repeated switch-spec runs in phase evidence.**
+
+<!--
+**Result:** verified
+**Checkpoint:** <short-sha>
+**Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/phase-1.md
+-->
+
+## Phase 2: v0.14.1 release content and first dry run
+
+- **Goal:** Align version, changelog, and clarity baseline to v0.14.1 with no invented audit values, then prove the full local matrix and a first successful release dry run with deploy skipped.
+- **Depends on:** Phase 1
+- **Covers:** FR-3, FR-5, NFR-3, NFR-5, AC-3, AC-5
+- **Touches:** `package.json`, `CHANGELOG.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md`
+- **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high && gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true`
+- **Status:** pending
+
+- [ ] **P2.T1: Align v0.14.1 release documentation** — covers: FR-5
+  - [ ] **P2.T1.1: Bump `package.json` from `0.14.0` to `0.14.1`.**
+  - [ ] **P2.T1.2: Curate an empty `[Unreleased]` and a parent-facing `[0.14.1] - 2026-11-19` CHANGELOG section with refreshed compare links, explaining the release-flow fix.**
+  - [ ] **P2.T1.3: Retarget all clarity baseline labels to v0.14.1 while leaving all eight `awaiting observation` cells and all privacy/traceability wording intact.**
+- [ ] **P2.T2: Run the full local matrix and first dry run** — covers: FR-3
+  - [ ] **P2.T2.1: Run every configured local verification layer and record exact results in integrated evidence.**
+  - [ ] **P2.T2.2: Dispatch the first release dry run from the release branch, watch it to completion, require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
+- [ ] **P2.T3: Assemble release evidence** — covers: FR-3
+  - [ ] **P2.T3.1: Record phase checkpoints, release summary inputs, dry-run gate, automatic tag gate, and post-tag workflow-watch gate in integrated evidence.**
+
+<!--
+**Result:** verified
+**Checkpoint:** <short-sha>
+**Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md
+-->
+
+## Phase 3: Second dry run and release gate evidence
+
+- **Goal:** Prove a second consecutive dry-run success on the final release content and complete the evidence needed for review, PR, automatic tagging, and workflow watch.
+- **Depends on:** Phase 2
+- **Covers:** FR-4, FR-6, FR-7, FR-8, NFR-4, NFR-6, AC-4, AC-6, AC-7, AC-8
+- **Touches:** `conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md`
+- **Verification:** `gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true` (then watch the dispatched run to completion and record the result)
+- **Status:** pending
+
+- [ ] **P3.T1: Prove two consecutive dry runs** — covers: FR-4
+  - [ ] **P3.T1.1: Dispatch and watch a second distinct dry run from the release branch; require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
+  - [ ] **P3.T1.2: Assert both dry runs are green and stop without tagging if either fails, is cancelled, or deploys.**
+- [ ] **P3.T2: Record release gate evidence** — covers: FR-6, FR-7, FR-8
+  - [ ] **P3.T2.1: Record the automatic annotated-tag-after-merge gate at the squash merge commit, the no-tag-overwrite rule, and the tag-triggered workflow watch requirement.**
+  - [ ] **P3.T2.2: Record PR inputs, review gate, archive gate, GHCR-403-is-unknown policy, and the explicit no-manual-tablet-check decision.**
+
+<!--
+**Result:** verified
+**Checkpoint:** <short-sha>
+**Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md
+-->
