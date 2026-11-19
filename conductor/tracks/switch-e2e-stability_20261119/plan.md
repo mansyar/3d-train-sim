@@ -77,13 +77,13 @@
 **Covers:** FR-6, AC-6
 **Touches:** `conductor/product.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-R1.md`
 **Verification:** `pnpm check`
-**Status:** in_progress
+**Status:** verified
 
-- [ ] **R1.T1: Qualify roadmap status** — covers: FR-6
-  - [ ] **R1.T1.1: Change the `switch-e2e-stability_20261119` product roadmap status from a premature `Shipped 2026-11-19` claim to a qualified fix-complete/release-gates-pending wording, keeping all other rows and the v0.14.1 clarity-baseline correction unchanged.**
-- [ ] **R1.T2: Record review-fix evidence** — covers: AC-6
-  - [ ] **R1.T2.1: Write `verification/phase-R1.md` with the before/after wording, focused regression result, `pnpm check`, and scope statement.**
+- [x] **R1.T1: Qualify roadmap status** — covers: FR-6
+  - [x] **R1.T1.1: Change the `switch-e2e-stability_20261119` product roadmap status from a premature `Shipped 2026-11-19` claim to a qualified fix-complete/release-gates-pending wording, keeping all other rows and the v0.14.1 clarity-baseline correction unchanged.**
+- [x] **R1.T2: Record review-fix evidence** — covers: AC-6
+  - [x] **R1.T2.1: Write `verification/phase-R1.md` with the before/after wording, focused regression result, `pnpm check`, and scope statement.**
 
-**Result:** pending
-**Checkpoint:** pending
+**Result:** verified — F1 resolved with the roadmap wording qualified to fix-complete/release-gates-pending; no code or release behavior changed.
+**Checkpoint:** bbcf9625349dd392efd74620e308d85062c284b5
 **Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/phase-R1.md
