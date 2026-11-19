@@ -39,7 +39,7 @@
 - **Covers:** FR-5, FR-6, FR-7, NFR-4, NFR-5, AC-5, AC-6, AC-7
 - **Touches:** `conductor/tracks/release-v0.14.0_20261119/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high && gh workflow run release.yml --ref chore/release-v0.14.0_20261119 --field dry_run=true`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Run the full configured verification matrix** — covers: FR-5
   - [ ] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
