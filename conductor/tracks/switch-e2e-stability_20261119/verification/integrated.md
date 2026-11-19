@@ -2,6 +2,7 @@
 
 - **Track:** `switch-e2e-stability_20261119` — Switch E2E Stability and Release v0.14.1
 - **Phase:** 2 — v0.14.1 docs and first dry run
+- **Phase 3 addendum:** "Phase 3 — Second dry run and release gate evidence" below (Result: `pass`)
 - **Date:** 2026-11-19
 - **Branch:** `fix/switch-e2e-stability_20261119`
 - **Phase base:** `445ecb9cf0d5cec5491192af00fbf692799759f8`
@@ -139,8 +140,8 @@ claims of this phase:
   patch release).
 - **Clarity values:** remain `awaiting observation`; no invented audit
   measurements (verified `awaiting observation=8`).
-- **Second dry run:** Phase 3 must produce a second distinct successful dry
-  run before tagging; the one recorded above is the first of two.
+- **Second dry run:** satisfied in Phase 3 — `44514200919` is recorded below as
+  the second distinct successful dry run; both it and `44493402673` skipped deploy.
 
 ## Acceptance criteria
 
@@ -187,4 +188,125 @@ At `2026-11-19T09:36:02Z` on HEAD `3d68afd4cfa77037d7a331548cdab173c4b69c3d`:
 - Commits in range were `5a09b38`, `a39a452`, `a53d222`, `3d68afd`; there were no merge commits.
 - `package.json` version is `0.14.1`; clarity artifact counts are `v0.14.1=7`, `v0.14.0=0`, `awaiting observation=8`.
 - The full local chain and first dry run were already executed by the primary on this exact release content (`LOCAL_CHAIN_EXIT=0`; dry run `44493402673` success with deploy skipped); no code changed after those runs.
-- AC-3 and AC-5 are satisfied. No deviation: the cancelled dry run was infrastructure-only and a successful retry was recorded. AC-4 still requires one more distinct successful dry run in Phase 3.
+- AC-3 and AC-5 are satisfied. No deviation: the cancelled dry run was infrastructure-only and a successful retry was recorded. AC-4's second distinct successful dry run is recorded in the Phase 3 section below.
+
+## Phase 3 — Second dry run and release gate evidence
+
+- **Phase:** 3 — Second dry run and release gate evidence
+- **Date:** 2026-11-19
+- **Phase base:** `c53ba9df6035f49c9290a7543be653bcfe5aa1bf`
+- **Phase 2 checkpoint:** `f15c9a2` (per `conductor/runs/switch-e2e-stability_20261119.json`)
+- **Scope:** this evidence file only; no source, test, config, workflow, package,
+  changelog, comparison, or Conductor-state edits.
+- **Result: `pass`** — two distinct, consecutive successful `workflow_dispatch`
+  dry runs are recorded with deploy skipped (AC-4), and the post-merge release
+  gates are documented below. All primary-executed facts are recorded verbatim;
+  nothing was re-run by this phase.
+
+### P3.T1 — Second successful dry run (AC-4)
+
+The primary dispatched and watched the second dry run; this phase did not
+re-run any command from the primary-executed facts.
+
+| Field | Recorded value |
+| --- | --- |
+| Command | `gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true` |
+| Run ID | `44514200919` |
+| URL | `https://github.com/mansyar/3d-train-sim/actions/runs/44514200919` |
+| Event / branch | `workflow_dispatch` / `fix/switch-e2e-stability_20261119` |
+| Created | `2026-11-19T11:22:14Z` |
+| Updated / completed | `2026-11-19T11:51:02Z` |
+| Watch command / exit | `gh run watch 44514200919 --interval 20 --exit-status` → `SECOND_DRY_RUN_WATCH_EXIT=0` |
+| Conclusion | `success` |
+
+| Job | Conclusion | Duration |
+| --- | --- | --- |
+| `Gate · vitest` | success | 25s |
+| `Gate · e2e (tablet · phone · prod)` | success | 27m43s |
+| `Gate · biome + typecheck` | success | 22s |
+| `publish` | success | 59s |
+
+- Publish step `Build and push image (push only on real tags)` succeeded;
+  `Deploy via Coolify webhook` was skipped — no deploy occurred.
+- Only pre-existing Node 20 action deprecation annotations were emitted; no
+  gate failed.
+
+#### Dry-run sequence and AC-4 assertion
+
+| Run ID | Outcome | Counts toward AC-4 |
+| --- | --- | --- |
+| `44488925935` | cancelled during WebKit browser install after 30m16s; infrastructure-only; publish skipped | No — retained as history only |
+| `44493402673` | first successful run; all gates and image build green; Coolify deploy skipped | Yes (1 of 2) |
+| `44514200919` | second consecutive successful run; all gates and image build green; Coolify deploy skipped | Yes (2 of 2) |
+
+Two distinct, consecutive successful `workflow_dispatch` runs — `44493402673`
+and `44514200919` — are now recorded, each with all gates green, image build
+success, and deploy skipped. AC-4's two-consecutive-success bar is satisfied.
+The cancelled `44488925935` attempt was an infrastructure failure during browser
+installation, not a failure of the switch e2e fix; it is retained as history and
+is counted neither as a success nor as a product regression.
+
+### P3.T2 — Release gate evidence (FR-6, FR-7, FR-8; NFR-4, NFR-6; AC-6, AC-7, AC-8)
+
+These are primary-owned gates to be satisfied and recorded after this evidence
+phase; they are documented here as requirements/policy, not as claims that they
+have already been executed:
+
+- **PR / review gate (FR-6, AC-6):** a release PR is opened with base `main` and
+  head `fix/switch-e2e-stability_20261119`, squash merge, using the Phase 2
+  release summary above as body inputs. Review verdict must be PASS and
+  archive/metadata/PR terminal proof committed before merge. No PR was opened or
+  reviewed in this phase.
+- **Automatic tag-after-merge gate (FR-7, AC-7, NFR-4):** after the squash merge,
+  an annotated `v0.14.1` tag is created at the squash merge commit and pushed
+  with `git push origin v0.14.1`; `v0.14.0` must remain unchanged, with no tag
+  deletion, overwrite, or force-push. No tag was created here.
+- **Tag-workflow watch gate (FR-8, AC-8):** watch the tag-triggered `release.yml`
+  to completion and report its conclusion plus the `publish` job state
+  (success, failure, cancellation, or skipped publish). Cancellation or timeout
+  must be reported as such and must not be claimed as publication. No
+  tag-triggered workflow was watched here.
+- **GHCR-403 policy (NFR-6, AC-8):** a GHCR package inspection returning `403`
+  is reported as **unknown** — not as verified and not as unpublished. No GHCR
+  package was inspected or mutated here.
+- **Archive gate:** archive/metadata terminal proof is primary-owned and is
+  recorded with the PR review gate; no archive edit was made here.
+- **Manual tablet check:** explicitly not performed, per the standing user
+  decision.
+- **No invented values:** no v1.0 claim and no invented clarity-audit values;
+  the eight `awaiting observation` cells remain intact (`awaiting observation=8`).
+
+### Phase 3 acceptance criteria
+
+| ID | Criterion | Result |
+| --- | --- | --- |
+| AC-4 | Two distinct successful `workflow_dispatch` dry runs with all gates green, image build success, deploy skipped | **pass** — `44493402673`, `44514200919` |
+| AC-6 | PASS review and archive/metadata/PR terminal proof before merge | recorded as a primary-owned post-merge gate; not executed in this phase |
+| AC-7 | Annotated `v0.14.1` at the squash merge commit, present on origin; `v0.14.0` unchanged | recorded as a primary-owned post-merge gate; not executed in this phase |
+| AC-8 | Tag workflow watched to completion; conclusion and `publish` state reported; GHCR 403 = unknown | recorded as a primary-owned post-tag gate; not executed in this phase |
+
+### Phase 3 notes
+
+- No command from the primary-executed facts was re-run: no dry run, watch,
+  verification, tag, PR, merge, or deploy was executed by this phase.
+- Only this evidence file was edited; no staging or commit was performed —
+  final staging/squash is left to the primary.
+- The worktree contains only this evidence edit plus primary-owned untracked
+  `conductor/runs/`.
+- The two successful dry runs were observed on final release content with no
+  code changes between them, satisfying the "two consecutive successes" bar.
+
+## Primary verification
+
+- At `2026-11-19T11:55:00Z` the worktree had only this evidence-file edit and
+  the primary-owned untracked `conductor/runs/` directory; Phase 3 base was
+  `c53ba9df6035f49c9290a7543be653bcfe5aa1bf` and HEAD matched that base.
+- The Phase 3 section records the primary-executed second dry run
+  `44514200919` (success, all gates green, image build success, Coolify deploy
+  skipped, `SECOND_DRY_RUN_WATCH_EXIT=0`) and the first successful dry run
+  `44493402673`; the cancelled `44488925935` attempt is retained as
+  infrastructure history only. No command was re-run by this phase.
+- AC-4 is satisfied by two consecutive successful `workflow_dispatch` runs on
+  final release content. AC-6/AC-7/AC-8 remain primary-owned post-review,
+  post-merge, and post-tag gates and are recorded in evidence.
+- No deviation.
