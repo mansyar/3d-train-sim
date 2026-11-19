@@ -175,3 +175,12 @@ after it. Rework commits: `620c775` (scene fix), `6eec19c` (e2e fix and new spec
 Still only the four code/test Touch files plus this evidence file. No new
 clarity numbers or child-gate claims are made here; full matrix results remain
 the primary's `verification/integrated.md`.
+
+## Primary verification
+
+- **Exact command (re-run after rework):** `pnpm check && pnpm build && pnpm exec playwright test e2e/cargo.spec.ts e2e/ride-toybox-flow.spec.ts e2e/a11y.spec.ts`
+- **Exit code:** 0 — Biome 200 files clean, `tsc --noEmit` clean, 58 files / 1029 unit tests passed, build green, **10 Playwright tests passed** on 2 workers (tablet + phone), including the new stop-settled spec.
+- **Stability proof (primary re-run):** `pnpm exec playwright test e2e/cargo.spec.ts --repeat-each=3` exit 0, **18 passed / 18** — the previously flaky reload step is now stable across three repetitions.
+- **Tree/diff check:** `git status --porcelain` clean apart from untracked `conductor/runs/`; `git diff --name-only 8023802..HEAD` = exactly the four code/test Touch files plus this evidence file.
+- **Squash guard:** commit range `bd92490`, `3b453c3`, `3c8242e`, `d8dfa29`, `620c775`, `6eec19c`, `3812158` matches the report; no merge/user commits. Phase accepted at checkpoint after squash.
+- **Note:** The pre-rework summary lines above (head `3c8242e`, "9 passed", "count increments at arc's end") are superseded by `## Rework 1` and this section; the authoritative final behavior is count-settled-at-station-stop with a purely visual arc.
