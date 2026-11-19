@@ -1,0 +1,31 @@
+{
+  "id": "release-v0.14.0_20261119",
+  "title": "Release v0.14.0",
+  "type": "chore",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-19T04:44:27Z",
+  "updated_at": "2026-11-19T06:30:04Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/release-v0.14.0_20261119",
+  "base_branch": "main",
+  "base_sha": "9dee5cc4cb6b740a3f5974ec155cb470a3d09d1b",
+  "progress": {
+    "phases_total": 2,
+    "phases_verified": 2,
+    "tasks_total": 21,
+    "tasks_done": 21
+  },
+  "last_checkpoint": "069c0c4887acea8a1f381c2379d35d86127ac176",
+  "review_verdict": "PASS",
+  "review_rounds": 1,
+  "doc_sync": "updated",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/84",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-19T06:30:04Z",
+  "archive_path": "conductor/archive/release-v0.14.0_20261119"
+}

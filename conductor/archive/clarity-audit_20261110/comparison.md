@@ -1,16 +1,16 @@
-# Comparison Artifact — v0.13.0 Current-State Baseline
+# Comparison Artifact — v0.14.0 Current-State Baseline
 
 > This artifact defines the current-state baseline for the clarity audit and
 > the format for later comparisons. It is an empty instrument: every measured
 > value stays **awaiting observation** until real sessions are observed. No
 > baseline is claimed as measured and no numbers are invented.
 
-## Current-state baseline: v0.13.0 (FR-5, AC-4)
+## Current-state baseline: v0.14.0 (FR-5, AC-4)
 
-The baseline is **Tiny Tracks v0.13.0** — the version current when this audit
+The baseline is **Tiny Tracks v0.14.0** — the version current when this audit
 prepares its instrument. All measured values below are **awaiting observation**.
 
-| Measure (definition imported from `progressive-disclosure_20261110`) | v0.13.0 current-state baseline | v1.0 gate reference (from `conductor/product.md`) |
+| Measure (definition imported from `progressive-disclosure_20261110`) | v0.14.0 current-state baseline | v1.0 gate reference (from `conductor/product.md`) |
 | --- | --- | --- |
 | time-to-first-ride | awaiting observation | three of three children unassisted within 60 seconds |
 | unassisted session length | awaiting observation | one 10+ minute unassisted session |
@@ -26,7 +26,7 @@ field definitions and cohort instead of inventing numbers, stating that "no
 baseline numbers are recorded here because there is nothing to compare against
 yet" and that the app records no telemetry by design, so no automated proxy
 exists or is invented. This artifact inherits that contract: **no pre-feature
-numbers exist, and none are invented here.** The v0.13.0 column stays
+numbers exist, and none are invented here.** The v0.14.0 column stays
 **awaiting observation** until a parent runs the sessions described in
 `protocol.md` and records them in `report.md`.
 
@@ -59,6 +59,6 @@ telemetry, and no privacy-guideline changes.
 
 | Criterion | Requirement | Satisfied by |
 | --- | --- | --- |
-| AC-4 | Cites Progressive Disclosure's audit-comparison notes as the source, states v0.13.0 as the current-state baseline, marks every value "awaiting observation" | Imported field definitions and baseline table above |
-| FR-5 | v0.13.0 baseline defined, imported definitions cited, all measured values left empty and labelled "awaiting observation" | Baseline table and "Why no numbers exist" above |
+| AC-4 | Cites Progressive Disclosure's audit-comparison notes as the source, states v0.14.0 as the current-state baseline, marks every value "awaiting observation" | Imported field definitions and baseline table above |
+| FR-5 | v0.14.0 baseline defined, imported definitions cited, all measured values left empty and labelled "awaiting observation" | Baseline table and "Why no numbers exist" above |
 | FR-6 | No recordings or identifying details; anonymous notes stay on device / in track | Privacy above |
