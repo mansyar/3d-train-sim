@@ -32,7 +32,7 @@
 - **Covers:** FR-1, FR-2, FR-4, FR-6, NFR-2, NFR-4, NFR-5, NFR-6, AC-2, AC-3, AC-4, AC-6, AC-7, AC-8
 - **Touches:** `src/scene/rig-cargo.ts`, `src/scene/train-fleet.ts`, `src/scene/init-scene.ts`, `e2e/cargo.spec.ts`, `conductor/tracks/station-cargo-clarity_20261120/verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/cargo.spec.ts e2e/ride-toybox-flow.spec.ts e2e/a11y.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Animate station-to-wagon loading** — covers: FR-1
   - [ ] **P2.T1.1: Use the next `station_crate_N` slot as the arc origin and the wagon bed as the destination**
