@@ -14,7 +14,7 @@
 - **Covers:** FR-3, FR-5, NFR-1, NFR-3, AC-1, AC-5
 - **Touches:** `src/core/cargo-transfer.ts`, `src/core/cargo-transfer.test.ts`, `conductor/tracks/station-cargo-clarity_20261120/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Add pure cargo transfer helper** — covers: FR-3
   - [ ] **P1.T1.1: Deterministic bounded arc progress with a short gentle lift and no per-frame allocation**
