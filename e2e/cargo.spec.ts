@@ -28,6 +28,8 @@ type TransferSample = {
   from: { x: number; y: number; z: number };
   to: { x: number; y: number; z: number };
   spot: { x: number; y: number; z: number };
+  /** Destination slot visibility — hidden while a delivery crate is in flight. */
+  slotVisible: boolean;
 };
 
 const pointDistance = (
@@ -92,6 +94,31 @@ const deliveryCount = (page: Page, stationId: string) =>
         id,
       ) ?? 0,
     [stationId] as const,
+  );
+
+/** The one live crate arc, sampled from the dev scene witness. */
+const cargoTransfer = (page: Page) =>
+  page.evaluate(() => {
+    const scene = (
+      window as unknown as { __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null } }
+    ).__tinyTracksScene;
+    return scene?.cargoTransfer?.() ?? null;
+  });
+
+/** A station slot's live visibility, read from the dev scene witness. */
+const cargoSlotVisible = (page: Page, stationId: string, slot: number) =>
+  page.evaluate(
+    ([id, slotNumber]) => {
+      const scene = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cargoSlotVisible?: (stationId: string, slot: number) => boolean | null;
+          };
+        }
+      ).__tinyTracksScene;
+      return scene?.cargoSlotVisible?.(id, slotNumber) ?? null;
+    },
+    [stationId, slot] as const,
   );
 
 /**
@@ -420,6 +447,7 @@ test('load and delivery crates arc between the platform slot and the wagon bed',
           from: { ...sample.from },
           to: { ...sample.to },
           spot: { ...sample.spot },
+          slotVisible: sample.slotVisible,
         });
       }
       if (probe.__cargoSampling) requestAnimationFrame(tick);
@@ -475,6 +503,26 @@ test('load and delivery crates arc between the platform slot and the wagon bed',
         pointDistance(max.spot, max.from),
       );
     }
+  });
+
+  await test.step('the destination slot follows the delivery crate', async () => {
+    const deliver = samples.filter(
+      (sample) => sample.kind === 'deliver' && sample.stationId === stationId,
+    );
+    expect(deliver.length, 'deliver arc samples').toBeGreaterThan(1);
+    for (const sample of deliver) {
+      expect(sample.slotVisible, 'slot stays dark while the crate flies').toBe(false);
+    }
+    const load = samples.filter(
+      (sample) => sample.kind === 'load' && sample.stationId === stationId,
+    );
+    for (const sample of load) {
+      expect(sample.slotVisible, 'a load arc does not hide a platform slot').toBe(true);
+    }
+    // The ledger reveals the slot at the stop; only the landing may show it.
+    await expect
+      .poll(() => cargoSlotVisible(page, stationId, 1), { timeout: 10_000, intervals: [100] })
+      .toBe(true);
   });
 
   expectLocalAndClean(page, consoleErrors, requestUrls);
@@ -590,19 +638,41 @@ test('the count settles at the station stop, before the arc finishes', async ({ 
   expect(stop.count).toBe(before + 1);
   expect(stop.arc, 'the delivery arc is running while the count is settled').not.toBeNull();
   expect(stop.arc?.kind).toBe('deliver');
+  expect(stop.arc?.slotVisible, 'the platform slot waits for its crate').toBe(false);
 
-  // Stopping the ride cancels the arc; snapping it home must not count again
-  // and must not leave a travelling crate behind.
-  await page.click('.ride-toggle');
-  await page.waitForTimeout(900);
-  expect(await deliveryCount(page, stationId)).toBe(before + 1);
-  const arcAfterStop = await page.evaluate(() => {
+  // An arc must be live when Stop lands: poll for one, then click and sample
+  // in ONE task, before the next frame can cancel and snap the crate home.
+  await expect
+    .poll(
+      async () => {
+        const arc = await cargoTransfer(page);
+        return arc !== null && arc.kind === 'deliver' && arc.progress < 0.5;
+      },
+      { timeout: 10_000, intervals: [50] },
+    )
+    .toBe(true);
+  const atStop = await page.evaluate(() => {
+    const toggle = document.querySelector<HTMLButtonElement>('.ride-toggle');
+    if (!toggle) throw new Error('ride toggle missing');
+    toggle.click();
     const scene = (
       window as unknown as { __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null } }
     ).__tinyTracksScene;
+    // Sampled in the same task as the click: the arc is still in flight here.
     return scene?.cargoTransfer?.() ?? null;
   });
-  expect(arcAfterStop).toBeNull();
+  expect(atStop, 'a delivery arc was in flight when Stop was pressed').not.toBeNull();
+  expect(atStop?.kind).toBe('deliver');
+  // Slot darkness is asserted at the arc's start above (`stop.arc`): a world
+  // notify can re-settle visibility between frames, which the next tick reapplies.
+
+  // The next frame cancels and snaps home: no second count, no stranded
+  // travelling crate, and the platform keeps its already-delivered crate.
+  await expect
+    .poll(async () => (await cargoTransfer(page)) === null, { timeout: 10_000, intervals: [50] })
+    .toBe(true);
+  expect(await deliveryCount(page, stationId)).toBe(before + 1);
+  expect(await cargoSlotVisible(page, stationId, 1)).toBe(true);
 
   expectClean(consoleErrors);
 });

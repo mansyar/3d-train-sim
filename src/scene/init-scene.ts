@@ -40,7 +40,7 @@ import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
-import { type CargoTransferWitness, createRigCargo } from './rig-cargo';
+import { type CargoTransferWitness, createRigCargo, type StationSlot } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
@@ -72,6 +72,8 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Dev/e2e witness: the live crate arc's kind, progress and world endpoints. */
   cargoTransfer(): CargoTransferWitness | null;
+  /** Dev/e2e witness: a station's numbered slot visibility, null if no slot. */
+  cargoSlotVisible(stationId: string, slot: number): boolean | null;
   /** Dev/e2e witness: drive one cargo stop for the primary rig. Reduced motion
    *  renders a single static frame, so a real station stop never advances; this
    *  runs the exact handle the ride uses, without faking the world's count. */
@@ -252,23 +254,21 @@ export function initScene(
   // The little-train fleet: rigs, template loading, the cargo cycle. The
   // assembler hands it the shared context and stays out of its internals.
   // Resolve a platform's numbered crate slot from the ACTUAL station mesh —
-  // slot visibility stays owned by the track renderer's persisted sync. The
-  // nearest match to the station's cell disambiguates multiple stations. Called
-  // once per hand-off, never from the per-frame path.
+  // the nearest match to the station's cell disambiguates multiple stations.
+  // The mesh comes back too, so a delivery arc can hold its slot dark until
+  // the crate lands. Called once per hand-off, never from the per-frame path.
   const slotScratch = new Vector3();
-  const stationSlotWorld = (
-    stationId: string,
-    slot: number,
-  ): { x: number; y: number; z: number } | null => {
+  const stationSlotWorld = (stationId: string, slot: number): StationSlot | null => {
     const station = world
       .scenery()
       .find((item) => item.id === stationId && item.kind === 'station');
     if (!station) return null;
     const at = cellToWorld(station.cell);
-    const nearest: { point: { x: number; y: number; z: number } | null; dist: number } = {
-      point: null,
-      dist: Infinity,
-    };
+    const nearest: {
+      point: { x: number; y: number; z: number } | null;
+      crate: Object3D | null;
+      dist: number;
+    } = { point: null, crate: null, dist: Infinity };
     scene.traverse((object) => {
       if (object.name !== `station_crate_${slot}`) return;
       object.getWorldPosition(slotScratch);
@@ -278,9 +278,11 @@ export function initScene(
       if (dist < nearest.dist) {
         nearest.dist = dist;
         nearest.point = { x: slotScratch.x, y: slotScratch.y, z: slotScratch.z };
+        nearest.crate = object;
       }
     });
-    return nearest.point;
+    if (!nearest.point) return null;
+    return { point: nearest.point, crate: nearest.crate };
   };
   const cargo = createRigCargo({
     world,
@@ -517,6 +519,10 @@ export function initScene(
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => fleet.wagonCount(),
     cargoTransfer: () => cargo.transferWitness(),
+    cargoSlotVisible: (stationId, slot) => {
+      const found = stationSlotWorld(stationId, slot);
+      return found ? (found.crate?.visible ?? true) : null;
+    },
     forceCargoStation: (stationId) => {
       const rig = fleet.primary();
       if (rig) cargo.handleStation(rig, stationId);

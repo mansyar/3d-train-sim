@@ -38,6 +38,14 @@ export interface CargoTransferWitness {
   from: TransferPoint;
   to: TransferPoint;
   spot: TransferPoint;
+  /** Destination slot visibility — false while a delivery crate is in flight. */
+  slotVisible: boolean;
+}
+
+/** A station's numbered slot: its world point and the crate mesh that fills it. */
+export interface StationSlot {
+  point: TransferPoint;
+  crate: Object3D | null;
 }
 
 /** One in-flight hand-off. Endpoints and scratch live here, allocated once. */
@@ -50,6 +58,10 @@ interface ActiveTransfer {
   from: TransferPoint;
   to: TransferPoint;
   spot: TransferPoint;
+  /** Refreshed on world notify — the frame path reads this, never scenery(). */
+  stationPresent: boolean;
+  /** Platform slot hidden until the delivery lands, revealed on every exit. */
+  slotCrate: Object3D | null;
 }
 
 export interface RigCargo {
@@ -82,8 +94,8 @@ export interface RigCargoOptions {
   cellToWorld: (cell: Cell) => { x: number; z: number };
   /** The travel crate is parented here so its path uses world coordinates. */
   scene: Object3D;
-  /** World position of a station's numbered platform slot, or null if absent. */
-  stationSlotWorld: (stationId: string, slot: number) => TransferPoint | null;
+  /** World point and crate mesh of a station's numbered slot, or null if absent. */
+  stationSlotWorld: (stationId: string, slot: number) => StationSlot | null;
 }
 
 export function createRigCargo({
@@ -102,6 +114,25 @@ export function createRigCargo({
   let active: ActiveTransfer | null = null;
   /** Scratch for one-shot endpoint lookups — never touched in the frame path. */
   const scratchVec = new Vector3();
+  /**
+   * Station presence is a plain flag, refreshed only when the world notifies.
+   * `world.scenery()` copies every item, so a notify may allocate once but a
+   * frame never may; the tick reads the flag instead of querying the world.
+   */
+  const unsubscribeWorld = world.subscribe(() => {
+    const transfer = active;
+    if (!transfer) return;
+    const scenery = world.scenery();
+    let present = false;
+    for (let i = 0; i < scenery.length; i += 1) {
+      const item = scenery[i];
+      if (item?.id === transfer.stationId && item.kind === 'station') {
+        present = true;
+        break;
+      }
+    }
+    transfer.stationPresent = present;
+  });
 
   /** The delivery crates riding these wagons (attached lazily). */
   const crates = (wagons: Object3D[]): Object3D[] => {
@@ -156,6 +187,9 @@ export function createRigCargo({
    *  reload or a cancel mid-arc can neither lose nor repeat the delivery. */
   const finishTransfer = (transfer: ActiveTransfer): void => {
     if (travelCrate) travelCrate.visible = false;
+    // Every exit — landing, cancel, or a new stop — gives the platform its
+    // delivered crate back, even when the ledger revealed it mid-flight.
+    if (transfer.slotCrate) transfer.slotCrate.visible = true;
     if (transfer.kind === 'load') {
       for (const crate of crates(transfer.rig.wagons)) {
         crate.visible = true;
@@ -166,25 +200,27 @@ export function createRigCargo({
     if (active === transfer) active = null;
   };
 
-  /** Begins the short visual arc: platform slot ↔ wagon bed. `slot` is the
-   *  platform slot the stop just filled, captured before the count advanced. */
+  /** Begins the short visual arc: platform slot ↔ wagon bed. `slotNumber` is
+   *  the platform slot the stop just filled, read before the count advanced. */
   const startTransfer = (
     rig: CargoRig,
     action: CargoAction,
     stationId: string,
-    slot: number,
+    slotNumber: number,
   ): void => {
-    // A new stop while an arc is live snaps the old one home before starting.
-    if (active) finishTransfer(active);
-
+    // Captured here and on notify only: the frame loop below stays allocation-free.
     const station = stationOf(stationId);
     const wagonCrate = crates(rig.wagons)[0];
-    const slotPoint = station ? stationSlotWorld(stationId, slot) : null;
+    const slot = station ? stationSlotWorld(stationId, slotNumber) : null;
+    const slotPoint = slot?.point ?? null;
     if (!station || !travelCrate || !wagonCrate || !slotPoint) {
       // No mesh to travel between — the stop already applied the real state.
       setLoaded(rig, action === 'load');
       return;
     }
+    // The ledger already revealed this slot; keep it dark until the crate lands.
+    const slotCrate = action === 'deliver' ? (slot?.crate ?? null) : null;
+    if (slotCrate) slotCrate.visible = false;
 
     // The wagon bed is the arc's other end; copying the riding crate's world
     // scale keeps the stand-in the same toy at both stops.
@@ -204,6 +240,8 @@ export function createRigCargo({
       from,
       to,
       spot: { x: from.x, y: from.y, z: from.z },
+      stationPresent: true,
+      slotCrate,
     };
 
     // The real crates wait out the hand-off; one travelling crate stands in.
@@ -215,10 +253,9 @@ export function createRigCargo({
   const tickTransfer = (dt: number): void => {
     const transfer = active;
     if (!transfer) return;
-    const stationGone = !stationOf(transfer.stationId);
-    // A removed station or a rig that left its ride both cancel the arc; the
-    // pure helper resolves cancelled progress to 1 so the crate lands, not hangs.
-    const cancelled = stationGone || transfer.rig.anchor === '';
+    // A removed station (flagged on notify) or a rig that left its ride both
+    // cancel; the pure helper resolves cancelled progress to 1 so it lands.
+    const cancelled = !transfer.stationPresent || transfer.rig.anchor === '';
     transfer.elapsed += dt;
     const progress = resolveTransferProgress(transferProgress(transfer.elapsed), cancelled);
     transfer.progress = progress;
@@ -226,6 +263,9 @@ export function createRigCargo({
       finishTransfer(transfer);
       return;
     }
+    // A world notify can re-settle platform visibility mid-flight; one plain
+    // property write keeps the slot dark until the crate actually lands.
+    if (transfer.slotCrate) transfer.slotCrate.visible = false;
     transferPoint(transfer.from, transfer.to, progress, transfer.spot);
     if (travelCrate) {
       travelCrate.position.set(transfer.spot.x, transfer.spot.y, transfer.spot.z);
@@ -241,10 +281,14 @@ export function createRigCargo({
       from: { ...active.from },
       to: { ...active.to },
       spot: { ...active.spot },
+      slotVisible: active.slotCrate ? active.slotCrate.visible : true,
     };
   };
 
   const handleStation = (rig: CargoRig, stationId: string): void => {
+    // A new stop snaps any live arc home first — including its hidden slot,
+    // so a stop that takes the instant path never strands a dark platform.
+    if (active) finishTransfer(active);
     const action = actionAtStop(rig.cargo);
     rig.cargo = loadAfterAction(action);
     const station = stationOf(stationId);
@@ -282,6 +326,8 @@ export function createRigCargo({
     tickTransfer,
     transferWitness,
     dispose(): void {
+      unsubscribeWorld();
+      if (active) finishTransfer(active);
       if (travelCrate) {
         scene.remove(travelCrate);
         travelCrate = null;
