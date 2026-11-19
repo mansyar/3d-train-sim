@@ -173,32 +173,40 @@ describe('drawerPages', () => {
 });
 
 // Read as text: src/core must never import from src/ui (import-graph guard).
-describe('generated piece icons', () => {
-  const source = new URL('../ui/generated-piece-icons.ts', import.meta.url);
+describe('hand-authored piece icons', () => {
+  const source = new URL('../ui/toy-icons.ts', import.meta.url);
+  const text = readFileSync(source, 'utf8');
+  const start = text.indexOf('export const PIECE_ICONS');
+  const block = text.slice(start, text.indexOf('\n};', start));
 
-  it('has a static SVG for every PieceType', () => {
-    const icons = readFileSync(source, 'utf8');
-    for (const kind of PIECE_TYPES) {
-      const key = /^[A-Za-z][A-Za-z0-9]*$/.test(kind) ? kind : `'${kind}'`;
-      expect(icons, `no generated icon for ${kind}`).toMatch(new RegExp(`^  ${key}: \``, 'm'));
-    }
-    expect(icons.match(/<svg viewBox="0 0 48 48"/g)).toHaveLength(PIECE_TYPES.length);
-  });
-
-  it('gives every PieceType on a tab a distinct generated icon', () => {
-    const icons = new Map<string, string>();
-    for (const match of readFileSync(source, 'utf8').matchAll(
-      /^ {2}(?:'([^']+)'|([A-Za-z][\w-]*)): `([\s\S]*?)`,$/gm,
-    )) {
+  /** Parse the hand-authored key → SVG entries from the PIECE_ICONS object. */
+  const icons = () => {
+    const entries = new Map<string, string>();
+    for (const match of block.matchAll(/^ {2}(?:'([^']+)'|([A-Za-z][\w-]*)): `([\s\S]*?)`,$/gm)) {
       const key = match[1] ?? match[2];
       const svg = match[3];
-      if (key !== undefined && svg !== undefined) icons.set(key, svg);
+      if (key !== undefined && svg !== undefined) entries.set(key, svg);
     }
+    return entries;
+  };
+
+  it('has a hand-authored 48×48 SVG for every PieceType', () => {
+    const parsed = icons();
+    for (const kind of PIECE_TYPES) {
+      expect(parsed.get(kind), `no hand-authored icon for ${kind}`).toBeDefined();
+      expect(parsed.get(kind)).toContain('<svg viewBox="0 0 48 48"');
+    }
+    expect(parsed.size).toBe(PIECE_TYPES.length);
+    expect(block.match(/<svg viewBox="0 0 48 48"/g)).toHaveLength(PIECE_TYPES.length);
+  });
+
+  it('gives every PieceType on a tab a distinct hand-authored icon', () => {
+    const parsed = icons();
     for (const tab of drawerTabs()) {
       const seen = new Map<string, string>();
       for (const kind of PIECE_TYPES.filter((piece) => tabForKind(piece) === tab.id)) {
-        const icon = icons.get(kind);
-        if (icon === undefined) throw new Error(`no generated icon for ${kind}`);
+        const icon = parsed.get(kind);
+        if (icon === undefined) throw new Error(`no hand-authored icon for ${kind}`);
         const duplicate = seen.get(icon);
         expect(duplicate, `${kind} shares its ${tab.id} icon with ${duplicate}`).toBeUndefined();
         seen.set(icon, kind);

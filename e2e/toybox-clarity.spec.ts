@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-
+import { drawerTabs, tabForKind } from '../src/core/drawer';
+import { PIECE_TYPES } from '../src/core/pieces';
 import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
@@ -273,4 +275,45 @@ test('re-entry, pointer loss and new toys never remove a placed piece @smoke', a
   expect(await counts(page)).toEqual({ pieces: 1, scenery: 0 });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+// The icon contract is also asserted against the committed source text so a
+// runtime WebGL renderer or generated module can never creep back in.
+test.describe('hand-authored piece icons', () => {
+  const source = new URL('../src/ui/toy-icons.ts', import.meta.url);
+  const text = readFileSync(source, 'utf8');
+  const start = text.indexOf('export const PIECE_ICONS');
+  const block = text.slice(start, text.indexOf('\n};', start));
+
+  const icons = () => {
+    const entries = new Map<string, string>();
+    for (const match of block.matchAll(/^ {2}(?:'([^']+)'|([A-Za-z][\w-]*)): `([\s\S]*?)`,$/gm)) {
+      const key = match[1] ?? match[2];
+      const svg = match[3];
+      if (key !== undefined && svg !== undefined) entries.set(key, svg);
+    }
+    return entries;
+  };
+
+  test('every PieceType has a hand-authored SVG', () => {
+    const parsed = icons();
+    for (const kind of PIECE_TYPES) {
+      expect(parsed.get(kind), `no hand-authored icon for ${kind}`).toBeDefined();
+    }
+    expect(parsed.size).toBe(PIECE_TYPES.length);
+  });
+
+  test('no two icons on one drawer tab are identical', () => {
+    const parsed = icons();
+    for (const tab of drawerTabs()) {
+      const seen = new Map<string, string>();
+      for (const kind of PIECE_TYPES.filter((piece) => tabForKind(piece) === tab.id)) {
+        const icon = parsed.get(kind);
+        if (icon === undefined) throw new Error(`no hand-authored icon for ${kind}`);
+        const duplicate = seen.get(icon);
+        expect(duplicate, `${kind} shares its ${tab.id} icon with ${duplicate}`).toBeUndefined();
+        seen.set(icon, kind);
+      }
+    }
+  });
 });
