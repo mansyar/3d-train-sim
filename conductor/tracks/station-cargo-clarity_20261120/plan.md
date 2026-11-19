@@ -83,24 +83,29 @@ Review fixes are appended by `conductor-review` as:
   `e2e/cargo.spec.ts`, `src/scene/rig-cargo.test.ts`,
   `verification/phase-R1.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/cargo.spec.ts e2e/ride-toybox-flow.spec.ts e2e/a11y.spec.ts e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts && pnpm exec playwright test e2e/cargo.spec.ts --repeat-each=3`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — all three review findings fixed; one internal R1 e2e
+  iteration was needed for an over-strict sub-frame slot-visibility assertion
+  (see `verification/phase-R1.md`).
+- **Checkpoint:** a4b0733
+- **Evidence:** conductor/tracks/station-cargo-clarity_20261120/verification/phase-R1.md
 
-- [ ] **R1.T1: Resolve F1 — no per-frame scenery allocation** — covers: F1, NFR-1
-  - [ ] Replace the per-frame `stationOf()` / `world.scenery()` read in
+- [x] **R1.T1: Resolve F1 — no per-frame scenery allocation** — covers: F1, NFR-1
+  - [x] Replace the per-frame `stationOf()` / `world.scenery()` read in
     `tickTransfer()` with an allocation-free presence flag refreshed only on
     world notifications (plain-loop scan, no `.map()`/`.find()` closures).
-  - [ ] Add a focused unit test with a counting `world.scenery()` stub proving
+  - [x] Add a focused unit test with a counting `world.scenery()` stub proving
     the tick path never calls it while an arc is live.
-- [ ] **R1.T2: Resolve F2 — slot visibility follows the arc** — covers: F2, FR-2, AC-3, FR-6
-  - [ ] Return the actual `station_crate_N` mesh from the scene slot resolver
+- [x] **R1.T2: Resolve F2 — slot visibility follows the arc** — covers: F2, FR-2, AC-3, FR-6
+  - [x] Return the actual `station_crate_N` mesh from the scene slot resolver
     alongside its world point; hide it when a delivery arc starts, keep it
     hidden through the flight (including intervening notifications), and reveal
     it on landing, cancel, new-stop snap, and the instant reduced-motion path.
-  - [ ] Extend the dev/e2e transfer witness with slot visibility and assert in
+  - [x] Extend the dev/e2e transfer witness with slot visibility and assert in
     `e2e/cargo.spec.ts` that the destination slot is hidden during a `deliver`
     arc and visible after landing and after a mid-arc cancel.
-- [ ] **R1.T3: Resolve F3 — deterministic mid-arc Stop proof** — covers: F3, AC-5
-  - [ ] Replace the 900 ms post-Stop wait with a single synchronous `evaluate`
+- [x] **R1.T3: Resolve F3 — deterministic mid-arc Stop proof** — covers: F3, AC-5
+  - [x] Replace the 900 ms post-Stop wait with a single synchronous `evaluate`
     that clicks Stop and samples `cargoTransfer()` in the same task, proving an
     arc was in flight when Stop was pressed; then assert it snaps home with no
     second count.
