@@ -97,11 +97,15 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** FR-8, NFR-6, FR-7, AC-8, AC-10
 - **Touches:** `src/ui/toy-icons.ts`, `src/ui/generated-piece-icons.ts`, `scripts/generate-piece-icons.mjs`, `src/core/drawer.test.ts`, `e2e/toybox-clarity.spec.ts`, `verification/phase-R2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R2.T1: Restore intuitive hand-authored piece icons** — covers: FR-8, AC-10
-  - [ ] **R2.T1.1: Restore the curated `PIECE_ICONS` from the pre-track baseline and remove the generated-icon re-export so every piece has a recognizable rail/feature drawing**
-- [ ] **R2.T2: Remove the generator pipeline and adapt tests** — covers: NFR-6, AC-10
-  - [ ] **R2.T2.1: Delete `scripts/generate-piece-icons.mjs` and `src/ui/generated-piece-icons.ts`, then adapt the icon-uniqueness assertions to read the hand-authored source with no generator or `--check` references**
-- [ ] **R2.T3: Verify the revised icon contract** — covers: FR-7, AC-8
-  - [ ] **R2.T3.1: Run the exact phase verification, confirm no runtime WebGL/generated module remains, and record evidence with the new icon behavior**
+- [x] **R2.T1: Restore intuitive hand-authored piece icons** — covers: FR-8, AC-10
+  - [x] **R2.T1.1: Restore the curated `PIECE_ICONS` from the pre-track baseline and remove the generated-icon re-export so every piece has a recognizable rail/feature drawing**
+- [x] **R2.T2: Remove the generator pipeline and adapt tests** — covers: NFR-6, AC-10
+  - [x] **R2.T2.1: Delete `scripts/generate-piece-icons.mjs` and `src/ui/generated-piece-icons.ts`, then adapt the icon-uniqueness assertions to read the hand-authored source with no generator or `--check` references**
+- [x] **R2.T3: Verify the revised icon contract** — covers: FR-7, AC-8
+  - [x] **R2.T3.1: Run the exact phase verification, confirm no runtime WebGL/generated module remains, and record evidence with the new icon behavior**
+
+- **Result:** verified — curated hand-authored SVG icons restored, generator pipeline deleted, and phase verification green on tablet and phone.
+- **Checkpoint:** `081da87665f797a39c2a418a01689f30e6bc34eb`
+- **Evidence:** `conductor/tracks/toybox-clarity_20261119/verification/phase-R2.md`
