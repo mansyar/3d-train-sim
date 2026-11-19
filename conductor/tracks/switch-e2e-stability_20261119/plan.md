@@ -59,15 +59,13 @@
 - **Verification:** `gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true` (then watch the dispatched run to completion and record the result)
 - **Status:** in_progress
 
-- [ ] **P3.T1: Prove two consecutive dry runs** — covers: FR-4
-  - [ ] **P3.T1.1: Dispatch and watch a second distinct dry run from the release branch; require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
-  - [ ] **P3.T1.2: Assert both dry runs are green and stop without tagging if either fails, is cancelled, or deploys.**
-- [ ] **P3.T2: Record release gate evidence** — covers: FR-6, FR-7, FR-8
-  - [ ] **P3.T2.1: Record the automatic annotated-tag-after-merge gate at the squash merge commit, the no-tag-overwrite rule, and the tag-triggered workflow watch requirement.**
-  - [ ] **P3.T2.2: Record PR inputs, review gate, archive gate, GHCR-403-is-unknown policy, and the explicit no-manual-tablet-check decision.**
+- [x] **P3.T1: Prove two consecutive dry runs** — covers: FR-4
+  - [x] **P3.T1.1: Dispatch and watch a second distinct dry run from the release branch; require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
+  - [x] **P3.T1.2: Assert both dry runs are green and stop without tagging if either fails, is cancelled, or deploys.**
+- [x] **P3.T2: Record release gate evidence** — covers: FR-6, FR-7, FR-8
+  - [x] **P3.T2.1: Record the automatic annotated-tag-after-merge gate at the squash merge commit, the no-tag-overwrite rule, and the tag-triggered workflow watch requirement.**
+  - [x] **P3.T2.2: Record PR inputs, review gate, archive gate, GHCR-403-is-unknown policy, and the explicit no-manual-tablet-check decision.**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — two consecutive successful dry runs (`44493402673`, `44514200919`) recorded with all gates green and deploy skipped; post-merge automatic tag and tag-workflow watch gates documented for primary execution.
+**Checkpoint:** 2c57c2bff09f2439583b4b76f6bcf6f0be092a75
 **Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md
--->
