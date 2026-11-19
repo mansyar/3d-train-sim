@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [release-v0.14.0_20261119](./tracks/release-v0.14.0_20261119/index.md) | Release v0.14.0 | Chore | new |
 | [toybox-clarity_20261119](./archive/toybox-clarity_20261119/index.md) | Toybox Clarity and Outside-Drag Removal | Feature | archived |
 | [release-v0.13.0_20261118](./archive/release-v0.13.0_20261118/index.md) | Release v0.13.0 | Chore | archived |
 | [perf-budget_20261111](./archive/perf-budget_20261111/index.md) | Performance Budget | Feature | archived |

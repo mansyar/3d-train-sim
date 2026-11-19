@@ -1,0 +1,31 @@
+{
+  "id": "release-v0.14.0_20261119",
+  "title": "Release v0.14.0",
+  "type": "chore",
+  "status": "new",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-19T04:44:27Z",
+  "updated_at": "2026-11-19T04:44:27Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/release-v0.14.0_20261119",
+  "base_branch": "main",
+  "base_sha": "9dee5cc4cb6b740a3f5974ec155cb470a3d09d1b",
+  "progress": {
+    "phases_total": 2,
+    "phases_verified": 0,
+    "tasks_total": 21,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
