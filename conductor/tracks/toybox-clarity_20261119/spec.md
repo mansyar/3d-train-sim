@@ -41,7 +41,7 @@ trains are separate, later ideas.
 
 - A pure paged model for dense drawer tabs: Rails, Adventure, and Town.
 - Four or fewer visible toy slots per page, with tappable page dots and swipe on empty drawer space.
-- An offline generator that derives static track-piece SVGs from the shipped GLB geometry and commits the output for every `PieceType`; no runtime WebGL.
+- Hand-authored, curated static SVG icons for every `PieceType`, committed in `src/ui/toy-icons.ts`; no runtime WebGL.
 - Per-tab page memory for the current session only; reload starts at page 1.
 - Removing a placed piece or scenery item by dragging it beyond the board edge and releasing.
 - A visible “leaving” preview while a placed item is outside the board; returning inside cancels.
