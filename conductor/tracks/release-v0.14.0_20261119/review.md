@@ -92,7 +92,7 @@ No manual tablet check (explicit user decision). No GHCR image inspection requir
 
 ## Doc sync
 
-`updated` — version, changelog, clarity baseline, and product artifact link were aligned during implementation; post-review sync confirmed no further documentation change is needed.
+`updated` — version, changelog, clarity baseline, and product artifact link were aligned during implementation; post-review sync at `2026-11-19T06:27:00Z` confirmed no further documentation change is needed.
 
 ## History
 
