@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [switch-e2e-stability_20261119](./archive/switch-e2e-stability_20261119/index.md) | Switch E2E Stability and Release v0.14.1 | Bug | archived |
 | [release-v0.14.0_20261119](./archive/release-v0.14.0_20261119/index.md) | Release v0.14.0 | Chore | archived |
 | [toybox-clarity_20261119](./archive/toybox-clarity_20261119/index.md) | Toybox Clarity and Outside-Drag Removal | Feature | archived |
 | [release-v0.13.0_20261118](./archive/release-v0.13.0_20261118/index.md) | Release v0.13.0 | Chore | archived |

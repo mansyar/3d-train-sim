@@ -9,6 +9,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-11-19
+
+### Fixed
+- **Updates reach your tablet again.** A behind-the-scenes check that runs before each update could fail on a slow tablet even when the train table was working perfectly, which held up the last release. It now follows the train's own progress instead of a stopwatch, so a slower device no longer blocks an update. Nothing changes on the train table for little ones.
+
 ## [0.14.0] - 2026-11-19
 
 ### Added
@@ -357,7 +362,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.14.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.14.1...HEAD
+[0.14.1]: https://github.com/mansyar/3d-train-sim/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/mansyar/3d-train-sim/compare/v0.11.0...v0.12.0
