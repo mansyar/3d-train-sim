@@ -9,6 +9,15 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-11-19
+
+### Added
+- **A toybox that fits in little hands.** The busiest drawers — Rails, Adventure, and Town — now show a few toys at a time instead of a crowded row. Little dots show when there are more to see, and a gentle swipe turns the page. The page your child was on is remembered while the app is open, so the toy they were reaching for is right there when they come back to it.
+- **Toy pictures that look like the real thing.** Every track piece and scenery button now has its own hand-drawn picture, so little ones can spot the piece they want by looking — no reading needed.
+
+### Changed
+- **Putting a toy away is as easy as building with it.** The little trash bin is gone. Now your child can simply drag a placed piece off the edge of the meadow: it turns see-through to show it is about to go, and letting go removes it. One tap of the ↩️ button brings it right back, and dragging it back onto the board cancels the removal.
+
 ## [0.13.0] - 2026-11-18
 
 ### Added
@@ -348,7 +357,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/mansyar/3d-train-sim/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mansyar/3d-train-sim/compare/v0.10.0...v0.11.0
