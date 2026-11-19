@@ -1,0 +1,31 @@
+{
+  "id": "station-cargo-clarity_20261120",
+  "title": "Station Cargo Clarity",
+  "type": "feature",
+  "status": "new",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-19T15:22:42Z",
+  "updated_at": "2026-11-19T15:22:42Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/station-cargo-clarity_20261120",
+  "base_branch": "main",
+  "base_sha": "be83e91714cea3c4a1b2d58623301e6f394561a0",
+  "progress": {
+    "phases_total": 2,
+    "phases_verified": 0,
+    "tasks_total": 17,
+    "tasks_done": 0
+  },
+  "last_checkpoint": null,
+  "review_verdict": null,
+  "review_rounds": 0,
+  "doc_sync": "pending",
+  "pr_url": null,
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": null,
+  "archive_path": null
+}
