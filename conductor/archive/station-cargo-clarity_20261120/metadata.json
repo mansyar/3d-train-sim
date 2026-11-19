@@ -1,0 +1,31 @@
+{
+  "id": "station-cargo-clarity_20261120",
+  "title": "Station Cargo Clarity",
+  "type": "feature",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-19T15:22:42Z",
+  "updated_at": "2026-11-20T16:50:00Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/station-cargo-clarity_20261120",
+  "base_branch": "main",
+  "base_sha": "be83e91714cea3c4a1b2d58623301e6f394561a0",
+  "progress": {
+    "phases_total": 2,
+    "phases_verified": 2,
+    "tasks_total": 17,
+    "tasks_done": 17
+  },
+  "last_checkpoint": "a4b0733",
+  "review_verdict": "PASS",
+  "review_rounds": 2,
+  "doc_sync": "complete",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/86",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-20T16:50:00Z",
+  "archive_path": "conductor/archive/station-cargo-clarity_20261120"
+}

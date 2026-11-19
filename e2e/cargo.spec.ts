@@ -20,6 +20,38 @@ type WorldHandle = {
   deliveryCount: (id: string) => number;
 };
 
+/** A snapshot of the single in-flight crate arc (dev/e2e witness on the scene). */
+type TransferSample = {
+  kind: 'load' | 'deliver';
+  stationId: string;
+  progress: number;
+  from: { x: number; y: number; z: number };
+  to: { x: number; y: number; z: number };
+  spot: { x: number; y: number; z: number };
+  /** Destination slot visibility — hidden while a delivery crate is in flight. */
+  slotVisible: boolean;
+};
+
+const pointDistance = (
+  a: { x: number; y: number; z: number },
+  b: { x: number; y: number; z: number },
+): number => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+
+/** Progress travelled and how far the crate's spot left its first sample. */
+const arcSpan = (arc: TransferSample[]): { progress: number; travel: number } => {
+  const first = arc.reduce<TransferSample | null>((acc, sample) => acc ?? sample, null);
+  if (!first) return { progress: 0, travel: 0 };
+  let lowest = first;
+  let highest = first;
+  let travel = 0;
+  for (const sample of arc) {
+    if (sample.progress < lowest.progress) lowest = sample;
+    if (sample.progress > highest.progress) highest = sample;
+    travel = Math.max(travel, pointDistance(first.spot, sample.spot));
+  }
+  return { progress: highest.progress - lowest.progress, travel };
+};
+
 const waitReady = (page: Page) =>
   page.waitForFunction(() =>
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
@@ -61,6 +93,59 @@ const deliveryCount = (page: Page, stationId: string) =>
       (window as unknown as { __tinyTracksWorld?: WorldHandle }).__tinyTracksWorld?.deliveryCount(
         id,
       ) ?? 0,
+    [stationId] as const,
+  );
+
+/** The one live crate arc, sampled from the dev scene witness. */
+const cargoTransfer = (page: Page) =>
+  page.evaluate(() => {
+    const scene = (
+      window as unknown as { __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null } }
+    ).__tinyTracksScene;
+    return scene?.cargoTransfer?.() ?? null;
+  });
+
+/** A station slot's live visibility, read from the dev scene witness. */
+const cargoSlotVisible = (page: Page, stationId: string, slot: number) =>
+  page.evaluate(
+    ([id, slotNumber]) => {
+      const scene = (
+        window as unknown as {
+          __tinyTracksScene?: {
+            cargoSlotVisible?: (stationId: string, slot: number) => boolean | null;
+          };
+        }
+      ).__tinyTracksScene;
+      return scene?.cargoSlotVisible?.(id, slotNumber) ?? null;
+    },
+    [stationId, slot] as const,
+  );
+
+/**
+ * The count in the persisted IndexedDB snapshot, not the live store. World
+ * saves are fire-and-forget async writes, so reloading straight after a
+ * delivery can race the commit; this waits for the exact count to land.
+ */
+const savedDeliveryCount = (page: Page, stationId: string) =>
+  page.evaluate(
+    ([id]) =>
+      new Promise<number>((resolve, reject) => {
+        const open = indexedDB.open('tiny-tracks', 2);
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const read = db.transaction('worlds', 'readonly').objectStore('worlds').get('current');
+          read.onerror = () => {
+            db.close();
+            reject(read.error);
+          };
+          read.onsuccess = () => {
+            db.close();
+            const snapshot: { deliveries?: Record<string, number> } | undefined = read.result;
+            resolve(snapshot?.deliveries?.[id] ?? 0);
+          };
+        };
+      }),
     [stationId] as const,
   );
 
@@ -145,11 +230,23 @@ test('wagons load, deliver, keep the count across a reload, and nothing with no 
       return station.id;
     });
     const count = await deliveryCount(page, stationId);
+    expect(count, 'a delivery must have landed before the reload').toBeGreaterThanOrEqual(1);
+
+    // The world save is an async IndexedDB write. Wait for this EXACT count to
+    // be committed before reloading, or the boot can read a snapshot from
+    // before the delivery — the race that made this assertion flaky.
+    await expect
+      .poll(async () => savedDeliveryCount(page, stationId), { timeout: 20000, intervals: [200] })
+      .toBe(count);
 
     // The delivery survives a reload: the platform keeps its crate.
     await page.reload();
     await waitReady(page);
-    expect(await deliveryCount(page, stationId)).toBe(count);
+    // Readiness follows hydration, but poll so the assertion targets the exact
+    // saved count rather than an arbitrary instant after boot.
+    await expect
+      .poll(async () => deliveryCount(page, stationId), { timeout: 20000, intervals: [100] })
+      .toBe(count);
 
     expectLocalAndClean(page, consoleErrors, requestUrls);
   });
@@ -310,4 +407,272 @@ test('the chosen pair rides a switch shuttle without a ripple', async ({ page })
 
     expectLocalAndClean(page, consoleErrors, requestUrls);
   });
+});
+
+test('load and delivery crates arc between the platform slot and the wagon bed', async ({
+  page,
+}) => {
+  // One first lap loads, the next delivers; software rendering can make each
+  // stop slow, so the delivery poll keeps the same generous budget as above.
+  test.setTimeout(180_000);
+  const consoleErrors = watchConsoleErrors(page);
+  const requestUrls: string[] = [];
+  page.on('request', (request) => requestUrls.push(request.url()));
+
+  await boot(page);
+  const stationId = await buildCargoLoop(page);
+  // The arc's stand-in is cloned from the crate template; without it the
+  // hand-off correctly falls back to the instant state change.
+  await page.waitForFunction(() =>
+    performance.getEntriesByType('resource').some((entry) => entry.name.includes('crate.glb')),
+  );
+
+  // Sample the scene witness every animation frame while the ride runs. Only
+  // the two half-second arcs produce samples; idle frames return null.
+  await page.evaluate(() => {
+    const probe = window as unknown as {
+      __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null };
+      __cargoSamples?: TransferSample[];
+      __cargoSampling?: boolean;
+    };
+    probe.__cargoSamples = [];
+    probe.__cargoSampling = true;
+    const tick = () => {
+      const sample = probe.__tinyTracksScene?.cargoTransfer?.();
+      if (sample) {
+        probe.__cargoSamples?.push({
+          kind: sample.kind,
+          stationId: sample.stationId,
+          progress: sample.progress,
+          from: { ...sample.from },
+          to: { ...sample.to },
+          spot: { ...sample.spot },
+          slotVisible: sample.slotVisible,
+        });
+      }
+      if (probe.__cargoSampling) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await test.step('ride through a load and a delivery', async () => {
+    await page.click('.ride-toggle');
+    await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+    await expect
+      .poll(async () => deliveryCount(page, stationId), { timeout: 90000, intervals: [1000] })
+      .toBeGreaterThanOrEqual(1);
+  });
+
+  const samples = await page.evaluate(() => {
+    const probe = window as unknown as {
+      __cargoSampling?: boolean;
+      __cargoSamples?: TransferSample[];
+    };
+    probe.__cargoSampling = false;
+    return probe.__cargoSamples ?? [];
+  });
+
+  await test.step('both arcs travel from one endpoint toward the other', async () => {
+    for (const kind of ['load', 'deliver'] as const) {
+      const arc = samples.filter(
+        (sample) => sample.kind === kind && sample.stationId === stationId,
+      );
+      expect(arc.length, `${kind} arc samples`).toBeGreaterThan(1);
+
+      const span = arcSpan(arc);
+      expect(span.progress, `${kind} progress moved`).toBeGreaterThan(0.15);
+      expect(span.travel, `${kind} crate spot moved`).toBeGreaterThan(0.05);
+
+      const first = arc.reduce<TransferSample | null>((acc, sample) => acc ?? sample, null);
+      if (!first) throw new Error(`${kind} arc had no samples`);
+      const min = arc.reduce(
+        (acc, sample) => (sample.progress < acc.progress ? sample : acc),
+        first,
+      );
+      const max = arc.reduce(
+        (acc, sample) => (sample.progress > acc.progress ? sample : acc),
+        first,
+      );
+      expect(pointDistance(first.from, first.to), `${kind} endpoints`).toBeGreaterThan(0.05);
+      // The spot starts by its origin and ends by its destination — the same
+      // helper runs in both directions, so load and delivery are mirrored.
+      expect(pointDistance(min.spot, min.from), `${kind} starts at origin`).toBeLessThan(
+        pointDistance(min.spot, min.to),
+      );
+      expect(pointDistance(max.spot, max.to), `${kind} ends at destination`).toBeLessThan(
+        pointDistance(max.spot, max.from),
+      );
+    }
+  });
+
+  await test.step('the destination slot follows the delivery crate', async () => {
+    const deliver = samples.filter(
+      (sample) => sample.kind === 'deliver' && sample.stationId === stationId,
+    );
+    expect(deliver.length, 'deliver arc samples').toBeGreaterThan(1);
+    for (const sample of deliver) {
+      expect(sample.slotVisible, 'slot stays dark while the crate flies').toBe(false);
+    }
+    const load = samples.filter(
+      (sample) => sample.kind === 'load' && sample.stationId === stationId,
+    );
+    for (const sample of load) {
+      expect(sample.slotVisible, 'a load arc does not hide a platform slot').toBe(true);
+    }
+    // The ledger reveals the slot at the stop; only the landing may show it.
+    await expect
+      .poll(() => cargoSlotVisible(page, stationId, 1), { timeout: 10_000, intervals: [100] })
+      .toBe(true);
+  });
+
+  expectLocalAndClean(page, consoleErrors, requestUrls);
+});
+
+test('reduced motion skips the crate arc but still delivers exactly once', async ({ page }) => {
+  test.setTimeout(90_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  // Sampled at boot: the static frame never advances a real station stop, so
+  // a dev witness drives the very same cargo handler the ride calls.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await boot(page);
+  const stationId = await buildCargoLoop(page);
+  await page.waitForFunction(() =>
+    performance.getEntriesByType('resource').some((entry) => entry.name.includes('crate.glb')),
+  );
+
+  // A rig must exist for the primary rig's cargo handler to be callable.
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const scene = (
+            window as unknown as {
+              __tinyTracksScene?: { ridingTrainCount?: () => number };
+            }
+          ).__tinyTracksScene;
+          return scene?.ridingTrainCount?.() ?? 0;
+        }),
+      { timeout: 20000 },
+    )
+    .toBeGreaterThanOrEqual(1);
+
+  const before = await deliveryCount(page, stationId);
+  const witnessed = await page.evaluate((id) => {
+    const scene = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          forceCargoStation?: (stationId: string) => void;
+          cargoTransfer?: () => TransferSample | null;
+        };
+      }
+    ).__tinyTracksScene;
+    if (!scene?.forceCargoStation) throw new Error('dev cargo witness missing');
+    // Two stops: empty wagons load, then loaded wagons deliver.
+    scene.forceCargoStation(id);
+    const afterLoad = scene.cargoTransfer?.() ?? null;
+    scene.forceCargoStation(id);
+    const afterDeliver = scene.cargoTransfer?.() ?? null;
+    return { afterLoad, afterDeliver };
+  }, stationId);
+
+  expect(witnessed.afterLoad, 'no load arc under reduced motion').toBeNull();
+  expect(witnessed.afterDeliver, 'no delivery arc under reduced motion').toBeNull();
+  expect(await deliveryCount(page, stationId), 'delivery still counts once').toBe(before + 1);
+
+  expectClean(consoleErrors);
+});
+
+test('the count settles at the station stop, before the arc finishes', async ({ page }) => {
+  test.setTimeout(90_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await boot(page);
+  const stationId = await buildCargoLoop(page);
+  await page.waitForFunction(() =>
+    performance.getEntriesByType('resource').some((entry) => entry.name.includes('crate.glb')),
+  );
+
+  // A live rig is required: the dev witness drives the very handler the ride
+  // calls, and a normal (non-reduced) frame loop animates the visual arc.
+  await page.click('.ride-toggle');
+  await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const scene = (
+            window as unknown as { __tinyTracksScene?: { ridingTrainCount?: () => number } }
+          ).__tinyTracksScene;
+          return scene?.ridingTrainCount?.() ?? 0;
+        }),
+      { timeout: 20000 },
+    )
+    .toBeGreaterThanOrEqual(1);
+
+  const before = await deliveryCount(page, stationId);
+  // Both stops run in one synchronous task, so no frame slips between the
+  // load and the delivery: the arc we read is the freshly started delivery.
+  const stop = await page.evaluate((id) => {
+    const scene = (
+      window as unknown as {
+        __tinyTracksScene?: {
+          forceCargoStation?: (stationId: string) => void;
+          cargoTransfer?: () => TransferSample | null;
+        };
+      }
+    ).__tinyTracksScene;
+    const world = (
+      window as unknown as { __tinyTracksWorld?: { deliveryCount: (id: string) => number } }
+    ).__tinyTracksWorld;
+    if (!scene?.forceCargoStation || !world) throw new Error('dev cargo witness missing');
+    scene.forceCargoStation(id); // empty wagons load
+    scene.forceCargoStation(id); // loaded wagons deliver
+    return { count: world.deliveryCount(id), arc: scene.cargoTransfer?.() ?? null };
+  }, stationId);
+
+  // The ledger is settled while the crate is still in flight. Reloading or
+  // cancelling mid-arc can neither lose nor repeat this delivery.
+  expect(stop.count).toBe(before + 1);
+  expect(stop.arc, 'the delivery arc is running while the count is settled').not.toBeNull();
+  expect(stop.arc?.kind).toBe('deliver');
+  expect(stop.arc?.slotVisible, 'the platform slot waits for its crate').toBe(false);
+
+  // An arc must be live when Stop lands: poll for one, then click and sample
+  // in ONE task, before the next frame can cancel and snap the crate home.
+  await expect
+    .poll(
+      async () => {
+        const arc = await cargoTransfer(page);
+        return arc !== null && arc.kind === 'deliver' && arc.progress < 0.5;
+      },
+      { timeout: 10_000, intervals: [50] },
+    )
+    .toBe(true);
+  const atStop = await page.evaluate(() => {
+    const toggle = document.querySelector<HTMLButtonElement>('.ride-toggle');
+    if (!toggle) throw new Error('ride toggle missing');
+    toggle.click();
+    const scene = (
+      window as unknown as { __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null } }
+    ).__tinyTracksScene;
+    // Sampled in the same task as the click: the arc is still in flight here.
+    return scene?.cargoTransfer?.() ?? null;
+  });
+  expect(atStop, 'a delivery arc was in flight when Stop was pressed').not.toBeNull();
+  expect(atStop?.kind).toBe('deliver');
+  // Slot darkness is asserted at the arc's start above (`stop.arc`): a world
+  // notify can re-settle visibility between frames, which the next tick reapplies.
+
+  // The next frame cancels and snaps home: no second count, no stranded
+  // travelling crate, and the platform keeps its already-delivered crate.
+  await expect
+    .poll(async () => (await cargoTransfer(page)) === null, { timeout: 10_000, intervals: [50] })
+    .toBe(true);
+  expect(await deliveryCount(page, stationId)).toBe(before + 1);
+  expect(await cargoSlotVisible(page, stationId, 1)).toBe(true);
+
+  expectClean(consoleErrors);
 });

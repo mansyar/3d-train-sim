@@ -9,6 +9,9 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+### Changed
+- **Crates now travel where they belong.** When the train calls at a station, a crate visibly glides from the platform to the wagon as it loads, and from the wagon to the platform pile when it delivers - a short, gentle arc in either direction. Nothing to read or tap; it just makes the hand-off easy to follow. When a device asks for less motion, crates simply appear in the right place straight away, and the delivered count is still correct.
+
 ## [0.14.1] - 2026-11-19
 
 ### Fixed
