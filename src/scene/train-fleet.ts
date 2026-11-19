@@ -520,6 +520,9 @@ export function createTrainFleet({
         }
         visibleSteamPuffs += rig.puffs.activeCount();
       }
+      // A station stop above may have begun a hand-off; advance it on this
+      // same frame. One active transfer, one tick — no per-rig arc bookkeeping.
+      cargo.tickTransfer(dt);
       // Hand the riding trains' spots to the crossing gates as one view.
       crossingTrainView.length = crossingTrainCount;
       for (let i = 0; i < crossingTrainCount; i++) {

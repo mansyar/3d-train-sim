@@ -4,6 +4,7 @@ import {
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
+  Vector3,
   WebGLRenderer,
 } from 'three';
 import { createAmbienceAudio } from '../audio/ambience-audio';
@@ -39,7 +40,7 @@ import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
-import { createRigCargo } from './rig-cargo';
+import { type CargoTransferWitness, createRigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
@@ -69,6 +70,12 @@ export interface SceneHandle {
   setGridVisible(visible: boolean): void;
   /** Debug aid: how many cargo wagons are live in the scene. */
   wagonCount(): number;
+  /** Dev/e2e witness: the live crate arc's kind, progress and world endpoints. */
+  cargoTransfer(): CargoTransferWitness | null;
+  /** Dev/e2e witness: drive one cargo stop for the primary rig. Reduced motion
+   *  renders a single static frame, so a real station stop never advances; this
+   *  runs the exact handle the ride uses, without faking the world's count. */
+  forceCargoStation(stationId: string): void;
   /** Debug aid: number of currently visible steam puffs. */
   steamPuffCount(): number;
   /** Dev/e2e witness: the frame contract's order with per-system tick counts. */
@@ -244,7 +251,45 @@ export function initScene(
 
   // The little-train fleet: rigs, template loading, the cargo cycle. The
   // assembler hands it the shared context and stays out of its internals.
-  const cargo = createRigCargo({ world, confetti, reducedMotion, cellToWorld });
+  // Resolve a platform's numbered crate slot from the ACTUAL station mesh —
+  // slot visibility stays owned by the track renderer's persisted sync. The
+  // nearest match to the station's cell disambiguates multiple stations. Called
+  // once per hand-off, never from the per-frame path.
+  const slotScratch = new Vector3();
+  const stationSlotWorld = (
+    stationId: string,
+    slot: number,
+  ): { x: number; y: number; z: number } | null => {
+    const station = world
+      .scenery()
+      .find((item) => item.id === stationId && item.kind === 'station');
+    if (!station) return null;
+    const at = cellToWorld(station.cell);
+    const nearest: { point: { x: number; y: number; z: number } | null; dist: number } = {
+      point: null,
+      dist: Infinity,
+    };
+    scene.traverse((object) => {
+      if (object.name !== `station_crate_${slot}`) return;
+      object.getWorldPosition(slotScratch);
+      const dx = slotScratch.x - at.x;
+      const dz = slotScratch.z - at.z;
+      const dist = dx * dx + dz * dz;
+      if (dist < nearest.dist) {
+        nearest.dist = dist;
+        nearest.point = { x: slotScratch.x, y: slotScratch.y, z: slotScratch.z };
+      }
+    });
+    return nearest.point;
+  };
+  const cargo = createRigCargo({
+    world,
+    confetti,
+    reducedMotion,
+    cellToWorld,
+    scene,
+    stationSlotWorld,
+  });
   const fleet = createTrainFleet({
     context,
     rides,
@@ -471,6 +516,11 @@ export function initScene(
     setPieceVisible: (id, visible) => tracks.setPieceVisible(id, visible),
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => fleet.wagonCount(),
+    cargoTransfer: () => cargo.transferWitness(),
+    forceCargoStation: (stationId) => {
+      const rig = fleet.primary();
+      if (rig) cargo.handleStation(rig, stationId);
+    },
     steamPuffCount: () => fleet.steamPuffCount(),
     // Dev/e2e witness: the frame contract's order with per-system tick counts.
     frameSystems: () => frameRunner.snapshot(),

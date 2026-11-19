@@ -1,5 +1,17 @@
-import { Box3, type Object3D } from 'three';
-import { actionAtStop, type CargoLoad, loadAfterAction } from '../core/cargo';
+import { Box3, type Object3D, Vector3 } from 'three';
+import {
+  actionAtStop,
+  type CargoAction,
+  type CargoLoad,
+  loadAfterAction,
+  MAX_DELIVERED_CRATES,
+} from '../core/cargo';
+import {
+  resolveTransferProgress,
+  type TransferPoint,
+  transferPoint,
+  transferProgress,
+} from '../core/cargo-transfer';
 import type { Cell } from '../core/track-graph';
 import type { WorldStore } from '../state/world';
 import type { Confetti } from './confetti';
@@ -10,10 +22,34 @@ const CARGO_POP_SECONDS = 0.25;
 
 /** The cargo slice of a train rig (structurally satisfied by TrainRig). */
 export interface CargoRig {
+  /** The ride anchor served, '' when the rig is back in the spare pool. */
+  anchor: string;
   wagons: Object3D[];
   cargo: CargoLoad;
   /** Load pop-in progress, 1 = settled. Sits at 1 unless animating. */
   cargoPop: number;
+}
+
+/** Dev/e2e read-out of the one live hand-off. Endpoints are world positions. */
+export interface CargoTransferWitness {
+  kind: CargoAction;
+  stationId: string;
+  progress: number;
+  from: TransferPoint;
+  to: TransferPoint;
+  spot: TransferPoint;
+}
+
+/** One in-flight hand-off. Endpoints and scratch live here, allocated once. */
+interface ActiveTransfer {
+  rig: CargoRig;
+  kind: CargoAction;
+  stationId: string;
+  elapsed: number;
+  progress: number;
+  from: TransferPoint;
+  to: TransferPoint;
+  spot: TransferPoint;
 }
 
 export interface RigCargo {
@@ -30,6 +66,10 @@ export interface RigCargo {
   /** One stop of the cargo cycle: empty wagons load, loaded wagons deliver.
    *  Delivery bumps the station's persisted count and pops the confetti. */
   handleStation(rig: CargoRig, stationId: string): void;
+  /** Advance the single visible crate arc, snapping home on cancel. */
+  tickTransfer(dt: number): void;
+  /** Dev/e2e witness: the live arc's kind, progress and endpoints, or null. */
+  transferWitness(): CargoTransferWitness | null;
   dispose(): void;
 }
 
@@ -37,9 +77,13 @@ export interface RigCargoOptions {
   world: WorldStore;
   /** The delivery celebration — a pooled burst at the station. */
   confetti: Confetti;
-  /** Reduced motion keeps the delivery but skips the pop animation. */
+  /** Reduced motion keeps the delivery but skips the travel arc. */
   reducedMotion: boolean;
   cellToWorld: (cell: Cell) => { x: number; z: number };
+  /** The travel crate is parented here so its path uses world coordinates. */
+  scene: Object3D;
+  /** World position of a station's numbered platform slot, or null if absent. */
+  stationSlotWorld: (stationId: string, slot: number) => TransferPoint | null;
 }
 
 export function createRigCargo({
@@ -47,9 +91,17 @@ export function createRigCargo({
   confetti,
   reducedMotion,
   cellToWorld,
+  scene,
+  stationSlotWorld,
 }: RigCargoOptions): RigCargo {
   /** The wagon-load delivery crate (cloned per wagon, template owns GPU). */
   let crateTemplate: Object3D | null = null;
+  /** One reused stand-in for the crate in flight (never one per transfer). */
+  let travelCrate: Object3D | null = null;
+  /** Exactly one ride is active, so at most one hand-off is ever in flight. */
+  let active: ActiveTransfer | null = null;
+  /** Scratch for one-shot endpoint lookups — never touched in the frame path. */
+  const scratchVec = new Vector3();
 
   /** The delivery crates riding these wagons (attached lazily). */
   const crates = (wagons: Object3D[]): Object3D[] => {
@@ -96,31 +148,145 @@ export function createRigCargo({
     }
   };
 
+  const stationOf = (stationId: string) =>
+    world.scenery().find((item) => item.id === stationId && item.kind === 'station');
+
+  /** Lands the visual crate and clears the stand-in. Purely renderer state:
+   *  the ledger and celebration already settled at the station stop, so a
+   *  reload or a cancel mid-arc can neither lose nor repeat the delivery. */
+  const finishTransfer = (transfer: ActiveTransfer): void => {
+    if (travelCrate) travelCrate.visible = false;
+    if (transfer.kind === 'load') {
+      for (const crate of crates(transfer.rig.wagons)) {
+        crate.visible = true;
+        crate.scale.setScalar(1);
+      }
+      transfer.rig.cargoPop = 1;
+    }
+    if (active === transfer) active = null;
+  };
+
+  /** Begins the short visual arc: platform slot ↔ wagon bed. `slot` is the
+   *  platform slot the stop just filled, captured before the count advanced. */
+  const startTransfer = (
+    rig: CargoRig,
+    action: CargoAction,
+    stationId: string,
+    slot: number,
+  ): void => {
+    // A new stop while an arc is live snaps the old one home before starting.
+    if (active) finishTransfer(active);
+
+    const station = stationOf(stationId);
+    const wagonCrate = crates(rig.wagons)[0];
+    const slotPoint = station ? stationSlotWorld(stationId, slot) : null;
+    if (!station || !travelCrate || !wagonCrate || !slotPoint) {
+      // No mesh to travel between — the stop already applied the real state.
+      setLoaded(rig, action === 'load');
+      return;
+    }
+
+    // The wagon bed is the arc's other end; copying the riding crate's world
+    // scale keeps the stand-in the same toy at both stops.
+    wagonCrate.getWorldPosition(scratchVec);
+    const bedPoint: TransferPoint = { x: scratchVec.x, y: scratchVec.y, z: scratchVec.z };
+    wagonCrate.getWorldScale(scratchVec);
+    travelCrate.scale.copy(scratchVec);
+
+    const from = action === 'load' ? slotPoint : bedPoint;
+    const to = action === 'load' ? bedPoint : slotPoint;
+    active = {
+      rig,
+      kind: action,
+      stationId,
+      elapsed: 0,
+      progress: 0,
+      from,
+      to,
+      spot: { x: from.x, y: from.y, z: from.z },
+    };
+
+    // The real crates wait out the hand-off; one travelling crate stands in.
+    for (const crate of crates(rig.wagons)) crate.visible = false;
+    travelCrate.position.set(from.x, from.y, from.z);
+    travelCrate.visible = true;
+  };
+
+  const tickTransfer = (dt: number): void => {
+    const transfer = active;
+    if (!transfer) return;
+    const stationGone = !stationOf(transfer.stationId);
+    // A removed station or a rig that left its ride both cancel the arc; the
+    // pure helper resolves cancelled progress to 1 so the crate lands, not hangs.
+    const cancelled = stationGone || transfer.rig.anchor === '';
+    transfer.elapsed += dt;
+    const progress = resolveTransferProgress(transferProgress(transfer.elapsed), cancelled);
+    transfer.progress = progress;
+    if (progress >= 1) {
+      finishTransfer(transfer);
+      return;
+    }
+    transferPoint(transfer.from, transfer.to, progress, transfer.spot);
+    if (travelCrate) {
+      travelCrate.position.set(transfer.spot.x, transfer.spot.y, transfer.spot.z);
+    }
+  };
+
+  const transferWitness = (): CargoTransferWitness | null => {
+    if (!active) return null;
+    return {
+      kind: active.kind,
+      stationId: active.stationId,
+      progress: active.progress,
+      from: { ...active.from },
+      to: { ...active.to },
+      spot: { ...active.spot },
+    };
+  };
+
   const handleStation = (rig: CargoRig, stationId: string): void => {
     const action = actionAtStop(rig.cargo);
     rig.cargo = loadAfterAction(action);
-    setLoaded(rig, action === 'load');
-    if (action !== 'deliver') return;
-    // A station lifted mid-ride cannot receive the delivery — the crates
-    // simply come off; no orphan count, no celebration.
-    const station = world.scenery().find((item) => item.id === stationId);
-    if (station) {
+    const station = stationOf(stationId);
+    // The platform slot this stop fills, read before the ledger advances.
+    const slot = Math.min(world.deliveryCount(stationId) + 1, MAX_DELIVERED_CRATES);
+    // Settle the persisted delivery and its cue at the STOP, not at the arc's
+    // end. The arc is only the visible cause; a reload or a cancel mid-flight
+    // must find the hand-off already committed, with no progress to persist.
+    if (action === 'deliver' && station) {
       world.deliverCrate(stationId);
       const at = cellToWorld(station.cell);
       confetti.burst(at.x, 0.5, at.z);
     }
+    if (reducedMotion || !station || !travelCrate || !crates(rig.wagons)[0]) {
+      // Instant state change — no travel mesh, no per-frame arc to witness.
+      setLoaded(rig, action === 'load');
+      return;
+    }
+    startTransfer(rig, action, stationId, slot);
   };
 
   return {
     setTemplate(model) {
       crateTemplate = model;
+      travelCrate = model.clone(true);
+      travelCrate.name = 'cargo_transfer_crate';
+      travelCrate.visible = false;
+      scene.add(travelCrate);
     },
     attach,
     crates,
     advancePop,
     setLoaded,
     handleStation,
+    tickTransfer,
+    transferWitness,
     dispose(): void {
+      if (travelCrate) {
+        scene.remove(travelCrate);
+        travelCrate = null;
+      }
+      active = null;
       if (crateTemplate) disposeObject(crateTemplate);
       crateTemplate = null;
     },
