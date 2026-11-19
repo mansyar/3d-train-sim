@@ -310,3 +310,27 @@ have already been executed:
   final release content. AC-6/AC-7/AC-8 remain primary-owned post-review,
   post-merge, and post-tag gates and are recorded in evidence.
 - No deviation.
+
+## Final integrated verification
+
+- Re-run on `2026-11-19T12:18:10Z` at final HEAD
+  `98a0e5eb432665b5325e640f476370db4e0107cc`; `INTEGRATED_FINAL_EXIT=0`.
+- `pnpm exec biome check .`: 198 files, no fixes; `pnpm exec tsc --noEmit`:
+  clean.
+- `pnpm test` and `pnpm test:coverage`: 57 files / 1016 tests; coverage 97.07%
+  statements, 91.21% branches, 97.41% functions, 98.87% lines (80% gate met).
+- `pnpm build`: Vite 115 modules; `dist/assets/index-V3mAMN8j.js` 814.58 kB /
+  gzip 216.01 kB; PWA 178 precache entries.
+- `pnpm exec playwright test --workers=1`: 85 passed, 1 pre-existing `@ci` skip
+  (`[tablet] e2e/smoke.spec.ts:960:1`), 0 failed in 17.6m across tablet, phone,
+  and prod. The switch regression again showed the old fixed window missing
+  `-0.210` / `-1.571` at frame 320 and the new sampler seeing all keys at
+  frame 363.
+- `pnpm audit --audit-level=high`: 5 vulnerabilities (1 low / 4 moderate), no
+  high or critical.
+- Interactive mark 1114 ms; observation ticks 17.93/15.68/20.10; hard-gate
+  ticks 18.65/15.04/19.36 against floor 2.5; negative proofs emitted the exact
+  expected messages.
+- Only pre-existing warnings: Vite `configLoader: 'native'`, chunk-size, and
+  THREE `PCFSoftShadowMap` deprecation. No source, config, workflow, dependency,
+  or release-content change after this run.
