@@ -4,6 +4,11 @@
 > renumber it. If a requirement is removed, mark it `Withdrawn` instead of
 > deleting it.
 
+> **Post-review revision (2026-11-19):** the parent rejected geometry-derived
+> silhouettes as unintuitive. Frozen IDs FR-8/NFR-6/AC-10 are retained but their
+> requirement text is revised to hand-authored, intuitive SVG icons; the offline
+> generator and generated module are removed.
+
 ## Overview
 
 Make the toddler toybox easier to scan and make removing a placed toy obvious
@@ -66,7 +71,7 @@ trains are separate, later ideas.
 | FR-5 | Removal uses a soft animation and the existing undo chip; one undo restores the removed item. | must |
 | FR-6 | The `.trash-slot` UI, styles, wiring, and selectors are removed; existing tests are updated, not disabled or skipped. | must |
 | FR-7 | The change is covered by the configured static, unit, build, and e2e checks without weakening an existing gate. | must |
-| FR-8 | Every track-piece icon is a static SVG generated offline from that piece's shipped GLB geometry, with a deterministic regeneration check and no runtime WebGL renderer. | must |
+| FR-8 | Every track-piece icon is a hand-authored, static SVG that intuitively reads as its piece at 48×48; icons are committed in source and require no runtime WebGL. | must |
 
 ## Non-Functional Requirements
 
@@ -77,7 +82,7 @@ trains are separate, later ideas.
 | NFR-3 | Keep the toddler interaction rules: tap/drag only, no kid long-press, no fail states, autosave, and undo. |
 | NFR-4 | `pnpm check`, `pnpm test:coverage`, `pnpm build`, and the Playwright suite pass; coverage stays above the 80% gate on `src/core` and `src/state`. |
 | NFR-5 | No changes to disclosure gating, parent tray, viewport policy, piece/scenery catalogs, or release workflow. |
-| NFR-6 | The icon generator is dev-only and deterministic: regenerating from the committed GLB geometry reproduces the committed SVG output with no diff. |
+| NFR-6 | Icons are static, dependency-free SVG markup: no runtime WebGL renderer, no generated icon module, no baked PNG thumbnails, and no network fetch. |
 
 ## Acceptance Criteria
 
@@ -92,7 +97,7 @@ trains are separate, later ideas.
 | AC-7 | No `.trash-slot` selector remains in production source or active e2e tests; the trash bin is absent from the toybox rail. | FR-6 |
 | AC-8 | The full configured verification matrix passes with all existing gates intact. | FR-7 |
 | AC-9 | The page dots have accessible names and the unmodified a11y sweep reports no new violations; no visible reading is added to the kid UI. | FR-2, NFR-2 |
-| AC-10 | Regenerating icons from the shipped GLB geometry produces no diff, every `PieceType` has a generated SVG, and no runtime WebGL icon renderer is introduced. | FR-8, NFR-6 |
+| AC-10 | Every `PieceType` has a distinct hand-authored SVG that reads as its piece, no two icons on one drawer tab are identical, and no runtime WebGL icon renderer or offline generator module is present. | FR-8, NFR-6 |
 
 ## Edge Cases
 
@@ -102,8 +107,8 @@ trains are separate, later ideas.
 - Cancelling a drag by returning inside the board leaves the item exactly where it was.
 - Pointer loss, window blur, or an interrupted drag cancels removal rather than deleting.
 - Reduced-motion users get instant removal with no bounce and no sound change.
-- If a piece silhouette is not distinguishable at 48×48, the offline generator may adjust camera framing and line weight for that piece while preserving its real geometry.
-- A missing or renamed GLB makes the icon generation check fail rather than silently falling back to a hand-drawn icon.
+- A hand-authored icon must stay recognizable at 48×48 with its rails and defining feature visible; if two icons on one tab are hard to tell apart, add a distinguishing visual cue rather than text.
+- The original curated hand-drawn `PIECE_ICONS` are the baseline; scenery and critter SVGs remain unchanged.
 - Scenery items are treated like placed track pieces because the current trash accepted both.
 - The phone profile has the same paging and outside-drag behaviour as tablet.
 
@@ -119,7 +124,7 @@ trains are separate, later ideas.
 - **Assumption:** “Outside the board” means beyond the visible meadow/board edge, not merely outside the toy drawer.
 - **Assumption:** Page position is session-only and per tab, so a reload starts at page 1 and adds no saved state.
 - **Assumption:** Undo remains the only recovery mechanism; no parent confirmation is added for single-item removal.
-- **Assumption:** Geometry-derived icons apply to track pieces only; scenery and critter SVGs remain unchanged.
+- **Assumption:** Hand-authored icons apply to track pieces only; scenery and critter SVGs remain unchanged.
 
 ## References
 
@@ -127,7 +132,7 @@ trains are separate, later ideas.
 - `src/core/drawer.ts` — current tab model and piece grouping.
 - `src/ui/toy-drawer.ts` — current tab strip, panels, gating, and cap dimming.
 - `src/ui/app.ts` — current toybox rail and trash slot markup.
-- `src/ui/toy-icons.ts` — current hand-authored `PIECE_ICONS` to replace with generated output.
-- `src/scene/track-catalog.ts` and `scripts/blender-*.py` — shipped model URL/source contracts for geometry-derived icons.
+- `src/ui/toy-icons.ts` — hand-authored `PIECE_ICONS` restored as the icon source of truth.
+- `conductor/archive/clarity-audit_20261110/report.md` — the parent's qualitative feedback that drove paging and removal changes.
 - `e2e/smoke.spec.ts`, `e2e/undo.spec.ts`, `e2e/ride-toybox-flow.spec.ts` — current drag/trash coverage to update.
 - `conductor/product-guidelines.md` — no-reading, tap/drag-only, autosave, and undo rules.

@@ -89,3 +89,19 @@ Review fixes are appended by `conductor-review` as:
 - **Result:** verified — F1 and F2 resolved; tab-switch page memory is asserted and generated icons are distinct within every drawer tab.
 - **Checkpoint:** `d110f58f7bac3127b1be5d3771e0ebba662830e1`
 - **Evidence:** `conductor/tracks/toybox-clarity_20261119/verification/phase-R1.md`
+
+## Phase R2: Hand-Drawn Icon Clarity
+
+- **Goal:** Replace geometry-derived silhouettes with intuitive hand-authored SVG icons that clearly read as their track pieces, while keeping paging, outside-drag removal, undo, and all configured gates intact.
+- **Depends on:** Phase R1
+- **Covers:** FR-8, NFR-6, FR-7, AC-8, AC-10
+- **Touches:** `src/ui/toy-icons.ts`, `src/ui/generated-piece-icons.ts`, `scripts/generate-piece-icons.mjs`, `src/core/drawer.test.ts`, `e2e/toybox-clarity.spec.ts`, `verification/phase-R2.md`
+- **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts`
+- **Status:** pending
+
+- [ ] **R2.T1: Restore intuitive hand-authored piece icons** — covers: FR-8, AC-10
+  - [ ] **R2.T1.1: Restore the curated `PIECE_ICONS` from the pre-track baseline and remove the generated-icon re-export so every piece has a recognizable rail/feature drawing**
+- [ ] **R2.T2: Remove the generator pipeline and adapt tests** — covers: NFR-6, AC-10
+  - [ ] **R2.T2.1: Delete `scripts/generate-piece-icons.mjs` and `src/ui/generated-piece-icons.ts`, then adapt the icon-uniqueness assertions to read the hand-authored source with no generator or `--check` references**
+- [ ] **R2.T3: Verify the revised icon contract** — covers: FR-7, AC-8
+  - [ ] **R2.T3.1: Run the exact phase verification, confirm no runtime WebGL/generated module remains, and record evidence with the new icon behavior**
