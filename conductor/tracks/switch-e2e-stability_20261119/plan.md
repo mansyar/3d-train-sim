@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, NFR-1, NFR-2, AC-1, AC-2
 - **Touches:** `e2e/switches.spec.ts`, `e2e/helpers.ts`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm exec playwright test e2e/switches.spec.ts --repeat-each=3`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Make slip sampling frame-aware** — covers: FR-1
   - [ ] **P1.T1.1: Replace the fixed 320 × 400 ms polling loop with sampling tied to frame or ride progress, retaining a bounded safety timeout.**
