@@ -14,13 +14,16 @@
 - **Covers:** FR-3, FR-5, NFR-1, NFR-3, AC-1, AC-5
 - **Touches:** `src/core/cargo-transfer.ts`, `src/core/cargo-transfer.test.ts`, `conductor/tracks/station-cargo-clarity_20261120/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified
+- **Checkpoint:** 9b3d81b
+- **Evidence:** conductor/tracks/station-cargo-clarity_20261120/verification/phase-1.md
 
-- [ ] **P1.T1: Add pure cargo transfer helper** — covers: FR-3
-  - [ ] **P1.T1.1: Deterministic bounded arc progress with a short gentle lift and no per-frame allocation**
-  - [ ] **P1.T1.2: Cancel-and-snap semantics and direction-independent interpolation**
-- [ ] **P1.T2: Guard the unchanged cargo/save contract** — covers: FR-5
-  - [ ] **P1.T2.1: Assert CargoLoad, CargoAction, actionAtStop, loadAfterAction, deliveredCountAfter and snapshot keys are unchanged**
+- [x] **P1.T1: Add pure cargo transfer helper** — covers: FR-3
+  - [x] **P1.T1.1: Deterministic bounded arc progress with a short gentle lift and no per-frame allocation**
+  - [x] **P1.T1.2: Cancel-and-snap semantics and direction-independent interpolation**
+- [x] **P1.T2: Guard the unchanged cargo/save contract** — covers: FR-5
+  - [x] **P1.T2.1: Assert CargoLoad, CargoAction, actionAtStop, loadAfterAction, deliveredCountAfter and snapshot keys are unchanged**
 
 ## Phase 2: Visible station/wagon hand-off and verification
 

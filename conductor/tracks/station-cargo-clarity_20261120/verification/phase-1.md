@@ -49,3 +49,11 @@ None.
 - One green-phase fix: `arcLift` now returns exactly 0 at both ends instead of `Math.sin(PI)`'s tiny float residue, so crates land exactly on endpoints.
 - The Vite config emits a pre-existing `configLoader: 'native'` warning about an extensionless import in `vite.config.ts`. Unrelated to this phase and outside Touches; left unchanged.
 - No scene, UI, e2e, save, telemetry or dependency files were touched. Phase 2 will consume the helper in the renderer; the e2e orphan-mesh assertion belongs to that phase.
+
+## Primary verification
+
+- **Command:** `pnpm check && pnpm test:coverage` (run by the primary agent from the repo root)
+- **Exit code:** 0
+- **Result:** pass. Biome checked 200 files with no fixes; `tsc --noEmit` clean; unit run 58 files / 1029 tests passed; coverage 97.16% statements / 91.44% branches / 97.44% functions / 98.94% lines — all above the 80% gate.
+- **Tree/diff check:** `git status --porcelain` clean apart from the untracked `conductor/runs/` housekeeping dir; `git diff --name-only 38fd561..HEAD` = exactly the three Touches files, no unreported files.
+- **Squash guard:** commit range `33745cf`, `6e102df`, `d79dace` matches the report's `commits`; no merge or user commits.
