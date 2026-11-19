@@ -3,13 +3,13 @@
 - **Track:** switch-e2e-stability_20261119
 - **Type:** Bug
 - **Branch:** fix/switch-e2e-stability_20261119
-- **Range:** `1ad84b2e996934532f54c6ddb1804366ca5fc2c9..1f891283a59d424541f253890918178d7e89da59`
-- **Date:** 2026-11-19T12:30:00Z
-- **Verdict:** PASS WITH FINDINGS
+- **Range:** `1ad84b2e996934532f54c6ddb1804366ca5fc2c9..47661d36a03f17da339f5acd37bcc3f90fdb5731`
+- **Date:** 2026-11-19T12:45:00Z
+- **Verdict:** PASS
 
 ## Summary
 
-The frame-aware slip-road sampler is correct and non-weakening, the active regression is deterministic and non-tautological, the v0.14.1 documentation is internally consistent, and the two dry-run successes satisfy the release gate. One Low documentation-timing finding remains: the product roadmap claimed the track was shipped before the post-merge/post-tag gates had completed. Strict review mode requires that finding to be fixed before PR.
+The frame-aware slip-road sampler is correct and non-weakening, the active regression is deterministic and non-tautological, the v0.14.1 documentation is internally consistent, and the two dry-run successes satisfy the release gate. Round 1 found one Low documentation-timing finding (a premature “Shipped” roadmap status); R1 qualified that wording and the round-2 reviewer confirmed zero open findings.
 
 ## Verification
 
@@ -58,11 +58,10 @@ The frame-aware slip-road sampler is correct and non-weakening, the active regre
 
 ### Low
 
-**F1 — premature roadmap status**
+**F1 — premature roadmap status (fixed in R1)**
 - **File:** `conductor/product.md:115`
-- **What:** The roadmap row said `Shipped 2026-11-19` while metadata still showed `in_progress`, `review_verdict: null`, `pr_url: null`, and `archived_at: null`; the PR, merge, tag, and tag-triggered workflow had not happened.
-- **Why:** The definition of done includes the release PR/review, annotated tag push, and a successful tag-triggered workflow with publish not skipped.
-- **Fix:** Qualify the status as fix-complete with v0.14.1 release gates pending until post-merge/post-tag sync; restore the shipped wording only after those gates complete.
+- **What:** The roadmap row said `Shipped 2026-11-19` while the PR, merge, tag, and tag-triggered workflow had not happened.
+- **Fix:** Qualified to `Fix complete 2026-11-19; v0.14.1 release gates pending`; confirmed by the round-2 reviewer at final HEAD.
 - **Requirement:** FR-6/AC-6
 - **Test gap:** none
 
@@ -84,10 +83,11 @@ None introduced. The historical cancelled dry run `44488925935` is retained as i
 
 ## Doc sync
 
-updated — pre-review sync aligned product and clarity docs to v0.14.1; F1 requires a post-review wording qualification before PR.
+updated — pre-review sync aligned product and clarity docs to v0.14.1; post-review sync qualified the roadmap status to fix-complete/release-gates-pending before PR, and the round-2 reviewer confirmed consistency.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 |---|---|---|---|---|---|---|
 | 1 | PASS WITH FINDINGS | 0 | 0 | 0 | 1 | 0 |
+| 2 | PASS | 0 | 0 | 0 | 0 | 1 |
