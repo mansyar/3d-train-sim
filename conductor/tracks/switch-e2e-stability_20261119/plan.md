@@ -57,7 +57,7 @@
 - **Covers:** FR-4, FR-6, FR-7, FR-8, NFR-4, NFR-6, AC-4, AC-6, AC-7, AC-8
 - **Touches:** `conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Prove two consecutive dry runs** — covers: FR-4
   - [ ] **P3.T1.1: Dispatch and watch a second distinct dry run from the release branch; require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
