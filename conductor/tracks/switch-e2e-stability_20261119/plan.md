@@ -34,23 +34,21 @@
 - **Covers:** FR-3, FR-5, NFR-3, NFR-5, AC-3, AC-5
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high && gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Align v0.14.1 release documentation** — covers: FR-5
-  - [ ] **P2.T1.1: Bump `package.json` from `0.14.0` to `0.14.1`.**
-  - [ ] **P2.T1.2: Curate an empty `[Unreleased]` and a parent-facing `[0.14.1] - 2026-11-19` CHANGELOG section with refreshed compare links, explaining the release-flow fix.**
-  - [ ] **P2.T1.3: Retarget all clarity baseline labels to v0.14.1 while leaving all eight `awaiting observation` cells and all privacy/traceability wording intact.**
-- [ ] **P2.T2: Run the full local matrix and first dry run** — covers: FR-3
-  - [ ] **P2.T2.1: Run every configured local verification layer and record exact results in integrated evidence.**
-  - [ ] **P2.T2.2: Dispatch the first release dry run from the release branch, watch it to completion, require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
-- [ ] **P2.T3: Assemble release evidence** — covers: FR-3
-  - [ ] **P2.T3.1: Record phase checkpoints, release summary inputs, dry-run gate, automatic tag gate, and post-tag workflow-watch gate in integrated evidence.**
+- [x] **P2.T1: Align v0.14.1 release documentation** - covers: FR-5
+  - [x] **P2.T1.1: Bump `package.json` from `0.14.0` to `0.14.1`.**
+  - [x] **P2.T1.2: Curate an empty `[Unreleased]` and a parent-facing `[0.14.1] - 2026-11-19` CHANGELOG section with refreshed compare links, explaining the release-flow fix.**
+  - [x] **P2.T1.3: Retarget all clarity baseline labels to v0.14.1 while leaving all eight `awaiting observation` cells and all privacy/traceability wording intact.**
+- [x] **P2.T2: Run the full local matrix and first dry run** - covers: FR-3
+  - [x] **P2.T2.1: Run every configured local verification layer and record exact results in integrated evidence.**
+  - [x] **P2.T2.2: Dispatch the first release dry run from the release branch, watch it to completion, require all gates and image build green with deploy skipped, and record run ID, URL, jobs, and timestamps.**
+- [x] **P2.T3: Assemble release evidence** - covers: FR-3
+  - [x] **P2.T3.1: Record phase checkpoints, release summary inputs, dry-run gate, automatic tag gate, and post-tag workflow-watch gate in integrated evidence.**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — local matrix green, clarity baseline retargeted to v0.14.1, and first successful dry run `44493402673` recorded with deploy skipped; a cancelled infrastructure-only attempt is retained as history.
+**Checkpoint:** 147f58c2635eb29407d74880be59b0597c01336f
 **Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md
--->
 
 ## Phase 3: Second dry run and release gate evidence
 
