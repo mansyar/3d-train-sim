@@ -1,7 +1,16 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
-import { clearMeadow, watchConsoleErrors } from './helpers';
+import {
+  clearMeadow,
+  formatSlipFailure,
+  missingSlipKeys,
+  type SlipFrameSource,
+  type SlipRoadTables,
+  sampleSlipFixedWindow,
+  sampleSlipRoads,
+  watchConsoleErrors,
+} from './helpers';
 
 /**
  * Switch smoke, merged into one file: every switch kind (Y, mirrored Y,
@@ -110,6 +119,61 @@ const poseOf = (page: Page, id: string, entry?: Edge) =>
       ) ?? null,
     [id, entry] as const,
   );
+
+/** Spec copy of the slip tables in the shape the shared sampler consumes. */
+const SLIP_TABLES: SlipRoadTables = {
+  entries: ENTRIES,
+  bladeTable: SLIP_BLADES,
+  leverTable: SLIP_LEVERS,
+  requiredBlades: ['0.000', '-0.210', '0.210'],
+  requiredRoads: ['0.000', '-1.571', '1.571'],
+  bladeTolerance: 1e-3,
+  leverTolerance: 0.02,
+};
+
+// Sampling is driven by rendered frames with a wall-clock safety backstop —
+// never a fixed 320 x 400 ms wall-clock window (the v0.14.0 CI failure).
+const SLIP_MAX_FRAMES = 2000;
+const SLIP_SAFETY_MS = 240_000;
+
+type FrameProbe = { frameSystems: () => Array<{ name: string; ticks: number }> };
+
+/** Frame counter from the frame-runner probe: 'fleet' ticks once per frame. */
+const frameCount = (page: Page) =>
+  page.evaluate(() => {
+    const scene = (window as unknown as { __tinyTracksScene?: FrameProbe }).__tinyTracksScene;
+    return scene?.frameSystems().find((system) => system.name === 'fleet')?.ticks ?? 0;
+  });
+
+const waitForNextFrame = (page: Page, after: number, timeout: number) =>
+  page.waitForFunction(
+    (previous) => {
+      const scene = (window as unknown as { __tinyTracksScene?: FrameProbe }).__tinyTracksScene;
+      return (
+        (scene?.frameSystems().find((system) => system.name === 'fleet')?.ticks ?? 0) > previous
+      );
+    },
+    after,
+    { polling: 'raf', timeout },
+  );
+
+/** Reads every entry pose once per rendered frame, driving the live sampler. */
+const makeSlipFrameSource = (page: Page, id: string): SlipFrameSource => {
+  let previous = -1;
+  return async () => {
+    if (previous < 0) previous = await frameCount(page);
+    // A renderer that stops producing frames ends sampling through our own
+    // bounded timeout rather than a raw Playwright error, so the diagnostic
+    // still carries the frame count.
+    await waitForNextFrame(page, previous, SLIP_SAFETY_MS).catch(() => undefined);
+    const current = await frameCount(page);
+    if (current <= previous) return null;
+    previous = current;
+    const poses: Array<Pose | null> = [];
+    for (const entry of ENTRIES) poses.push(await poseOf(page, id, entry));
+    return poses;
+  };
+};
 
 const waitForGlb = (page: Page, asset: string) =>
   page.waitForFunction(
@@ -381,54 +445,25 @@ test('every switch kind rides every road', async ({ page }) => {
 
     await startRide(page);
 
-    // Sample EVERY entry's blade group while the ride cycles the roads. The
-    // lone slip walks its closed six-step cycle, so each entry recurs with
-    // rotating counter phases and every entry's blades take more than one
-    // road in turn. The lever is one global node while the blades are
-    // per-entry groups, so only a SETTLED sighting of the just-announced
-    // entry pairs blade and lever: the blade sits exactly on a table value,
-    // the lever exactly on a road angle, and the two agree on the road
-    // (mid-tween crossings and stale groups are skipped, as in the 3-way
-    // test). The ride must witness all three roads somewhere across the
-    // groups: blade closed (0) for a straight-through, ±0.21 for the two
-    // diagonals, with the lever at 0, -90°, +90° respectively.
-    const bladeKeys = new Set<string>();
-    const pairedRoads = new Set<string>();
-    let samples = 0;
-    for (let i = 0; i < 320 && (bladeKeys.size < 3 || pairedRoads.size < 3); i += 1) {
-      for (const entry of ENTRIES) {
-        const pose = await poseOf(page, id, entry);
-        if (!pose || pose.lever === null) continue;
-        const lever = pose.lever;
-        // Only settled, road-paired sightings count: mid-tween blades would
-        // otherwise fake a third key and end the loop early.
-        const road = (Object.entries(SLIP_BLADES[entry]) as [Edge, number][]).find(
-          ([road, blade]) =>
-            Math.abs(blade - pose.blade) < 1e-3 && Math.abs(SLIP_LEVERS[road] - lever) < 0.02,
-        );
-        if (!road) continue;
-        const [roadName, canonicalBlade] = road;
-        samples += 1;
-        // Record the road's canonical blade value: the last witnessed tween
-        // frame can land one RAF step short (-0.209), and a raw toFixed would
-        // then never match the exact '-0.210' key below.
-        bladeKeys.add(canonicalBlade.toFixed(3));
-        pairedRoads.add(SLIP_LEVERS[roadName].toFixed(3));
-      }
-      await page.waitForTimeout(400);
-    }
-    expect(samples).toBeGreaterThan(0);
-    const missingBlades = ['0.000', '-0.210', '0.210'].filter((key) => !bladeKeys.has(key));
-    const missingRoads = ['0.000', '-1.571', '1.571'].filter((key) => !pairedRoads.has(key));
-    if (missingBlades.length > 0 || missingRoads.length > 0) {
-      throw new Error(
-        `missing blades: ${missingBlades.join(', ')}; missing roads: ${missingRoads.join(', ')}; ` +
-          `seen blades: ${[...bladeKeys].join(', ')}; seen roads: ${[...pairedRoads].join(', ')}`,
-      );
+    // Sample once per rendered frame (tracked by the frame-runner tick probe)
+    // until every blade and lever key is witnessed. The budget is a frame
+    // count plus a wall-clock safety backstop, not a fixed 320 x 400 ms window,
+    // so a slow software renderer cannot expire the wait before the east road
+    // cycles around (FR-1, AC-1). Only settled, road-paired sightings count —
+    // the exact rule the old inline loop used — so mid-tween blades cannot
+    // fake a third key and end sampling early.
+    const outcome = await sampleSlipRoads(makeSlipFrameSource(page, id), SLIP_TABLES, {
+      maxFrames: SLIP_MAX_FRAMES,
+      safetyMs: SLIP_SAFETY_MS,
+    });
+    const { sightings } = outcome;
+    const { missingBlades, missingRoads } = missingSlipKeys(sightings, SLIP_TABLES);
+    if (sightings.samples === 0 || missingBlades.length > 0 || missingRoads.length > 0) {
+      throw new Error(formatSlipFailure(outcome, SLIP_TABLES));
     }
 
     // After: the entry blades left neutral and the lever moved with them.
-    expect(bladeKeys.has('-0.210') || bladeKeys.has('0.210')).toBe(true);
+    expect(sightings.bladeKeys.has('-0.210') || sightings.bladeKeys.has('0.210')).toBe(true);
 
     await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
     await expectSceneChanging(page);
@@ -627,5 +662,69 @@ test('a switch under reduced motion still selects the road', async ({ page }) =>
 
     await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
     expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+  });
+});
+
+/**
+ * Regression for the release `44475228404` tablet failure (FR-2, AC-2).
+ *
+ * A deterministic slow-renderer pose sequence shows the straight and west
+ * roads from frame 0, but the east road (lever -pi/2) only from frame 360 —
+ * past the old 320-poll wall-clock window, well inside a frame-driven budget.
+ * Both samplers consume the same frame source through the shared recognition
+ * logic, so the assertion proves the sampling strategy is the fix rather than
+ * restating the desired outcome. This test stays active: it fails the moment
+ * either sampler diverges from its contract.
+ */
+test('frame-aware slip sampling sees a road the fixed window misses', async () => {
+  const eastAtFrame = 360;
+  const totalFrames = 480;
+  const witness: Edge = 'south';
+
+  // A fresh source per run: the frame index is mutable state, and each sampler
+  // must see the identical sequence from frame 0.
+  const makeSlowFrames = (): SlipFrameSource => {
+    let index = 0;
+    return async () => {
+      if (index >= totalFrames) return null;
+      const frame = index;
+      index += 1;
+      const cycle: Edge[] = frame < eastAtFrame ? ['north', 'west'] : ['north', 'west', 'east'];
+      const road = cycle[frame % cycle.length];
+      if (!road) return null;
+      return ENTRIES.map((entry) =>
+        entry === witness
+          ? { blade: SLIP_BLADES[entry][road] ?? 0, lever: SLIP_LEVERS[road] }
+          : { blade: 0, lever: 0 },
+      );
+    };
+  };
+
+  const oldOutcome = await sampleSlipFixedWindow(makeSlowFrames(), SLIP_TABLES, 320);
+  const oldMissing = missingSlipKeys(oldOutcome.sightings, SLIP_TABLES);
+  const before = formatSlipFailure(oldOutcome, SLIP_TABLES);
+  console.log(`[slip-regression] before: ${before}`);
+  expect(oldOutcome.sightings.complete, 'the fixed window must miss the east road').toBe(false);
+  expect(oldMissing, 'the fixed window misses exactly the east road').toEqual({
+    missingBlades: ['-0.210'],
+    missingRoads: ['-1.571'],
+  });
+
+  const newOutcome = await sampleSlipRoads(makeSlowFrames(), SLIP_TABLES, {
+    maxFrames: SLIP_MAX_FRAMES,
+    safetyMs: SLIP_SAFETY_MS,
+  });
+  const after = newOutcome.sightings.complete
+    ? `all keys seen: blades ${[...newOutcome.sightings.bladeKeys].join(', ')}; ` +
+      `roads ${[...newOutcome.sightings.roadKeys].join(', ')}; ` +
+      `frames sampled: ${newOutcome.sightings.frames}; elapsed ms: ${newOutcome.elapsedMs}`
+    : formatSlipFailure(newOutcome, SLIP_TABLES);
+  console.log(`[slip-regression] after: ${after}`);
+  expect(newOutcome.sightings.complete, 'frame-aware sampling must witness every road').toBe(true);
+  expect(newOutcome.timedOut).toBe(false);
+  expect(newOutcome.sightings.frames).toBeGreaterThan(eastAtFrame);
+  expect(missingSlipKeys(newOutcome.sightings, SLIP_TABLES)).toEqual({
+    missingBlades: [],
+    missingRoads: [],
   });
 });
