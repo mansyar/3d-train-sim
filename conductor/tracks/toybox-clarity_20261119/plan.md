@@ -97,7 +97,7 @@ Review fixes are appended by `conductor-review` as:
 - **Covers:** FR-8, NFR-6, FR-7, AC-8, AC-10
 - **Touches:** `src/ui/toy-icons.ts`, `src/ui/generated-piece-icons.ts`, `scripts/generate-piece-icons.mjs`, `src/core/drawer.test.ts`, `e2e/toybox-clarity.spec.ts`, `verification/phase-R2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/toybox-clarity.spec.ts e2e/smoke.spec.ts e2e/a11y.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R2.T1: Restore intuitive hand-authored piece icons** — covers: FR-8, AC-10
   - [ ] **R2.T1.1: Restore the curated `PIECE_ICONS` from the pre-track baseline and remove the generated-icon re-export so every piece has a recognizable rail/feature drawing**
