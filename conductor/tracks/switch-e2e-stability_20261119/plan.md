@@ -34,7 +34,7 @@
 - **Covers:** FR-3, FR-5, NFR-3, NFR-5, AC-3, AC-5
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high && gh workflow run release.yml --ref fix/switch-e2e-stability_20261119 --field dry_run=true`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Align v0.14.1 release documentation** — covers: FR-5
   - [ ] **P2.T1.1: Bump `package.json` from `0.14.0` to `0.14.1`.**
