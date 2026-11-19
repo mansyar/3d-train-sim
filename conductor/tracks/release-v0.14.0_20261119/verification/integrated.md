@@ -6,6 +6,7 @@
 - **Branch:** `chore/release-v0.14.0_20261119`
 - **Base commit:** `9dee5cc4cb6b740a3f5974ec155cb470a3d09d1b`
 - **Head SHA (release content, at verification time):** `1d2acc98f061f01abfd4eeed944d4c7e84b292ad`
+- **Final integrated HEAD:** `34ad1757ab376a35ddb80da0eb5913d82132ebce` (state/evidence-only commits after release-content verification)
 - **Phase 1 checkpoint:** `6677c9bff4ab6ac05191ceb6f975f6698dc7e8b4`
 - **Result:** **pass** — the exact verification chain exited 0 (`PHASE2_EXIT=0`) and the release-workflow dry run concluded `success` with all gates green, image build successful, and no publish/deploy.
 
@@ -145,3 +146,25 @@ green, image build success, and Coolify deploy skipped. The primary independentl
 watched the dry run with `gh run watch 44464649923 --interval 20 --exit-status`
 (`WATCH_EXIT=0`). AC-5 and AC-6 are satisfied; AC-7 remains a post-review,
 pre-merge PR gate. No deviation.
+
+## Final integrated verification
+
+At final HEAD `34ad1757ab376a35ddb80da0eb5913d82132ebce`, the full configured
+strategy was re-run on `2026-11-19T05:49:26Z` with `INTEGRATED_EXIT=0`:
+
+| Layer | Command | Result |
+| --- | --- | --- |
+| Lint | `pnpm exec biome check .` | 198 files, no fixes |
+| Typecheck | `pnpm exec tsc --noEmit` | clean |
+| Unit | `pnpm test` | 57 files / 1016 tests |
+| Coverage | `pnpm test:coverage` | 97.07% stmts / 91.21% branches / 97.41% funcs / 98.87% lines |
+| Build | `pnpm build` | 115 modules, `index-B9M-mrlA.js` 814.58 kB / gzip 216.01 kB, PWA 178 precache entries |
+| E2E | `pnpm exec playwright test` | 84 passed, 1 pre-existing `@ci` skip, 0 failed in 8.8m (tablet/phone/prod) |
+| Audit | `pnpm audit --audit-level=high` | 5 vulnerabilities (1 low / 4 moderate), no high |
+
+Perf budgets stayed green: interactive mark 1270 ms; observation samples
+22.30/20.42/23.08 ticks/s; hard-gate samples 22.46/19.75/23.87 against floor
+2.5; both negative proofs emitted their expected messages. Only pre-existing
+warnings appeared (Vite configLoader, chunk size, THREE shadow map deprecation).
+No source, config, dependency, workflow, or release content changed after this
+run.
