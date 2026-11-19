@@ -39,21 +39,21 @@
 - **Covers:** FR-5, FR-6, FR-7, NFR-4, NFR-5, AC-5, AC-6, AC-7
 - **Touches:** `conductor/tracks/release-v0.14.0_20261119/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test && pnpm audit --audit-level=high && gh workflow run release.yml --ref chore/release-v0.14.0_20261119 --field dry_run=true`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Run the full configured verification matrix** — covers: FR-5
-  - [ ] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
-  - [ ] **P2.T1.2: Record exact commands, results, and file/test counts in `verification/integrated.md`.**
-  - [ ] **P2.T1.3: Confirm the diff remains limited to the Phase 1 files and Conductor evidence.**
-- [ ] **P2.T2: Run the release-workflow dry run** — covers: FR-6
-  - [ ] **P2.T2.1: Dispatch `release.yml` from `chore/release-v0.14.0_20261119` with `dry_run=true`.**
-  - [ ] **P2.T2.2: Wait for the run to complete and require all gates plus image build to succeed with no publish or deploy.**
-  - [ ] **P2.T2.3: Record the run URL, jobs, and conclusion in `verification/integrated.md`.**
-- [ ] **P2.T3: Assemble release PR inputs** — covers: FR-7
-  - [ ] **P2.T3.1: Record the release summary, phase checkpoints, verification table, dry-run gate, and automatic tag/post-tag workflow gates for the primary to place in `pr.md`.**
+- [x] **P2.T1: Run the full configured verification matrix** — covers: FR-5
+  - [x] **P2.T1.1: Run static, unit, coverage, build, full Playwright, and audit commands on the final release-branch content.**
+  - [x] **P2.T1.2: Record exact commands, results, and file/test counts in `verification/integrated.md`.**
+  - [x] **P2.T1.3: Confirm the diff remains limited to the Phase 1 files and Conductor evidence.**
+- [x] **P2.T2: Run the release-workflow dry run** — covers: FR-6
+  - [x] **P2.T2.1: Dispatch `release.yml` from `chore/release-v0.14.0_20261119` with `dry_run=true`.**
+  - [x] **P2.T2.2: Wait for the run to complete and require all gates plus image build to succeed with no publish or deploy.**
+  - [x] **P2.T2.3: Record the run URL, jobs, and conclusion in `verification/integrated.md`.**
+- [x] **P2.T3: Assemble release PR inputs** — covers: FR-7
+  - [x] **P2.T3.1: Record the release summary, phase checkpoints, verification table, dry-run gate, and automatic tag/post-tag workflow gates for the primary to place in `pr.md`.**
 
-**Result:** pending
-**Checkpoint:** pending
+**Result:** verified — local matrix green, release dry run successful with no deploy, and PR/tag/workflow gates recorded.
+**Checkpoint:** `069c0c4887acea8a1f381c2379d35d86127ac176`
 **Evidence:** `conductor/tracks/release-v0.14.0_20261119/verification/integrated.md`
 
 ## Release Tag and Workflow Gate (post-merge, not a phase)
