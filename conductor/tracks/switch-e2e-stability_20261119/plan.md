@@ -14,20 +14,18 @@
 - **Covers:** FR-1, FR-2, NFR-1, NFR-2, AC-1, AC-2
 - **Touches:** `e2e/switches.spec.ts`, `e2e/helpers.ts`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm exec playwright test e2e/switches.spec.ts --repeat-each=3`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Make slip sampling frame-aware** — covers: FR-1
-  - [ ] **P1.T1.1: Replace the fixed 320 × 400 ms polling loop with sampling tied to frame or ride progress, retaining a bounded safety timeout.**
-  - [ ] **P1.T1.2: Preserve the exact required blade keys `0.000`, `-0.210`, `0.210` and road keys `0.000`, `-1.571`, `1.571`, and include frame progress in failure diagnostics.**
-- [ ] **P1.T2: Prove the regression** — covers: FR-2
-  - [ ] **P1.T2.1: Add a focused regression case that reproduces the old missing-road condition and fails against the old sampler but passes with the new sampler, without weakening the active assertion.**
-  - [ ] **P1.T2.2: Record the before/after regression output and the three repeated switch-spec runs in phase evidence.**
+- [x] **P1.T1: Make slip sampling frame-aware** — covers: FR-1
+  - [x] **P1.T1.1: Replace the fixed 320 × 400 ms polling loop with sampling tied to frame or ride progress, retaining a bounded safety timeout.**
+  - [x] **P1.T1.2: Preserve the exact required blade keys `0.000`, `-0.210`, `0.210` and road keys `0.000`, `-1.571`, `1.571`, and include frame progress in failure diagnostics.**
+- [x] **P1.T2: Prove the regression** — covers: FR-2
+  - [x] **P1.T2.1: Add a focused regression case that reproduces the old missing-road condition and fails against the old sampler but passes with the new sampler, without weakening the active assertion.**
+  - [x] **P1.T2.2: Record the before/after regression output and the three repeated switch-spec runs in phase evidence.**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
+**Result:** verified — frame-aware sampling passes three repeated switch-spec runs; the regression proves the old fixed-window sampler misses the east road while the new sampler observes all keys at frame 363.
+**Checkpoint:** `580cc1cb8204f452ab2068e73cb467973b6b25dc`
 **Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/phase-1.md
--->
 
 ## Phase 2: v0.14.1 release content and first dry run
 

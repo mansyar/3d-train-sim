@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-19T07:49:01Z",
-  "updated_at": "2026-11-19T07:52:18Z",
+  "updated_at": "2026-11-19T08:10:30Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "fix/switch-e2e-stability_20261119",
@@ -14,11 +14,11 @@
   "base_sha": "1ad84b2e996934532f54c6ddb1804366ca5fc2c9",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 0,
+    "phases_verified": 1,
     "tasks_total": 21,
-    "tasks_done": 0
+    "tasks_done": 6
   },
-  "last_checkpoint": null,
+  "last_checkpoint": "580cc1cb8204f452ab2068e73cb467973b6b25dc",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
