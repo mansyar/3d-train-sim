@@ -77,7 +77,7 @@
 **Covers:** FR-6, AC-6
 **Touches:** `conductor/product.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-R1.md`
 **Verification:** `pnpm check`
-**Status:** pending
+**Status:** in_progress
 
 - [ ] **R1.T1: Qualify roadmap status** — covers: FR-6
   - [ ] **R1.T1.1: Change the `switch-e2e-stability_20261119` product roadmap status from a premature `Shipped 2026-11-19` claim to a qualified fix-complete/release-gates-pending wording, keeping all other rows and the v0.14.1 clarity-baseline correction unchanged.**
