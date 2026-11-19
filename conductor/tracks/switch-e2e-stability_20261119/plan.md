@@ -69,3 +69,21 @@
 **Result:** verified — two consecutive successful dry runs (`44493402673`, `44514200919`) recorded with all gates green and deploy skipped; post-merge automatic tag and tag-workflow watch gates documented for primary execution.
 **Checkpoint:** 2c57c2bff09f2439583b4b76f6bcf6f0be092a75
 **Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/integrated.md
+
+## Phase R1: Review Fixes
+
+**Goal:** Resolve the round-1 Low documentation finding F1 by qualifying the product roadmap status until the post-merge and post-tag release gates complete, without changing code or release behavior.
+**Depends on:** Phase 3
+**Covers:** FR-6, AC-6
+**Touches:** `conductor/product.md`, `conductor/tracks/switch-e2e-stability_20261119/verification/phase-R1.md`
+**Verification:** `pnpm check`
+**Status:** pending
+
+- [ ] **R1.T1: Qualify roadmap status** — covers: FR-6
+  - [ ] **R1.T1.1: Change the `switch-e2e-stability_20261119` product roadmap status from a premature `Shipped 2026-11-19` claim to a qualified fix-complete/release-gates-pending wording, keeping all other rows and the v0.14.1 clarity-baseline correction unchanged.**
+- [ ] **R1.T2: Record review-fix evidence** — covers: AC-6
+  - [ ] **R1.T2.1: Write `verification/phase-R1.md` with the before/after wording, focused regression result, `pnpm check`, and scope statement.**
+
+**Result:** pending
+**Checkpoint:** pending
+**Evidence:** conductor/tracks/switch-e2e-stability_20261119/verification/phase-R1.md
