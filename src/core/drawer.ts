@@ -13,6 +13,32 @@ import { SCENERY_KINDS, type SceneryKind, sceneryCategory } from './scenery';
 export const DRAWER_TABS = ['rails', 'adventure', 'nature', 'town', 'critter'] as const;
 export type DrawerTabId = (typeof DRAWER_TABS)[number];
 
+/** Maximum toy slots shown on one page of a dense tab. */
+export const PAGE_SIZE = 4;
+
+/** The dense tabs: their toys span several pages. Nature and Critters stay single-page. */
+export const PAGED_TABS: readonly DrawerTabId[] = ['rails', 'adventure', 'town'];
+
+/** True when a tab's toys are split into pages. */
+export const isPagedTab = (id: DrawerTabId): boolean => PAGED_TABS.some((tab) => tab === id);
+
+/**
+ * Split an already-filtered tab's kinds into pages of at most PAGE_SIZE.
+ * Paging only groups kinds the caller already decided to show — disclosure
+ * filtering and cap dimming stay the caller's job, before this runs.
+ */
+export function drawerPages(
+  kinds: (PieceType | SceneryKind)[],
+  tabId: DrawerTabId,
+): (PieceType | SceneryKind)[][] {
+  if (!isPagedTab(tabId)) return [kinds.slice()];
+  const pages: (PieceType | SceneryKind)[][] = [];
+  for (let start = 0; start < kinds.length; start += PAGE_SIZE) {
+    pages.push(kinds.slice(start, start + PAGE_SIZE));
+  }
+  return pages;
+}
+
 /** One tab: its identity, its chunky icon, and the toys it holds. */
 export interface DrawerTab {
   id: DrawerTabId;

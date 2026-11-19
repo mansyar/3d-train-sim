@@ -4,8 +4,8 @@ import { clearMeadow, watchConsoleErrors } from './helpers';
 
 /**
  * Build-to-ride flow & toybox clarity: riding hides the build tools and
- * returns them on stop, the drawer shows five tabs with a swipeable
- * Adventure row, and closing a loop celebrates on the ride button —
+ * returns them on stop, the drawer shows five tabs with a paged Adventure
+ * row, and closing a loop celebrates on the ride button —
  * all with a clean console.
  *
  * The loop detector itself is proven at the unit level (ride-ready.test.ts);
@@ -65,16 +65,15 @@ test('riding hides the build tools, and stopping returns them with the five tabs
     const ride = page.locator('.ride-toggle');
     const toys = page.locator('[data-drawer="toys"]');
     const trains = page.locator('[data-drawer="trains"]');
-    const trash = page.locator('.trash-slot');
     const undo = page.locator('.undo-toggle');
     await expect(undo).toBeVisible();
+    await expect(page.locator('.trash-slot')).toHaveCount(0);
 
     await ride.click();
     await expect(ride).toHaveClass(/is-riding/);
     // Build tools hide; the whistle, mute, and gate stay for the ride.
     await expect(toys).toBeHidden();
     await expect(trains).toBeHidden();
-    await expect(trash).toBeHidden();
     await expect(undo).toBeHidden();
     await expect(page.locator('.whistle-toot')).toBeVisible();
     await expect(page.locator('.mute-toggle')).toBeVisible();
@@ -84,7 +83,7 @@ test('riding hides the build tools, and stopping returns them with the five tabs
     // Everything returns and the world is exact.
     await expect(toys).toBeVisible();
     await expect(trains).toBeVisible();
-    await expect(trash).toBeVisible();
+    await expect(page.locator('.trash-slot')).toHaveCount(0);
     await expect(undo).toBeVisible();
     const count = await page.evaluate(
       () =>
@@ -94,7 +93,7 @@ test('riding hides the build tools, and stopping returns them with the five tabs
     expect(count).toBe(2);
   });
 
-  await test.step('five tabs hold their toys; the adventure row swipes on phones', async () => {
+  await test.step('five tabs hold their toys; Adventure pages on phones', async () => {
     await page.locator('[data-drawer="toys"]').click();
     const tabs = page.locator('.drawer-tab');
     await expect(tabs).toHaveCount(5);
@@ -124,8 +123,8 @@ test('riding hides the build tools, and stopping returns them with the five tabs
     }
 
     // Unlock the advanced tier (three completed rides) and prove the full
-    // 9-toy Adventure row still swipes on phones and tablets alike instead
-    // of wrapping over the meadow.
+    // 9-toy Adventure set pages on phones and tablets alike instead of
+    // wrapping over the meadow.
     await page.evaluate(() => {
       const world = (
         window as unknown as {
@@ -143,9 +142,12 @@ test('riding hides the build tools, and stopping returns them with the five tabs
     await expect(
       adventure.locator('.piece-slot:not([hidden]), .scenery-slot:not([hidden])'),
     ).toHaveCount(9);
-    const overflow = await page
-      .locator('.drawer-panel[data-panel="adventure"]')
-      .evaluate((panel) => panel.scrollWidth > panel.clientWidth + 1);
+    // Nine gated-in toys become three pages of at most four; the scroller,
+    // not the panel, is what overflows and snaps between pages.
+    await expect(adventure.locator('.page-dot:not([hidden])')).toHaveCount(3);
+    const overflow = await adventure
+      .locator('.drawer-pages')
+      .evaluate((pages) => pages.scrollWidth > pages.clientWidth + 1);
     expect(overflow).toBe(true);
   });
 

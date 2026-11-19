@@ -18,6 +18,31 @@ const waitForReady = (page: import('@playwright/test').Page) =>
     Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
   );
 
+/** A canvas point the board raycast cannot resolve — the outside-drop zone. */
+const outsideBoardPoint = (page: import('@playwright/test').Page) =>
+  page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>('.scene-canvas');
+    if (!canvas) throw new Error('scene canvas missing');
+    const rect = canvas.getBoundingClientRect();
+    const scene = (
+      window as unknown as {
+        __tinyTracksScene?: { cellFromPoint: (x: number, y: number) => unknown };
+      }
+    ).__tinyTracksScene;
+    if (!scene) throw new Error('dev scene handle missing');
+    const candidates = [
+      { x: rect.right - 12, y: rect.top + 12 },
+      { x: rect.left + rect.width / 2, y: rect.top + 12 },
+      { x: rect.right - 12, y: rect.top + rect.height / 2 },
+    ];
+    for (const point of candidates) {
+      if (scene.cellFromPoint(point.x, point.y) !== null) continue;
+      if (document.elementFromPoint(point.x, point.y)?.closest('.toybox-rail')) continue;
+      return point;
+    }
+    throw new Error('no point beyond the board found');
+  });
+
 test('app boots on a tablet with a clean console and zero external requests @smoke', async ({
   page,
 }) => {
@@ -60,7 +85,7 @@ test('app boots on a tablet with a clean console and zero external requests @smo
   });
 });
 
-test('the build journey: drag-place, rotate, lift, trash and take back @smoke', async ({
+test('the build journey: drag-place, rotate, lift, remove beyond the board and take back @smoke', async ({
   page,
 }) => {
   test.setTimeout(180_000); // the six folded journeys' default budgets, summed
@@ -272,8 +297,9 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
     expect(count.scenery).toBe(0);
   });
 
-  await test.step('drag-to-trash deletes a lifted toy over the rail, and undo takes it back', async () => {
+  await test.step('dragging a lifted toy beyond the board removes it, and undo takes it back', async () => {
     await clearMeadow(page);
+    await expect(page.locator('.trash-slot')).toHaveCount(0);
 
     await page.evaluate(() => {
       const world = (
@@ -287,7 +313,6 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
       world.place('straight', { x: 6, y: 8 }, 0);
     });
 
-    // Drag the toy straight down into the trash bin on the rail.
     const start = await page.evaluate(() => {
       const sceneHandle = (
         window as unknown as {
@@ -301,18 +326,18 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
       if (!point) throw new Error('cell (6,8) not visible on screen');
       return point;
     });
-    const trash = await page.locator('.trash-slot').boundingBox();
-    if (!trash) throw new Error('trash slot not visible');
+    const outside = await outsideBoardPoint(page);
 
     await page.mouse.move(start.x, start.y);
     await page.mouse.down();
-    // Lift over the threshold, then travel to the trash bin's center.
+    // Lift over the threshold, then travel past the board edge.
     await page.mouse.move(start.x + 16, start.y + 16, { steps: 3 });
-    await page.mouse.move(trash.x + trash.width / 2, trash.y + trash.height / 2, { steps: 10 });
+    await page.mouse.move(outside.x, outside.y, { steps: 10 });
+    await expect(page.locator('.removal-preview')).toBeVisible();
     await page.mouse.up();
     await page.waitForTimeout(400);
 
-    const trashed = await page.evaluate(() => {
+    const removed = await page.evaluate(() => {
       const world = (
         window as unknown as {
           __tinyTracksWorld?: { pieces: () => unknown[]; scenery: () => unknown[] };
@@ -321,10 +346,10 @@ test('the build journey: drag-place, rotate, lift, trash and take back @smoke', 
       if (!world) throw new Error('dev world handle missing');
       return { pieces: world.pieces().length, scenery: world.scenery().length };
     });
-    expect(trashed.pieces).toBe(0);
-    expect(trashed.scenery).toBe(0);
+    expect(removed.pieces).toBe(0);
+    expect(removed.scenery).toBe(0);
 
-    // The bin is one take-back on the rail: the trashed toy comes back.
+    // One take-back on the rail brings the removed toy straight back.
     const undo = page.locator('.undo-toggle');
     await expect(undo).toBeVisible();
     await undo.click();

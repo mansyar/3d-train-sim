@@ -1,0 +1,31 @@
+{
+  "id": "toybox-clarity_20261119",
+  "title": "Toybox Clarity and Outside-Drag Removal",
+  "type": "feature",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-18T21:42:16Z",
+  "updated_at": "2026-11-19T03:03:10Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "feat/toybox-clarity_20261119",
+  "base_branch": "main",
+  "base_sha": "6d762f35363010f0abd6f360850fa060d414b6ad",
+  "progress": {
+    "phases_total": 4,
+    "phases_verified": 4,
+    "tasks_total": 32,
+    "tasks_done": 32
+  },
+  "last_checkpoint": "081da87665f797a39c2a418a01689f30e6bc34eb",
+  "review_verdict": "PASS",
+  "review_rounds": 3,
+  "doc_sync": "updated",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/83",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-19T03:03:10Z",
+  "archive_path": "conductor/archive/toybox-clarity_20261119"
+}
