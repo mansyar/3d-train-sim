@@ -25,7 +25,7 @@ import { createPortalGlow } from './portal-glow';
 import { createRiverWater } from './river-water';
 import type { SceneContext } from './scene-context';
 import { createSkyDome } from './sky-dome';
-import { createWeatherParticles } from './weather-particles';
+import { type CloudWitness, createWeatherParticles } from './weather-particles';
 import { disposeWindowGlows, setGlowNight } from './window-glow';
 
 /** Portal glow reach in cell units — the mouth flares as the engine nears. */
@@ -56,6 +56,12 @@ export interface DayAmbience {
   setDayPhase(phase: DayPhase): void;
   /** Fire on every phase change, the child's tap or the drift's own hand. */
   subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
+  /** DEV/e2e: pin the cloud bed (null restores the clock). Never persisted. */
+  setCloudWeather(weather: { cloud: number; snow: number } | null): void;
+  /** DEV/e2e: advance the cloud emitter by N frames, no RAF required. */
+  stepClouds(frames: number, dt: number): void;
+  /** DEV/e2e: live two-layer cloud witness. */
+  cloudLayers(): CloudWitness | null;
   dispose(): void;
 }
 
@@ -83,8 +89,10 @@ export function createDayAmbience({
   const weatherClock = createWeatherClock({ now: () => performance.now() });
   const sky = createSkyDome(context.scene);
   const water = createRiverWater(context.scene);
-  const weather = createWeatherParticles(context.scene);
+  const weather = createWeatherParticles(context.scene, context.reducedMotion);
   const fireflies = createFireflies(context.scene);
+  /** DEV/e2e-only cloud bed override — in memory, never saved or shipped. */
+  let cloudOverride: { cloud: number; snow: number } | null = null;
   /** The portals catching the night beams (one shared warm light). */
   const portalGlowVisual = createPortalGlow(context.scene);
   /** Open portal mouths in flat [x, z, ...] cell units — rebuilt on edits. */
@@ -138,9 +146,11 @@ export function createDayAmbience({
     // easing makes the trim fade in, and snow accumulation stays full.
     const weatherScale = qualityApplier.weatherScale;
     scaledWeather.rain = base.rain * weatherScale;
-    scaledWeather.snow = base.snow * weatherScale;
-    scaledWeather.cloud = base.cloud * weatherScale;
-    weather.update(dt, scaledWeather);
+    // A pinned DEV/e2e bed replaces only the cloud/snow inputs; the clock,
+    // ground and audio keep reading the real weather.
+    scaledWeather.snow = (cloudOverride?.snow ?? base.snow) * weatherScale;
+    scaledWeather.cloud = (cloudOverride?.cloud ?? base.cloud) * weatherScale;
+    weather.update(dt, scaledWeather, night);
     ground.setSnow(base.snow);
     tracks.setTunnelSnow(base.snow >= FROZEN_SNOW); // The hill wears winter, like the river.
     tracks.setHillSnow(base.snow >= FROZEN_SNOW); // The hill run's crowns share the gate.
@@ -184,6 +194,18 @@ export function createDayAmbience({
       dayClock.subscribe((event) => {
         if (event.kind === 'phase') listener(event.phase);
       }),
+    setCloudWeather(cloudWeather): void {
+      cloudOverride = cloudWeather;
+      // Repaint at once — the reduced-motion static frame has no loop to pick
+      // the override up on a later tick.
+      paint();
+    },
+    stepClouds(frames, dt): void {
+      for (let index = 0; index < frames; index += 1) {
+        weather.update(dt, scaledWeather, nightFactorAt(dayClock.fraction));
+      }
+    },
+    cloudLayers: () => weather.cloudLayers(),
     updatePortalGlow(star) {
       const night = nightFactorAt(dayClock.fraction);
       // The headlight catches the portals at night: a warm glow at the open
