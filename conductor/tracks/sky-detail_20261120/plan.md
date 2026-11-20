@@ -15,7 +15,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-5, FR-7, AC-1, AC-3, AC-5, AC-7
 - **Touches:** `src/core/cloud-layers.ts`, `src/core/cloud-layers.test.ts`, `verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Failing tests for layer/cover/parallax helpers** — covers: FR-1, FR-2, FR-3, FR-5
   - [ ] **P1.T1.1: exactly two layer descriptors with distinct depth and speed**
