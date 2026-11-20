@@ -74,6 +74,6 @@ e2e/perf-budget.spec.ts
 
 ## Primary verification
 
-The primary independently re-ran the exact phase command on `6d24cc7`:
+The primary independently re-ran the exact phase command on the final code head `6269342`:
 `pnpm check && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts e2e/frame-contract.spec.ts --repeat-each=3`.
-`check` exit 0 (Biome 204 files clean, tsc clean, Vitest 60 files / 1051 tests); Playwright exit 0 with 15/15 passed and both negative proofs throwing the expected messages on all three repeats. The working tree was clean apart from gitignored `.conductor/`; `git diff --name-only 96fcb32..HEAD` listed exactly the two allowed paths. Squash guard: the range contains only commit `6d24cc7`, with no merge/user commits. Only pre-existing Vite, WebGLShadowMap, and >500 kB warnings appeared.
+`check` exit 0 (Biome 204 files clean, tsc clean, Vitest 60 files / 1051 tests); Playwright exit 0 with 15/15 passed and both negative proofs throwing the expected messages on all three repeats. The working tree was clean apart from gitignored `.conductor/`; `git diff --name-only 96fcb32..HEAD` listed exactly the two allowed paths. Squash guard: the range contains only commit `6269342`, with no merge/user commits. Only pre-existing Vite, WebGLShadowMap, and >500 kB warnings appeared.

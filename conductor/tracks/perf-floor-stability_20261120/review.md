@@ -5,11 +5,11 @@
 - **Branch:** `fix/perf-floor-stability_20261120`
 - **Range:** `15dbc05220a29a31a32480ccaa1f6a2805865a1d..aa8b5ba`
 - **Date:** 2026-11-20T21:10:00Z
-- **Verdict:** `PASS WITH FINDINGS` — one Low comment-accuracy finding; no Critical or High.
+- **Verdict:** `PASS` after review phase R1 resolved F1 and a delta re-review returned PASS with one non-blocking documentation nit (F2, corrected in post-review sync); no Critical or High.
 
 ## Summary
 
-The wall-clock throughput hard gate is fully removed and replaced by a deterministic frame-count/order gate mirroring the established `frame-contract.spec.ts` witness. The interactive mark remains a hard <=5000 ms gate, negative proofs fail closed, the observation spec changed only its comment, and scope is confined to the two perf e2e specs plus Conductor files. All requirements are covered and all configured checks are green. One Low finding (F1) is a factually inaccurate comment introduced by this diff; strict mode requires fixing it in R1 rather than deferring it.
+The wall-clock throughput hard gate is fully removed and replaced by a deterministic frame-count/order gate mirroring the established `frame-contract.spec.ts` witness. The interactive mark remains a hard <=5000 ms gate, negative proofs fail closed, the observation spec changed only its comment, and scope is confined to the two perf e2e specs plus Conductor files. All requirements are covered and all configured checks are green. One Low finding (F1) was a factually inaccurate comment introduced by this diff; strict mode scheduled it for R1 rather than deferring it. R1 resolved F1 with a comment-only change, and the delta re-review returned PASS with no new Critical/High/Medium finding.
 
 ## Verification
 
@@ -72,14 +72,23 @@ The wall-clock throughput hard gate is fully removed and replaced by a determini
   - **Fix:** Reword to "Both tick reads happen at the same point within their RAF callbacks, so where the scene loop sits in the callback queue cannot bias the delta."
   - **Requirement:** FR-2
   - **Test gap:** none — documentation-only.
+  - **Resolution:** fixed in R1 (checkpoint `6269342`) by replacing the comment with the accurate wording used in `e2e/frame-contract.spec.ts`; delta re-review returned PASS.
+
+- **F2 — Stale hash in new R1 evidence (delta re-review, Low)**
+  - **File:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-R1.md:77,79`
+  - **What:** The primary-verification note referenced the pre-amend head `6d24cc7` instead of the final head `6269342`.
+  - **Why:** The byte-identical code was committed as `6269342`; the stale hash would mislead a reader checking the squash guard.
+  - **Fix:** Updated both references to `6269342` in post-review sync; no test or behavior change.
+  - **Requirement:** none
+  - **Test gap:** none — documentation-only.
 
 ## Overrides
 
-- <none — strict mode; F1 is scheduled for R1.>
+- <none — strict mode; both Low findings were fixed rather than deferred.>
 
 ## Plan compliance
 
-All four planned sections (Phase 1, Phase 2, Phase 3, plus the initial failed-tag context) are accounted for. Phase 1 has 20/20 tasks complete with checkpoint `d1b46fd`; Phase 2 has 8/8 with checkpoint `219a98f`; Phase 3 has 9/9 with checkpoint `63a444f`; metadata totals 37/37 tasks and 3/3 phases. No task was silently dropped or marked complete without verification. The final diff stays within the union of phase Touches plus Conductor state.
+All four planned sections are accounted for: Phase 1 20/20 tasks (`d1b46fd`), Phase 2 8/8 (`219a98f`), Phase 3 9/9 (`63a444f`), and review phase R1 4/4 (`6269342`). Metadata totals 40/40 tasks and 4/4 phases. No task was silently dropped or marked complete without verification. The final diff stays within the union of phase Touches plus Conductor state.
 
 ## Out of scope
 
@@ -91,10 +100,11 @@ Pre-existing warnings (Vite `configLoader: 'native'`, `THREE.WebGLShadowMap` dep
 
 ## Doc sync
 
-`pending` — no product, tech-stack, product-guideline, CHANGELOG, clarity, or release-document contract changed; post-review sync will confirm `none`.
+`none` — no product, tech-stack, product-guideline, CHANGELOG, clarity, or release-document contract changed. Only the review record, R1 evidence hash correction, and metadata terminal review fields were synchronized.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | PASS WITH FINDINGS | 0 | 0 | 0 | 1 | 0 (R1 scheduled) |
+| R1 | PASS (delta re-review) | 0 | 0 | 0 | 0 (F2 corrected in post-review sync) | 1 (F1) |
