@@ -42,7 +42,9 @@
 - **Covers:** FR-6, NFR-4, AC-6
 - **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-2.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.0_20261120 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** in_progress
+- **Status:** failed (both allowed dry-run attempts ended in failure — see `verification/phase-2.md`)
+- **Result:** blocked — no tag, no PR, no archive.
+- **Evidence:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-2.md`
 
 - [ ] **P2.T1: Dispatch and watch the first dry run** — covers: FR-6
   - [ ] **P2.T1.1: Dispatch the dry run from this branch, watch it to completion and record run ID, URL, jobs and timestamps.**
