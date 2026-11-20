@@ -40,7 +40,12 @@ import { mountPerfDebugOverlay } from './perf-debug-overlay';
 import { createPlaceholderCrate } from './placeholder-crate';
 import { createQualityApplier } from './quality-applier';
 import { createRenderScale } from './render-scale';
-import { type CargoTransferWitness, createRigCargo, type StationSlot } from './rig-cargo';
+import {
+  type CargoTransferTrace,
+  type CargoTransferWitness,
+  createRigCargo,
+  type StationSlot,
+} from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
@@ -73,6 +78,9 @@ export interface SceneHandle {
   wagonCount(): number;
   /** Dev/e2e witness: the live crate arc's kind, progress and world endpoints. */
   cargoTransfer(): CargoTransferWitness | null;
+  /** DEV-only: the app-recorded transfer samples (oldest first), for deterministic
+   *  arc assertions that do not depend on the test's own RAF under CI load. */
+  cargoTransferTrace(): CargoTransferTrace;
   /** Dev/e2e witness: a station's numbered slot visibility, null if no slot. */
   cargoSlotVisible(stationId: string, slot: number): boolean | null;
   /** Dev/e2e witness: drive one cargo stop for the primary rig. Reduced motion
@@ -526,6 +534,7 @@ export function initScene(
     setGridVisible: (visible) => tracks.setGridVisible(visible),
     wagonCount: () => fleet.wagonCount(),
     cargoTransfer: () => cargo.transferWitness(),
+    cargoTransferTrace: () => cargo.transferTrace(),
     cargoSlotVisible: (stationId, slot) => {
       const found = stationSlotWorld(stationId, slot);
       return found ? (found.crate?.visible ?? true) : null;

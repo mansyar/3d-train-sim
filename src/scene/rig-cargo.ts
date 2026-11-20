@@ -20,6 +20,9 @@ import { disposeObject } from './dispose-object';
 /** How long the wagon crates take to pop aboard at a station load. */
 const CARGO_POP_SECONDS = 0.25;
 
+/** Bounded DEV trace history — several whole arcs survive before the ring wraps. */
+const TRACE_CAPACITY = 256;
+
 /** The cargo slice of a train rig (structurally satisfied by TrainRig). */
 export interface CargoRig {
   /** The ride anchor served, '' when the rig is back in the spare pool. */
@@ -40,6 +43,20 @@ export interface CargoTransferWitness {
   spot: TransferPoint;
   /** Destination slot visibility — false while a delivery crate is in flight. */
   slotVisible: boolean;
+}
+
+/**
+ * One retained sample in the DEV transfer trace. It carries exactly the live
+ * witness fields so the e2e can assert the whole arc after the fact; the app
+ * records it in place at transfer start and on every tick (landing included).
+ */
+export type CargoTransferTraceSample = CargoTransferWitness;
+
+/** Ordered DEV trace result. `samples` holds the retained preallocated objects
+ *  themselves (oldest first), not copies — their identities stay stable. */
+export interface CargoTransferTrace {
+  count: number;
+  samples: CargoTransferTraceSample[];
 }
 
 /** A station's numbered slot: its world point and the crate mesh that fills it. */
@@ -82,6 +99,8 @@ export interface RigCargo {
   tickTransfer(dt: number): void;
   /** Dev/e2e witness: the live arc's kind, progress and endpoints, or null. */
   transferWitness(): CargoTransferWitness | null;
+  /** DEV-only: the retained transfer samples, oldest first. Never called in a frame. */
+  transferTrace(): CargoTransferTrace;
   dispose(): void;
 }
 
@@ -112,6 +131,53 @@ export function createRigCargo({
   let travelCrate: Object3D | null = null;
   /** Exactly one ride is active, so at most one hand-off is ever in flight. */
   let active: ActiveTransfer | null = null;
+
+  /**
+   * DEV-only bounded trace, allocated once here. The record path only
+   * overwrites these objects in place, so an arc's evidence is what the app
+   * actually drew — never whatever the test's own RAF happened to catch under
+   * CI load. No allocation, growth or closure lives in start/tick/record.
+   */
+  const traceSamples: CargoTransferTraceSample[] = [];
+  for (let i = 0; i < TRACE_CAPACITY; i += 1) {
+    traceSamples.push({
+      kind: 'load',
+      stationId: '',
+      progress: 0,
+      from: { x: 0, y: 0, z: 0 },
+      to: { x: 0, y: 0, z: 0 },
+      spot: { x: 0, y: 0, z: 0 },
+      slotVisible: true,
+    });
+  }
+  /** Index of the next write; traceSize is the number of retained samples. */
+  let traceHead = 0;
+  let traceSize = 0;
+
+  /** In-place point copy — no allocation on the record path. */
+  const copyTracePoint = (out: TransferPoint, from: TransferPoint): void => {
+    out.x = from.x;
+    out.y = from.y;
+    out.z = from.z;
+  };
+
+  /** Records one sample into the ring without allocating. */
+  const recordTrace = (transfer: ActiveTransfer, progress: number): void => {
+    // traceHead is always modulo-wrapped into the preallocated ring; the guard
+    // only narrows away noUncheckedIndexedAccess's impossible undefined.
+    const sample = traceSamples[traceHead];
+    if (!sample) return;
+    sample.kind = transfer.kind;
+    sample.stationId = transfer.stationId;
+    sample.progress = progress;
+    copyTracePoint(sample.from, transfer.from);
+    copyTracePoint(sample.to, transfer.to);
+    copyTracePoint(sample.spot, transfer.spot);
+    sample.slotVisible = transfer.slotCrate ? transfer.slotCrate.visible : true;
+    traceHead = (traceHead + 1) % TRACE_CAPACITY;
+    if (traceSize < TRACE_CAPACITY) traceSize += 1;
+  };
+
   /** Scratch for one-shot endpoint lookups — never touched in the frame path. */
   const scratchVec = new Vector3();
   /**
@@ -231,7 +297,7 @@ export function createRigCargo({
 
     const from = action === 'load' ? slotPoint : bedPoint;
     const to = action === 'load' ? bedPoint : slotPoint;
-    active = {
+    const transfer: ActiveTransfer = {
       rig,
       kind: action,
       stationId,
@@ -243,11 +309,15 @@ export function createRigCargo({
       stationPresent: true,
       slotCrate,
     };
+    active = transfer;
 
     // The real crates wait out the hand-off; one travelling crate stands in.
     for (const crate of crates(rig.wagons)) crate.visible = false;
     travelCrate.position.set(from.x, from.y, from.z);
     travelCrate.visible = true;
+
+    // First trace sample: the arc's origin, recorded before any frame runs.
+    recordTrace(transfer, 0);
   };
 
   const tickTransfer = (dt: number): void => {
@@ -259,14 +329,20 @@ export function createRigCargo({
     transfer.elapsed += dt;
     const progress = resolveTransferProgress(transferProgress(transfer.elapsed), cancelled);
     transfer.progress = progress;
+    // Fill the scratch spot BEFORE recording and finishing so the landing
+    // sample (progress 1) lands its spot exactly on the destination. The pure
+    // helper clamps and zeroes the lift at both endpoints.
+    transferPoint(transfer.from, transfer.to, progress, transfer.spot);
+    // A world notify can re-settle platform visibility mid-flight; one plain
+    // property write keeps the slot dark until the crate actually lands.
+    if (transfer.slotCrate) transfer.slotCrate.visible = false;
+    // Record every tick — the landing tick included — before finishTransfer
+    // clears `active`, so the trace keeps the crate's honest final witness.
+    recordTrace(transfer, progress);
     if (progress >= 1) {
       finishTransfer(transfer);
       return;
     }
-    // A world notify can re-settle platform visibility mid-flight; one plain
-    // property write keeps the slot dark until the crate actually lands.
-    if (transfer.slotCrate) transfer.slotCrate.visible = false;
-    transferPoint(transfer.from, transfer.to, progress, transfer.spot);
     if (travelCrate) {
       travelCrate.position.set(transfer.spot.x, transfer.spot.y, transfer.spot.z);
     }
@@ -283,6 +359,21 @@ export function createRigCargo({
       spot: { ...active.spot },
       slotVisible: active.slotCrate ? active.slotCrate.visible : true,
     };
+  };
+
+  /**
+   * DEV-only. Builds an oldest→newest wrapper over the retained sample
+   * references. Allocating here is fine — the frame path never calls it, and
+   * the sample objects themselves are the preallocated ring members.
+   */
+  const transferTrace = (): CargoTransferTrace => {
+    const samples: CargoTransferTraceSample[] = [];
+    const oldest = (traceHead - traceSize + TRACE_CAPACITY) % TRACE_CAPACITY;
+    for (let i = 0; i < traceSize; i += 1) {
+      const sample = traceSamples[(oldest + i) % TRACE_CAPACITY];
+      if (sample) samples.push(sample);
+    }
+    return { count: traceSize, samples };
   };
 
   const handleStation = (rig: CargoRig, stationId: string): void => {
@@ -325,6 +416,7 @@ export function createRigCargo({
     handleStation,
     tickTransfer,
     transferWitness,
+    transferTrace,
     dispose(): void {
       unsubscribeWorld();
       if (active) finishTransfer(active);
