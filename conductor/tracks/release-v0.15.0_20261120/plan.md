@@ -14,28 +14,26 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4, AC-5
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.15.0_20261120/verification/phase-1.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test --shard=1/2 && pnpm exec playwright test --shard=2/2 && pnpm audit --audit-level=high`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Bump the release version** — covers: FR-1
-  - [ ] **P1.T1.1: Set `package.json` version to `0.15.0` with no dependency or `pnpm-lock.yaml` diff.**
-- [ ] **P1.T2: Curate the parent-facing changelog** — covers: FR-2
-  - [ ] **P1.T2.1: Leave `[Unreleased]` empty and add `[0.15.0] - 2026-11-20` with plain-language entries for the cargo hand-off and the layered clouds.**
-  - [ ] **P1.T2.2: Refresh the compare links at the foot of `CHANGELOG.md` for v0.15.0 and v0.14.1.**
-- [ ] **P1.T3: Restore shipped roadmap wording** — covers: FR-3
-  - [ ] **P1.T3.1: Change only `conductor/product.md:115` from "v0.14.1 release gates pending" to shipped wording, leaving the rest of the roadmap, Phase 3, anti-roadmap and v1.0 gate unchanged.**
-- [ ] **P1.T4: Retarget the clarity baseline labels** — covers: FR-4
-  - [ ] **P1.T4.1: Relabel `comparison.md` from v0.14.1 to v0.15.0 while all eight `awaiting observation` cells and the no-numbers wording stay intact.**
-- [ ] **P1.T5: Run the full local matrix** — covers: FR-5
-  - [ ] **P1.T5.1: Run the exact verification command, including both Playwright shards and the audit gate.**
-  - [ ] **P1.T5.2: Record exact command results, gate exit codes and any pre-existing warnings without inventing values.**
-- [ ] **P1.T6: Assemble release evidence** — covers: FR-5
-  - [ ] **P1.T6.1: Write `verification/integrated.md` with the scope guard, check table, AC-1..AC-5 mapping and honest non-claims.**
+- [x] **P1.T1: Bump the release version** — covers: FR-1
+  - [x] **P1.T1.1: Set `package.json` version to `0.15.0` with no dependency or `pnpm-lock.yaml` diff.**
+- [x] **P1.T2: Curate the parent-facing changelog** — covers: FR-2
+  - [x] **P1.T2.1: Leave `[Unreleased]` empty and add `[0.15.0] - 2026-11-20` with plain-language entries for the cargo hand-off and the layered clouds.**
+  - [x] **P1.T2.2: Refresh the compare links at the foot of `CHANGELOG.md` for v0.15.0 and v0.14.1.**
+- [x] **P1.T3: Restore shipped roadmap wording** — covers: FR-3
+  - [x] **P1.T3.1: Change only `conductor/product.md:115` from "v0.14.1 release gates pending" to shipped wording, leaving the rest of the roadmap, Phase 3, anti-roadmap and v1.0 gate unchanged.**
+- [x] **P1.T4: Retarget the clarity baseline labels** — covers: FR-4
+  - [x] **P1.T4.1: Relabel `comparison.md` from v0.14.1 to v0.15.0 while all eight `awaiting observation` cells and the no-numbers wording stay intact.**
+- [x] **P1.T5: Run the full local matrix** — covers: FR-5
+  - [x] **P1.T5.1: Run the exact verification command, including both Playwright shards and the audit gate.**
+  - [x] **P1.T5.2: Record exact command results, gate exit codes and any pre-existing warnings without inventing values.**
+- [x] **P1.T6: Assemble release evidence** — covers: FR-5
+  - [x] **P1.T6.1: Write `verification/phase-1.md` with the scope guard, check table, AC-1..AC-5 mapping and honest non-claims; `verification/integrated.md` is assembled after all phases.**
 
-<!--
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/release-v0.15.0_20261120/verification/integrated.md
--->
+**Result:** verified (after one primary rework of three phase-subagent permission denials; see evidence `## Primary rework 1`)
+**Checkpoint:** `4f9d9a3`
+**Evidence:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-1.md`
 
 ## Phase 2: First release dry run
 
