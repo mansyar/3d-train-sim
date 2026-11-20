@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [sky-detail_20261120](./tracks/sky-detail_20261120/index.md) | Sky Detail | Feature | new |
+| [sky-detail_20261120](./tracks/sky-detail_20261120/index.md) | Sky Detail | Feature | in_progress |
 | [station-cargo-clarity_20261120](./archive/station-cargo-clarity_20261120/index.md) | Station Cargo Clarity | Feature | archived |
 | [switch-e2e-stability_20261119](./archive/switch-e2e-stability_20261119/index.md) | Switch E2E Stability and Release v0.14.1 | Bug | archived |
 | [release-v0.14.0_20261119](./archive/release-v0.14.0_20261119/index.md) | Release v0.14.0 | Chore | archived |
