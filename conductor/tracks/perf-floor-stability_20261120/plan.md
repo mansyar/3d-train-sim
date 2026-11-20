@@ -90,11 +90,14 @@
 - **Covers:** F1 (FR-2)
 - **Touches:** `e2e/perf-budget.spec.ts`, `conductor/tracks/perf-floor-stability_20261120/verification/phase-R1.md`
 - **Verification:** `pnpm check && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts e2e/frame-contract.spec.ts --repeat-each=3`
-- **Status:** pending
+- **Status:** verified
+- **Result:** verified — F1 corrected with a comment-only diff; exact phase command green under the primary.
+- **Checkpoint:** `6269342`
+- **Evidence:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-R1.md`
 
-- [ ] **R1.T1: Resolve F1** — covers: F1
-  - [ ] **R1.T1.1:** Replace the "same RAF callback" wording with "same point within their RAF callbacks".
-  - [ ] **R1.T1.2:** Re-run the deterministic perf specs three times and write `verification/phase-R1.md`.
+- [x] **R1.T1: Resolve F1** — covers: F1
+  - [x] **R1.T1.1:** Replace the "same RAF callback" wording with "same point within their RAF callbacks".
+  - [x] **R1.T1.2:** Re-run the deterministic perf specs three times and write `verification/phase-R1.md`.
 
 <!--
 Review fixes are appended by `conductor-review` as:
