@@ -44,22 +44,25 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8
 - **Touches:** `src/scene/weather-particles.ts`, `src/scene/day-ambience.ts`, `src/scene/init-scene.ts`, `e2e/sky-detail.spec.ts`, `verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/sky-detail.spec.ts e2e/sun-moon.spec.ts e2e/a11y.spec.ts e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified (one e2e tolerance fix during the phase; see `## Deviations` in evidence)
+- **Checkpoint:** `29458e3`
+- **Evidence:** `conductor/tracks/sky-detail_20261120/verification/phase-2.md`
 
-- [ ] **P2.T1: Build the two fixed cloud pools** — covers: FR-1, FR-2, FR-3, FR-5
-  - [ ] **P2.T1.1: near/far sprite pools reuse the existing puff texture; no post-boot mesh creation**
-  - [ ] **P2.T1.2: feed layer opacity and speed from the Phase 1 helper in place**
-  - [ ] **P2.T1.3: wrap drift inside the arc and preserve the quality guardrail scale**
-- [ ] **P2.T2: Wire reduced motion and weather/day repaint** — covers: FR-4, FR-7
-  - [ ] **P2.T2.1: freeze drift under reduced motion while keeping static layered clouds visible**
-  - [ ] **P2.T2.2: keep weather cross-fades and day-phase tint working with no flash**
-- [ ] **P2.T3: Dev/e2e witnesses and specs** — covers: FR-6, AC-1, AC-2, AC-3, AC-4, AC-6
-  - [ ] **P2.T3.1: expose layer count, drift state/relative speed and cover on the DEV scene handle**
-  - [ ] **P2.T3.2: assert two layers, weather response, parallax drift and reduced-motion freeze**
-  - [ ] **P2.T3.3: keep existing sun-moon, a11y and perf specs unchanged and green**
-- [ ] **P2.T4: Scope guard and evidence** — covers: AC-5, AC-7, AC-8
-  - [ ] **P2.T4.1: prove no new network/identifier/script, no save/UI/audio/dependency diff**
-  - [ ] **P2.T4.2: write `verification/phase-2.md`**
+- [x] **P2.T1: Build the two fixed cloud pools** — covers: FR-1, FR-2, FR-3, FR-5
+  - [x] **P2.T1.1: near/far sprite pools reuse the existing puff texture; no post-boot mesh creation**
+  - [x] **P2.T1.2: feed layer opacity and speed from the Phase 1 helper in place**
+  - [x] **P2.T1.3: wrap drift inside the arc and preserve the quality guardrail scale**
+- [x] **P2.T2: Wire reduced motion and weather/day repaint** — covers: FR-4, FR-7
+  - [x] **P2.T2.1: freeze drift under reduced motion while keeping static layered clouds visible**
+  - [x] **P2.T2.2: keep weather cross-fades and day-phase tint working with no flash**
+- [x] **P2.T3: Dev/e2e witnesses and specs** — covers: FR-6, AC-1, AC-2, AC-3, AC-4, AC-6
+  - [x] **P2.T3.1: expose layer count, drift state/relative speed and cover on the DEV scene handle**
+  - [x] **P2.T3.2: assert two layers, weather response, parallax drift and reduced-motion freeze**
+  - [x] **P2.T3.3: keep existing sun-moon, a11y and perf specs unchanged and green**
+- [x] **P2.T4: Scope guard and evidence** — covers: AC-5, AC-7, AC-8
+  - [x] **P2.T4.1: prove no new network/identifier/script, no save/UI/audio/dependency diff**
+  - [x] **P2.T4.2: write `verification/phase-2.md`**
 
 <!--
 Review fixes are appended by `conductor-review` as:

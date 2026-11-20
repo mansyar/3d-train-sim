@@ -6,7 +6,7 @@
   "priority": "medium",
   "depends_on": [],
   "created_at": "2026-11-20T02:35:07Z",
-  "updated_at": "2026-11-20T02:50:00Z",
+  "updated_at": "2026-11-20T03:02:00Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "feat/sky-detail_20261120",
@@ -14,11 +14,11 @@
   "base_sha": "da63f087eceec2754e7e0daf5efa71a0a7206a77",
   "progress": {
     "phases_total": 2,
-    "phases_verified": 1,
+    "phases_verified": 2,
     "tasks_total": 22,
-    "tasks_done": 8
+    "tasks_done": 22
   },
-  "last_checkpoint": "2f71b4b",
+  "last_checkpoint": "29458e3",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
