@@ -14,35 +14,31 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, NFR-1, NFR-2, NFR-3, NFR-4, AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8
 - **Touches:** `e2e/perf-budget.spec.ts`, `e2e/perf-budget-observe.spec.ts`, `conductor/tracks/perf-floor-stability_20261120/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test --shard=1/2 && pnpm exec playwright test --shard=2/2 && pnpm audit --audit-level=high && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts e2e/frame-contract.spec.ts --repeat-each=3`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified (after one primary rework of subagent permission/environment blockers; exact chained command exit 0 — see `## Primary verification` in evidence)
+- **Checkpoint:** `d1b46fd`
+- **Evidence:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-1.md`
 
-- [ ] **P1.T1: Remove the wall-clock throughput hard gate** — covers: FR-1, AC-1
-  - [ ] **P1.T1.1:** Delete `FPS_FLOOR_TICKS_PER_SECOND` and its calibration comment from `e2e/perf-budget.spec.ts`
-  - [ ] **P1.T1.2:** Remove `ticksPerSecond` from `BudgetInput`/`assertBudget` and the per-sample hard assertion loop
-  - [ ] **P1.T1.3:** Keep exactly one interactive mark ≤5000 ms as a hard assertion
-- [ ] **P1.T2: Add a deterministic frame-count/order hard gate** — covers: FR-2, AC-2
-  - [ ] **P1.T2.1:** Sample at least 10 animation frames with both tick reads in the same RAF callback
-  - [ ] **P1.T2.2:** Assert the system names equal the documented 12-system order before and after sampling
-  - [ ] **P1.T2.3:** Assert every system's tick delta equals the observed frame count
-- [ ] **P1.T3: Add deterministic negative proofs** — covers: FR-3, AC-3
-  - [ ] **P1.T3.1:** Prove a late interactive mark still throws the expected message
-  - [ ] **P1.T3.2:** Prove an over-tick or wrong-order frame sample throws the expected message
-- [ ] **P1.T4: Keep throughput observation non-blocking** — covers: FR-4, AC-4
-  - [ ] **P1.T4.1:** Update the `e2e/perf-budget-observe.spec.ts` comment to state that the hard gate is mark plus frame contract and that no floor exists
-  - [ ] **P1.T4.2:** Keep the three ticks/second samples, console log and JSON attachment unchanged
-- [ ] **P1.T5: Run full matrix and repeated perf specs** — covers: FR-5, NFR-4, AC-6
-  - [ ] **P1.T5.1:** Run the exact chained verification command to completion
-  - [ ] **P1.T5.2:** Record that no test was skipped, weakened or deleted
-- [ ] **P1.T6: Write phase evidence and scope guard** — covers: FR-6, AC-5, AC-8
-  - [ ] **P1.T6.1:** Record commands, results, the imported failed samples and the negative-proof messages
-  - [ ] **P1.T6.2:** Assert the diff is confined to the two perf e2e specs plus the evidence file
-
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/perf-floor-stability_20261120/verification/phase-1.md
--->
+- [x] **P1.T1: Remove the wall-clock throughput hard gate** — covers: FR-1, AC-1
+  - [x] **P1.T1.1:** Delete `FPS_FLOOR_TICKS_PER_SECOND` and its calibration comment from `e2e/perf-budget.spec.ts`
+  - [x] **P1.T1.2:** Remove `ticksPerSecond` from `BudgetInput`/`assertBudget` and the per-sample hard assertion loop
+  - [x] **P1.T1.3:** Keep exactly one interactive mark ≤5000 ms as a hard assertion
+- [x] **P1.T2: Add a deterministic frame-count/order hard gate** — covers: FR-2, AC-2
+  - [x] **P1.T2.1:** Sample at least 10 animation frames with both tick reads in the same RAF callback
+  - [x] **P1.T2.2:** Assert the system names equal the documented 12-system order before and after sampling
+  - [x] **P1.T2.3:** Assert every system's tick delta equals the observed frame count
+- [x] **P1.T3: Add deterministic negative proofs** — covers: FR-3, AC-3
+  - [x] **P1.T3.1:** Prove a late interactive mark still throws the expected message
+  - [x] **P1.T3.2:** Prove an over-tick or wrong-order frame sample throws the expected message
+- [x] **P1.T4: Keep throughput observation non-blocking** — covers: FR-4, AC-4
+  - [x] **P1.T4.1:** Update the `e2e/perf-budget-observe.spec.ts` comment to state that the hard gate is mark plus frame contract and that no floor exists
+  - [x] **P1.T4.2:** Keep the three ticks/second samples, console log and JSON attachment unchanged
+- [x] **P1.T5: Run full matrix and repeated perf specs** — covers: FR-5, NFR-4, AC-6
+  - [x] **P1.T5.1:** Run the exact chained verification command to completion
+  - [x] **P1.T5.2:** Record that no test was skipped, weakened or deleted
+- [x] **P1.T6: Write phase evidence and scope guard** — covers: FR-6, AC-5, AC-8
+  - [x] **P1.T6.1:** Record commands, results, the imported failed samples and the negative-proof messages
+  - [x] **P1.T6.2:** Assert the diff is confined to the two perf e2e specs plus the evidence file
 
 ## Phase 2: First post-fix release dry run
 
