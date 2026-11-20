@@ -44,6 +44,7 @@ import { type CargoTransferWitness, createRigCargo, type StationSlot } from './r
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
+import type { CloudWitness } from './weather-particles';
 
 /** Pixel ratio cap: tablet GPUs render crisp without melting the battery. */
 const MAX_PIXEL_RATIO = 2;
@@ -128,6 +129,12 @@ export interface SceneHandle {
   setDayPhase(phase: DayPhase): void;
   /** Fire on every time-of-day change, the child's tap or the drift's own. */
   subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
+  /** Dev/e2e witness: live two-layer cloud count, cover, drift and offsets. */
+  cloudLayers(): CloudWitness | null;
+  /** Dev/e2e witness: pin the cloud bed (null restores the clock). Not saved. */
+  setCloudWeather(weather: { cloud: number; snow: number } | null): void;
+  /** Dev/e2e witness: advance the cloud emitter by N frames deterministically. */
+  stepClouds(frames: number, dt: number): void;
   /** The number of riding trains, pushed on every ride change (🎥 visibility). */
   subscribeFilmCount(listener: (count: number) => void): () => void;
   /** Whether any train is riding, pushed on every ride change (▶/⏹ face). */
@@ -557,6 +564,9 @@ export function initScene(
     advanceDay: () => dayAmbience.advanceDay(),
     setDayPhase: (phase) => dayAmbience.setDayPhase(phase),
     subscribeDayPhase: (listener) => dayAmbience.subscribeDayPhase(listener),
+    cloudLayers: () => dayAmbience.cloudLayers(),
+    setCloudWeather: (weather) => dayAmbience.setCloudWeather(weather),
+    stepClouds: (frames, dt) => dayAmbience.stepClouds(frames, dt),
     ridingTrainCount: () => fleet.ridingCount(),
     crossingPhases: () => tracks.crossingPhases(),
     bellRinging: () => tracks.bellRinging(),
