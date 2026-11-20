@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, NFR-1, NFR-2, NFR-3, NFR-4, AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-8
 - **Touches:** `e2e/perf-budget.spec.ts`, `e2e/perf-budget-observe.spec.ts`, `conductor/tracks/perf-floor-stability_20261120/verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test --shard=1/2 && pnpm exec playwright test --shard=2/2 && pnpm audit --audit-level=high && pnpm exec playwright test e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts e2e/frame-contract.spec.ts --repeat-each=3`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Remove the wall-clock throughput hard gate** — covers: FR-1, AC-1
   - [ ] **P1.T1.1:** Delete `FPS_FLOOR_TICKS_PER_SECOND` and its calibration comment from `e2e/perf-budget.spec.ts`
