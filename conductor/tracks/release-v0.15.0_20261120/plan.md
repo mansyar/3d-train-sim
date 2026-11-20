@@ -80,6 +80,24 @@
 **Evidence:** conductor/tracks/release-v0.15.0_20261120/verification/integrated.md
 -->
 
+## Phase R1: Cargo arc e2e determinism (user-authorized scope override)
+
+- **Goal:** Remove the CI-load-sensitive RAF sampling from the cargo-arc e2e by recording a preallocated DEV-only transfer trace inside the cargo rig, so both arcs are asserted from samples the app itself recorded at transfer start and every tick.
+- **Depends on:** Phase 1
+- **Covers:** FR-6, NFR-4, AC-6 (2026-11-20 user override recorded in `spec.md`)
+- **Touches:** `src/scene/rig-cargo.ts`, `src/scene/init-scene.ts`, `src/scene/rig-cargo.test.ts`, `e2e/cargo.spec.ts`, `conductor/tracks/release-v0.15.0_20261120/verification/phase-R1.md`
+- **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/cargo.spec.ts --repeat-each=5 && pnpm exec playwright test e2e/sky-detail.spec.ts e2e/a11y.spec.ts e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts`
+- **Status:** in_progress
+
+- [ ] **R1.T1: Add a preallocated DEV transfer trace to the cargo rig** — covers: FR-6
+  - [ ] **R1.T1.1: Record one in-place sample at transfer start and at every tick (including the landing tick), reusing fixed point objects in a bounded ring; assert no allocation in the frame path.**
+  - [ ] **R1.T1.2: Expose `cargoTransferTrace()` on the DEV `SceneHandle` in `init-scene.ts` and keep the existing live `cargoTransfer()` witness unchanged.**
+- [ ] **R1.T2: Make the cargo-arc e2e assert the recorded trace** — covers: AC-6
+  - [ ] **R1.T2.1: In `e2e/cargo.spec.ts`, assert both load and deliver arcs from the app-recorded trace (multiple samples, progress span, endpoint-to-spot geometry) instead of relying on the test's own RAF sampler under CI load.**
+- [ ] **R1.T3: Prove stability and record evidence** — covers: FR-6, NFR-4
+  - [ ] **R1.T3.1: Run the exact verification command above, including five repeats of the cargo spec and the neighbouring sky/a11y/perf specs.**
+  - [ ] **R1.T3.2: Write `verification/phase-R1.md` with command results, scope guard and explicit non-claims.**
+
 <!--
 Review fixes are appended by `conductor-review` as:
 
