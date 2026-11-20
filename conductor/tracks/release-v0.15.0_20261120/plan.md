@@ -86,7 +86,7 @@
 
 ## Phase R1: Cargo arc e2e determinism (user-authorized scope override)
 
-- **Goal:** Remove the CI-load-sensitive RAF sampling from the cargo-arc e2e by recording a preallocated DEV-only transfer trace inside the cargo rig, so both arcs are asserted from samples the app itself recorded at transfer start and every tick.
+- **Goal:** Remove the CI-load-sensitive RAF sampling from the cargo-arc e2e by recording a preallocated transfer trace inside the cargo rig, read only through the DEV scene handle, so both arcs are asserted from samples the app itself recorded at transfer start and every tick.
 - **Depends on:** Phase 1
 - **Covers:** FR-6, NFR-4, AC-6 (2026-11-20 user override recorded in `spec.md`)
 - **Touches:** `src/scene/rig-cargo.ts`, `src/scene/init-scene.ts`, `src/scene/rig-cargo.test.ts`, `e2e/cargo.spec.ts`, `conductor/tracks/release-v0.15.0_20261120/verification/phase-R1.md`

@@ -56,7 +56,7 @@ the documented baseline remains stale.
 
 - Runtime changes to `src/`, e2e/unit tests, `playwright.config.ts` or
   `release.yml`, **except** the explicit user-authorized 2026-11-20 override
-  permitting an in-track, DEV-only cargo-transfer trace witness and e2e changes
+  permitting an in-track cargo-transfer trace with a DEV-gated read witness and e2e changes
   that make the existing cargo-arc assertion deterministic under CI load. No
   crate timing or player-facing behavior may change.
 - Dependency, `pnpm-lock.yaml`, save-format, storage-key, parent-gate, viewport
@@ -125,7 +125,7 @@ the documented baseline remains stale.
 - **Assumption:** No manual tablet check is required for this release, per the user's standing choice.
 - **Assumption:** v0.14.0 and v0.14.1 tags remain historical and are never retagged.
 - **Assumption:** The v1.0 3/3-child gate remains unmet and is not claimed anywhere in release docs.
-- **User override (2026-11-20):** After two failing dry runs caused by the pre-existing timing-sensitive cargo-arc e2e, the user explicitly directed "fix it on this track". A fix phase is therefore authorized for a DEV-only transfer-sample trace and the corresponding e2e assertion; release-doc content and crate motion stay unchanged.
+- **User override (2026-11-20):** After two failing dry runs caused by the pre-existing timing-sensitive cargo-arc e2e, the user explicitly directed "fix it on this track". A fix phase is therefore authorized for a transfer-sample trace whose reader is DEV-gated, plus the corresponding e2e assertion; release-doc content and crate motion stay unchanged.
 
 ## References
 

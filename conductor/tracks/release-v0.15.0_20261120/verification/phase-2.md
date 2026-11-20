@@ -64,7 +64,7 @@ A follow-up (new) track would be needed to make the cargo-arc e2e sampling deter
 
 ## Recovery after R1 (authoritative)
 
-The user explicitly directed "fix it on this track" after the two failed dry runs. That scope override is recorded in `spec.md` and implemented as Phase R1 (`verification/phase-R1.md`): `rig-cargo.ts` now records a bounded, preallocated DEV-only trace at transfer start and every tick, `SceneHandle.cargoTransferTrace()` exposes it, and `e2e/cargo.spec.ts` asserts both arcs from that app-recorded trace instead of its own RAF sampler. No crate timing, reduced-motion, confetti, persistence, player-facing behavior or `transferWitness()` changed. Primary re-verification before resuming dry runs: `pnpm check` (1051 tests), `pnpm build`, cargo spec `--repeat-each=5` (30/30), companion sky/a11y/perf specs (8/8).
+The user explicitly directed "fix it on this track" after the two failed dry runs. That scope override is recorded in `spec.md` and implemented as Phase R1 (`verification/phase-R1.md`): `rig-cargo.ts` now records a bounded, preallocated trace at transfer start and every tick, and the DEV-gated `SceneHandle.cargoTransferTrace()` exposes it, and `e2e/cargo.spec.ts` asserts both arcs from that app-recorded trace instead of its own RAF sampler. No crate timing, reduced-motion, confetti, persistence, player-facing behavior or `transferWitness()` changed. Primary re-verification before resuming dry runs: `pnpm check` (1051 tests), `pnpm build`, cargo spec `--repeat-each=5` (30/30), companion sky/a11y/perf specs (8/8).
 
 Four post-fix `workflow_dispatch` dry runs were dispatched from the pushed branch (`30f4676`) and watched to completion:
 

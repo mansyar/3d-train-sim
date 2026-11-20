@@ -24,7 +24,7 @@ The exact chained Phase 1 command was re-run by the primary on the final release
 
 ## Origin of the two dry-run failures and the R1 fix
 
-The first two dry runs (`44698232311`, `44700234497`) failed the e2e gate on the pre-existing cargo-arc test: the test's own RAF sampler captured too few samples or stopped before landing under CI load. Release content cannot affect crate motion; the primary's sharded local matrix passed. The user then explicitly said "fix it on this track", which is recorded as a scope override in `spec.md` and implemented as Phase R1: a bounded, preallocated DEV-only trace records every cargo transfer sample in the app, `SceneHandle.cargoTransferTrace()` exposes it, and the cargo e2e asserts from that trace. No crate timing, reduced-motion behavior, confetti, persistence, `transferWitness()` shape or player-facing behavior changed.
+The first two dry runs (`44698232311`, `44700234497`) failed the e2e gate on the pre-existing cargo-arc test: the test's own RAF sampler captured too few samples or stopped before landing under CI load. Release content cannot affect crate motion; the primary's sharded local matrix passed. The user then explicitly said "fix it on this track", which is recorded as a scope override in `spec.md` and implemented as Phase R1: a bounded, preallocated trace records every cargo transfer sample in the app, and the DEV-gated `SceneHandle.cargoTransferTrace()` exposes it, and the cargo e2e asserts from that trace. No crate timing, reduced-motion behavior, confetti, persistence, `transferWitness()` shape or player-facing behavior changed.
 
 After R1, a third dry run (`44709418739`) passed, a fourth (`44712469297`) failed on a separate perf-floor CI-load flake (`2.4667 < 2.5` ticks/s) with all functional tests green, and the final two runs (`44715407918`, `44717739869`) passed consecutively. No test was weakened or deleted.
 
@@ -39,7 +39,7 @@ After R1, a third dry run (`44709418739`) passed, a fourth (`44712469297`) faile
 | FR-5 / AC-5 | PASS — full local matrix green; audit gate passes with no high/critical findings | `verification/phase-1.md` |
 | FR-6 / AC-6 | PASS — final two consecutive dry runs green; image build succeeds, GHCR push and deploy skipped | `verification/phase-2.md`, `verification/phase-3.md` |
 | FR-7 / AC-7 | PRE-MERGE PASS; post-merge tag and tag-workflow gates pending by design | `verification/phase-3.md` |
-| NFR-1 / NFR-2 | PASS — no runtime, save, telemetry, UI, audio, dependency or workflow change in release content; R1 change is DEV-only trace plus e2e | `verification/phase-3.md` scope guard |
+| NFR-1 / NFR-2 | PASS — no runtime, save, telemetry, UI, audio, dependency or workflow change in release content; R1 change is an always-recorded, allocation-free trace read only by the DEV scene handle, plus e2e | `verification/phase-3.md` scope guard |
 | NFR-3 | PASS — no clarity numbers, no v1.0 claim, comparison still eight `awaiting observation` cells | `verification/phase-1.md`, `verification/phase-3.md` |
 | NFR-4 | PASS — no tag overwrite or force-push; GHCR 403 rule recorded as unknown | `verification/phase-3.md` |
 | NFR-5 | PASS — all configured commands exit 0, coverage above 80% | required-commands table |

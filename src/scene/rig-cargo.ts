@@ -20,7 +20,7 @@ import { disposeObject } from './dispose-object';
 /** How long the wagon crates take to pop aboard at a station load. */
 const CARGO_POP_SECONDS = 0.25;
 
-/** Bounded DEV trace history — several whole arcs survive before the ring wraps. */
+/** Bounded transfer trace history — several whole arcs survive before the ring wraps. */
 const TRACE_CAPACITY = 256;
 
 /** The cargo slice of a train rig (structurally satisfied by TrainRig). */
@@ -46,13 +46,13 @@ export interface CargoTransferWitness {
 }
 
 /**
- * One retained sample in the DEV transfer trace. It carries exactly the live
+ * One retained sample in the transfer trace. It carries exactly the live
  * witness fields so the e2e can assert the whole arc after the fact; the app
  * records it in place at transfer start and on every tick (landing included).
  */
 export type CargoTransferTraceSample = CargoTransferWitness;
 
-/** Ordered DEV trace result. `samples` holds the retained preallocated objects
+/** Ordered trace result. `samples` holds the retained preallocated objects
  *  themselves (oldest first), not copies — their identities stay stable. */
 export interface CargoTransferTrace {
   count: number;
@@ -99,7 +99,7 @@ export interface RigCargo {
   tickTransfer(dt: number): void;
   /** Dev/e2e witness: the live arc's kind, progress and endpoints, or null. */
   transferWitness(): CargoTransferWitness | null;
-  /** DEV-only: the retained transfer samples, oldest first. Never called in a frame. */
+  /** DEV-exposed read of the retained transfer samples, oldest first. Never called in a frame. */
   transferTrace(): CargoTransferTrace;
   dispose(): void;
 }
@@ -133,7 +133,7 @@ export function createRigCargo({
   let active: ActiveTransfer | null = null;
 
   /**
-   * DEV-only bounded trace, allocated once here. The record path only
+   * Bounded trace, allocated once here (its reader is exposed only in DEV builds). The record path only
    * overwrites these objects in place, so an arc's evidence is what the app
    * actually drew — never whatever the test's own RAF happened to catch under
    * CI load. No allocation, growth or closure lives in start/tick/record.
@@ -362,7 +362,7 @@ export function createRigCargo({
   };
 
   /**
-   * DEV-only. Builds an oldest→newest wrapper over the retained sample
+   * DEV-exposed read. Builds an oldest→newest wrapper over the retained sample
    * references. Allocating here is fine — the frame path never calls it, and
    * the sample objects themselves are the preallocated ring members.
    */

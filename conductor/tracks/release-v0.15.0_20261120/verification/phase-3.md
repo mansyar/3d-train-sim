@@ -47,7 +47,7 @@ The earlier post-fix run `44712469297` failed a CI-load perf floor after ~19 min
 
 ## Scope guard
 
-The final release diff from base `e13f652` contains release content (`package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`), Conductor track state, and the user-authorized R1 cargo e2e determinism change (`src/scene/rig-cargo.ts`, `src/scene/init-scene.ts`, `src/scene/rig-cargo.test.ts`, `e2e/cargo.spec.ts`). R1 adds a DEV-only transfer trace and changes no crate timing, reduced-motion path, confetti, persistence, `transferWitness()` shape or player-facing behavior. No dependency or lockfile change; no workflow, save, UI, audio, telemetry or clarity-number change.
+The final release diff from base `e13f652` contains release content (`package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`), Conductor track state, and the user-authorized R1 cargo e2e determinism change (`src/scene/rig-cargo.ts`, `src/scene/init-scene.ts`, `src/scene/rig-cargo.test.ts`, `e2e/cargo.spec.ts`). R1 adds a transfer trace exposed only through the DEV scene handle and changes no crate timing, reduced-motion path, confetti, persistence, `transferWitness()` shape or player-facing behavior. No dependency or lockfile change; no workflow, save, UI, audio, telemetry or clarity-number change.
 
 ## Non-claims
 
