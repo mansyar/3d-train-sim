@@ -68,7 +68,7 @@
 - **Covers:** FR-5, FR-6, NFR-3, NFR-5, AC-7, AC-8
 - **Touches:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-3.md`, `conductor/tracks/perf-floor-stability_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref fix/perf-floor-stability_20261120 --field dry_run=true`, then watch the dispatched run to completion and assert both runs are green
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Dispatch and watch the second dry run** — covers: FR-5, AC-7
   - [ ] **P3.T1.1:** Dispatch the same `release.yml` dry-run command
