@@ -47,7 +47,7 @@
 - **Covers:** FR-5, NFR-4, NFR-5, AC-7
 - **Touches:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-2.md`
 - **Verification:** `gh workflow run release.yml --ref fix/perf-floor-stability_20261120 --field dry_run=true`, then watch the dispatched run to completion
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Dispatch the first dry run** — covers: FR-5, AC-7
   - [ ] **P2.T1.1:** Push `fix/perf-floor-stability_20261120` so the workflow can resolve `--ref`
