@@ -47,16 +47,19 @@
 - **Covers:** FR-5, NFR-4, NFR-5, AC-7
 - **Touches:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-2.md`
 - **Verification:** `gh workflow run release.yml --ref fix/perf-floor-stability_20261120 --field dry_run=true`, then watch the dispatched run to completion
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — first post-fix dry run `44811466927` succeeded with all four gates green and deploy skipped.
+- **Checkpoint:** `219a98f`
+- **Evidence:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-2.md`
 
-- [ ] **P2.T1: Dispatch the first dry run** — covers: FR-5, AC-7
-  - [ ] **P2.T1.1:** Push `fix/perf-floor-stability_20261120` so the workflow can resolve `--ref`
-  - [ ] **P2.T1.2:** Dispatch `release.yml` with `dry_run=true` and record the run URL/ID
-- [ ] **P2.T2: Watch and verify the first dry run** — covers: NFR-4, AC-7
-  - [ ] **P2.T2.1:** Require `Gate · biome + typecheck`, `Gate · vitest`, `Gate · e2e` and `publish` to succeed
-  - [ ] **P2.T2.2:** Require `Deploy via Coolify webhook` to be skipped and no GHCR push to occur
-- [ ] **P2.T3: Record first-run evidence** — covers: AC-7, AC-8
-  - [ ] **P2.T3.1:** Save run ID, URL, job conclusions and timestamps in `verification/phase-2.md`
+- [x] **P2.T1: Dispatch the first dry run** — covers: FR-5, AC-7
+  - [x] **P2.T1.1:** Push `fix/perf-floor-stability_20261120` so the workflow can resolve `--ref`
+  - [x] **P2.T1.2:** Dispatch `release.yml` with `dry_run=true` and record the run URL/ID
+- [x] **P2.T2: Watch and verify the first dry run** — covers: NFR-4, AC-7
+  - [x] **P2.T2.1:** Require `Gate · biome + typecheck`, `Gate · vitest`, `Gate · e2e` and `publish` to succeed
+  - [x] **P2.T2.2:** Require `Deploy via Coolify webhook` to be skipped and no GHCR push to occur
+- [x] **P2.T3: Record first-run evidence** — covers: AC-7, AC-8
+  - [x] **P2.T3.1:** Save run ID, URL, job conclusions and timestamps in `verification/phase-2.md`
 
 ## Phase 3: Second consecutive dry run and integrated evidence
 
