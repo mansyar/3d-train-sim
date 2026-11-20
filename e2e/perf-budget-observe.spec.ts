@@ -3,8 +3,9 @@ import { expect, type Page, test } from '@playwright/test';
 /**
  * Performance-budget observation (Phase 1). This records, but does not gate:
  * one dev interactive mark and three frame-tick cadence samples on the tablet
- * profile. Phase 2 owns the calibrated floor and the hard assertion. There is
- * deliberately no FPS floor here — this spec only measures and records.
+ * profile. The hard gate lives in perf-budget.spec.ts: the interactive mark
+ * plus the deterministic per-frame tick/order contract. There is no wall-clock
+ * ticks/second floor here — this spec only measures and records.
  */
 
 const MARK_NAME = 'tiny-tracks-interactive';
