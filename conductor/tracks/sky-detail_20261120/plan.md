@@ -15,16 +15,19 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-5, FR-7, AC-1, AC-3, AC-5, AC-7
 - **Touches:** `src/core/cloud-layers.ts`, `src/core/cloud-layers.test.ts`, `verification/phase-1.md`
 - **Verification:** `pnpm check && pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified (TDD red → green; one rework-free run under the primary)
+- **Checkpoint:** `2f71b4b`
+- **Evidence:** `conductor/tracks/sky-detail_20261120/verification/phase-1.md`
 
-- [ ] **P1.T1: Failing tests for layer/cover/parallax helpers** — covers: FR-1, FR-2, FR-3, FR-5
-  - [ ] **P1.T1.1: exactly two layer descriptors with distinct depth and speed**
-  - [ ] **P1.T1.2: cover monotone in cloud intensity, clamped; snow stays moderate**
-  - [ ] **P1.T1.3: drift wraps inside the arc; near layer faster than far; deterministic**
-  - [ ] **P1.T1.4: scratch `out` object identity preserved over repeated calls (no allocation)**
-- [ ] **P1.T2: Implement the pure helper** — covers: FR-1, FR-2, FR-3, FR-5
-- [ ] **P1.T3: Guard the visual-only contract** — covers: FR-7, AC-7
-  - [ ] **P1.T3.1: assert no save-key/schema/snapshot-key/dependency changes in the diff**
+- [x] **P1.T1: Failing tests for layer/cover/parallax helpers** — covers: FR-1, FR-2, FR-3, FR-5
+  - [x] **P1.T1.1: exactly two layer descriptors with distinct depth and speed**
+  - [x] **P1.T1.2: cover monotone in cloud intensity, clamped; snow stays moderate**
+  - [x] **P1.T1.3: drift wraps inside the arc; near layer faster than far; deterministic**
+  - [x] **P1.T1.4: scratch `out` object identity preserved over repeated calls (no allocation)**
+- [x] **P1.T2: Implement the pure helper** — covers: FR-1, FR-2, FR-3, FR-5
+- [x] **P1.T3: Guard the visual-only contract** — covers: FR-7, AC-7
+  - [x] **P1.T3.1: assert no save-key/schema/snapshot-key/dependency changes in the diff**
 
 <!--
 The primary appends after acceptance:
