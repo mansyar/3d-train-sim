@@ -44,7 +44,7 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8
 - **Touches:** `src/scene/weather-particles.ts`, `src/scene/day-ambience.ts`, `src/scene/init-scene.ts`, `e2e/sky-detail.spec.ts`, `verification/phase-2.md`
 - **Verification:** `pnpm check && pnpm build && pnpm exec playwright test e2e/sky-detail.spec.ts e2e/sun-moon.spec.ts e2e/a11y.spec.ts e2e/perf-budget.spec.ts e2e/perf-budget-observe.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Build the two fixed cloud pools** — covers: FR-1, FR-2, FR-3, FR-5
   - [ ] **P2.T1.1: near/far sprite pools reuse the existing puff texture; no post-boot mesh creation**
