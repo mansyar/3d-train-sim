@@ -4,7 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
-| [perf-floor-stability_20261120](./tracks/perf-floor-stability_20261120/index.md) | Perf Floor Stability | Bug | new |
+| [perf-floor-stability_20261120](./tracks/perf-floor-stability_20261120/index.md) | Perf Floor Stability | Bug | in_progress |
 | [release-v0.15.0_20261120](./archive/release-v0.15.0_20261120/index.md) | Release v0.15.0 | Chore | archived |
 | [sky-detail_20261120](./archive/sky-detail_20261120/index.md) | Sky Detail | Feature | archived |
 | [station-cargo-clarity_20261120](./archive/station-cargo-clarity_20261120/index.md) | Station Cargo Clarity | Feature | archived |
