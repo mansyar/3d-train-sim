@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-20T12:51:36Z",
-  "updated_at": "2026-11-20T20:44:49Z",
+  "updated_at": "2026-11-20T21:02:14Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "fix/perf-floor-stability_20261120",
@@ -14,11 +14,11 @@
   "base_sha": "15dbc05220a29a31a32480ccaa1f6a2805865a1d",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 37,
-    "tasks_done": 28
+    "tasks_done": 37
   },
-  "last_checkpoint": "219a98f",
+  "last_checkpoint": "63a444f",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",

@@ -68,17 +68,20 @@
 - **Covers:** FR-5, FR-6, NFR-3, NFR-5, AC-7, AC-8
 - **Touches:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-3.md`, `conductor/tracks/perf-floor-stability_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref fix/perf-floor-stability_20261120 --field dry_run=true`, then watch the dispatched run to completion and assert both runs are green
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** PASS — second consecutive dry run `44814318883` succeeded; full matrix and non-claims recorded in `verification/integrated.md`.
+- **Checkpoint:** `63a444f`
+- **Evidence:** `conductor/tracks/perf-floor-stability_20261120/verification/phase-3.md`, `conductor/tracks/perf-floor-stability_20261120/verification/integrated.md`
 
-- [ ] **P3.T1: Dispatch and watch the second dry run** — covers: FR-5, AC-7
-  - [ ] **P3.T1.1:** Dispatch the same `release.yml` dry-run command
-  - [ ] **P3.T1.2:** Watch to completion and require all four gates green with deploy skipped
-- [ ] **P3.T2: Prove a consecutive green pair** — covers: AC-7
-  - [ ] **P3.T2.1:** Assert both post-fix run IDs succeeded consecutively
-  - [ ] **P3.T2.2:** Record intervening run history honestly; restart the pair if any run intervenes and fails
-- [ ] **P3.T3: Write integrated evidence and non-claims** — covers: FR-6, NFR-3, AC-8
-  - [ ] **P3.T3.1:** Assemble the full required-command table and requirements coverage in `verification/integrated.md`
-  - [ ] **P3.T3.2:** Record scope guard, `v0.15.0` tag immutability, human-only manual-device status, no clarity numbers and no v1.0 claim
+- [x] **P3.T1: Dispatch and watch the second dry run** — covers: FR-5, AC-7
+  - [x] **P3.T1.1:** Dispatch the same `release.yml` dry-run command
+  - [x] **P3.T1.2:** Watch to completion and require all four gates green with deploy skipped
+- [x] **P3.T2: Prove a consecutive green pair** — covers: AC-7
+  - [x] **P3.T2.1:** Assert both post-fix run IDs succeeded consecutively
+  - [x] **P3.T2.2:** Record intervening run history honestly; restart the pair if any run intervenes and fails
+- [x] **P3.T3: Write integrated evidence and non-claims** — covers: FR-6, NFR-3, AC-8
+  - [x] **P3.T3.1:** Assemble the full required-command table and requirements coverage in `verification/integrated.md`
+  - [x] **P3.T3.2:** Record scope guard, `v0.15.0` tag immutability, human-only manual-device status, no clarity numbers and no v1.0 claim
 
 <!--
 Review fixes are appended by `conductor-review` as:
