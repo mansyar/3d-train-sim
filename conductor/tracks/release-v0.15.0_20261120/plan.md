@@ -12,9 +12,9 @@
 - **Goal:** Align version, changelog, shipped docs wording and clarity labels to v0.15.0, then prove the full local matrix green on the final release content.
 - **Depends on:** none
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-2, NFR-3, NFR-5, AC-1, AC-2, AC-3, AC-4, AC-5
-- **Touches:** `package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
+- **Touches:** `package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.15.0_20261120/verification/phase-1.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test --shard=1/2 && pnpm exec playwright test --shard=2/2 && pnpm audit --audit-level=high`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Bump the release version** — covers: FR-1
   - [ ] **P1.T1.1: Set `package.json` version to `0.15.0` with no dependency or `pnpm-lock.yaml` diff.**
@@ -42,7 +42,7 @@
 - **Goal:** Prove that a `workflow_dispatch` dry run from the release branch has every gate green and deploy skipped.
 - **Depends on:** Phase 1
 - **Covers:** FR-6, NFR-4, AC-6
-- **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
+- **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-2.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.0_20261120 --field dry_run=true` (then watch the dispatched run to completion and record the result)
 - **Status:** pending
 
@@ -63,7 +63,7 @@
 - **Goal:** Prove a second consecutive dry-run success on final content and document the post-merge tagging and workflow-watch gates.
 - **Depends on:** Phase 2
 - **Covers:** FR-6, FR-7, NFR-4, NFR-6, AC-6, AC-7, AC-8
-- **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
+- **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-3.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.0_20261120 --field dry_run=true` (then watch the dispatched run to completion and record the result)
 - **Status:** pending
 
