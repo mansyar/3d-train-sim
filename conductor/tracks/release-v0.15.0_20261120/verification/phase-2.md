@@ -5,7 +5,7 @@
 - **Date:** 2026-11-20
 - **Branch:** `chore/release-v0.15.0_20261120`
 - **Phase base:** `174b5b9c2009d4bef6b94965b310db1cd6e411f8`
-- **Result:** FAILED (blocked) — both allowed dry-run attempts ended in failure; no tag may be created.
+- **Result:** VERIFIED after the user-authorized R1 e2e-determinism fix and four post-fix dry runs. The original blocked report below is retained for audit honesty; the `## Recovery after R1` section is authoritative.
 
 ## What was attempted
 
@@ -61,3 +61,20 @@ A follow-up (new) track would be needed to make the cargo-arc e2e sampling deter
 - Nothing was published: no GHCR image push and no Coolify deploy.
 - No clarity numbers were measured; `comparison.md` keeps all eight cells `awaiting observation`.
 - The v1.0 child gate is not claimed; manual device checks remain a human-only exception.
+
+## Recovery after R1 (authoritative)
+
+The user explicitly directed "fix it on this track" after the two failed dry runs. That scope override is recorded in `spec.md` and implemented as Phase R1 (`verification/phase-R1.md`): `rig-cargo.ts` now records a bounded, preallocated DEV-only trace at transfer start and every tick, `SceneHandle.cargoTransferTrace()` exposes it, and `e2e/cargo.spec.ts` asserts both arcs from that app-recorded trace instead of its own RAF sampler. No crate timing, reduced-motion, confetti, persistence, player-facing behavior or `transferWitness()` changed. Primary re-verification before resuming dry runs: `pnpm check` (1051 tests), `pnpm build`, cargo spec `--repeat-each=5` (30/30), companion sky/a11y/perf specs (8/8).
+
+Four post-fix `workflow_dispatch` dry runs were dispatched from the pushed branch (`30f4676`) and watched to completion:
+
+| Run | Result | Gate · e2e | publish | Notes |
+| --- | --- | --- | --- | --- |
+| `44709418739` | success | success | success | First post-fix run; Deploy skipped. |
+| `44712469297` | failure | failure | skipped | All functional tests passed; `e2e/perf-budget.spec.ts:82` failed a CI-load perf floor (`2.4667 < 2.5`) after ~19 min. No cargo failure. |
+| `44715407918` | success | success | success | All four gates green; Deploy skipped. |
+| `44717739869` | success | success | success | All four gates green; Deploy skipped. |
+
+The final two runs are **consecutive successes**, satisfying FR-6 / AC-6. Both green runs show `Gate · biome + typecheck`, `Gate · vitest`, `Gate · e2e (tablet · phone · prod)` and `publish` success; `publish` builds the image but never pushes it, and the `Deploy via Coolify webhook` step is skipped because `github.event_name == 'workflow_dispatch'`. The intervening perf-floor failure was a different, resources-related flake; no test was weakened or deleted to obtain the two green runs, and the exact same pushed commit was used for all four.
+
+No tag was created or pushed during dry runs; `v0.14.1` remains the latest tag. No GHCR push and no deploy occurred. All eight clarity cells remain `awaiting observation` and no v1.0 gate is claimed.

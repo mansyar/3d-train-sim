@@ -42,15 +42,16 @@
 - **Covers:** FR-6, NFR-4, AC-6
 - **Touches:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-2.md`, `conductor/tracks/release-v0.15.0_20261120/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.0_20261120 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** failed (both allowed dry-run attempts ended in failure — see `verification/phase-2.md`)
-- **Result:** blocked — no tag, no PR, no archive.
+- **Status:** verified
+- **Result:** verified after the user-authorized R1 e2e fix; final two dry runs (`44715407918`, `44717739869`) are consecutive successes with deploy skipped. Original failures retained in evidence.
+- **Checkpoint:** `30f4676`
 - **Evidence:** `conductor/tracks/release-v0.15.0_20261120/verification/phase-2.md`
 
-- [ ] **P2.T1: Dispatch and watch the first dry run** — covers: FR-6
-  - [ ] **P2.T1.1: Dispatch the dry run from this branch, watch it to completion and record run ID, URL, jobs and timestamps.**
-  - [ ] **P2.T1.2: Require all gates and image build green with deploy skipped; stop without tagging if it fails, is cancelled, or deploys.**
-- [ ] **P2.T2: Record first-run evidence** — covers: FR-6
-  - [ ] **P2.T2.1: Append the first dry-run result to `verification/integrated.md`.**
+- [x] **P2.T1: Dispatch and watch the first dry run** — covers: FR-6
+  - [x] **P2.T1.1: Dispatch the dry run from this branch, watch it to completion and record run ID, URL, jobs and timestamps.**
+  - [x] **P2.T1.2: Require all gates and image build green with deploy skipped; stop without tagging if it fails, is cancelled, or deploys.**
+- [x] **P2.T2: Record first-run evidence** — covers: FR-6
+  - [x] **P2.T2.1: Append the first dry-run result to `verification/integrated.md`.**
 
 <!--
 **Result:** verified
