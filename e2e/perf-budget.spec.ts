@@ -11,8 +11,7 @@ import { expect, type Page, test } from '@playwright/test';
  *
  * The 12-system order is spelled out on purpose (not imported from the wiring
  * tuple) so a test that merely booted the app could not satisfy the contract.
- * Both tick reads happen inside the same RAF callback, so where the scene loop
- * sits in the callback queue cannot bias the delta.
+ * Both tick reads happen at the same point within their RAF callbacks, so where the scene's loop sits in the callback queue cannot bias the delta.
  */
 
 const MARK_NAME = 'tiny-tracks-interactive';
