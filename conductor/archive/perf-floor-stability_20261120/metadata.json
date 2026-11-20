@@ -2,11 +2,11 @@
   "id": "perf-floor-stability_20261120",
   "title": "Perf Floor Stability",
   "type": "bug",
-  "status": "in_progress",
+  "status": "complete",
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-20T12:51:36Z",
-  "updated_at": "2026-11-20T21:20:00Z",
+  "updated_at": "2026-11-20T21:15:35Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "fix/perf-floor-stability_20261120",
@@ -22,10 +22,10 @@
   "review_verdict": "PASS",
   "review_rounds": 2,
   "doc_sync": "complete",
-  "pr_url": null,
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/89",
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
-  "archived_at": null,
-  "archive_path": null
+  "archived_at": "2026-11-20T21:15:35Z",
+  "archive_path": "conductor/archive/perf-floor-stability_20261120"
 }
