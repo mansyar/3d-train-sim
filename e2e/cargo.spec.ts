@@ -32,6 +32,9 @@ type TransferSample = {
   slotVisible: boolean;
 };
 
+/** The app-recorded trace read from the DEV scene handle. */
+type TransferTrace = { count: number; samples: TransferSample[] };
+
 const pointDistance = (
   a: { x: number; y: number; z: number },
   b: { x: number; y: number; z: number },
@@ -103,6 +106,21 @@ const cargoTransfer = (page: Page) =>
       window as unknown as { __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null } }
     ).__tinyTracksScene;
     return scene?.cargoTransfer?.() ?? null;
+  });
+
+/**
+ * The app-recorded arc samples — the deterministic source of the arc
+ * assertions. The rig records one at transfer start and on every frame tick,
+ * so a loaded runner cannot thin the evidence the way a test-side RAF can.
+ */
+const cargoTransferTrace = (page: Page): Promise<TransferTrace> =>
+  page.evaluate(() => {
+    const scene = (
+      window as unknown as {
+        __tinyTracksScene?: { cargoTransferTrace?: () => TransferTrace | null };
+      }
+    ).__tinyTracksScene;
+    return scene?.cargoTransferTrace?.() ?? { count: 0, samples: [] };
   });
 
 /** A station slot's live visibility, read from the dev scene witness. */
@@ -427,34 +445,6 @@ test('load and delivery crates arc between the platform slot and the wagon bed',
     performance.getEntriesByType('resource').some((entry) => entry.name.includes('crate.glb')),
   );
 
-  // Sample the scene witness every animation frame while the ride runs. Only
-  // the two half-second arcs produce samples; idle frames return null.
-  await page.evaluate(() => {
-    const probe = window as unknown as {
-      __tinyTracksScene?: { cargoTransfer?: () => TransferSample | null };
-      __cargoSamples?: TransferSample[];
-      __cargoSampling?: boolean;
-    };
-    probe.__cargoSamples = [];
-    probe.__cargoSampling = true;
-    const tick = () => {
-      const sample = probe.__tinyTracksScene?.cargoTransfer?.();
-      if (sample) {
-        probe.__cargoSamples?.push({
-          kind: sample.kind,
-          stationId: sample.stationId,
-          progress: sample.progress,
-          from: { ...sample.from },
-          to: { ...sample.to },
-          spot: { ...sample.spot },
-          slotVisible: sample.slotVisible,
-        });
-      }
-      if (probe.__cargoSampling) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-
   await test.step('ride through a load and a delivery', async () => {
     await page.click('.ride-toggle');
     await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
@@ -463,14 +453,24 @@ test('load and delivery crates arc between the platform slot and the wagon bed',
       .toBeGreaterThanOrEqual(1);
   });
 
-  const samples = await page.evaluate(() => {
-    const probe = window as unknown as {
-      __cargoSampling?: boolean;
-      __cargoSamples?: TransferSample[];
-    };
-    probe.__cargoSampling = false;
-    return probe.__cargoSamples ?? [];
-  });
+  // The rig records every arc sample itself; wait for the delivery's landing
+  // sample rather than trusting a test-side RAF that a loaded runner can
+  // throttle down to a single observation (the two failing release dry runs).
+  await expect
+    .poll(
+      async () => {
+        const trace = await cargoTransferTrace(page);
+        return trace.samples.some(
+          (sample) =>
+            sample.kind === 'deliver' && sample.stationId === stationId && sample.progress >= 1,
+        );
+      },
+      { timeout: 15_000, intervals: [100] },
+    )
+    .toBe(true);
+
+  // Every arc assertion below reads the app-recorded trace, never a RAF sample.
+  const samples = (await cargoTransferTrace(page)).samples;
 
   await test.step('both arcs travel from one endpoint toward the other', async () => {
     for (const kind of ['load', 'deliver'] as const) {

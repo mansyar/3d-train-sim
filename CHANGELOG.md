@@ -9,8 +9,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-11-20
+
 ### Changed
 - **Crates now travel where they belong.** When the train calls at a station, a crate visibly glides from the platform to the wagon as it loads, and from the wagon to the platform pile when it delivers - a short, gentle arc in either direction. Nothing to read or tap; it just makes the hand-off easy to follow. When a device asks for less motion, crates simply appear in the right place straight away, and the delivered count is still correct.
+- **Soft clouds drift gently over the meadow.** Two layers of soft clouds wander slowly across the sky, and the ones nearer to us move just a little faster than the ones far away. Nothing to read or tap; the sky simply looks after itself while little ones play. When a device asks for less motion, the clouds stay still but are still there to see.
 
 ## [0.14.1] - 2026-11-19
 
@@ -365,7 +368,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.14.1...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/mansyar/3d-train-sim/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/mansyar/3d-train-sim/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/mansyar/3d-train-sim/compare/v0.12.0...v0.13.0
