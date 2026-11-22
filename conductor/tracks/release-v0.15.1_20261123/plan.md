@@ -66,21 +66,18 @@
 - **Covers:** FR-6, FR-7, NFR-4, NFR-6, AC-6, AC-7, AC-8
 - **Touches:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-3.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.1_20261123 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Prove two consecutive dry runs** — covers: FR-6
-  - [ ] **P3.T1.1: Dispatch and watch a second distinct dry run; require all gates green and deploy skipped, and record its ID, URL, jobs and timestamps.**
-  - [ ] **P3.T1.2: Assert both dry runs are green and stop without tagging if either fails, is cancelled, or deploys.**
-- [ ] **P3.T2: Record release gate evidence** — covers: FR-7
-  - [ ] **P3.T2.1: Record the automatic annotated-tag-after-merge gate at the squash merge commit, the no-overwrite rule, and the tag-triggered workflow-watch requirement.**
-  - [ ] **P3.T2.2: Record PR inputs, review gate, archive gate, GHCR-403-is-unknown policy, and the explicit no-manual-tablet-check and no-v1.0-claim decisions.**
+- [x] **P3.T1: Prove two consecutive dry runs** — covers: FR-6
+  - [x] **P3.T1.1: Dispatch and watch a second distinct dry run; require all gates green and deploy skipped, and record its ID, URL, jobs and timestamps.**
+  - [x] **P3.T1.2: Assert both dry runs are green and stop without tagging if either fails, is cancelled, or deploys.**
+- [x] **P3.T2: Record release gate evidence** — covers: FR-7
+  - [x] **P3.T2.1: Record the automatic annotated-tag-after-merge gate at the squash merge commit, the no-overwrite rule, and the tag-triggered workflow-watch requirement.**
+  - [x] **P3.T2.2: Record PR inputs, review gate, archive gate, GHCR-403-is-unknown policy, and the explicit no-manual-tablet-check and no-v1.0-claim decisions.**
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/release-v0.15.1_20261123/verification/phase-3.md
--->
+**Result:** verified — second consecutive dry run `45069711685` succeeded with all gates green and deploy skipped; no early tag was created.
+**Checkpoint:** `61323cc`
+**Evidence:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-3.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 
 <!--
 Review fixes are appended by `conductor-review` as:

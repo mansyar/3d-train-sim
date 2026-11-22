@@ -6,7 +6,7 @@
   "priority": "high",
   "depends_on": [],
   "created_at": "2026-11-22T19:56:28Z",
-  "updated_at": "2026-11-22T21:00:21Z",
+  "updated_at": "2026-11-22T21:17:47Z",
   "spec": "spec.md",
   "plan": "plan.md",
   "branch": "chore/release-v0.15.1_20261123",
@@ -14,11 +14,11 @@
   "base_sha": "85d019354eb7e7479ab17dd6b2df0bf72ef1dd20",
   "progress": {
     "phases_total": 3,
-    "phases_verified": 2,
+    "phases_verified": 3,
     "tasks_total": 30,
-    "tasks_done": 24
+    "tasks_done": 30
   },
-  "last_checkpoint": "0a6e0c7",
+  "last_checkpoint": "61323cc",
   "review_verdict": null,
   "review_rounds": 0,
   "doc_sync": "pending",
