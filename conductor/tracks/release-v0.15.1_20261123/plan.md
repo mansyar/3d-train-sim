@@ -14,7 +14,7 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-2, NFR-3, NFR-5, NFR-6, AC-1, AC-2, AC-3, AC-4, AC-5
 - **Touches:** `package.json`, `CHANGELOG.md`, `conductor/product.md`, `conductor/archive/clarity-audit_20261110/comparison.md`, `conductor/tracks/release-v0.15.1_20261123/verification/phase-1.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 - **Verification:** `pnpm check && pnpm test:coverage && pnpm build && pnpm exec playwright test --shard=1/2 && pnpm exec playwright test --shard=2/2 && pnpm audit --audit-level=high`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Bump the release version** — covers: FR-1
   - [ ] **P1.T1.1: Set `package.json` version to `0.15.1` with no dependency or `pnpm-lock.yaml` diff.**
