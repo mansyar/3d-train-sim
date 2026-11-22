@@ -66,7 +66,7 @@
 - **Covers:** FR-6, FR-7, NFR-4, NFR-6, AC-6, AC-7, AC-8
 - **Touches:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-3.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.1_20261123 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P3.T1: Prove two consecutive dry runs** — covers: FR-6
   - [ ] **P3.T1.1: Dispatch and watch a second distinct dry run; require all gates green and deploy skipped, and record its ID, URL, jobs and timestamps.**
