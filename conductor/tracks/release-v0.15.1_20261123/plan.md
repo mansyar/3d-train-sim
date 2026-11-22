@@ -79,6 +79,19 @@
 **Checkpoint:** `61323cc`
 **Evidence:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-3.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review finding F1 by restoring the scoped Effort cell in `conductor/product.md`.
+- **Depends on:** Phase 3
+- **Covers:** F1 (FR-3)
+- **Touches:** `conductor/product.md`, `conductor/tracks/release-v0.15.1_20261123/verification/phase-R1.md`
+- **Verification:** `pnpm check` plus a direct diff check that only the Effort cell changed back to `2.5d`
+- **Status:** pending
+
+- [ ] **R1.T1: Resolve F1** — covers: F1
+  - [ ] **R1.T1.1: Restore `perf-budget_20261111` Effort cell to `2.5d`; change no other cell.**
+  - [ ] **R1.T1.2: Write `verification/phase-R1.md` and re-run `pnpm check`.**
+
 <!--
 Review fixes are appended by `conductor-review` as:
 
