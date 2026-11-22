@@ -86,11 +86,15 @@
 - **Covers:** F1 (FR-3)
 - **Touches:** `conductor/product.md`, `conductor/tracks/release-v0.15.1_20261123/verification/phase-R1.md`
 - **Verification:** `pnpm check` plus a direct diff check that only the Effort cell changed back to `2.5d`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **R1.T1: Resolve F1** — covers: F1
-  - [ ] **R1.T1.1: Restore `perf-budget_20261111` Effort cell to `2.5d`; change no other cell.**
-  - [ ] **R1.T1.2: Write `verification/phase-R1.md` and re-run `pnpm check`.**
+- [x] **R1.T1: Resolve F1** — covers: F1
+  - [x] **R1.T1.1: Restore `perf-budget_20261111` Effort cell to `2.5d`; change no other cell.**
+  - [x] **R1.T1.2: Write `verification/phase-R1.md` and re-run `pnpm check`.**
+
+**Result:** verified — F1 resolved with a one-cell documentation fix; `pnpm check` exit 0 with 1051 tests.
+**Checkpoint:** `f47280d`
+**Evidence:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-R1.md`
 
 <!--
 Review fixes are appended by `conductor-review` as:
