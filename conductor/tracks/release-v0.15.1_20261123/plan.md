@@ -47,20 +47,17 @@
 - **Covers:** FR-6, NFR-4, AC-6
 - **Touches:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-2.md`, `conductor/tracks/release-v0.15.1_20261123/verification/integrated.md`
 - **Verification:** `gh workflow run release.yml --ref chore/release-v0.15.1_20261123 --field dry_run=true` (then watch the dispatched run to completion and record the result)
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Dispatch and watch the first dry run** — covers: FR-6
-  - [ ] **P2.T1.1: Dispatch the dry run from this branch, watch it to completion and record run ID, URL, jobs and timestamps.**
-  - [ ] **P2.T1.2: Require all gates and image build green with deploy skipped; stop without tagging if it fails, is cancelled, or deploys.**
-- [ ] **P2.T2: Record first-run evidence** — covers: FR-6
-  - [ ] **P2.T2.1: Append the first dry-run result to `verification/integrated.md`.**
+- [x] **P2.T1: Dispatch and watch the first dry run** — covers: FR-6
+  - [x] **P2.T1.1: Dispatch the dry run from this branch, watch it to completion and record run ID, URL, jobs and timestamps.**
+  - [x] **P2.T1.2: Require all gates and image build green with deploy skipped; stop without tagging if it fails, is cancelled, or deploys.**
+- [x] **P2.T2: Record first-run evidence** — covers: FR-6
+  - [x] **P2.T2.1: Append the first dry-run result to `verification/integrated.md`.**
 
-<!--
-The primary appends after acceptance:
-**Result:** verified
-**Checkpoint:** <short-sha>
-**Evidence:** conductor/tracks/release-v0.15.1_20261123/verification/phase-2.md
--->
+**Result:** verified — first dry run `45068023992` succeeded with every gate green and deploy skipped.
+**Checkpoint:** `0a6e0c7`
+**Evidence:** `conductor/tracks/release-v0.15.1_20261123/verification/phase-2.md`
 
 ## Phase 3: Second dry run and release gate evidence
 
