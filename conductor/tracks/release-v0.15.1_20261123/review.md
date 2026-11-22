@@ -5,11 +5,11 @@
 - **Branch:** `chore/release-v0.15.1_20261123`
 - **Range:** `85d019354eb7e7479ab17dd6b2df0bf72ef1dd20..7087c6359841e3c681c28127f79a46973ac3475f`
 - **Date:** `2026-11-22T21:21:54Z`
-- **Verdict:** `PASS WITH FINDINGS` — one Low, in-scope documentation-consistency finding; no Critical or High.
+- **Verdict:** `PASS` after review phase R1 resolved the sole Low finding and a delta re-review returned PASS; no Critical or High.
 
 ## Summary
 
-Release content, scope guard, checks evidence and consecutive dry-run proof satisfy the frozen spec. Version, CHANGELOG, product drift, clarity relabel, full local matrix and two green `workflow_dispatch` runs are all verified. FR-7/AC-7/AC-8 are honestly partial at review time because tag creation, tag-workflow watch, PR and archive are post-merge runbook/Conductor completion steps. Strict mode requires fixing the one Low finding in a review-fix phase rather than deferring it.
+Release content, scope guard, checks evidence and consecutive dry-run proof satisfy the frozen spec. Version, CHANGELOG, product drift, clarity relabel, full local matrix and two green `workflow_dispatch` runs are all verified. FR-7/AC-7/AC-8 are honestly partial at review time because tag creation, tag-workflow watch, PR and archive are post-merge runbook/Conductor completion steps. Strict mode required fixing the one Low finding in review phase R1 rather than deferring it; R1 restored the scoped roadmap cell with a one-line diff and the delta re-review returned PASS with no new findings.
 
 ## Verification
 
@@ -75,14 +75,15 @@ Release content, scope guard, checks evidence and consecutive dry-run proof sati
   - **Fix:** Restore that Effort cell to `2.5d` so only scoped wording changes remain.
   - **Requirement:** FR-3
   - **Test gap:** none
+  - **Resolution (R1):** fixed at checkpoint `f47280d` by restoring the Effort cell to `2.5d`; the diff was exactly one line and no other roadmap cell changed. Delta re-review returned PASS with no new Critical/High/Medium finding.
 
 ## Overrides
 
-- <none — strict mode; F1 is scheduled for R1 rather than deferred.>
+- <none — strict mode; F1 was fixed in R1 rather than deferred.>
 
 ## Plan compliance
 
-All three planned phases are verified with real Result/Checkpoint/Evidence blocks: Phase 1 `46e1bd3`, Phase 2 `0a6e0c7`, Phase 3 `61323cc`. Metadata records 3/3 phases and 30/30 tasks. No task is marked complete without evidence. Final diff stays within the union of the phases' Touches plus Conductor state and the one scoped product-doc correction recorded as F1.
+All three planned phases are verified with real Result/Checkpoint/Evidence blocks: Phase 1 `46e1bd3`, Phase 2 `0a6e0c7`, Phase 3 `61323cc`. Review phase R1 is verified at `f47280d` and resolved F1. Metadata records 4/4 phases and 33/33 tasks. No task is marked complete without evidence. Final diff stays within the union of the phases' Touches plus Conductor state and the one scoped product-doc correction.
 
 ## Out of scope
 
@@ -94,10 +95,11 @@ Pre-existing Vite `configLoader: 'native'`, WebGLShadowMap deprecation, and >500
 
 ## Doc sync
 
-`pending` — F1 is scheduled for review phase R1; post-review sync will record the final state.
+`none` — no product, tech-stack, product-guideline, CHANGELOG, clarity or release-document contract changed during review; F1 was a scoped one-cell restoration already reflected in the Phase 1 product edit.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | PASS WITH FINDINGS | 0 | 0 | 0 | 1 | 0 (R1 scheduled) |
+| R1 | PASS (delta re-review) | 0 | 0 | 0 | 0 | 1 (F1) |
