@@ -57,13 +57,18 @@
   - [x] P2.T3.1: Show the diff contains only this track's artifacts; no app, test, dependency, lockfile, release-doc, clarity-artifact or product change.
 
 
-<!--
 ## Phase R1: Review Fixes
-- **Goal:** Resolve `<finding ID>` from `review.md`.
+
+- **Goal:** Resolve F1 from `review.md` by correcting the requirement-ID mapping in the integrated evidence while leaving the kit artifacts unchanged.
 - **Depends on:** Phase 2
-- **Covers:** `<requirement ID>`
-- **Touches:** `<paths>`
-- **Verification:** `<exact command>`
+- **Covers:** F1 (evidence traceability / AC-7)
+- **Touches:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`, `conductor/tracks/clarity-observation-kit_20261124/verification/phase-R1.md`
+- **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
 - **Status:** pending
-- [ ] **R1.T1: Resolve `<finding ID>`**
--->
+
+- [ ] **R1.T1: Correct integrated evidence requirement mapping**
+  - [ ] R1.T1.1: Rewrite FR-1..FR-6, NFR-1..NFR-5 and AC-1..AC-7 rows to match `spec.md:41-70`.
+  - [ ] R1.T1.2: Keep all existing evidence-path references and non-claims unchanged.
+
+- [ ] **R1.T2: Verify and record evidence**
+  - [ ] R1.T2.1: Re-run the exact verification command and write `verification/phase-R1.md` with the F1 fix, commands, scope guard and delta note.
