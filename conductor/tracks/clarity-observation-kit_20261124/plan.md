@@ -64,11 +64,14 @@
 - **Covers:** F1 (evidence traceability / AC-7)
 - **Touches:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`, `conductor/tracks/clarity-observation-kit_20261124/verification/phase-R1.md`
 - **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified — F1 fixed with an evidence-only mapping correction; exact chain exit 0.
+- **Checkpoint:** `8447f04`
+- **Evidence:** `conductor/tracks/clarity-observation-kit_20261124/verification/phase-R1.md`
 
-- [ ] **R1.T1: Correct integrated evidence requirement mapping**
-  - [ ] R1.T1.1: Rewrite FR-1..FR-6, NFR-1..NFR-5 and AC-1..AC-7 rows to match `spec.md:41-70`.
-  - [ ] R1.T1.2: Keep all existing evidence-path references and non-claims unchanged.
+- [x] **R1.T1: Correct integrated evidence requirement mapping**
+  - [x] R1.T1.1: Rewrite FR-1..FR-6, NFR-1..NFR-5 and AC-1..AC-7 rows to match `spec.md:41-70`.
+  - [x] R1.T1.2: Keep all existing evidence-path references and non-claims unchanged.
 
-- [ ] **R1.T2: Verify and record evidence**
-  - [ ] R1.T2.1: Re-run the exact verification command and write `verification/phase-R1.md` with the F1 fix, commands, scope guard and delta note.
+- [x] **R1.T2: Verify and record evidence**
+  - [x] R1.T2.1: Re-run the exact verification command and write `verification/phase-R1.md` with the F1 fix, commands, scope guard and delta note.
