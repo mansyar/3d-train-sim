@@ -9,6 +9,11 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-11-23
+
+### Changed
+- **The updates now reach your tablet properly.** A behind-the-scenes fix makes the release checks steady, so the new crate hand-off and drifting clouds can ship on a reliable build. Nothing changes in how the toy plays.
+
 ## [0.15.0] - 2026-11-20
 
 ### Changed
@@ -368,7 +373,8 @@ are `vX.Y.Z` git tags that trigger the release pipeline (see
 - The release pipeline itself: version tags build a Docker image, publish
   it, and ship it to production automatically.
 
-[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/mansyar/3d-train-sim/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/mansyar/3d-train-sim/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/mansyar/3d-train-sim/compare/v0.14.1...v0.15.0
 [0.14.1]: https://github.com/mansyar/3d-train-sim/compare/v0.14.0...v0.14.1
 [0.14.0]: https://github.com/mansyar/3d-train-sim/compare/v0.13.0...v0.14.0
