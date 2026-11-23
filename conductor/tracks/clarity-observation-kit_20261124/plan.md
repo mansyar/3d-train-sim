@@ -64,7 +64,7 @@
 - **Covers:** F1 (evidence traceability / AC-7)
 - **Touches:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`, `conductor/tracks/clarity-observation-kit_20261124/verification/phase-R1.md`
 - **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **R1.T1: Correct integrated evidence requirement mapping**
   - [ ] R1.T1.1: Rewrite FR-1..FR-6, NFR-1..NFR-5 and AC-1..AC-7 rows to match `spec.md:41-70`.
