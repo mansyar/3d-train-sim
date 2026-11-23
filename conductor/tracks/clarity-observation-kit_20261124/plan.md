@@ -42,22 +42,20 @@
 - **Covers:** FR-6, NFR-1, NFR-3, NFR-4, NFR-5, AC-7
 - **Touches:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`
 - **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** PASS — exact chain exit 0 on final content; validator PASS; scope confined to track artifacts.
+- **Checkpoint:** `7c791ef`
+- **Evidence:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`
 
-- [ ] **P2.T1: Re-run exact verification against final content**
-  - [ ] P2.T1.1: Record exit codes for both commands.
+- [x] **P2.T1: Re-run exact verification against final content**
+  - [x] P2.T1.1: Record exit codes for both commands.
 
-- [ ] **P2.T2: Write integrated evidence**
-  - [ ] P2.T2.1: Write `verification/integrated.md` with the required-command table, FR/NFR/AC coverage, scope guard and non-claims.
+- [x] **P2.T2: Write integrated evidence**
+  - [x] P2.T2.1: Write `verification/integrated.md` with the required-command table, FR/NFR/AC coverage, scope guard and non-claims.
 
-- [ ] **P2.T3: Prove scope**
-  - [ ] P2.T3.1: Show the diff contains only this track's artifacts; no app, test, dependency, lockfile, release-doc, clarity-artifact or product change.
+- [x] **P2.T3: Prove scope**
+  - [x] P2.T3.1: Show the diff contains only this track's artifacts; no app, test, dependency, lockfile, release-doc, clarity-artifact or product change.
 
-<!-- The primary appends after acceptance:
-- **Result:** verified
-- **Checkpoint:** <short-sha>
-- **Evidence:** conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md
--->
 
 <!--
 ## Phase R1: Review Fixes
