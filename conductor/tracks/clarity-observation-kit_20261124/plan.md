@@ -42,7 +42,7 @@
 - **Covers:** FR-6, NFR-1, NFR-3, NFR-4, NFR-5, AC-7
 - **Touches:** `conductor/tracks/clarity-observation-kit_20261124/verification/integrated.md`
 - **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Re-run exact verification against final content**
   - [ ] P2.T1.1: Record exit codes for both commands.
