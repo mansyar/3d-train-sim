@@ -10,33 +10,30 @@
 - **Covers:** FR-1, FR-2, FR-3, FR-4, FR-5, NFR-1, NFR-2, NFR-3, NFR-4, AC-1, AC-2, AC-3, AC-4, AC-5, AC-6
 - **Touches:** `conductor/tracks/clarity-observation-kit_20261124/quick-card.md`, `conductor/tracks/clarity-observation-kit_20261124/session-log.md`, `conductor/tracks/clarity-observation-kit_20261124/validate.mjs`, `conductor/tracks/clarity-observation-kit_20261124/verification/phase-1.md`
 - **Verification:** `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs`
-- **Status:** in_progress
+- **Status:** verified
+- **Result:** verified (after two subagent permission denials and a primary content handoff authorized by the user; exact chain exit 0)
+- **Checkpoint:** `c4e45c7`
+- **Evidence:** `conductor/tracks/clarity-observation-kit_20261124/verification/phase-1.md`
 
-- [ ] **P1.T1: Write the quick card**
-  - [ ] P1.T1.1: Include setup fields, consent reminder, both clock definitions and the 20:00 cap.
-  - [ ] P1.T1.2: Include interruption, disengagement, sibling/device failure, no-ride and disagreement rules.
-  - [ ] P1.T1.3: Include human-only iPad Safari and Android Chrome touch/audio/frame-feel prompts, visibly separate from measured values.
+- [x] **P1.T1: Write the quick card**
+  - [x] P1.T1.1: Include setup fields, consent reminder, both clock definitions and the 20:00 cap.
+  - [x] P1.T1.2: Include interruption, disengagement, sibling/device failure, no-ride and disagreement rules.
+  - [x] P1.T1.3: Include human-only iPad Safari and Android Chrome touch/audio/frame-feel prompts, visibly separate from measured values.
 
-- [ ] **P1.T2: Write the session log sheet**
-  - [ ] P1.T2.1: Include anonymous child 1 / 2 / 3 rows, setup context, both measured fields and observer notes with `not measured` defaults.
-  - [ ] P1.T2.2: Include the top-five friction table with affected-child count then severity ordering and `not measured` defaults.
-  - [ ] P1.T2.3: Include consent, withdrawal, no-identifiers, no-recording rules and traceability links.
+- [x] **P1.T2: Write the session log sheet**
+  - [x] P1.T2.1: Include anonymous child 1 / 2 / 3 rows, setup context, both measured fields and observer notes with `not measured` defaults.
+  - [x] P1.T2.2: Include the top-five friction table with affected-child count then severity ordering and `not measured` defaults.
+  - [x] P1.T2.3: Include consent, withdrawal, no-identifiers, no-recording rules and traceability links.
 
-- [ ] **P1.T3: Write the static validator**
-  - [ ] P1.T3.1: Use Node built-ins only; assert required phrases in both artifacts.
-  - [ ] P1.T3.2: Reject identifiers, numbers in result cells, clarity claims and v1.0 claims; exit non-zero with clear messages on failure.
+- [x] **P1.T3: Write the static validator**
+  - [x] P1.T3.1: Use Node built-ins only; assert required phrases in both artifacts.
+  - [x] P1.T3.2: Reject identifiers, numbers in result cells, clarity claims and v1.0 claims; exit non-zero with clear messages on failure.
 
-- [ ] **P1.T4: Run exact verification**
-  - [ ] P1.T4.1: Run `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs` and record exit codes.
+- [x] **P1.T4: Run exact verification**
+  - [x] P1.T4.1: Run `pnpm check && node conductor/tracks/clarity-observation-kit_20261124/validate.mjs` and record exit codes.
 
-- [ ] **P1.T5: Write phase evidence**
-  - [ ] P1.T5.1: Write `verification/phase-1.md` with command results, AC-1..AC-6 table, scope guard, deviations and non-claims.
-
-<!-- The primary appends after acceptance:
-- **Result:** verified
-- **Checkpoint:** <short-sha>
-- **Evidence:** conductor/tracks/clarity-observation-kit_20261124/verification/phase-1.md
--->
+- [x] **P1.T5: Write phase evidence**
+  - [x] P1.T5.1: Write `verification/phase-1.md` with command results, AC-1..AC-6 table, scope guard, deviations and non-claims.
 
 ## Phase 2: Integrated verification and scope guard
 
