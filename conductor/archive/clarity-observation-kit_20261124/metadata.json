@@ -1,0 +1,31 @@
+{
+  "id": "clarity-observation-kit_20261124",
+  "title": "Clarity Observation Kit",
+  "type": "chore",
+  "status": "complete",
+  "priority": "high",
+  "depends_on": [],
+  "created_at": "2026-11-23T13:44:37Z",
+  "updated_at": "2026-11-23T14:18:00Z",
+  "spec": "spec.md",
+  "plan": "plan.md",
+  "branch": "chore/clarity-observation-kit_20261124",
+  "base_branch": "main",
+  "base_sha": "3fcc79716c9a7cfed291a18ee738ad5e1cf29f8e",
+  "progress": {
+    "phases_total": 3,
+    "phases_verified": 3,
+    "tasks_total": 26,
+    "tasks_done": 26
+  },
+  "last_checkpoint": "8447f04",
+  "review_verdict": "PASS",
+  "review_rounds": 2,
+  "doc_sync": "complete",
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/91",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "archived_at": "2026-11-23T14:18:00Z",
+  "archive_path": "conductor/archive/clarity-observation-kit_20261124"
+}
