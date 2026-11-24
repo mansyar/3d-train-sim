@@ -68,6 +68,8 @@ Every originally-listed candidate has shipped; this section is the record, not t
 
 ## Roadmap (Next)
 
+Planned work and dropped ideas live in [roadmap.md](roadmap.md). Shipped track history, the Toddler Test guardrails, and the v1.0 ship gate remain here as product definition and acceptance criteria; the roadmap stores only intent and ordering.
+
 The named roadmap closed with the double-slip switch. This roadmap is deliberately sequenced by **risk**, not by feature appeal: first the only failure a child experiences as permanent (lost work), then the cost of future change, then proof of the product thesis. Estimates assume one maintainer, full-time-equivalent; one track in flight at a time, a release every 2–3 tracks.
 
 **North star (unchanged):** the Toddler Test.
@@ -126,21 +128,11 @@ The named roadmap closed with the double-slip switch. This roadmap is deliberate
 
 ### Phase 3 — Depth over Breadth (v1.x, decision gate at v1.0)
 
-Pick exactly one direction; do not start a second until it ships.
-
-| Option | What it is | Effort | Why it fits |
-|---|---|---|---|
-| **A. Rituals** *(recommended)* | Deepen the existing day/weather clock: train bedtime, morning wake-up, seasonal transitions, matching audio | 5–8d | Zero new UI surface; deepens systems already built; depth without cognitive load |
-| **B. Expression** | Child-applied paint/sticker liveries for trains and stations | 8–10d | Maximum agency per new control; fits "creator, not consumer" |
-| **C. Shared Play** | Two-child local co-build on one tablet with split touch zones, no accounts | 10–14d | Highest delight ceiling, highest interaction risk for a two-year-old |
-
-Recommendation: **A**, then **B**; defer **C** until the clarity audit shows the solo loop is saturated.
+Pick exactly one direction; do not start a second until it ships. The options and their ordering are captured in [roadmap.md](roadmap.md) as RM-002 (A. Rituals, recommended), RM-003 (B. Expression) and RM-004 (C. Shared Play, deferred until the clarity audit shows the solo loop is saturated). No Phase 3 track is created until v1.0.
 
 ### Anti-roadmap (explicitly out of scope)
 
-No accounts · no cloud sync · no analytics SDK · no ads or purchases · no network multiplayer · no physics engine · no new track piece types before the clarity audit · no new locomotives before v1.0.
-
-Each is a legitimate idea. None fixes a permanent-loss or measurement gap, and each adds surface a non-reader must parse.
+The dropped ideas are captured in [roadmap.md](roadmap.md) as RM-009 through RM-014; deferred piece-type and locomotive ideas are RM-006 and RM-007. Each is a legitimate idea. None fixes a permanent-loss or measurement gap, and each adds surface a non-reader must parse.
 
 **Piece/icon contract:** whenever a track piece is added or changed, its icon must be updated in the same change. Track-piece icons are hand-authored SVGs that must intuitively read as the piece; geometry-derived silhouettes are not sufficient.
 

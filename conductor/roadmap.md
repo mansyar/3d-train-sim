@@ -11,6 +11,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
+| RM-001 | v1.0 clarity ship gate | chore | P0 | — |  | conductor/product.md — v1.0 ship gate |
 
 ## Next
 
@@ -21,8 +22,21 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
+| RM-002 | A. Rituals — deepen the day/weather clock | feature | P1 | RM-001 |  | conductor/product.md — Phase 3, recommended |
+| RM-003 | B. Expression — child-applied paint/sticker liveries | feature | P2 | RM-001 |  | conductor/product.md — Phase 3 |
+| RM-004 | C. Shared Play — two-child local co-build | feature | P3 | RM-001 |  | conductor/product.md — Phase 3, deferred |
+| RM-005 | Longer trains | feature | P3 | RM-001 |  | informal parent feedback |
+| RM-006 | New track piece types | feature | P2 | RM-001 |  | conductor/product.md — anti-roadmap |
+| RM-007 | New locomotives | feature | P2 | RM-001 |  | conductor/product.md — anti-roadmap |
+| RM-008 | Piece/icon contract for every new or changed piece | chore | P2 | — |  | conductor/product.md — piece/icon contract |
 
 ## Dropped
 
 | id | title | reason |
 | --- | --- | --- |
+| RM-009 | Accounts | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-010 | Cloud sync | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-011 | Analytics SDK | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-012 | Ads or purchases | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-013 | Network multiplayer | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-014 | Physics engine | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
