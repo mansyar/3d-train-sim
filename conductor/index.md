@@ -22,6 +22,10 @@ New to the repo? Start with the top-level [README](../README.md) and the
   containing `spec.md`, `plan.md`, `metadata.json`, and `verification/`
 - **Archive:** [archive/](archive/) — completed tracks, kept as history
 
+## Roadmap
+
+- **Roadmap:** [roadmap.md](roadmap.md) — planned ideas and follow-ups ordered by intent
+
 ## Code Styleguides
 
 - [code_styleguides/typescript.md](code_styleguides/typescript.md)
