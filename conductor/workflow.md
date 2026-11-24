@@ -67,7 +67,7 @@ pr:
   media: "always"
   watch_ci: true
   watch_timeout_minutes: 30
-  merge_method: "squash"
+  merge_method: "merge"
 ```
 
 ## Definitions
@@ -297,7 +297,7 @@ The plan update is a separate state commit.
   `main`.
 - Visual/UI tracks include a media demo (GIF or short video) in the PR body —
   diffs cannot prove feel.
-- Watch CI with a 30-minute cap. Merge with **squash** once CI is green.
+- Watch CI with a 30-minute cap. Merge with a **merge commit** once CI is green.
 - Merging to `main` never deploys. Only `v*` tags ship.
 
 ## Definition of Done
