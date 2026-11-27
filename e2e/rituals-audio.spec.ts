@@ -42,7 +42,9 @@ const ready = (page: Page) =>
   page.waitForFunction(
     () => Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
     undefined,
-    { timeout: 20_000 },
+    // Software-GL CI runners boot the scene slowly; the cap only bites on a
+    // real hang, never on a passing run.
+    { timeout: 60_000 },
   );
 
 const ritualAudio = (page: Page) =>
@@ -90,7 +92,9 @@ async function waitForMotif(page: Page, greeting: Greeting): Promise<RitualAudio
       return witness?.lastMotif === expected;
     },
     greeting,
-    { timeout: 20_000 },
+    // Settle (1 s) plus the envelope ramp run on frame time; a loaded CI
+    // runner needs headroom. The cap only bites on a real failure.
+    { timeout: 60_000 },
   );
   const witness = await ritualAudio(page);
   expect(witness, 'the scene exposes its greeting-audio witness').not.toBeNull();
@@ -99,7 +103,8 @@ async function waitForMotif(page: Page, greeting: Greeting): Promise<RitualAudio
 }
 
 test('greeting motifs stay locked before a gesture and die instantly on mute', async ({ page }) => {
-  test.setTimeout(120_000);
+  // Six sequential witness waits; the budget must fit the raised caps above.
+  test.setTimeout(300_000);
   const consoleErrors = watchConsoleErrors(page);
 
   // Count resumes without changing what the app's voices do with the context.
@@ -133,7 +138,9 @@ test('greeting motifs stay locked before a gesture and die instantly on mute', a
         ((window as unknown as { __ritualAudioProbe?: { resumes: number } }).__ritualAudioProbe
           ?.resumes ?? 0) > 0,
       undefined,
-      { timeout: 15_000 },
+      // The resume lands on the click's gesture; under CI load the frame
+      // that processes it can lag, so allow headroom.
+      { timeout: 30_000 },
     );
     expect(await resumeCount(page)).toBeGreaterThan(0);
   });

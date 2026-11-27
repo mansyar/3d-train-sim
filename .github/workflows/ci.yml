@@ -149,6 +149,13 @@ jobs:
       - name: Install Playwright browsers (WebKit for the iPad profile)
         run: pnpm exec playwright install --with-deps
 
+      # The rituals evidence spec shells out to ffmpeg to build the
+      # greeting-cycle GIF (resolved from PATH / FFMPEG). The runner image
+      # ships none, so install it — after the browser step, reusing its
+      # `apt-get update`.
+      - name: Install ffmpeg for evidence GIF capture
+        run: sudo apt-get install -y ffmpeg
+
       # The `prod` e2e project serves the static build via `vite preview`,
       # so dist/ must exist before the suite boots its web servers.
       - name: Build for prod e2e project

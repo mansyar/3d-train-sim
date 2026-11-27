@@ -61,7 +61,9 @@ const ready = (page: Page) =>
   page.waitForFunction(
     () => Boolean((window as unknown as { __tinyTracksReady?: boolean }).__tinyTracksReady),
     undefined,
-    { timeout: 20_000 },
+    // Software-GL CI runners boot the scene slowly; the cap only bites on a
+    // real hang, never on a passing run.
+    { timeout: 60_000 },
   );
 
 test('rapid sun/moon taps play exactly one greeting for the settled phase', async ({ page }) => {
@@ -163,10 +165,19 @@ test('night in flight yields cleanly to a dawn transition', async ({ page }) => 
           let dayAtDawn: VoiceSnapshot | null = null;
           let nightAtDawn: NightSnapshot | null = null;
           const start = performance.now();
+          // Game time is the rAF deltas the loop itself sees — the same time
+          // base the stale night timer runs on. A slow runner delays frames,
+          // so a wall-clock deadline could expire before the game has run
+          // long enough for a stale release to strike; deadlines below are in
+          // accumulated game time instead.
+          let lastTick = start;
+          let gameElapsed = 0;
 
           scene.setDayPhase('dawn'); // cross-family handoff: night -> dawn
 
-          const tick = (): void => {
+          const tick = (now: number): void => {
+            gameElapsed += now - lastTick;
+            lastTick = now;
             const voice = scene.rituals().activeGreeting;
             if (voice !== last) {
               changes.push(voice);
@@ -184,8 +195,15 @@ test('night in flight yields cleanly to a dawn transition', async ({ page }) => 
               };
             }
             // Past the old night timer's expiry but before dawn's own end: a
-            // stale release would have cleared the shared voice by now.
-            if (performance.now() - start >= 4_000) {
+            // stale release would have cleared the shared voice by now. The
+            // wait is in game time, so it holds on any runner speed; the wall
+            // failsafe only resolves early so the assertions fail clearly
+            // instead of the promise hanging to the test timeout.
+            if (dayAtDawn !== null && gameElapsed >= 4_500) {
+              resolve({ nightInFlight, changes, dayAtDawn, nightAtDawn, finalVoice: voice });
+              return;
+            }
+            if (now - start >= 60_000) {
               resolve({ nightInFlight, changes, dayAtDawn, nightAtDawn, finalVoice: voice });
               return;
             }
@@ -201,7 +219,7 @@ test('night in flight yields cleanly to a dawn transition', async ({ page }) => 
             beginTransition();
             return;
           }
-          if (performance.now() - waitStart >= 20_000) {
+          if (performance.now() - waitStart >= 60_000) {
             reject(new Error('night greeting never reached the stage'));
             return;
           }
