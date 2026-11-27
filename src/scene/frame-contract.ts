@@ -44,6 +44,11 @@ export const FRAME_SYSTEM_ORDER = [
   'film-camera',
 ] as const;
 
+// The ritual greeting director (src/state/rituals.ts) has no slot here: it is
+// driven by day-clock phase events and a tick(dt), not by per-frame inputs.
+// Adding a runtime entry would fail the fail-fast wiring check above — its
+// scene system lands with the greeting rendering phases, outside this phase.
+
 export type FrameSystemName = (typeof FRAME_SYSTEM_ORDER)[number];
 
 /**
