@@ -1,5 +1,7 @@
 # Conductor Roadmap
 
+<!-- next-rm-id: 15 -->
+
 > Planned and future work. The roadmap stores **intent** — ordering, priority,
 > and dependencies — not live state. `conductor-status` joins every entry whose
 > `track` column is filled to that track's real metadata and registry state, so
@@ -11,7 +13,6 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-001 | v1.0 clarity ship gate | chore | P0 | — |  | conductor/product.md — v1.0 ship gate |
 
 ## Next
 
@@ -40,3 +41,4 @@
 | RM-012 | Ads or purchases | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
 | RM-013 | Network multiplayer | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
 | RM-014 | Physics engine | Adds surface a non-reader must parse and fixes no permanent-loss or measurement gap. |
+| RM-001 | v1.0 clarity ship gate | Owner declined human observation; ship no longer blocked on observed sessions — feedback and pain points gathered continuously as they come in. |
