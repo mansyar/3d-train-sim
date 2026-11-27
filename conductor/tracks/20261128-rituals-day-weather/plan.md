@@ -93,11 +93,15 @@ The primary appends after acceptance:
 - **Covers:** FR-7, FR-10 (audio), NFR-2
 - **Touches:** `src/audio/rituals.ts`, `src/audio/rituals.test.ts`, `src/scene/init-scene.ts` (lullaby-hook motif wiring only)
 - **Verification:** `pnpm exec playwright test`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P4.T1: Red — unit tests for motif definitions (distinct per phase, night = lullaby phrase)** — covers: FR-7
-- [ ] **P4.T2: Green — implement motifs, wire night to the music-box lullaby phrase** — covers: FR-7
-- [ ] **P4.T3: Unlock-path and instant-mute regression** — covers: FR-10
+- [x] **P4.T1: Red — unit tests for motif definitions (distinct per phase, night = lullaby phrase)** — covers: FR-7
+- [x] **P4.T2: Green — implement motifs, wire night to the music-box lullaby phrase** — covers: FR-7
+- [x] **P4.T3: Unlock-path and instant-mute regression** — covers: FR-10
+
+**Result:** verified
+**Checkpoint:** 183d07fd22729c38de8154667cd3004a3c9aee0a
+**Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-4.md
 
 <!--
 The primary appends after acceptance:
