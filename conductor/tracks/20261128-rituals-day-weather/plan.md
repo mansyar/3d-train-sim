@@ -129,6 +129,18 @@ The primary appends after acceptance:
 **Checkpoint:** 2f3a5fd162bfa512ca435efbb630def3e0009f3a
 **Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-5.md
 
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review findings F1 (cross-family yield/release ownership) and F2 (portable ffmpeg resolution).
+- **Depends on:** Phase 5: Settle hardening and evidence
+- **Covers:** F1, F2
+- **Touches:** `src/scene/rituals/*`, `src/state/rituals.ts`, `e2e/rituals-settle.spec.ts`, `e2e/rituals-evidence.spec.ts`
+- **Verification:** `pnpm check` + targeted specs (new mid-greeting transition test + evidence spec)
+- **Status:** pending
+
+- [ ] **R1.T1: Guard cross-family yield and release ownership (F1)** — covers: F1
+- [ ] **R1.T2: Portable ffmpeg resolution in evidence spec (F2)** — covers: F2
+
 <!--
 The primary appends after acceptance:
 **Result:** verified
