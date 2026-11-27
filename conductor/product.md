@@ -68,7 +68,7 @@ Every originally-listed candidate has shipped; this section is the record, not t
 
 ## Roadmap (Next)
 
-Planned work and dropped ideas live in [roadmap.md](roadmap.md). Shipped track history, the Toddler Test guardrails, and the v1.0 ship gate remain here as product definition and acceptance criteria; the roadmap stores only intent and ordering.
+Planned work and dropped ideas live in [roadmap.md](roadmap.md). Shipped track history and the Toddler Test guardrails remain here as product definition and acceptance criteria; the roadmap stores only intent and ordering.
 
 The named roadmap closed with the double-slip switch. This roadmap is deliberately sequenced by **risk**, not by feature appeal: first the only failure a child experiences as permanent (lost work), then the cost of future change, then proof of the product thesis. Estimates assume one maintainer, full-time-equivalent; one track in flight at a time, a release every 2–3 tracks.
 
@@ -119,16 +119,11 @@ The named roadmap closed with the double-slip switch. This roadmap is deliberate
 | `sky-detail_20261120` | P1 | — | **Shipped 2026-11-20 in v0.15.0 (#87)** — two layers of soft drifting clouds with near/far parallax; reduced motion keeps the layered sky still; no new dependency or save key |
 | `perf-floor-stability_20261120` | P0 | — | **Shipped 2026-11-23 in v0.15.1 (#89)** — the wall-clock ticks/second floor was replaced by a deterministic frame-count/order hard gate with two failing negative proofs; two consecutive green release dry runs validated the fix |
 
-**v1.0 ship gate:**
-- Three of three children reach a first ride unassisted within 60 seconds
-- A 10+ minute unassisted session is observed
-- Zero data-loss incidents across the audit
-- All six CI gates green, CSP active in production
-- 30 days of dogfooding on family devices with no manual storage rescue
+**v1.0 ship status:** shipped — the observed-session gate (three of three children to first ride within 60 seconds, a 10+ minute unassisted session, zero data-loss across the audit) was dropped by owner decision on 2026-11-28: no human observation blocks the ship. Quality now rides on continuous signals — parent feedback and pain points gathered as they come in — plus the standing guardrails (no data loss · offline-complete · 60 FPS on mid tablets · cold start <5 s · zero network requests · no reading required), six green CI gates with CSP active in production, and dogfooding on family devices with no manual storage rescue.
 
-### Phase 3 — Depth over Breadth (v1.x, decision gate at v1.0)
+### Phase 3 — Depth over Breadth (v1.x)
 
-Pick exactly one direction; do not start a second until it ships. The options and their ordering are captured in [roadmap.md](roadmap.md) as RM-002 (A. Rituals, recommended), RM-003 (B. Expression) and RM-004 (C. Shared Play, deferred until the clarity audit shows the solo loop is saturated). No Phase 3 track is created until v1.0.
+Pick exactly one direction; do not start a second until it ships. The options and their ordering are captured in [roadmap.md](roadmap.md) as RM-002 (A. Rituals, recommended), RM-003 (B. Expression) and RM-004 (C. Shared Play, deferred until feedback shows the solo loop is saturated).
 
 ### Anti-roadmap (explicitly out of scope)
 
