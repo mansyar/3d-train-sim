@@ -68,11 +68,15 @@ The primary appends after acceptance:
 - **Covers:** FR-5, FR-6, AC-2 (night), AC-3 (night)
 - **Touches:** `src/scene/rituals/dusk-night.ts`, `src/scene/actors/*`, `src/scene/init-scene.ts`
 - **Verification:** `pnpm exec playwright test`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Dusk greeting — windows warm, critters settle** — covers: FR-5
-- [ ] **P3.T2: Night greeting — fireflies rise, headlight on, lullaby hook** — covers: FR-6
-- [ ] **P3.T3: Reduced-motion resting-state hooks for all five greetings** — covers: FR-9
+- [x] **P3.T1: Dusk greeting — windows warm, critters settle** — covers: FR-5
+- [x] **P3.T2: Night greeting — fireflies rise, headlight on, lullaby hook** — covers: FR-6
+- [x] **P3.T3: Reduced-motion resting-state hooks for all five greetings** — covers: FR-9
+
+**Result:** verified
+**Checkpoint:** c4500270207f445f349091146f24e44dbf310ef8
+**Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-3.md
 
 <!--
 The primary appends after acceptance:
