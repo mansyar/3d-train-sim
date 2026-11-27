@@ -92,4 +92,4 @@ Registry of development tracks. One row per archived track; active tracks appear
 | [bootstrap-tiny-tracks](archive/bootstrap-tiny-tracks/index.md) | Bootstrap Tiny Tracks | Feature | archived |
 
 - [x] **Track: A. Rituals — Deepen the Day/Weather Clock** — [20261128-rituals-day-weather](./archive/20261128-rituals-day-weather/index.md) — feature — high
-- [ ] **Track: B. Expression — paint/sticker liveries** — [20261128-expression-liveries](./tracks/20261128-expression-liveries/index.md) — feature — medium
+- [~] **Track: B. Expression — paint/sticker liveries** — [20261128-expression-liveries](./tracks/20261128-expression-liveries/index.md) — feature — medium
