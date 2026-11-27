@@ -5,7 +5,7 @@
 - **Branch:** `feat/20261128-rituals-day-weather`
 - **Range:** `c368d22d1f83c6579c8187fdca3f650f4164192d..12ffd0e837730a05c8a59e4f7999c7294df670e3`
 - **Date:** `2026-11-28T04:09:43+11:00`
-- **Verdict:** `BLOCK`
+- **Verdict:** `PASS`
 
 ## Summary
 
@@ -128,10 +128,12 @@ partial status is a test-design gap, not a plan-compliance failure.
 
 ## Doc sync
 
-`pending` — runs after the review fixes land.
+`none` — R1 changed product code and specs only; no product/tech-stack/workflow
+changes, and the resolved GIF assumption was already traced in plan P5.T4.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | BLOCK | 0 | 2 | 0 | 0 | 0 |
+| 1 (fix delta `8ee5b6a..07b0875`) | PASS | 0 | 0 | 0 | 0 | 2 |
