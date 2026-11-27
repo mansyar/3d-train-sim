@@ -95,11 +95,23 @@ function build(options: DayRitualOptions): DayRituals {
   let glowLevel = 0;
 
   const unsubscribe = director.subscribe((event) => {
-    if (!DAY_GREETINGS.includes(event.greeting)) return;
-    active = event.greeting;
+    if (DAY_GREETINGS.includes(event.greeting)) {
+      active = event.greeting;
+      restingGreeting = null;
+      elapsed = 0;
+      level = 0;
+      return;
+    }
+    // Another family owns the voice now. Yield at once instead of keeping this
+    // stage on screen: the mid-greeting edge of FR-8 forbids two families at
+    // once, and the old timer must not outlive this handoff.
+    active = null;
     restingGreeting = null;
-    elapsed = 0;
     level = 0;
+    glowLevel = 0;
+    chorus.update(0, 0, 1);
+    butterflies.update(0, 0, 1);
+    glow.update(0);
   });
 
   const apply = (dt: number): void => {
@@ -143,6 +155,9 @@ function build(options: DayRitualOptions): DayRituals {
       if (reducedMotion || active === null) return;
       elapsed += dt * 1_000;
       if (elapsed >= GREETING_MS) {
+        // Only give up the voice if this stage still holds it. A late frame
+        // from a yielded greeting must never clear its successor's voice.
+        if (director.activeGreeting === active) director.release();
         active = null;
         level = 0;
         glowLevel = 0;
@@ -150,7 +165,6 @@ function build(options: DayRitualOptions): DayRituals {
         butterflies.update(dt, 0, 1);
         glow.update(0);
         restingGreeting = null;
-        director.release();
         return;
       }
       apply(dt);

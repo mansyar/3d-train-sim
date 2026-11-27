@@ -21,11 +21,20 @@ type Greeting =
   | 'dusk-windows'
   | 'night-fireflies';
 
+type VoiceSnapshot = { activeGreeting: Greeting | null; level: number };
+type NightStage = {
+  lullabyFires: number;
+  level: number;
+  fireflyCount: number;
+  settledCritterCount: number;
+  fireflyRise: number;
+};
+
 type SceneHandle = {
   dayPhase(): string;
   setDayPhase(phase: string): void;
-  rituals(): { activeGreeting: Greeting | null; level: number };
-  nightRituals(): { lullabyFires: number; level: number };
+  rituals(): VoiceSnapshot;
+  nightRituals(): NightStage;
 };
 
 type SpamResult = {
@@ -34,6 +43,18 @@ type SpamResult = {
   activations: Greeting[];
   lullabyDelta: number;
   finalPhase: string;
+};
+
+type NightSnapshot = Pick<
+  NightStage,
+  'level' | 'fireflyCount' | 'settledCritterCount' | 'fireflyRise'
+>;
+type TransitionResult = {
+  nightInFlight: { level: number; fireflyCount: number };
+  changes: Array<Greeting | null>;
+  dayAtDawn: VoiceSnapshot | null;
+  nightAtDawn: NightSnapshot | null;
+  finalVoice: Greeting | null;
 };
 
 const ready = (page: Page) =>
@@ -106,6 +127,111 @@ test('rapid sun/moon taps play exactly one greeting for the settled phase', asyn
     expect(result.finalPhase).toBe('night');
     expect(result.activations).toEqual(['night-fireflies']);
     expect(result.lullabyDelta).toBe(1); // one hook, not a stacked second voice
+  });
+
+  expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);
+});
+
+/**
+ * F1: the spec's mid-greeting edge. Night is still on stage when the clock
+ * settles on dawn; the handing over must hide night at once and keep the new
+ * voice, even after the old night timer would have expired. Both stages are
+ * watched through their dev witnesses, so overlap and a stale `release()` are
+ * observed separately rather than inferred from a screenshot.
+ */
+test('night in flight yields cleanly to a dawn transition', async ({ page }) => {
+  test.setTimeout(120_000);
+  const consoleErrors = watchConsoleErrors(page);
+
+  await page.goto('/');
+  await ready(page);
+
+  const result = await page.evaluate(
+    () =>
+      new Promise<TransitionResult>((resolve, reject) => {
+        const scene = (window as unknown as { __tinyTracksScene?: SceneHandle }).__tinyTracksScene;
+        if (!scene) throw new Error('dev scene handle missing');
+
+        const beginTransition = (): void => {
+          const inFlight = scene.nightRituals();
+          const nightInFlight = {
+            level: inFlight.level,
+            fireflyCount: inFlight.fireflyCount,
+          };
+          const changes: Array<Greeting | null> = [];
+          let last = scene.rituals().activeGreeting; // night-fireflies
+          let dayAtDawn: VoiceSnapshot | null = null;
+          let nightAtDawn: NightSnapshot | null = null;
+          const start = performance.now();
+
+          scene.setDayPhase('dawn'); // cross-family handoff: night -> dawn
+
+          const tick = (): void => {
+            const voice = scene.rituals().activeGreeting;
+            if (voice !== last) {
+              changes.push(voice);
+              last = voice;
+            }
+            if (voice === 'dawn-chorus' && scene.rituals().level > 0.8 && nightAtDawn === null) {
+              const day = scene.rituals();
+              const night = scene.nightRituals();
+              dayAtDawn = { activeGreeting: day.activeGreeting, level: day.level };
+              nightAtDawn = {
+                level: night.level,
+                fireflyCount: night.fireflyCount,
+                settledCritterCount: night.settledCritterCount,
+                fireflyRise: night.fireflyRise,
+              };
+            }
+            // Past the old night timer's expiry but before dawn's own end: a
+            // stale release would have cleared the shared voice by now.
+            if (performance.now() - start >= 4_000) {
+              resolve({ nightInFlight, changes, dayAtDawn, nightAtDawn, finalVoice: voice });
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        };
+
+        const waitStart = performance.now();
+        const waitForNight = (): void => {
+          const night = scene.nightRituals();
+          if (night.level > 0.8 && night.fireflyCount > 0) {
+            beginTransition();
+            return;
+          }
+          if (performance.now() - waitStart >= 20_000) {
+            reject(new Error('night greeting never reached the stage'));
+            return;
+          }
+          requestAnimationFrame(waitForNight);
+        };
+
+        scene.setDayPhase('noon');
+        scene.setDayPhase('night');
+        waitForNight();
+      }),
+  );
+
+  await test.step('night was still on stage when the clock moved', async () => {
+    expect(result.nightInFlight.level).toBeGreaterThan(0.8);
+    expect(result.nightInFlight.fireflyCount).toBeGreaterThan(0);
+  });
+
+  await test.step('dawn speaks alone, with night fully hidden', async () => {
+    expect(result.dayAtDawn).not.toBeNull();
+    expect(result.dayAtDawn?.activeGreeting).toBe('dawn-chorus');
+    expect(result.dayAtDawn?.level).toBeGreaterThan(0.8);
+    expect(result.nightAtDawn?.level).toBe(0);
+    expect(result.nightAtDawn?.fireflyCount).toBe(0);
+    expect(result.nightAtDawn?.settledCritterCount).toBe(0);
+    expect(result.nightAtDawn?.fireflyRise).toBe(0);
+  });
+
+  await test.step('one voice transition, no stale clobber', async () => {
+    expect(result.changes).toEqual([null, 'dawn-chorus']);
+    expect(result.finalVoice).toBe('dawn-chorus');
   });
 
   expect(consoleErrors, `console errors: ${consoleErrors.join(' | ')}`).toEqual([]);

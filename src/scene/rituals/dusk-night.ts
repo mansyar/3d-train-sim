@@ -137,12 +137,20 @@ function build(options: DuskNightOptions): DuskNightRituals {
   };
 
   const unsubscribe = director.subscribe((event) => {
-    if (!DUSK_NIGHT_GREETINGS.includes(event.greeting)) return;
-    active = event.greeting;
+    if (DUSK_NIGHT_GREETINGS.includes(event.greeting)) {
+      active = event.greeting;
+      restingGreeting = null;
+      elapsed = 0;
+      level = 0;
+      if (event.greeting === 'night-fireflies') fireLullaby();
+      return;
+    }
+    // A day-family greeting owns the voice now. Mirror `applyResting`'s
+    // non-owning branch so the night bed — not a stale surge — is on screen.
+    active = null;
     restingGreeting = null;
-    elapsed = 0;
     level = 0;
-    if (event.greeting === 'night-fireflies') fireLullaby();
+    restoreAmbient(0);
   });
 
   return {
@@ -154,10 +162,12 @@ function build(options: DuskNightOptions): DuskNightRituals {
       }
       elapsed += dt * 1_000;
       if (elapsed >= GREETING_MS) {
+        // Release only the voice this stage still owns; a night timer that
+        // outlives its handoff to dawn must not clear the day greeting.
+        if (director.activeGreeting === active) director.release();
         active = null;
         level = 0;
         restoreAmbient(dt);
-        director.release();
         return;
       }
       level = greetingEnvelope(elapsed);

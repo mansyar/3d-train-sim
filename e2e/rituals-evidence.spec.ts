@@ -33,8 +33,8 @@ test.use({
 
 const SHOTS_DIR = '.conductor/evidence/20261128-rituals-day-weather/screenshots';
 const EVIDENCE_DIR = 'conductor/tracks/20261128-rituals-day-weather/evidence';
-const FFMPEG =
-  'C:\\Users\\Ansyar\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin\\ffmpeg.exe';
+// PATH by default; FFMPEG lets a runner point at a binary installed elsewhere.
+const FFMPEG = process.env.FFMPEG ?? 'ffmpeg';
 
 /** Playwright keeps the recording in the per-test artifacts directory. */
 function findVideo(): string {
@@ -64,24 +64,31 @@ test.afterAll(() => {
   for (const phase of ['dawn', 'morning', 'noon', 'dusk', 'night']) {
     copyFileSync(path.join(SHOTS_DIR, `${phase}.png`), path.join(EVIDENCE_DIR, `${phase}.png`));
   }
-  execFileSync(
-    FFMPEG,
-    [
-      '-y',
-      '-ss',
-      clipStartSeconds(),
-      '-i',
-      findVideo(),
-      '-t',
-      '5',
-      '-vf',
-      'fps=10,scale=400:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse',
-      '-loop',
-      '0',
-      path.join(EVIDENCE_DIR, 'greeting-cycle.gif'),
-    ],
-    { stdio: 'pipe' },
-  );
+  try {
+    execFileSync(
+      FFMPEG,
+      [
+        '-y',
+        '-ss',
+        clipStartSeconds(),
+        '-i',
+        findVideo(),
+        '-t',
+        '5',
+        '-vf',
+        'fps=10,scale=400:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse',
+        '-loop',
+        '0',
+        path.join(EVIDENCE_DIR, 'greeting-cycle.gif'),
+      ],
+      { stdio: 'pipe' },
+    );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Could not run ffmpeg to build the greeting-cycle GIF. Install it on PATH or set FFMPEG to its executable path. Original error: ${detail}`,
+    );
+  }
 });
 
 type Greeting =
