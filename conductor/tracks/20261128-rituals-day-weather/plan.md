@@ -42,13 +42,17 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-3, FR-4, AC-2 (day), AC-3 (day)
 - **Touches:** `src/scene/rituals/day.ts`, `src/scene/actors/*`, `src/scene/init-scene.ts`, `src/scene/frame-contract.ts`, `src/scene/frame-contract.test.ts`
 - **Verification:** `pnpm exec playwright test`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: Spike — actor authoring (procedural vs checked-in recipe), record the decision** — covers: Open question
-  - [ ] **P2.T1.1: Cap check against NFR-1 (pooled, capped counts) and NFR-3 (precache)**
-- [ ] **P2.T2: Dawn greeting — chorus critters wake and flutter near the track** — covers: FR-2
-- [ ] **P2.T3: Morning greeting — butterflies drift over the meadow** — covers: FR-3
-- [ ] **P2.T4: Noon greeting — full sun glow, critters liveliest** — covers: FR-4
+- [x] **P2.T1: Spike — actor authoring (procedural vs checked-in recipe), record the decision** — covers: Open question
+  - [x] **P2.T1.1: Cap check against NFR-1 (pooled, capped counts) and NFR-3 (precache)**
+- [x] **P2.T2: Dawn greeting — chorus critters wake and flutter near the track** — covers: FR-2
+- [x] **P2.T3: Morning greeting — butterflies drift over the meadow** — covers: FR-3
+- [x] **P2.T4: Noon greeting — full sun glow, critters liveliest** — covers: FR-4
+
+**Result:** verified
+**Checkpoint:** d35b17b1f1535c483280983a7a84681d523e959e
+**Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-2.md
 
 <!--
 The primary appends after acceptance:
