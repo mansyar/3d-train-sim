@@ -14,19 +14,19 @@
 - **Covers:** FR-4, NFR-5, AC-2 (logic half; browser half lands in Phase 5)
 - **Touches:** `src/state/liveries.ts`, `src/state/liveries.test.ts`, `src/core/save.ts`, `src/core/save.test.ts`
 - **Verification:** `pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** done
 
-- [ ] **P1.T1: Livery store** — covers: FR-4
-  - [ ] **P1.T1.1: Red failing tests** — default stock livery, set-paint, stamp/evict-oldest, restore-default, per-train isolation
-  - [ ] **P1.T1.2: Green implementation** — pure store, no DOM/three.js, no save-schema change beyond the preferences key
-- [ ] **P1.T2: Preferences round-trip** — covers: FR-4, NFR-5
-  - [ ] **P1.T2.1: Red failing tests** — missing livery key boots stock; portable world-only export excludes liveries
-  - [ ] **P1.T2.2: Green implementation** — additive `preferences.liveries` key, salvage-safe
+- [x] **P1.T1: Livery store** — covers: FR-4
+  - [x] **P1.T1.1: Red failing tests** — default stock livery, set-paint, stamp/evict-oldest, restore-default, per-train isolation
+  - [x] **P1.T1.2: Green implementation** — pure store, no DOM/three.js, no save-schema change beyond the preferences key
+- [x] **P1.T2: Preferences round-trip** — covers: FR-4, NFR-5
+  - [x] **P1.T2.1: Red failing tests** — missing livery key boots stock; portable world-only export excludes liveries
+  - [x] **P1.T2.2: Green implementation** — additive `preferences.liveries` key, salvage-safe
 
 <!--
 The primary appends after acceptance:
 **Result:** verified
-**Checkpoint:** <short-sha>
+**Checkpoint:** 2c0a30d
 **Evidence:** conductor/tracks/20261128-expression-liveries/verification/phase-1.md
 -->
 
