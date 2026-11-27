@@ -37,7 +37,7 @@ The primary appends after acceptance:
 - **Covers:** FR-1, NFR-1, NFR-4
 - **Touches:** `src/ui/train-picker.ts`, `e2e/liveries-drawer.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/liveries-drawer.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Livery tray section** — covers: FR-1, NFR-4
 - [ ] **P2.T2: Vehicle targeting** — covers: FR-1 (tray follows the selected loco/wagon, keeps per-train state)
