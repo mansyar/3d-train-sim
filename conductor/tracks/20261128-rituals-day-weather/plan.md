@@ -91,9 +91,9 @@ The primary appends after acceptance:
   unlock path.
 - **Depends on:** Phase 1
 - **Covers:** FR-7, FR-10 (audio), NFR-2
-- **Touches:** `src/audio/rituals.ts`, `src/audio/rituals.test.ts`
+- **Touches:** `src/audio/rituals.ts`, `src/audio/rituals.test.ts`, `src/scene/init-scene.ts` (lullaby-hook motif wiring only)
 - **Verification:** `pnpm exec playwright test`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Red — unit tests for motif definitions (distinct per phase, night = lullaby phrase)** — covers: FR-7
 - [ ] **P4.T2: Green — implement motifs, wire night to the music-box lullaby phrase** — covers: FR-7
