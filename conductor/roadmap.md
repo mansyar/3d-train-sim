@@ -23,12 +23,12 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-002 | A. Rituals — deepen the day/weather clock | feature | P1 | RM-001 |  | conductor/product.md — Phase 3, recommended |
-| RM-003 | B. Expression — child-applied paint/sticker liveries | feature | P2 | RM-001 |  | conductor/product.md — Phase 3 |
-| RM-004 | C. Shared Play — two-child local co-build | feature | P3 | RM-001 |  | conductor/product.md — Phase 3, deferred |
-| RM-005 | Longer trains | feature | P3 | RM-001 |  | informal parent feedback |
-| RM-006 | New track piece types | feature | P2 | RM-001 |  | conductor/product.md — anti-roadmap |
-| RM-007 | New locomotives | feature | P2 | RM-001 |  | conductor/product.md — anti-roadmap |
+| RM-002 | A. Rituals — deepen the day/weather clock | feature | P1 | — |  | conductor/product.md — Phase 3, recommended |
+| RM-003 | B. Expression — child-applied paint/sticker liveries | feature | P2 | — |  | conductor/product.md — Phase 3 |
+| RM-004 | C. Shared Play — two-child local co-build | feature | P3 | — |  | conductor/product.md — Phase 3, deferred |
+| RM-005 | Longer trains | feature | P3 | — |  | informal parent feedback |
+| RM-006 | New track piece types | feature | P2 | — |  | conductor/product.md — anti-roadmap |
+| RM-007 | New locomotives | feature | P2 | — |  | conductor/product.md — anti-roadmap |
 | RM-008 | Piece/icon contract for every new or changed piece | chore | P2 | — |  | conductor/product.md — piece/icon contract |
 
 ## Dropped
