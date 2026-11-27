@@ -136,10 +136,14 @@ The primary appends after acceptance:
 - **Covers:** F1, F2
 - **Touches:** `src/scene/rituals/*`, `src/state/rituals.ts`, `e2e/rituals-settle.spec.ts`, `e2e/rituals-evidence.spec.ts`
 - **Verification:** `pnpm check` + targeted specs (new mid-greeting transition test + evidence spec)
-- **Status:** pending
+- **Status:** verified
 
-- [ ] **R1.T1: Guard cross-family yield and release ownership (F1)** — covers: F1
-- [ ] **R1.T2: Portable ffmpeg resolution in evidence spec (F2)** — covers: F2
+- [x] **R1.T1: Guard cross-family yield and release ownership (F1)** — covers: F1
+- [x] **R1.T2: Portable ffmpeg resolution in evidence spec (F2)** — covers: F2
+
+**Result:** verified
+**Checkpoint:** bbf87f3dd20e171b7d331f0ba753019a53c69dc0
+**Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-R1.md
 
 <!--
 The primary appends after acceptance:
