@@ -90,3 +90,5 @@ Registry of development tracks. One row per archived track; active tracks appear
 | [train-ride](archive/train-ride/index.md) | Train Ride (Autonomous Locomotive) | Feature | archived |
 | [choo-choo-sound-box](archive/choo-choo-sound-box/index.md) | Choo-Choo Sound Box (Audio & Whistle) | Feature | archived |
 | [bootstrap-tiny-tracks](archive/bootstrap-tiny-tracks/index.md) | Bootstrap Tiny Tracks | Feature | archived |
+
+- [x] **Track: A. Rituals — Deepen the Day/Weather Clock** — [20261128-rituals-day-weather](./archive/20261128-rituals-day-weather/index.md) — feature — high

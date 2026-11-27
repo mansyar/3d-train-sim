@@ -10,6 +10,7 @@ import {
 import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createRitualAudio, type RitualAudioWitness } from '../audio/rituals';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import type { DayPhase } from '../core/day-clock';
@@ -19,6 +20,7 @@ import type { Edge } from '../core/pieces';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createRideController } from '../state/ride';
+import { createRitualDirector, greetingForPhase } from '../state/rituals';
 import type { WorldStore } from '../state/world';
 import { createBarge } from './barge';
 import { createConfetti } from './confetti';
@@ -46,6 +48,8 @@ import {
   createRigCargo,
   type StationSlot,
 } from './rig-cargo';
+import { createDayRituals, type RitualWitness } from './rituals/day';
+import { createDuskNightRituals, type DuskNightWitness } from './rituals/dusk-night';
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
@@ -137,6 +141,12 @@ export interface SceneHandle {
   setDayPhase(phase: DayPhase): void;
   /** Fire on every time-of-day change, the child's tap or the drift's own. */
   subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
+  /** Dev/e2e witness: the settled day greeting's stage, levels and cap counts. */
+  rituals(): RitualWitness;
+  /** Dev/e2e witness: the dusk/night greeting's stage, glow and lullaby hook. */
+  nightRituals(): DuskNightWitness;
+  /** Dev/e2e witness: which greeting motif wound, and whether it was audible. */
+  ritualAudio(): RitualAudioWitness;
   /** Dev/e2e witness: live two-layer cloud count, cover, drift and offsets. */
   cloudLayers(): CloudWitness | null;
   /** Dev/e2e witness: pin the cloud bed (null restores the clock). Not saved. */
@@ -224,6 +234,51 @@ export function initScene(
   const dayAmbience = createDayAmbience({ context, headlights, ambience, babble, ground });
   dayAmbience.paint();
   disposables.push(dayAmbience.dispose);
+
+  // Day greetings: the clock publishes transitions, the director settles them
+  // (only the phase left standing speaks), and the stage renders what fires.
+  // Kept outside the frame contract on purpose — see `rituals/day.ts`.
+  const ritualDirector = createRitualDirector();
+  const dayRituals = createDayRituals({ scene, director: ritualDirector, reducedMotion });
+  disposables.push(dayRituals.dispose);
+  const nightRituals = createDuskNightRituals({
+    scene,
+    director: ritualDirector,
+    nightFactor: () => dayAmbience.nightFactor(),
+    headlights,
+    reducedMotion,
+  });
+  disposables.push(nightRituals.dispose);
+
+  // One greeting voice for the whole day; the four day motifs follow settled
+  // director events, and night arrives through the scene's lullaby hook below.
+  const ritualAudio = createRitualAudio({ audio, director: ritualDirector });
+
+  // The night lullaby rides the very same attachment point as the fireflies
+  // and headlights — one hook, one phrase, never a stacked second voice.
+  const unregisterLullaby: () => void = nightRituals.registerLullabyHook(() => {
+    ritualAudio.play('night-fireflies');
+  });
+
+  const unsubscribeRitualPhase = dayAmbience.subscribeDayPhase((phase) => {
+    ritualDirector.observe(phase);
+    // Reduced motion has no RAF loop, so `tick` never fires a greeting here.
+    // Paint the resting pose on the spot instead — instantly, with no motion.
+    if (reducedMotion) {
+      const greeting = greetingForPhase(phase);
+      dayRituals.applyResting(greeting);
+      nightRituals.applyResting(greeting, greeting === 'night-fireflies');
+      // The night motif still comes from the hook fired by `applyResting` above;
+      // the day motifs have no tick here, so wind them on this transition.
+      if (greeting !== 'night-fireflies') ritualAudio.play(greeting);
+    }
+  });
+  // Booting straight into a phase shows its resting visuals, silently.
+  if (reducedMotion) {
+    const greeting = greetingForPhase(dayAmbience.dayPhase());
+    dayRituals.applyResting(greeting);
+    nightRituals.applyResting(greeting);
+  }
 
   const crate = createPlaceholderCrate();
   // The loading crate waits where the opening train will appear (spec FR3):
@@ -500,6 +555,11 @@ export function initScene(
       // `starSpot` by `fleet` after it moves, so every later system reads this
       // frame's values. The orchestrator only owns the object.
       frameRunner.run(frameInputs, dt);
+      // The director takes milliseconds; the RAF loop speaks seconds. Tick
+      // first so a settle that lands this frame stages its greeting this frame.
+      ritualDirector.tick(dt * 1_000);
+      dayRituals.update(dt);
+      nightRituals.update(dt);
     },
     perfMonitor,
     qualityController,
@@ -508,6 +568,7 @@ export function initScene(
       audio.suspend();
       ambience.suspend();
       babble.suspend();
+      ritualAudio.suspend();
       tracks.suspendMusicBox();
       clearInterval(attractTimer);
       attractTimer = 0;
@@ -517,6 +578,7 @@ export function initScene(
       audio.resume();
       ambience.resume();
       babble.resume();
+      ritualAudio.resume();
       tracks.resumeMusicBox();
       startAttractTimer();
     },
@@ -573,6 +635,9 @@ export function initScene(
     advanceDay: () => dayAmbience.advanceDay(),
     setDayPhase: (phase) => dayAmbience.setDayPhase(phase),
     subscribeDayPhase: (listener) => dayAmbience.subscribeDayPhase(listener),
+    rituals: () => dayRituals.probe(),
+    nightRituals: () => nightRituals.probe(),
+    ritualAudio: () => ritualAudio.probe(),
     cloudLayers: () => dayAmbience.cloudLayers(),
     setCloudWeather: (weather) => dayAmbience.setCloudWeather(weather),
     stepClouds: (frames, dt) => dayAmbience.stepClouds(frames, dt),
@@ -602,6 +667,9 @@ export function initScene(
       lifecycle.dispose();
       clearInterval(attractTimer);
       unsubscribeAttract();
+      unsubscribeRitualPhase();
+      unregisterLullaby();
+      ritualAudio.dispose();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeRides();
