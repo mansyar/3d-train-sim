@@ -19,6 +19,7 @@ import type { Edge } from '../core/pieces';
 import type { SceneryKind } from '../core/scenery';
 import type { Cell, PieceType, Rotation } from '../core/track-graph';
 import { createRideController } from '../state/ride';
+import { createRitualDirector } from '../state/rituals';
 import type { WorldStore } from '../state/world';
 import { createBarge } from './barge';
 import { createConfetti } from './confetti';
@@ -46,6 +47,7 @@ import {
   createRigCargo,
   type StationSlot,
 } from './rig-cargo';
+import { createDayRituals, type RitualWitness } from './rituals/day';
 import type { SceneContext } from './scene-context';
 import { startTrackRenderer } from './track-renderer';
 import { createTrainFleet } from './train-fleet';
@@ -137,6 +139,8 @@ export interface SceneHandle {
   setDayPhase(phase: DayPhase): void;
   /** Fire on every time-of-day change, the child's tap or the drift's own. */
   subscribeDayPhase(listener: (phase: DayPhase) => void): () => void;
+  /** Dev/e2e witness: the settled day greeting's stage, levels and cap counts. */
+  rituals(): RitualWitness;
   /** Dev/e2e witness: live two-layer cloud count, cover, drift and offsets. */
   cloudLayers(): CloudWitness | null;
   /** Dev/e2e witness: pin the cloud bed (null restores the clock). Not saved. */
@@ -224,6 +228,16 @@ export function initScene(
   const dayAmbience = createDayAmbience({ context, headlights, ambience, babble, ground });
   dayAmbience.paint();
   disposables.push(dayAmbience.dispose);
+
+  // Day greetings: the clock publishes transitions, the director settles them
+  // (only the phase left standing speaks), and the stage renders what fires.
+  // Kept outside the frame contract on purpose — see `rituals/day.ts`.
+  const ritualDirector = createRitualDirector();
+  const dayRituals = createDayRituals({ scene, director: ritualDirector });
+  disposables.push(dayRituals.dispose);
+  const unsubscribeRitualPhase = dayAmbience.subscribeDayPhase((phase) =>
+    ritualDirector.observe(phase),
+  );
 
   const crate = createPlaceholderCrate();
   // The loading crate waits where the opening train will appear (spec FR3):
@@ -500,6 +514,10 @@ export function initScene(
       // `starSpot` by `fleet` after it moves, so every later system reads this
       // frame's values. The orchestrator only owns the object.
       frameRunner.run(frameInputs, dt);
+      // The director takes milliseconds; the RAF loop speaks seconds. Tick
+      // first so a settle that lands this frame stages its greeting this frame.
+      ritualDirector.tick(dt * 1_000);
+      dayRituals.update(dt);
     },
     perfMonitor,
     qualityController,
@@ -573,6 +591,7 @@ export function initScene(
     advanceDay: () => dayAmbience.advanceDay(),
     setDayPhase: (phase) => dayAmbience.setDayPhase(phase),
     subscribeDayPhase: (listener) => dayAmbience.subscribeDayPhase(listener),
+    rituals: () => dayRituals.probe(),
     cloudLayers: () => dayAmbience.cloudLayers(),
     setCloudWeather: (weather) => dayAmbience.setCloudWeather(weather),
     stepClouds: (frames, dt) => dayAmbience.stepClouds(frames, dt),
@@ -602,6 +621,7 @@ export function initScene(
       lifecycle.dispose();
       clearInterval(attractTimer);
       unsubscribeAttract();
+      unsubscribeRitualPhase();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeRides();
