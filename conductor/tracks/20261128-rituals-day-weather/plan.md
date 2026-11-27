@@ -13,9 +13,9 @@
   gate green.
 - **Depends on:** none
 - **Covers:** FR-1, FR-8, NFR-5, NFR-6, AC-1
-- **Touches:** `src/state/rituals.ts`, `tests/unit/rituals*.ts`
+- **Touches:** `src/state/rituals.ts`, `src/state/rituals.test.ts`
 - **Verification:** `pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Red — failing tests for the phase→greeting map and settle rule** — covers: FR-1
   - [ ] **P1.T1.1: Map cases for all five phases**
@@ -79,7 +79,7 @@ The primary appends after acceptance:
   unlock path.
 - **Depends on:** Phase 1
 - **Covers:** FR-7, FR-10 (audio), NFR-2
-- **Touches:** `src/audio/rituals.ts`, `tests/unit/audio-rituals*.ts`
+- **Touches:** `src/audio/rituals.ts`, `src/audio/rituals.test.ts`
 - **Verification:** `pnpm exec playwright test`
 - **Status:** pending
 
