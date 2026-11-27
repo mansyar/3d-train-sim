@@ -12,7 +12,7 @@ download or network call (NFR-2).
 
 ## P4.T1 — Red: motif definition tests
 
-`src/audio/rituals.test.ts` (new, 10 tests) pins, before the implementation
+`src/audio/rituals.test.ts` (new, 9 tests) pins, before the implementation
 landed: all five `Greeting` keys have a motif with a unique note signature;
 night's notes are verbatim the `abc` (Twinkle) entry in `MELODIES`; phrases are
 short; definitions contain no file/network strings; mute and suspension wind a
