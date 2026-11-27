@@ -15,13 +15,17 @@
 - **Covers:** FR-1, FR-8, NFR-5, NFR-6, AC-1
 - **Touches:** `src/state/rituals.ts`, `src/state/rituals.test.ts`
 - **Verification:** `pnpm test:coverage`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P1.T1: Red — failing tests for the phase→greeting map and settle rule** — covers: FR-1
-  - [ ] **P1.T1.1: Map cases for all five phases**
-  - [ ] **P1.T1.2: Settle cases — spam yields only the resting phase, single voice**
-- [ ] **P1.T2: Green — implement the director in `src/state`** — covers: FR-1, FR-8
-- [ ] **P1.T3: Frame-contract entry — one line per new system with its reason** — covers: NFR-6
+- [x] **P1.T1: Red — failing tests for the phase→greeting map and settle rule** — covers: FR-1
+  - [x] **P1.T1.1: Map cases for all five phases**
+  - [x] **P1.T1.2: Settle cases — spam yields only the resting phase, single voice**
+- [x] **P1.T2: Green — implement the director in `src/state`** — covers: FR-1, FR-8
+- [x] **P1.T3: Frame-contract entry — one line per new system with its reason** — covers: NFR-6 (comment-only; runtime slot belongs to Phases 2–3, see verification/phase-1.md)
+
+**Result:** verified
+**Checkpoint:** d3099f0a225e5fb4ed2af6bac4420108041bb464
+**Evidence:** conductor/tracks/20261128-rituals-day-weather/verification/phase-1.md
 
 <!--
 The primary appends after acceptance:
