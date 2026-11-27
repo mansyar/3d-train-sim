@@ -14,7 +14,7 @@
 - **Covers:** FR-4, NFR-5, AC-2 (logic half; browser half lands in Phase 5)
 - **Touches:** `src/state/liveries.ts`, `src/state/liveries.test.ts`, `src/core/save.ts`, `src/core/save.test.ts`
 - **Verification:** `pnpm test:coverage`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Livery store** — covers: FR-4
   - [ ] **P1.T1.1: Red failing tests** — default stock livery, set-paint, stamp/evict-oldest, restore-default, per-train isolation
