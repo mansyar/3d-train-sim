@@ -1,16 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { PersistedLiveries } from '../core/save';
 import {
   createLiveryStore,
   locoVehicleId,
   MAX_STICKERS,
   PAINT_IDS,
   PAINT_SWATCHES,
+  type PaintId,
   STICKER_ANCHORS,
   STICKER_IDS,
+  type StickerId,
   stockLivery,
   wagonVehicleId,
-  type PaintId,
-  type StickerId,
 } from './liveries';
 
 const steam = locoVehicleId('steam');
@@ -145,14 +146,16 @@ describe('livery store', () => {
     const store = createLiveryStore();
     const tooMany = ['star', 'heart', 'flower', 'bolt', 'star'];
 
-    expect(() =>
-      store.hydrate({
-        __proto__: { paint: 'sky' },
-        [steam]: { paint: 'hovercraft', stickers: ['dragon', ...tooMany] },
-        [diesel]: { paint: 'sky', stickers: tooMany },
-        [leadWagon]: { paint: null, stickers: [] },
-      }),
-    ).not.toThrow();
+    // Corrupt payloads arrive from hand-edited JSON, so they are not valid
+    // PersistedLiveries — parse them the way the loader really receives them.
+    const corrupt = JSON.parse(
+      '{"__proto__":{"paint":"sky"},' +
+        `"${steam}":{"paint":"hovercraft","stickers":["dragon","${tooMany.join('","')}"]},` +
+        `"${diesel}":{"paint":"sky","stickers":["${tooMany.join('","')}"]},` +
+        `"${leadWagon}":{"paint":null,"stickers":[]}}`,
+    ) as PersistedLiveries;
+
+    expect(() => store.hydrate(corrupt)).not.toThrow();
 
     expect(store.liveryFor(steam)).toEqual(stockLivery());
     expect(store.liveryFor(diesel)).toEqual({ paint: 'sky', stickers: tooMany.slice(1) });
@@ -164,7 +167,9 @@ describe('livery store', () => {
 
     store.stamp(steam, 'star');
     store.liveryFor(steam).stickers.push('bolt');
-    store.liveries()[steam].paint = 'grape';
+    const exposed = store.liveries()[steam];
+    if (!exposed) throw new Error('expected the stamped livery to be listed');
+    exposed.paint = 'grape';
 
     expect(store.liveryFor(steam)).toEqual({ paint: null, stickers: ['star'] });
   });

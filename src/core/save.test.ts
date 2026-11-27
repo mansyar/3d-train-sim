@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { DAY_PHASES } from './day-clock';
-import { isWater } from './river';
 import { buildExport } from './portable';
+import { isWater } from './river';
 import {
   deserializePreferences,
   deserializeWorld,
+  type PersistedLiveries,
   parseWorldSnapshot,
   serializeWorld,
-  type PersistedLiveries,
   type WorldSnapshot,
 } from './save';
 import type { PlacedScenery } from './scenery';
@@ -1393,7 +1393,7 @@ describe('livery preferences — additive per-vehicle state', () => {
 
   it('keeps snapshots minimal when no vehicle has a livery', () => {
     expect(withLiveries({})).toEqual({ version: 3, pieces, scenery, train: 'steam' });
-    expect(withLiveries({ 'steam:loco': { paint: undefined, stickers: [] } }).preferences).toBeUndefined();
+    expect(withLiveries({ 'steam:loco': { stickers: [] } }).preferences).toBeUndefined();
   });
 
   it('round-trips liveries in both directions', () => {
@@ -1421,18 +1421,15 @@ describe('livery preferences — additive per-vehicle state', () => {
 
   it('boots every vehicle stock when the snapshot predates liveries', () => {
     expect(deserializePreferences({ version: 3, pieces, scenery })).toEqual({ muted: false });
-    expect(deserializePreferences({ version: 3, pieces, scenery, preferences: { muted: true } })).toEqual(
-      { muted: true },
-    );
+    expect(
+      deserializePreferences({ version: 3, pieces, scenery, preferences: { muted: true } }),
+    ).toEqual({ muted: true });
   });
 
   it('salvages corrupt livery entries without dropping valid ones or the world', () => {
     const snapshot = {
       version: 3 as const,
-      pieces: [
-        ...pieces,
-        { id: 'bad', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 },
-      ],
+      pieces: [...pieces, { id: 'bad', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 }],
       scenery,
       preferences: {
         muted: true,
