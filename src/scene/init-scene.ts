@@ -10,6 +10,7 @@ import {
 import { createAmbienceAudio } from '../audio/ambience-audio';
 import type { AudioController } from '../audio/audio-controller';
 import { bindRideAudio } from '../audio/ride-audio';
+import { createRitualAudio, type RitualAudioWitness } from '../audio/rituals';
 import { createRiverBabble } from '../audio/river-babble';
 import { createAttractClock } from '../core/attract-clock';
 import type { DayPhase } from '../core/day-clock';
@@ -144,6 +145,8 @@ export interface SceneHandle {
   rituals(): RitualWitness;
   /** Dev/e2e witness: the dusk/night greeting's stage, glow and lullaby hook. */
   nightRituals(): DuskNightWitness;
+  /** Dev/e2e witness: which greeting motif wound, and whether it was audible. */
+  ritualAudio(): RitualAudioWitness;
   /** Dev/e2e witness: live two-layer cloud count, cover, drift and offsets. */
   cloudLayers(): CloudWitness | null;
   /** Dev/e2e witness: pin the cloud bed (null restores the clock). Not saved. */
@@ -247,9 +250,15 @@ export function initScene(
   });
   disposables.push(nightRituals.dispose);
 
-  // Phase 4 attaches the night lullaby phrase here. Until then the hook is a
-  // counted no-op, so the attachment point is observable (and harmless) today.
-  const unregisterLullaby: () => void = nightRituals.registerLullabyHook(() => undefined);
+  // One greeting voice for the whole day; the four day motifs follow settled
+  // director events, and night arrives through the scene's lullaby hook below.
+  const ritualAudio = createRitualAudio({ audio, director: ritualDirector });
+
+  // The night lullaby rides the very same attachment point as the fireflies
+  // and headlights — one hook, one phrase, never a stacked second voice.
+  const unregisterLullaby: () => void = nightRituals.registerLullabyHook(() => {
+    ritualAudio.play('night-fireflies');
+  });
 
   const unsubscribeRitualPhase = dayAmbience.subscribeDayPhase((phase) => {
     ritualDirector.observe(phase);
@@ -259,6 +268,9 @@ export function initScene(
       const greeting = greetingForPhase(phase);
       dayRituals.applyResting(greeting);
       nightRituals.applyResting(greeting, greeting === 'night-fireflies');
+      // The night motif still comes from the hook fired by `applyResting` above;
+      // the day motifs have no tick here, so wind them on this transition.
+      if (greeting !== 'night-fireflies') ritualAudio.play(greeting);
     }
   });
   // Booting straight into a phase shows its resting visuals, silently.
@@ -556,6 +568,7 @@ export function initScene(
       audio.suspend();
       ambience.suspend();
       babble.suspend();
+      ritualAudio.suspend();
       tracks.suspendMusicBox();
       clearInterval(attractTimer);
       attractTimer = 0;
@@ -565,6 +578,7 @@ export function initScene(
       audio.resume();
       ambience.resume();
       babble.resume();
+      ritualAudio.resume();
       tracks.resumeMusicBox();
       startAttractTimer();
     },
@@ -623,6 +637,7 @@ export function initScene(
     subscribeDayPhase: (listener) => dayAmbience.subscribeDayPhase(listener),
     rituals: () => dayRituals.probe(),
     nightRituals: () => nightRituals.probe(),
+    ritualAudio: () => ritualAudio.probe(),
     cloudLayers: () => dayAmbience.cloudLayers(),
     setCloudWeather: (weather) => dayAmbience.setCloudWeather(weather),
     stepClouds: (frames, dt) => dayAmbience.stepClouds(frames, dt),
@@ -654,6 +669,7 @@ export function initScene(
       unsubscribeAttract();
       unsubscribeRitualPhase();
       unregisterLullaby();
+      ritualAudio.dispose();
       window.removeEventListener('resize', resize);
       rideAudio.dispose();
       unsubscribeRides();
