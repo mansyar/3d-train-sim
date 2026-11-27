@@ -118,7 +118,7 @@ The primary appends after acceptance:
 - **Covers:** FR-8, FR-9, FR-10, NFR-1, NFR-2, NFR-3, NFR-4, AC-4, AC-5, AC-6, AC-7, AC-8
 - **Touches:** `src/scene/rituals/*`, `src/state/rituals.ts`, `e2e/rituals*.spec.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Reduced-motion e2e — every greeting frozen at resting state** — covers: FR-9, AC-6
 - [ ] **P5.T2: Rapid-tap e2e — spam plays exactly one greeting for the settled phase** — covers: FR-8, AC-5
