@@ -40,9 +40,9 @@ The primary appends after acceptance:
   screenshots.
 - **Depends on:** Phase 1
 - **Covers:** FR-2, FR-3, FR-4, AC-2 (day), AC-3 (day)
-- **Touches:** `src/scene/rituals/day.ts`, `src/scene/actors/*`
+- **Touches:** `src/scene/rituals/day.ts`, `src/scene/actors/*`, `src/scene/init-scene.ts`, `src/scene/frame-contract.ts`, `src/scene/frame-contract.test.ts`
 - **Verification:** `pnpm exec playwright test`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P2.T1: Spike — actor authoring (procedural vs checked-in recipe), record the decision** — covers: Open question
   - [ ] **P2.T1.1: Cap check against NFR-1 (pooled, capped counts) and NFR-3 (precache)**
@@ -62,7 +62,7 @@ The primary appends after acceptance:
 - **Goal:** dusk and night greetings visible in-scene with per-phase screenshots.
 - **Depends on:** Phase 2
 - **Covers:** FR-5, FR-6, AC-2 (night), AC-3 (night)
-- **Touches:** `src/scene/rituals/dusk-night.ts`, `src/scene/actors/*`
+- **Touches:** `src/scene/rituals/dusk-night.ts`, `src/scene/actors/*`, `src/scene/init-scene.ts`
 - **Verification:** `pnpm exec playwright test`
 - **Status:** pending
 
