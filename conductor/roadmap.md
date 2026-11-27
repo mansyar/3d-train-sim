@@ -23,7 +23,7 @@
 
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
-| RM-003 | B. Expression — child-applied paint/sticker liveries | feature | P2 | — |  | conductor/product.md — Phase 3 |
+| RM-003 | B. Expression — child-applied paint/sticker liveries | feature | P2 | — | 20261128-expression-liveries | conductor/product.md — Phase 3 |
 | RM-004 | C. Shared Play — two-child local co-build | feature | P3 | — |  | conductor/product.md — Phase 3, deferred |
 | RM-005 | Longer trains | feature | P3 | — |  | informal parent feedback |
 | RM-006 | New track piece types | feature | P2 | — |  | conductor/product.md — anti-roadmap |
