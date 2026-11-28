@@ -81,6 +81,18 @@ test('a swatch repaints the whole consist of every locomotive', async ({ page })
     const vehicleIds = [`${kind}:loco`, `${kind}:lead`, `${kind}:rear`];
     for (const paint of PAINTS) {
       await page.click(`.livery-section [data-paint="${paint.id}"]`, { timeout: 60_000 });
+      // The repaint lands frames later; under software GL those frames are
+      // long, so wait for the landed state instead of snapshotting mid-flight.
+      await page.waitForFunction(
+        ({ ids, hex }: { ids: string[]; hex: string }) => {
+          const dev = window as unknown as { __tinyTracksLivery?: LiveryProbe };
+          const witness = dev.__tinyTracksLivery;
+          if (!witness) return false;
+          return ids.every((id) => witness.bodyHex(id) === hex);
+        },
+        { ids: [...vehicleIds], hex: paint.hex },
+        { timeout: 60_000 },
+      );
       const seen = await probe(page, vehicleIds);
       expect(seen, `${kind}/${paint.id}: paint witness missing`).not.toBeNull();
       for (const id of vehicleIds) {
