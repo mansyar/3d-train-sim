@@ -14,7 +14,7 @@
 - **Covers:** FR-2, FR-7 (model + save), A1, A3, A4
 - **Touches:** `src/state/world.ts`, `src/state/world.test.ts`, `src/core/save.ts`, `src/core/save.test.ts`
 - **Verification:** `pnpm check`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P1.T1: Uniform length + per-wagon outfits in world state** — covers: FR-2, FR-4
   - [ ] **P1.T1.1:** RED: tests for default pair, grow-to-4, 5th-grow no-op, per-wagon outfit set, tap-last removal
