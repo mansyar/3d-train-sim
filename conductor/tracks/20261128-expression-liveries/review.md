@@ -5,7 +5,7 @@
 - **Branch:** `feat/20261128-expression-liveries`
 - **Range:** `dc2ba44a6f3f62b31341e0227be2534d572067e6..17a88cd`
 - **Date:** `2026-11-28`
-- **Verdict:** `BLOCK`
+- **Verdict:** `PASS`
 
 ## Summary
 
@@ -15,6 +15,11 @@ edge case: the parent-gated full reset never clears liveries. The store's
 `reset()` does not notify, and no reset wiring calls it, so painted bodies,
 stuck stickers, and stored liveries all survive a world reset. One High
 finding blocks; no Medium or Low findings.
+
+Re-review of the fix delta (`5382d89..e28adda`): **PASS** — `reset()` notifies
+each affected id with stock via the existing notify path (silent on empty),
+`main.ts` wires `world.onReset` after the world save so the cleared snapshot
+persists last; unit plus e2e proof green, no new issues.
 
 ## Verification
 
@@ -121,11 +126,13 @@ for the missing persistence wiring, regenerated evidence bundle).
 
 ## Doc sync
 
-`pending` — no product/workflow/tech-stack changes anticipated (code-only fix);
-final value recorded after the fix phase.
+`none` — code-only fix (notifying `reset()` + one wiring line + tests); the
+reset-clears-liveries behavior was already specified in `spec.md`, and no
+product, workflow, or tech-stack text changed.
 
 ## History
 
 | Round | Verdict | Critical | High | Medium | Low | Fixed |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | BLOCK | 0 | 1 | 0 | 0 | 0 |
+| 1-fix1 | PASS | 0 | 0 | 0 | 0 | 1 |

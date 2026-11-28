@@ -22,10 +22,10 @@
   "revert_commit": null,
   "revert_pr_url": null,
   "review_rounds": 1,
-  "review_verdict": "BLOCK",
+  "review_verdict": "PASS",
   "spec": "spec.md",
   "status": "in_progress",
   "title": "B. Expression — paint/sticker liveries",
   "type": "feature",
-  "updated_at": "2026-11-28T12:13:31+11:00"
+  "updated_at": "2026-11-28T12:14:35+11:00"
 }
