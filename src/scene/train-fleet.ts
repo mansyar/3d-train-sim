@@ -811,6 +811,8 @@ export function createTrainFleet({
       loco: { x: number; y: number; z: number };
       wagons: Array<{
         preset: WagonPreset | null;
+        /** Actual wagon body paint, so e2e can see extras inherit the loco. */
+        bodyHex: string | null;
         x: number;
         y: number;
         z: number;
@@ -830,6 +832,7 @@ export function createTrainFleet({
           const crate = wagon.getObjectByName('cargo_crate');
           return {
             preset: wagonOutfitOf.get(wagon) ?? null,
+            bodyHex: paintHex(wagon),
             x: wagon.position.x,
             y: wagon.position.y,
             z: wagon.position.z,

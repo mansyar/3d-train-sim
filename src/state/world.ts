@@ -470,6 +470,10 @@ export function createWorldStore(): WorldStore {
       // once — no per-item teardown cascades.
       selectedTrain = 'steam';
       consist = defaultConsist();
+      // The parent reset returns the consist to its shipped shape too: one
+      // locomotive and two classic wagons, delivered in this single mutation.
+      wagonLength = DEFAULT_WAGON_COUNT;
+      wagonOutfits = defaultWagonOutfits();
       placed.splice(0, placed.length);
       scenery.splice(0, scenery.length);
       deliveries = {};
