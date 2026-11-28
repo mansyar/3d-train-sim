@@ -76,8 +76,8 @@ The primary appends after acceptance:
 - **Covers:** AC-1, AC-2, AC-7, NFR-2, NFR-5
 - **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`, `src/main.ts` (boot restore + watcher wiring only), `e2e/liveries-evidence.spec.ts`, `conductor/tracks/20261128-expression-liveries/evidence/` (committed bundle)
 - **Verification:** `pnpm exec playwright test e2e/liveries-evidence.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P5.T1: Six-train evidence spec** — covers: AC-1 (repaint + sticker everything, zero console errors)
-- [ ] **P5.T2: Persistence wiring + round-trip + offline** — covers: AC-2, AC-7, NFR-2, NFR-5 (watch/restore livery preferences in `persistence.ts` following the mute/day-phase watcher shape; boot restore in `main.ts` before watchers attach; reload identity; network-disabled prod run; no new precache entries)
-- [ ] **P5.T3: Evidence bundle** — covers: AC-1 (screenshots + one cycle capture committed under the track's `evidence/` dir)
+- [x] **P5.T1: Six-train evidence spec** — covers: AC-1 (repaint + sticker everything, zero console errors)
+- [x] **P5.T2: Persistence wiring + round-trip + offline** — covers: AC-2, AC-7, NFR-2, NFR-5 (watch/restore livery preferences in `persistence.ts` following the mute/day-phase watcher shape; boot restore in `main.ts` before watchers attach; reload identity; network-disabled prod run; no new precache entries)
+- [x] **P5.T3: Evidence bundle** — covers: AC-1 (screenshots + one cycle capture committed under the track's `evidence/` dir)

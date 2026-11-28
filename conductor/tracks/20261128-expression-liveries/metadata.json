@@ -13,8 +13,8 @@
   "priority": "medium",
   "progress": {
     "phases_total": 5,
-    "phases_verified": 4,
-    "tasks_done": 11,
+    "phases_verified": 5,
+    "tasks_done": 14,
     "tasks_total": 14
   },
   "pr_url": null,
@@ -27,5 +27,5 @@
   "status": "in_progress",
   "title": "B. Expression — paint/sticker liveries",
   "type": "feature",
-  "updated_at": "2026-11-28T13:00:00+11:00"
+  "updated_at": "2026-11-28T11:53:28+11:00"
 }
