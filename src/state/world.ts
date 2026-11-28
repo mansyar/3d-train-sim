@@ -6,7 +6,13 @@ import {
   recordCompletedRide,
 } from '../core/disclosure';
 import { isWater } from '../core/river';
-import type { WorldData } from '../core/save';
+import {
+  DEFAULT_WAGON_COUNT,
+  defaultWagonOutfits,
+  resolveWagonCount,
+  resolveWagonOutfits,
+  type WorldData,
+} from '../core/save';
 import { type PlacedScenery, sceneryFloats } from '../core/scenery';
 import {
   type Cell,
@@ -26,6 +32,27 @@ import {
   type TrainConsist,
   type WagonPreset,
 } from '../core/wagons';
+
+/** Path length is measured in track cells: one for the loco, one per wagon. */
+export const LOCOMOTIVE_LENGTH = 1;
+export const WAGON_LENGTH = 1;
+/** The gate needs a whole spare wagon beyond the current consist. */
+export const FIT_MARGIN_WAGONS = 1;
+
+/** How many cells a consist occupies; pure so the fit rule stays testable. */
+export function trainLength(wagonCount: number): number {
+  return LOCOMOTIVE_LENGTH + wagonCount * WAGON_LENGTH;
+}
+
+/**
+ * True when a loop of `pathLength` cells can hold the consist AND one more
+ * wagon. Pure: real loop measurement is wired up in a later phase, so this is
+ * the single rule every future grow tap will consult.
+ */
+export function consistFitsLoop(pathLength: number, wagonCount: number): boolean {
+  if (!Number.isFinite(pathLength) || !Number.isFinite(wagonCount)) return false;
+  return pathLength >= trainLength(wagonCount) + FIT_MARGIN_WAGONS;
+}
 
 /** Outcome of a world mutation the kid UI can show gently (dim, wobble, snap). */
 export type PlacementResult =
@@ -56,6 +83,14 @@ export interface WorldStore {
   consistFor(train: TrainKind): WagonPreset;
   /** Switches one train's wagons; invalid presets fall back to classic. */
   selectConsist(train: TrainKind, preset: unknown): boolean;
+  /** The uniform wagon count (1..4), shared by all six locomotives. */
+  wagonCount(train: TrainKind): number;
+  /** Clamps to 1..4; invalid input falls back to 2. True only when changed. */
+  setWagonCount(train: TrainKind, count: unknown): boolean;
+  /** Defensive copy of the outfit worn by each wagon, in pulling order. */
+  wagonOutfits(train: TrainKind): WagonPreset[];
+  /** Dresses one wagon; invalid presets fall back to classic. */
+  selectWagonOutfit(train: TrainKind, index: number, preset: unknown): boolean;
   /** The pieces currently on the meadow, in placement order. */
   pieces(): readonly PlacedPiece[];
   place(type: PieceType, cell: Cell, rotation: Rotation): PlacementResult;
@@ -153,6 +188,9 @@ export function createWorldStore(): WorldStore {
   let disclosure: DisclosureState = createDisclosureState();
   let selectedTrain: TrainKind = 'steam';
   let consist: TrainConsist = defaultConsist();
+  // One uniform length for the whole fleet; outfits are per wagon position.
+  let wagonLength = DEFAULT_WAGON_COUNT;
+  let wagonOutfits: WagonPreset[] = defaultWagonOutfits();
   const listeners = new Set<WorldListener>();
   const resetListeners = new Set<() => void>();
   let nextId = 1;
@@ -229,6 +267,44 @@ export function createWorldStore(): WorldStore {
       }
       if (preset === consist[train]) return true;
       consist = { ...consist, [train]: preset };
+      notify();
+      return true;
+    },
+
+    wagonCount: (train) => {
+      void train; // length is uniform; the argument keeps the store train-shaped
+      return resolveWagonCount(wagonLength);
+    },
+
+    setWagonCount(train, count) {
+      void train; // one shared count: a change applies to all six locomotives
+      const next = resolveWagonCount(count);
+      if (next === wagonLength) return false;
+      wagonLength = next;
+      notify();
+      return true;
+    },
+
+    /** A defensive copy — callers can never mutate the outfit rack. */
+    wagonOutfits: (train) => {
+      void train;
+      return [...wagonOutfits];
+    },
+
+    selectWagonOutfit(train, index, preset) {
+      void train;
+      // Out-of-range slots do not exist yet: a short consist must not dress a
+      // wagon that is not on the train.
+      if (!Number.isInteger(index) || index < 0 || index >= wagonLength) return false;
+      const next = resolveWagonPreset(preset);
+      if (!isWagonPreset(preset)) {
+        wagonOutfits = [...wagonOutfits];
+        wagonOutfits[index] = DEFAULT_WAGON_PRESET;
+        return false;
+      }
+      if (next === wagonOutfits[index]) return true;
+      wagonOutfits = [...wagonOutfits];
+      wagonOutfits[index] = next;
       notify();
       return true;
     },
@@ -363,6 +439,8 @@ export function createWorldStore(): WorldStore {
       selectedTrain = data.train;
       deliveries = { ...(data.deliveries ?? {}) };
       consist = readConsist(data.consist);
+      wagonLength = resolveWagonCount(data.wagonCount);
+      wagonOutfits = resolveWagonOutfits(data.wagonOutfits);
       placed.splice(
         0,
         placed.length,
@@ -415,6 +493,8 @@ export function createWorldStore(): WorldStore {
       const priorDeliveries = { ...deliveries };
       const priorTrain = selectedTrain;
       const priorConsist = { ...consist };
+      const priorWagonLength = wagonLength;
+      const priorWagonOutfits = [...wagonOutfits];
       const priorNextId = nextId;
       deliveries = { ...(data.deliveries ?? {}) };
       replaceMeadow(data);
@@ -426,6 +506,8 @@ export function createWorldStore(): WorldStore {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };
         consist = { ...priorConsist };
+        wagonLength = priorWagonLength;
+        wagonOutfits = [...priorWagonOutfits];
         placed.splice(0, placed.length, ...copyPieces(priorPieces));
         scenery.splice(0, scenery.length, ...copyScenery(priorScenery));
         nextId = priorNextId;
@@ -443,9 +525,13 @@ export function createWorldStore(): WorldStore {
       const priorDeliveries = { ...deliveries };
       const priorTrain = selectedTrain;
       const priorConsist = { ...consist };
+      const priorWagonLength = wagonLength;
+      const priorWagonOutfits = [...wagonOutfits];
       const priorNextId = nextId;
       selectedTrain = data.train;
       consist = readConsist(data.consist);
+      wagonLength = resolveWagonCount(data.wagonCount);
+      wagonOutfits = resolveWagonOutfits(data.wagonOutfits);
       deliveries = { ...(data.deliveries ?? {}) };
       replaceMeadow(data);
       // Same grandfather as applyPreset: the file's advanced pieces unlock
@@ -455,6 +541,8 @@ export function createWorldStore(): WorldStore {
         selectedTrain = priorTrain;
         deliveries = { ...priorDeliveries };
         consist = { ...priorConsist };
+        wagonLength = priorWagonLength;
+        wagonOutfits = [...priorWagonOutfits];
         placed.splice(0, placed.length, ...copyPieces(priorPieces));
         scenery.splice(0, scenery.length, ...copyScenery(priorScenery));
         nextId = priorNextId;

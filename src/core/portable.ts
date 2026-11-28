@@ -10,7 +10,7 @@ import { parseWorldSnapshot, serializeWorld, type WorldData } from './save';
 import type { PlacedScenery } from './scenery';
 import type { PlacedPiece } from './track-graph';
 import type { TrainKind } from './trains';
-import type { TrainConsist } from './wagons';
+import type { TrainConsist, WagonPreset } from './wagons';
 
 /** The cap an imported file must stay within; anything larger is refused. */
 export const MAX_IMPORT_BYTES = 1024 * 1024;
@@ -25,6 +25,9 @@ export interface PortableWorld {
   train?: TrainKind;
   consist?: TrainConsist;
   deliveries?: Record<string, number>;
+  /** Uniform consist length and per-wagon outfits travel with the world. */
+  wagonCount?: number;
+  wagonOutfits?: readonly WagonPreset[];
 }
 
 /** What an incoming file turned out to be. Refusals never carry a world. */
@@ -65,6 +68,12 @@ export function buildExport(world: PortableWorld): string {
       false,
       world.deliveries,
       world.consist,
+      undefined,
+      undefined,
+      false,
+      {},
+      world.wagonCount,
+      world.wagonOutfits,
     ),
   );
 }

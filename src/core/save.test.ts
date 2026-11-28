@@ -3,8 +3,10 @@ import { DAY_PHASES } from './day-clock';
 import { buildExport } from './portable';
 import { isWater } from './river';
 import {
+  DEFAULT_WAGON_COUNT,
   deserializePreferences,
   deserializeWorld,
+  MAX_WAGON_COUNT,
   type PersistedLiveries,
   parseWorldSnapshot,
   serializeWorld,
@@ -1476,5 +1478,114 @@ describe('livery preferences — additive per-vehicle state', () => {
 
     expect(exported.preferences).toBeUndefined();
     expect(JSON.stringify(exported)).not.toContain('liveries');
+  });
+});
+
+describe('wagon length and outfit snapshots — additive data', () => {
+  const mixed = ['classic', 'coal', 'tank', 'container'] as const;
+
+  it('holds the shipped defaults at two classic wagons and omits both fields', () => {
+    expect(DEFAULT_WAGON_COUNT).toBe(2);
+    const snapshot = serializeWorld(pieces, scenery, 'steam');
+
+    expect(snapshot.wagonCount).toBeUndefined();
+    expect(snapshot.wagonOutfits).toBeUndefined();
+    expect(deserializeWorld(snapshot).wagonCount).toBeUndefined();
+    expect(deserializeWorld(snapshot).wagonOutfits).toBeUndefined();
+  });
+
+  it('round-trips a lengthened, mixed-outfit consist byte-identically', () => {
+    const snapshot = serializeWorld(
+      pieces,
+      scenery,
+      'steam',
+      false,
+      {},
+      defaultConsist(),
+      undefined,
+      undefined,
+      false,
+      {},
+      MAX_WAGON_COUNT,
+      mixed,
+    );
+
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+    expect(snapshot.wagonCount).toBe(MAX_WAGON_COUNT);
+    expect(snapshot.wagonOutfits).toEqual(mixed);
+    expect(deserializeWorld(snapshot)).toEqual({
+      pieces,
+      scenery,
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+      wagonCount: MAX_WAGON_COUNT,
+      wagonOutfits: mixed,
+    });
+  });
+
+  it('carries length and outfits through the portable world export', () => {
+    const exported = JSON.parse(
+      buildExport({
+        pieces,
+        scenery,
+        train: 'steam',
+        deliveries: {},
+        consist: defaultConsist(),
+        wagonCount: MAX_WAGON_COUNT,
+        wagonOutfits: mixed,
+      }),
+    );
+
+    expect(exported.wagonCount).toBe(MAX_WAGON_COUNT);
+    expect(exported.wagonOutfits).toEqual(mixed);
+    expect(deserializeWorld(exported).wagonOutfits).toEqual(mixed);
+  });
+
+  it('clamps corrupt counts and forgives unknown outfits back to classic', () => {
+    const world = deserializeWorld({
+      version: 3,
+      pieces,
+      scenery,
+      wagonCount: 99,
+      wagonOutfits: ['coal', 'rocket', null, 7, 'tank'],
+    });
+
+    expect(world.wagonCount).toBe(MAX_WAGON_COUNT);
+    expect(world.wagonOutfits).toEqual(['coal', 'classic', 'classic', 'classic']);
+  });
+
+  it('falls back to the default count for non-numeric and non-finite values', () => {
+    for (const bad of ['four', null, Number.NaN, {}, true]) {
+      const world = deserializeWorld({ version: 3, pieces: [], scenery: [], wagonCount: bad });
+      expect(world.wagonCount).toBeUndefined();
+    }
+  });
+
+  it('never lets prototype keys or non-array outfits poison the world', () => {
+    const raw = JSON.parse(
+      '{"version":3,"pieces":[],"scenery":[],"wagonOutfits":{"__proto__":{"preset":"coal"},"constructor":["tank"]}}',
+    );
+
+    expect(deserializeWorld(raw).wagonOutfits).toBeUndefined();
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(
+      deserializeWorld({ version: 3, pieces: [], scenery: [], wagonOutfits: 'coal, tank' })
+        .wagonOutfits,
+    ).toBeUndefined();
+  });
+
+  it('salvages out-of-range data without changing recovery status', () => {
+    const result = parseWorldSnapshot({
+      version: 3,
+      pieces,
+      scenery,
+      wagonCount: -5,
+      wagonOutfits: ['container'],
+    });
+
+    expect(result.status).toBe('clean');
+    expect(result.world.wagonCount).toBe(1);
+    expect(result.world.wagonOutfits).toEqual(['container', 'classic', 'classic', 'classic']);
   });
 });
