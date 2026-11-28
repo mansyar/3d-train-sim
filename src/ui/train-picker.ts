@@ -1,4 +1,5 @@
 import type { AudioController } from '../audio/audio-controller';
+import { solvePath } from '../core/pathing';
 import { TRAIN_KINDS, type TrainKind, trainAria, trainIcon } from '../core/trains';
 import { WAGON_PRESETS, type WagonPreset, wagonPresetAria, wagonPresetIcon } from '../core/wagons';
 import {
@@ -9,7 +10,7 @@ import {
   STICKER_IDS,
   type StickerId,
 } from '../state/liveries';
-import type { WorldStore } from '../state/world';
+import { consistFitsLoop, type WorldStore } from '../state/world';
 
 /**
  * The drawer's livery store. It lives at module scope so it survives drawer
@@ -117,6 +118,53 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   }
   trainDrawer.append(wagonRow);
 
+  // ---- Consist strip: one chip per wagon, a compact + slot, a tiny tally ----
+  // The four chips are created once and hidden past the current count, so the
+  // drawer is updated in place — no rebuild, no second event listener.
+  const MAX_WAGONS = 4;
+  const consistRow = document.createElement('div');
+  consistRow.className = 'consist-row';
+  consistRow.setAttribute('role', 'group');
+  consistRow.setAttribute('aria-label', 'Wagons');
+
+  const wagonChips: HTMLButtonElement[] = [];
+  for (let index = 0; index < MAX_WAGONS; index += 1) {
+    const chip = document.createElement('button');
+    chip.className = 'wagon-chip';
+    chip.type = 'button';
+    chip.dataset.wagonIndex = String(index);
+    chip.setAttribute('aria-label', `Wagon ${index + 1}`);
+    chip.setAttribute('aria-pressed', 'false');
+    chip.innerHTML =
+      '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+      '<rect x="4" y="17" width="40" height="17" rx="3" fill="#f4c95d" stroke="#6b3f2a" stroke-width="3"/>' +
+      '<circle cx="15" cy="36" r="4" fill="#6b3f2a"/>' +
+      '<circle cx="33" cy="36" r="4" fill="#6b3f2a"/>' +
+      '</svg>';
+    wagonChips.push(chip);
+    consistRow.append(chip);
+  }
+
+  const addWagon = document.createElement('button');
+  addWagon.className = 'add-wagon';
+  addWagon.type = 'button';
+  addWagon.dataset.addWagon = '';
+  addWagon.setAttribute('aria-label', 'Add a wagon');
+  addWagon.setAttribute('aria-disabled', 'true');
+  addWagon.innerHTML =
+    '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+    '<path d="M24 9v30M9 24h30" fill="none" stroke="#6b3f2a" stroke-width="6" stroke-linecap="round"/>' +
+    '</svg>';
+  consistRow.append(addWagon);
+
+  const wagonTally = document.createElement('span');
+  wagonTally.className = 'wagon-tally';
+  wagonTally.dataset.wagonTally = '';
+  wagonTally.setAttribute('aria-hidden', 'true');
+  wagonTally.textContent = String(world.wagonCount(world.train()));
+  consistRow.append(wagonTally);
+  trainDrawer.append(consistRow);
+
   // ---- Livery tray: six paints, four stickers, one restore, all icon-only ----
   // Inline styles because the kid UI stylesheet is intentionally untouched by
   // this phase; the section wraps onto its own row inside the flex drawer.
@@ -207,6 +255,10 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   const currentVehicleId = () => locoVehicleId(world.train());
   /** The shape waiting for a vehicle tap — a sticker tap never stamps alone. */
   let armedSticker: StickerId | null = null;
+  /** Which chip the next preset dresses; null means the old pair-preset tap. */
+  let selectedWagon: number | null = null;
+  /** Selection and pressed states belong to this locomotive only. */
+  let trayTrain = world.train();
 
   /** Re-aim the whole tray at the selected locomotive, reading only the store. */
   const refreshLivery = () => {
@@ -248,18 +300,42 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   };
 
   const refreshTrainChoices = () => {
+    const train = world.train();
+    if (train !== trayTrain) {
+      trayTrain = train;
+      selectedWagon = null;
+    }
     for (const choice of trainDrawer.querySelectorAll<HTMLButtonElement>('[data-train]')) {
-      choice.setAttribute('aria-pressed', String(choice.dataset.train === world.train()));
+      choice.setAttribute('aria-pressed', String(choice.dataset.train === train));
     }
     // The tray always belongs to the locomotive currently selected above it.
     refreshLivery();
   };
-  // The row always shows the selected locomotive's pair, so loco switches,
-  // restores, and undos re-aim it through the same subscription.
+  // One refresh keeps the chips, the + gate, the tally, and the pair presets
+  // in sync. Loco switches, wagon taps, and track edits all arrive here via
+  // the same two subscriptions — the tray is never rebuilt.
   const refreshWagonChoices = () => {
-    const consist = world.consistFor(world.train());
+    const train = world.train();
+    const count = world.wagonCount(train);
+    const path = solvePath(world.pieces());
+    const loopLength = path.closed ? path.steps.length : 0;
+    const canAdd = count < MAX_WAGONS && consistFitsLoop(loopLength, count);
+    addWagon.setAttribute('aria-disabled', String(!canAdd));
+    addWagon.classList.toggle('is-dimmed', !canAdd);
+    wagonTally.textContent = String(count);
+    wagonTally.dataset.count = String(count);
+    if (selectedWagon !== null && selectedWagon >= count) selectedWagon = null;
+    wagonChips.forEach((chip, index) => {
+      chip.hidden = index >= count;
+      chip.setAttribute('aria-pressed', String(index < count && selectedWagon === index));
+    });
+    // No chip picked yet: show the shared pair preset (the old behaviour).
+    // With a chip picked: show that wagon's own outfit.
+    const consist = world.consistFor(train);
+    const outfit =
+      selectedWagon === null ? consist : (world.wagonOutfits(train)[selectedWagon] ?? consist);
     for (const pick of trainDrawer.querySelectorAll<HTMLButtonElement>('[data-wagon]')) {
-      pick.setAttribute('aria-pressed', String(pick.dataset.wagon === consist));
+      pick.setAttribute('aria-pressed', String(pick.dataset.wagon === outfit));
     }
   };
   trainDrawer.addEventListener('click', (event) => {
@@ -287,15 +363,43 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
       bounce(restoreButton);
       return;
     }
-    // A wagon tap dresses the selected locomotive's pair; the pressed states
-    // follow the newly selected loco, so switching locos re-aims the row.
+    const add = (event.target as Element).closest<HTMLButtonElement>('[data-add-wagon]');
+    if (add) {
+      if (add.getAttribute('aria-disabled') !== 'true') {
+        const train = world.train();
+        world.setWagonCount(train, world.wagonCount(train) + 1);
+      }
+      refreshWagonChoices();
+      return;
+    }
+    // Tapping the last chip unhitches it; any earlier chip just picks which
+    // wagon the next preset dresses. The final wagon never leaves the train.
+    const chip = (event.target as Element).closest<HTMLButtonElement>('[data-wagon-index]');
+    if (chip) {
+      const train = world.train();
+      const count = world.wagonCount(train);
+      const index = Number(chip.dataset.wagonIndex);
+      if (index === count - 1) {
+        if (count > 1) world.setWagonCount(train, count - 1);
+      } else {
+        selectedWagon = index;
+      }
+      refreshWagonChoices();
+      return;
+    }
+    // A wagon tap dresses the chosen chip, or the whole pair when no chip is
+    // picked — the old behaviour stays exactly as it was for pair presets.
     const wagon = (event.target as Element).closest<HTMLButtonElement>('[data-wagon]');
     if (wagon) {
       if (armedSticker) {
         liveryStore.stamp(currentVehicleId(), armedSticker);
         disarmSticker();
       }
-      world.selectConsist(world.train(), wagon.dataset.wagon as WagonPreset);
+      if (selectedWagon === null) {
+        world.selectConsist(world.train(), wagon.dataset.wagon as WagonPreset);
+      } else {
+        world.selectWagonOutfit(world.train(), selectedWagon, wagon.dataset.wagon as WagonPreset);
+      }
       refreshWagonChoices();
       // The newly dressed pair pops with the happy ding — still hands get
       // the ding but no motion, mirroring the loop-closing pop.
@@ -331,6 +435,7 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
     if (id === currentVehicleId()) refreshLivery();
   });
   refreshLivery();
+  refreshWagonChoices();
 
   return {
     setOpen(open) {

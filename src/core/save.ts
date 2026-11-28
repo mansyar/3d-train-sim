@@ -25,6 +25,14 @@ const SNAPSHOT_VERSION = 3;
 /** Snapshot versions this build understands: current, pre-tunnel v2, pre-river v1. */
 const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
 
+/** Uniform consist length: every locomotive pulls between one and four wagons. */
+export const MIN_WAGON_COUNT = 1;
+export const MAX_WAGON_COUNT = 4;
+export const DEFAULT_WAGON_COUNT = 2;
+
+/** One outfit per wagon position, in pulling order; always MAX_WAGON_COUNT long. */
+export type WagonOutfits = WagonPreset[];
+
 /**
  * One vehicle's persisted paint/stickers. The curated paint and sticker ids
  * are validated by the livery store on hydrate; persistence keeps only
@@ -66,6 +74,10 @@ export interface WorldSnapshot {
   deliveries?: Record<string, number>;
   /** Per-train wagon presets; omitted when every train pulls classic. */
   consist?: Partial<Record<TrainKind, WagonPreset>>;
+  /** Uniform wagon count; omitted at the shipped two-wagon default. */
+  wagonCount?: number;
+  /** Outfit worn by each wagon position; omitted when every position is classic. */
+  wagonOutfits?: WagonPreset[];
   /**
    * Progressive-disclosure progress: the completed-ride count plus the unlock
    * flag. Omitted for fresh-locked worlds, which read back identically.
@@ -83,6 +95,10 @@ export interface WorldData {
   deliveries: Record<string, number>;
   /** The wagon preset pair each locomotive pulls. */
   consist: TrainConsist;
+  /** Uniform wagon count; absent means the shipped two-wagon default. */
+  wagonCount?: number;
+  /** Outfit worn by each wagon position; absent means all classic. */
+  wagonOutfits?: WagonPreset[];
 }
 
 export function serializeWorld(
@@ -96,6 +112,8 @@ export function serializeWorld(
   disclosure?: DisclosureState,
   installHintDismissed = false,
   liveries: PersistedLiveries = {},
+  wagonCount: unknown = DEFAULT_WAGON_COUNT,
+  wagonOutfits: unknown = undefined,
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -130,6 +148,11 @@ export function serializeWorld(
   if (Object.keys(deliveries).length > 0) snapshot.deliveries = { ...deliveries };
   // Same for an all-classic consist — the default needs no storage.
   if (!isClassicConsist(consist)) snapshot.consist = { ...consist };
+  // Uniform length and outfits are additive too: the shipped pair needs none.
+  const cleanCount = resolveWagonCount(wagonCount);
+  const cleanOutfits = resolveWagonOutfits(wagonOutfits);
+  if (cleanCount !== DEFAULT_WAGON_COUNT) snapshot.wagonCount = cleanCount;
+  if (!isClassicOutfits(cleanOutfits)) snapshot.wagonOutfits = cleanOutfits;
   // Same for a fresh lock — zero rides and no unlock read back identically.
   if (disclosure && (disclosure.completedRides > 0 || disclosure.unlocked)) {
     snapshot.disclosure = { ...disclosure };
@@ -221,6 +244,8 @@ export function parseWorldSnapshot(value: unknown): WorldParseResult {
   }
 
   const dropped = droppedPieces + droppedScenery + droppedDuplicates;
+  const wagonCount = resolveWagonCount(value.wagonCount);
+  const wagonOutfits = resolveWagonOutfits(value.wagonOutfits);
   return {
     world: {
       pieces,
@@ -228,6 +253,10 @@ export function parseWorldSnapshot(value: unknown): WorldParseResult {
       train: isTrainKind(value.train) ? value.train : 'steam',
       deliveries: parseDeliveries(value.deliveries),
       consist: parseConsist(value.consist),
+      // Defaults stay absent so old snapshots and untouched worlds still read
+      // back exactly as they were written.
+      ...(wagonCount !== DEFAULT_WAGON_COUNT ? { wagonCount } : {}),
+      ...(isClassicOutfits(wagonOutfits) ? {} : { wagonOutfits }),
     },
     status: dropped > 0 ? 'salvaged' : 'clean',
     droppedPieces,
@@ -277,6 +306,43 @@ function parseConsist(value: unknown): TrainConsist {
 function isClassicConsist(consist: TrainConsist): boolean {
   for (const kind of TRAIN_KINDS) {
     if (consist[kind] !== DEFAULT_WAGON_PRESET) return false;
+  }
+  return true;
+}
+
+/** A fresh outfit rack: every wagon position wears classic. */
+export function defaultWagonOutfits(): WagonOutfits {
+  return Array.from({ length: MAX_WAGON_COUNT }, () => DEFAULT_WAGON_PRESET);
+}
+
+/**
+ * Uniform length is additive data: finite numbers clamp into 1..4, anything
+ * else falls back to the shipped two-wagon pair. A corrupt save can never make
+ * the loader throw or produce a consist the drawer cannot grow/shrink.
+ */
+export function resolveWagonCount(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return DEFAULT_WAGON_COUNT;
+  return Math.min(MAX_WAGON_COUNT, Math.max(MIN_WAGON_COUNT, Math.round(value)));
+}
+
+/**
+ * Reads one outfit per wagon position. Only a real array is trusted; unknown
+ * presets (and positions the array does not cover) resolve to classic, so a
+ * hand-edited save cannot poison the rack with prototype keys or bad models.
+ */
+export function resolveWagonOutfits(value: unknown): WagonOutfits {
+  const outfits = defaultWagonOutfits();
+  if (!Array.isArray(value)) return outfits;
+  for (let index = 0; index < MAX_WAGON_COUNT; index += 1) {
+    outfits[index] = resolveWagonPreset(value[index]);
+  }
+  return outfits;
+}
+
+/** True when no wagon position wears anything but classic. */
+function isClassicOutfits(outfits: readonly WagonPreset[]): boolean {
+  for (const preset of outfits) {
+    if (preset !== DEFAULT_WAGON_PRESET) return false;
   }
   return true;
 }

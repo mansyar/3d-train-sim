@@ -517,6 +517,71 @@ button:focus-visible {
   animation: ride-pop 0.45s ease-out;
 }
 
+/* ---- Consist strip: one chip per wagon, a compact + slot, a tiny tally ----
+   A single short row keeps all four wagons reachable without lengthening the
+   drawer; on phones it swipes sideways like the engine row above it. */
+
+.consist-row {
+  align-items: center;
+  display: flex;
+  flex-basis: 100%;
+  gap: 8px;
+  justify-content: center;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  touch-action: pan-x;
+}
+
+.wagon-chip,
+.add-wagon {
+  background: #f4c95d;
+  border: 4px solid var(--toy-brown);
+  border-radius: 16px;
+  box-shadow: 0 4px 0 var(--toy-brown);
+  cursor: pointer;
+  flex: 0 0 auto;
+  min-height: 64px;
+  min-width: 64px;
+  padding: 6px;
+  touch-action: manipulation;
+}
+
+.wagon-chip svg,
+.add-wagon svg {
+  display: block;
+  height: 40px;
+  width: 40px;
+}
+
+.wagon-chip[hidden] {
+  display: none;
+}
+
+.wagon-chip[aria-pressed='true'] {
+  background: var(--toy-green);
+}
+
+.add-wagon {
+  background: var(--toy-green);
+}
+
+.add-wagon.is-dimmed {
+  cursor: default;
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.wagon-tally {
+  color: var(--toy-brown);
+  flex: 0 0 auto;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 24px;
+  text-align: center;
+}
+
 /* ---- Grid toggle (debug) ------------------------------------------------- */
 
 .grid-toggle {

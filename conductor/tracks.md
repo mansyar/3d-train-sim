@@ -4,6 +4,7 @@ Registry of development tracks. One row per archived track; active tracks appear
 
 | Track | Title | Type | Status |
 |---|---|---|---|
+| [20261128-longer-trains](./archive/20261128-longer-trains/index.md) | Longer trains | Feature | complete |
 | [clarity-observation-kit_20261124](./archive/clarity-observation-kit_20261124/index.md) | Clarity Observation Kit | Chore | archived |
 | [release-v0.15.1_20261123](./archive/release-v0.15.1_20261123/index.md) | Release v0.15.1 | Chore | archived |
 | [perf-floor-stability_20261120](./archive/perf-floor-stability_20261120/index.md) | Perf Floor Stability | Bug | archived |

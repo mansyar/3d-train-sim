@@ -257,6 +257,59 @@ describe('mute preference', () => {
     });
   });
 
+  it('carries wagon count and per-wagon outfits into world-mutation saves', () => {
+    const store = createWorldStore();
+    store.setWagonCount('steam', 4);
+    store.selectWagonOutfit('steam', 1, 'coal');
+    store.selectWagonOutfit('steam', 2, 'tank');
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+
+    store.place('straight', ORIGIN, 0);
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      wagonCount: 4,
+      wagonOutfits: ['classic', 'coal', 'tank', 'classic'],
+    });
+  });
+
+  it('does not rewrite storage when a consist tap changes nothing', () => {
+    const store = createWorldStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+
+    store.place('straight', ORIGIN, 0);
+    expect(save).toHaveBeenCalledTimes(1);
+
+    expect(store.setWagonCount('steam', 2)).toBe(false);
+    expect(store.selectWagonOutfit('steam', 0, 'classic')).toBe(true);
+    expect(save, 'a no-op tap must not cause a storage rewrite').toHaveBeenCalledTimes(1);
+  });
+
+  it('resets the consist to a paired pair of classic wagons', () => {
+    const store = createWorldStore();
+    store.setWagonCount('steam', 4);
+    store.selectWagonOutfit('steam', 1, 'coal');
+    store.selectConsist('steam', 'container');
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchWorldPersistence(store, () => false, save);
+    const onReset = vi.fn();
+    store.onReset(onReset);
+
+    store.reset();
+
+    expect(onReset, 'reset notifies its own listeners exactly once').toHaveBeenCalledTimes(1);
+    expect(save, 'reset saves exactly once').toHaveBeenCalledTimes(1);
+    expect(store.wagonCount('steam'), 'length returns to the shipped pair').toBe(2);
+    expect(store.wagonOutfits('steam')).toEqual(['classic', 'classic', 'classic', 'classic']);
+    expect(store.consistFor('steam'), 'the pair preset returns to classic').toBe('classic');
+    const snapshot = save.mock.calls[0]?.[0];
+    expect(snapshot?.wagonCount).toBeUndefined();
+    expect(snapshot?.wagonOutfits).toBeUndefined();
+    expect(snapshot?.consist).toBeUndefined();
+  });
+
   it('carries the current mute preference into world-mutation saves', () => {
     const audio = makeAudio();
     audio.setMuted(true);

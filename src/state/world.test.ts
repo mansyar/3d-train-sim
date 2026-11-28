@@ -1,11 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isWater } from '../core/river';
-import type { WorldData } from '../core/save';
+import {
+  DEFAULT_WAGON_COUNT,
+  defaultWagonOutfits,
+  MAX_WAGON_COUNT,
+  type WorldData,
+} from '../core/save';
 import { cozyOval, hilltopJunction, STARTER_PRESETS, stationVillage } from '../core/starters';
 import { MAX_PIECES } from '../core/track-graph';
 import { TRAIN_KINDS } from '../core/trains';
 import { defaultConsist, withConsistPreset } from '../core/wagons';
-import { createWorldStore } from './world';
+import { consistFitsLoop, createWorldStore, trainLength } from './world';
 
 const ORIGIN = { x: 0, y: 0 };
 const NEXT_CELL = { x: 1, y: 0 };
@@ -1058,5 +1063,181 @@ describe('world store import', () => {
     });
 
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('world store wagon length', () => {
+  it('starts every locomotive on the shipped two-wagon pair', () => {
+    const store = createWorldStore();
+    expect(DEFAULT_WAGON_COUNT).toBe(2);
+    for (const kind of TRAIN_KINDS) expect(store.wagonCount(kind)).toBe(DEFAULT_WAGON_COUNT);
+  });
+
+  it('grows one uniform length shared by all six locomotives', () => {
+    const store = createWorldStore();
+
+    expect(store.setWagonCount('steam', 3)).toBe(true);
+    for (const kind of TRAIN_KINDS) expect(store.wagonCount(kind)).toBe(3);
+
+    expect(store.setWagonCount('freight', 4)).toBe(true);
+    for (const kind of TRAIN_KINDS) expect(store.wagonCount(kind)).toBe(MAX_WAGON_COUNT);
+  });
+
+  it('treats a fifth wagon and an unchanged count as silent no-ops', () => {
+    const store = createWorldStore();
+    store.setWagonCount('steam', MAX_WAGON_COUNT);
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.setWagonCount('steam', 5)).toBe(false);
+    expect(store.setWagonCount('steam', MAX_WAGON_COUNT)).toBe(false);
+    expect(store.wagonCount('steam')).toBe(MAX_WAGON_COUNT);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('clamps numeric counts to 1..4 and falls back to two for invalid input', () => {
+    const store = createWorldStore();
+
+    expect(store.setWagonCount('diesel', 0)).toBe(true);
+    expect(store.wagonCount('diesel')).toBe(1);
+    expect(store.setWagonCount('diesel', 99)).toBe(true);
+    expect(store.wagonCount('diesel')).toBe(MAX_WAGON_COUNT);
+    expect(store.setWagonCount('diesel', -3)).toBe(true);
+    expect(store.wagonCount('diesel')).toBe(1);
+
+    expect(store.setWagonCount('diesel', 'three')).toBe(true); // falls back to 2
+    expect(store.wagonCount('diesel')).toBe(DEFAULT_WAGON_COUNT);
+    expect(store.setWagonCount('diesel', Number.NaN)).toBe(false);
+    expect(store.wagonCount('diesel')).toBe(DEFAULT_WAGON_COUNT);
+  });
+
+  it('notifies exactly once for a real length change', () => {
+    const store = createWorldStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.setWagonCount('tram', 3)).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('dresses one wagon slot without touching the others', () => {
+    const store = createWorldStore();
+    store.setWagonCount('bullet', MAX_WAGON_COUNT);
+
+    expect(store.selectWagonOutfit('bullet', 2, 'coal')).toBe(true);
+    expect(store.wagonOutfits('bullet')).toEqual(['classic', 'classic', 'coal', 'classic']);
+    expect(store.selectWagonOutfit('bullet', 0, 'container')).toBe(true);
+    expect(store.wagonOutfits('bullet')).toEqual(['container', 'classic', 'coal', 'classic']);
+  });
+
+  it('falls back to classic for unknown presets and ignores out-of-range slots', () => {
+    const store = createWorldStore();
+
+    expect(store.selectWagonOutfit('steam', 1, 'rocket')).toBe(false);
+    expect(store.selectWagonOutfit('steam', 2, 'tank')).toBe(false); // not grown yet
+    expect(store.selectWagonOutfit('steam', -1, 'tank')).toBe(false);
+    expect(store.selectWagonOutfit('steam', MAX_WAGON_COUNT, 'tank')).toBe(false);
+    expect(store.wagonOutfits('steam')).toEqual(defaultWagonOutfits());
+  });
+
+  it('stays silent when a wagon already wears the chosen outfit', () => {
+    const store = createWorldStore();
+    store.selectWagonOutfit('steam', 1, 'coal');
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    expect(store.selectWagonOutfit('steam', 1, 'coal')).toBe(true);
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('keeps the remaining outfits when the last wagon is removed', () => {
+    const store = createWorldStore();
+    store.setWagonCount('express', MAX_WAGON_COUNT);
+    store.selectWagonOutfit('express', 2, 'tank');
+
+    expect(store.setWagonCount('express', 3)).toBe(true);
+    expect(store.wagonCount('express')).toBe(3);
+    expect(store.wagonOutfits('express')[2]).toBe('tank');
+  });
+
+  it('returns outfit copies callers cannot mutate', () => {
+    const store = createWorldStore();
+    store.wagonOutfits('steam')[0] = 'coal';
+
+    expect(store.wagonOutfits('steam')).toEqual(defaultWagonOutfits());
+  });
+
+  it('hydrates length and outfits, carrying them through preset apply and undo', () => {
+    const store = createWorldStore();
+    store.hydrate({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+      wagonCount: 4,
+      wagonOutfits: ['classic', 'coal', 'tank', 'classic'],
+    });
+
+    expect(store.wagonCount('steam')).toBe(4);
+    expect(store.wagonOutfits('steam')).toEqual(['classic', 'coal', 'tank', 'classic']);
+
+    store.applyPreset(cozyOval());
+    expect(store.wagonCount('diesel')).toBe(4);
+    expect(store.wagonOutfits('diesel')).toEqual(['classic', 'coal', 'tank', 'classic']);
+
+    expect(store.undo()).toBe(true);
+    expect(store.wagonCount('steam')).toBe(4);
+    expect(store.wagonOutfits('steam')).toEqual(['classic', 'coal', 'tank', 'classic']);
+  });
+
+  it('imports length and outfits from a file, restoring the prior on undo', () => {
+    const store = createWorldStore();
+    store.importWorld({
+      pieces: [],
+      scenery: [],
+      train: 'steam',
+      deliveries: {},
+      consist: defaultConsist(),
+      wagonCount: 3,
+      wagonOutfits: ['container', 'classic', 'coal', 'classic'],
+    });
+
+    expect(store.wagonCount('tram')).toBe(3);
+    expect(store.wagonOutfits('tram')).toEqual(['container', 'classic', 'coal', 'classic']);
+
+    expect(store.undo()).toBe(true);
+    expect(store.wagonCount('tram')).toBe(DEFAULT_WAGON_COUNT);
+    expect(store.wagonOutfits('tram')).toEqual(defaultWagonOutfits());
+  });
+});
+
+describe('consist fit rule', () => {
+  it('measures a consist as one locomotive plus one unit per wagon', () => {
+    expect(trainLength(1)).toBe(2);
+    expect(trainLength(2)).toBe(3);
+    expect(trainLength(MAX_WAGON_COUNT)).toBe(5);
+  });
+
+  it('fits only when one whole spare wagon fits past the current consist', () => {
+    expect(consistFitsLoop(4, 2)).toBe(true); // exact one-wagon margin boundary
+    expect(consistFitsLoop(3.9, 2)).toBe(false);
+    expect(consistFitsLoop(5, 3)).toBe(true);
+    expect(consistFitsLoop(4, 3)).toBe(false);
+    expect(consistFitsLoop(6, 4)).toBe(true);
+    expect(consistFitsLoop(5, 4)).toBe(false);
+  });
+
+  it('raises the needed path length by exactly one per added wagon', () => {
+    expect(consistFitsLoop(5, 2)).toBe(true);
+    expect(consistFitsLoop(5, 3)).toBe(true);
+    expect(consistFitsLoop(5, 4)).toBe(false);
+  });
+
+  it('refuses non-finite measurements and counts instead of throwing', () => {
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(consistFitsLoop(bad, 2)).toBe(false);
+      expect(consistFitsLoop(10, bad)).toBe(false);
+    }
   });
 });

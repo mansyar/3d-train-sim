@@ -14,7 +14,7 @@ import {
 import type { PlacedScenery } from '../core/scenery';
 import type { PlacedPiece } from '../core/track-graph';
 import type { TrainKind } from '../core/trains';
-import type { TrainConsist } from '../core/wagons';
+import type { TrainConsist, WagonPreset } from '../core/wagons';
 import type { LiveryStore } from './liveries';
 
 const DATABASE_NAME = 'tiny-tracks';
@@ -138,6 +138,8 @@ interface WorldReader {
   scenery(): readonly PlacedScenery[];
   deliveries(): Record<string, number>;
   consist(): TrainConsist;
+  wagonCount(train: TrainKind): number;
+  wagonOutfits(train: TrainKind): WagonPreset[];
   disclosure(): DisclosureState;
   subscribe(listener: () => void): () => void;
 }
@@ -163,9 +165,16 @@ function snapshotOf(
     world.disclosure(),
     installHintDismissed,
     liveries,
+    world.wagonCount(world.train()),
+    world.wagonOutfits(world.train()),
   );
 }
 
+/**
+ * The single world autosave watcher also carries the consist: a length tap or
+ * a wagon dress change notifies the world exactly like a track edit. identical
+ * snapshots are skipped so a silent/no-op reset cannot rewrite storage.
+ */
 export function watchWorldPersistence(
   world: WorldReader,
   readMuted: () => boolean = () => false,
@@ -174,10 +183,19 @@ export function watchWorldPersistence(
   readInstallHintDismissed: () => boolean = () => false,
   readLiveries: () => PersistedLiveries = readNoLiveries,
 ): () => void {
+  let lastPersisted: string | null = null;
   return world.subscribe(() => {
-    void save(
-      snapshotOf(world, readMuted(), readDayPhase(), readInstallHintDismissed(), readLiveries()),
+    const snapshot = snapshotOf(
+      world,
+      readMuted(),
+      readDayPhase(),
+      readInstallHintDismissed(),
+      readLiveries(),
     );
+    const encoded = JSON.stringify(snapshot);
+    if (encoded === lastPersisted) return;
+    lastPersisted = encoded;
+    void save(snapshot);
   });
 }
 
