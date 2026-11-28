@@ -89,6 +89,6 @@ The primary appends after acceptance:
 - **Covers:** F1
 - **Touches:** `src/state/liveries.ts`, `src/state/liveries.test.ts`, `src/main.ts` (reset wiring only), `e2e/liveries-reset.spec.ts` (new integration test)
 - **Verification:** `pnpm exec playwright test e2e/liveries-reset.spec.ts` + `pnpm check`
-- **Status:** pending
+- **Status:** verified
 
-- [ ] **R1.T1: Resolve F1** — covers: F1 (notifying `reset()` + `world.onReset` wiring + reset tests; verify consist-scoped restore consistency with a test, fix only if it fails)
+- [x] **R1.T1: Resolve F1** — covers: F1 (notifying `reset()` + `world.onReset` wiring + reset tests; verify consist-scoped restore consistency with a test, fix only if it fails)
