@@ -65,10 +65,10 @@ The primary appends after acceptance:
 - **Covers:** FR-3 (wiring), FR-7 (wiring), FR-8, AC-3, AC-4, AC-5
 - **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`, `src/main.ts`, `e2e/longer-trains-persist.spec.ts`
 - **Verification:** `pnpm check` + `pnpm exec playwright test e2e/longer-trains-persist.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P4.T1: Restore-before-watchers + reset-clears wiring** — covers: FR-7
-- [ ] **P4.T2: Fit recompute on track edits; shrink keeps wagons** — covers: FR-3, FR-8
+- [x] **P4.T1: Restore-before-watchers + reset-clears wiring** — covers: FR-7
+- [x] **P4.T2: Fit recompute on track edits; shrink keeps wagons** — covers: FR-3, FR-8
 
 ## Phase 5: Integrated evidence
 
