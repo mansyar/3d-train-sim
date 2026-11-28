@@ -71,6 +71,9 @@ async function openDrawer(page: Page): Promise<void> {
 }
 
 test('a swatch repaints the whole consist of every locomotive', async ({ page }) => {
+  // Six consists times every paint with landed-state waits: far beyond the
+  // default 30 s on software-GL runners. Same 300 s budget as rituals-audio.
+  test.setTimeout(300_000);
   const errors = watchConsoleErrors(page);
   await openDrawer(page);
 

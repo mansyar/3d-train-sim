@@ -207,7 +207,9 @@ test.afterAll(() => {
 test('integrated livery flow: six consists, screenshots, byte-identical reload', async ({
   page,
 }) => {
-  test.setTimeout(240_000);
+  // Six consists with sticker cycles, screenshots and video capture, plus a
+  // reload round-trip: video recording on software GL needs a bigger budget.
+  test.setTimeout(480_000);
   mkdirSync(SHOTS_DIR, { recursive: true });
   const videoStart = Date.now();
   const errors = watchConsoleErrors(page);
