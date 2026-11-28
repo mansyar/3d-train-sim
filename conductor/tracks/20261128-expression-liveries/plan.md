@@ -71,13 +71,13 @@ The primary appends after acceptance:
 
 ## Phase 5: Integrated evidence
 
-- **Goal:** Full six-train proof — every vehicle repainted + stickered, reload round-trip byte-identical, offline prod run precache-neutral, screenshots committed.
+- **Goal:** Full six-train proof — every vehicle repainted + stickered, persistence wired so reload round-trips byte-identical, offline prod run precache-neutral, screenshots committed.
 - **Depends on:** Phase 4
-- **Covers:** AC-1, AC-2, AC-7, NFR-2
-- **Touches:** `e2e/liveries-evidence.spec.ts`
+- **Covers:** AC-1, AC-2, AC-7, NFR-2, NFR-5
+- **Touches:** `src/state/persistence.ts`, `src/state/persistence.test.ts`, `src/main.ts` (boot restore + watcher wiring only), `e2e/liveries-evidence.spec.ts`, `conductor/tracks/20261128-expression-liveries/evidence/` (committed bundle)
 - **Verification:** `pnpm exec playwright test e2e/liveries-evidence.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Six-train evidence spec** — covers: AC-1 (repaint + sticker everything, zero console errors)
-- [ ] **P5.T2: Round-trip + offline** — covers: AC-2, AC-7, NFR-2 (reload identity; network-disabled prod run; no new precache entries)
+- [ ] **P5.T2: Persistence wiring + round-trip + offline** — covers: AC-2, AC-7, NFR-2, NFR-5 (watch/restore livery preferences in `persistence.ts` following the mute/day-phase watcher shape; boot restore in `main.ts` before watchers attach; reload identity; network-disabled prod run; no new precache entries)
 - [ ] **P5.T3: Evidence bundle** — covers: AC-1 (screenshots + one cycle capture committed under the track's `evidence/` dir)
