@@ -75,7 +75,9 @@ test('a swatch repaints the whole consist of every locomotive', async ({ page })
   await openDrawer(page);
 
   for (const kind of KINDS) {
-    await page.click(`.train-slot[data-train="${kind}"]`);
+    // Generous timeout: on software-GL CI runners this long multi-iteration
+    // test can keep the slot from settling within the default 30 s.
+    await page.click(`.train-slot[data-train="${kind}"]`, { timeout: 60_000 });
     const vehicleIds = [`${kind}:loco`, `${kind}:lead`, `${kind}:rear`];
     for (const paint of PAINTS) {
       await page.click(`.livery-section [data-paint="${paint.id}"]`);
