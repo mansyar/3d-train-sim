@@ -4,6 +4,7 @@ import type { DisclosureState } from '../core/disclosure';
 import type { InsightsState } from '../core/insights';
 import {
   deserializePreferences,
+  type PersistedLiveries,
   parseWorldSnapshot,
   type SnapshotStatus,
   serializeWorld,
@@ -14,6 +15,7 @@ import type { PlacedScenery } from '../core/scenery';
 import type { PlacedPiece } from '../core/track-graph';
 import type { TrainKind } from '../core/trains';
 import type { TrainConsist } from '../core/wagons';
+import type { LiveryStore } from './liveries';
 
 const DATABASE_NAME = 'tiny-tracks';
 // Version 2 adds the separate `insights` store. The upgrade is idempotent and
@@ -140,11 +142,15 @@ interface WorldReader {
   subscribe(listener: () => void): () => void;
 }
 
+type LiveryReader = Pick<LiveryStore, 'snapshot' | 'subscribe'>;
+const readNoLiveries = (): PersistedLiveries => ({});
+
 function snapshotOf(
   world: WorldReader,
   muted: boolean,
   dayPhase?: DayPhase,
   installHintDismissed = false,
+  liveries: PersistedLiveries = {},
 ): WorldSnapshot {
   return serializeWorld(
     world.pieces(),
@@ -156,6 +162,7 @@ function snapshotOf(
     dayPhase,
     world.disclosure(),
     installHintDismissed,
+    liveries,
   );
 }
 
@@ -165,9 +172,12 @@ export function watchWorldPersistence(
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
   readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
   readInstallHintDismissed: () => boolean = () => false,
+  readLiveries: () => PersistedLiveries = readNoLiveries,
 ): () => void {
   return world.subscribe(() => {
-    void save(snapshotOf(world, readMuted(), readDayPhase(), readInstallHintDismissed()));
+    void save(
+      snapshotOf(world, readMuted(), readDayPhase(), readInstallHintDismissed(), readLiveries()),
+    );
   });
 }
 
@@ -181,6 +191,7 @@ export function watchMutePersistence(
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
   readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
   readInstallHintDismissed: () => boolean = () => false,
+  readLiveries: () => PersistedLiveries = readNoLiveries,
 ): () => void {
   // Chug start/stop also notify; only an actual mute change persists.
   let lastPersisted = audio.isMuted();
@@ -189,7 +200,9 @@ export function watchMutePersistence(
     if (muted === lastPersisted) return;
     lastPersisted = muted;
     try {
-      void save(snapshotOf(world, muted, readDayPhase(), readInstallHintDismissed()));
+      void save(
+        snapshotOf(world, muted, readDayPhase(), readInstallHintDismissed(), readLiveries()),
+      );
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
@@ -223,13 +236,16 @@ export function watchDayPhasePersistence(
   readMuted: () => boolean = () => false,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
   readInstallHintDismissed: () => boolean = () => false,
+  readLiveries: () => PersistedLiveries = readNoLiveries,
 ): () => void {
   let lastPersisted = clock.phase;
   return clock.subscribe((event) => {
     if (event.phase === lastPersisted) return;
     lastPersisted = event.phase;
     try {
-      void save(snapshotOf(world, readMuted(), event.phase, readInstallHintDismissed()));
+      void save(
+        snapshotOf(world, readMuted(), event.phase, readInstallHintDismissed(), readLiveries()),
+      );
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
@@ -267,6 +283,7 @@ export function watchInstallHintPersistence(
   readMuted: () => boolean = () => false,
   readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
   save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+  readLiveries: () => PersistedLiveries = readNoLiveries,
 ): () => void {
   let lastPersisted = hint.isDismissed();
   return hint.subscribe(() => {
@@ -274,11 +291,60 @@ export function watchInstallHintPersistence(
     if (installHintDismissed === lastPersisted) return;
     lastPersisted = installHintDismissed;
     try {
-      void save(snapshotOf(world, readMuted(), readDayPhase(), installHintDismissed));
+      void save(
+        snapshotOf(world, readMuted(), readDayPhase(), installHintDismissed, readLiveries()),
+      );
     } catch {
       // Storage is an enhancement; never make the toy world unusable.
     }
   });
+}
+
+/**
+ * Keeps the paint and stickers in storage. Every livery change re-saves the
+ * FULL snapshot with the current world and the other preferences, so a swatch
+ * tap can never clobber a track edit — or have its own work clobbered by a
+ * later mute, phase, hint or world save. A no-op change (the store notifies on
+ * every swatch tap) never writes, and a rejected save stays non-fatal.
+ */
+export function watchLiveryPersistence(
+  store: LiveryReader,
+  world: WorldReader,
+  readMuted: () => boolean = () => false,
+  readDayPhase: () => DayPhase = () => DEFAULT_DAY_PHASE,
+  save: (snapshot: WorldSnapshot) => void = saveWorldSnapshot,
+  readInstallHintDismissed: () => boolean = () => false,
+): () => void {
+  let lastPersisted = store.snapshot();
+  return store.subscribe(() => {
+    const liveries = store.snapshot();
+    // The store notifies even when a tap leaves the choice unchanged; compare
+    // content, not identity, so those notifications never rewrite storage.
+    if (JSON.stringify(liveries) === JSON.stringify(lastPersisted)) return;
+    lastPersisted = liveries;
+    try {
+      void save(
+        snapshotOf(world, readMuted(), readDayPhase(), readInstallHintDismissed(), liveries),
+      );
+    } catch {
+      // Storage is an enhancement; never make the toy world unusable.
+    }
+  });
+}
+
+/**
+ * Applies a snapshot's saved liveries on boot. `deserializePreferences`
+ * salvages corrupt entries, and `hydrate` drops unknown paints/stickers, so
+ * bad bytes can never break the painter. Always hydrates — an absent key
+ * clears to stock, exactly like a fresh install. Call this BEFORE the
+ * persistence watchers attach, or the hydration notifications would rewrite
+ * the very snapshot being restored.
+ */
+export function restoreLiveryPreference(
+  snapshot: unknown,
+  store: Pick<LiveryStore, 'hydrate'>,
+): void {
+  store.hydrate(deserializePreferences(snapshot).liveries ?? {});
 }
 
 /**

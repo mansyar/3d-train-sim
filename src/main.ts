@@ -40,15 +40,23 @@ import { loadInsights, readStorageEstimate, saveInsights } from './state/insight
 import {
   loadWorldRecovery,
   restoreDayPhasePreference,
+  restoreLiveryPreference,
   restoreMutePreference,
   saveWorldSnapshot,
   watchDayPhasePersistence,
   watchInstallHintPersistence,
+  watchLiveryPersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './state/persistence';
 import { createWorldStore } from './state/world';
-import { createInstallHintDismissal, type InsightsView, mountControls, mountShell } from './ui/app';
+import {
+  createInstallHintDismissal,
+  type InsightsView,
+  liveryStore,
+  mountControls,
+  mountShell,
+} from './ui/app';
 
 import './style.css';
 
@@ -248,12 +256,21 @@ if (root) {
     // The dismissal rides in the same snapshot. Restore it before the watchers
     // attach so boot hydration never rewrites storage, just like mute and phase.
     installHint.restore(deserializePreferences(snapshot).installHintDismissed === true);
+    // Paint and stickers ride in the snapshot too. Restore before attaching the
+    // watchers: hydrate() notifies the painter once per entry, and an attached
+    // watcher would write those notifications straight back to storage.
+    restoreLiveryPreference(snapshot, liveryStore);
+    // Every watcher carries the whole preference set. Any save triggered by one
+    // control must preserve the choices made in all the others, including the
+    // liveries the child painted above.
+    const readLiveries = () => liveryStore.snapshot();
     watchDayPhasePersistence(
       dayClock,
       world,
       () => audio.isMuted(),
       recordSave,
       installHint.isDismissed,
+      readLiveries,
     );
     watchWorldPersistence(
       world,
@@ -261,14 +278,31 @@ if (root) {
       recordSave,
       () => dayClock.phase,
       installHint.isDismissed,
+      readLiveries,
     );
-    watchMutePersistence(audio, world, recordSave, () => dayClock.phase, installHint.isDismissed);
+    watchMutePersistence(
+      audio,
+      world,
+      recordSave,
+      () => dayClock.phase,
+      installHint.isDismissed,
+      readLiveries,
+    );
     watchInstallHintPersistence(
       installHint,
       world,
       () => audio.isMuted(),
       () => dayClock.phase,
       recordSave,
+      readLiveries,
+    );
+    watchLiveryPersistence(
+      liveryStore,
+      world,
+      () => audio.isMuted(),
+      () => dayClock.phase,
+      recordSave,
+      installHint.isDismissed,
     );
     // A reset clears every preference, so the parent's dismissal clears too
     // and the hint comes back with the fresh meadow.

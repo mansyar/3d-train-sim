@@ -3,14 +3,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDayClock, DAY_LENGTH_MS, type DayPhase } from '../core/day-clock';
 import { deserializePreferences, type WorldData, type WorldSnapshot } from '../core/save';
 import { defaultConsist } from '../core/wagons';
+import { createLiveryStore } from './liveries';
 import {
   loadWorldRecovery,
   loadWorldSnapshot,
   restoreDayPhasePreference,
+  restoreLiveryPreference,
   restoreMutePreference,
   saveWorldSnapshot,
   watchDayPhasePersistence,
   watchInstallHintPersistence,
+  watchLiveryPersistence,
   watchMutePersistence,
   watchWorldPersistence,
 } from './persistence';
@@ -895,5 +898,142 @@ describe('v2 database migration', () => {
     upgrade(db);
     expect(db.createObjectStore).not.toHaveBeenCalled();
     expect([...db.stores]).toEqual(['worlds', 'insights']);
+  });
+});
+
+describe('livery preference', () => {
+  const dusk = (): DayPhase => 'dusk';
+
+  it('hydrates saved liveries on boot and boots stock without the key', () => {
+    const store = createLiveryStore();
+    restoreLiveryPreference(
+      {
+        version: 3,
+        pieces: [],
+        scenery: [],
+        preferences: {
+          muted: false,
+          liveries: {
+            'steam:loco': { paint: 'cherry', stickers: ['star', 'heart'] },
+            'diesel:loco': { paint: 'bogus', stickers: ['star'] },
+            'tram:loco': { stickers: ['heart'] },
+          },
+        },
+      },
+      store,
+    );
+    expect(store.snapshot()).toEqual({
+      'steam:loco': { paint: 'cherry', stickers: ['star', 'heart'] },
+      'tram:loco': { stickers: ['heart'] },
+    });
+
+    const fresh = createLiveryStore();
+    restoreLiveryPreference({ version: 3, pieces: [], scenery: [] }, fresh);
+    expect(fresh.snapshot()).toEqual({});
+  });
+
+  it('saves the full snapshot once per actual livery change', () => {
+    const audio = makeAudio();
+    audio.setMuted(true);
+    const world = createWorldStore();
+    world.place('straight', ORIGIN, 0);
+    const livery = createLiveryStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    watchLiveryPersistence(livery, world, audio.isMuted, dusk, save, () => true);
+
+    livery.setPaint('steam:loco', 'cherry');
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]?.[0]).toMatchObject({
+      version: 3,
+      pieces: [{ type: 'straight', cell: ORIGIN }],
+    });
+    expect(deserializePreferences(save.mock.calls[0]?.[0])).toEqual({
+      muted: true,
+      dayPhase: 'dusk',
+      installHintDismissed: true,
+      liveries: { 'steam:loco': { paint: 'cherry' } },
+    });
+
+    livery.stamp('steam:loco', 'star');
+    expect(save).toHaveBeenCalledTimes(2);
+    expect(deserializePreferences(save.mock.calls[1]?.[0]).liveries).toEqual({
+      'steam:loco': { paint: 'cherry', stickers: ['star'] },
+    });
+
+    // A notification that does not change the livery never persists.
+    livery.setPaint('steam:loco', 'cherry');
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('treats a rejected save as non-fatal and keeps accepting changes', () => {
+    const world = createWorldStore();
+    const livery = createLiveryStore();
+    let calls = 0;
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>(() => {
+      calls += 1;
+      if (calls === 1) throw new Error('quota exceeded');
+    });
+    watchLiveryPersistence(
+      livery,
+      world,
+      () => false,
+      () => 'morning',
+      save,
+    );
+
+    expect(() => livery.setPaint('steam:loco', 'sky')).not.toThrow();
+    livery.stamp('steam:loco', 'bolt');
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops persisting once its unsubscribe runs', () => {
+    const world = createWorldStore();
+    const livery = createLiveryStore();
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+    const off = watchLiveryPersistence(livery, world, () => false, dusk, save);
+
+    off();
+    livery.setPaint('steam:loco', 'grape');
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('carries current liveries into world, mute, day-phase and hint saves', () => {
+    const livery = createLiveryStore();
+    livery.setPaint('steam:loco', 'grape');
+    const readLiveries = () => livery.snapshot();
+    const world = createWorldStore();
+    const audio = makeAudio();
+    const hint = makeHint();
+    hint.dismiss();
+    const clock = createDayClock({ now: () => 0 });
+    const save = vi.fn<(snapshot: WorldSnapshot) => void>();
+
+    watchWorldPersistence(world, audio.isMuted, save, dusk, hint.isDismissed, readLiveries);
+    watchMutePersistence(audio, world, save, dusk, hint.isDismissed, readLiveries);
+    watchDayPhasePersistence(clock, world, audio.isMuted, save, hint.isDismissed, readLiveries);
+    watchInstallHintPersistence(hint, world, audio.isMuted, dusk, save, readLiveries);
+
+    world.place('straight', ORIGIN, 0);
+    expect(deserializePreferences(save.mock.calls[0]?.[0]).liveries).toEqual({
+      'steam:loco': { paint: 'grape' },
+    });
+
+    audio.setMuted(true);
+    audio.emit();
+    expect(deserializePreferences(save.mock.calls[1]?.[0]).liveries).toEqual({
+      'steam:loco': { paint: 'grape' },
+    });
+
+    clock.advancePhase();
+    clock.tick();
+    expect(deserializePreferences(save.mock.calls[2]?.[0]).liveries).toEqual({
+      'steam:loco': { paint: 'grape' },
+    });
+
+    hint.restore();
+    hint.emit();
+    expect(deserializePreferences(save.mock.calls[3]?.[0]).liveries).toEqual({
+      'steam:loco': { paint: 'grape' },
+    });
   });
 });
