@@ -80,7 +80,7 @@ test('a swatch repaints the whole consist of every locomotive', async ({ page })
     await page.click(`.train-slot[data-train="${kind}"]`, { timeout: 60_000 });
     const vehicleIds = [`${kind}:loco`, `${kind}:lead`, `${kind}:rear`];
     for (const paint of PAINTS) {
-      await page.click(`.livery-section [data-paint="${paint.id}"]`);
+      await page.click(`.livery-section [data-paint="${paint.id}"]`, { timeout: 60_000 });
       const seen = await probe(page, vehicleIds);
       expect(seen, `${kind}/${paint.id}: paint witness missing`).not.toBeNull();
       for (const id of vehicleIds) {

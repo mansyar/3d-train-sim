@@ -152,7 +152,19 @@ test('greeting motifs stay locked before a gesture and die instantly on mute', a
     await settleOn(page, 'morning', 'dawn');
     const witness = await waitForMotif(page, 'morning-butterflies');
     expect(witness.plays).toBeGreaterThan(before.plays);
-    expect(witness.audiblePlays).toBeGreaterThan(before.audiblePlays);
+    // The wind lands on frame time but the backend voices lag behind on a
+    // loaded software-GL runner; poll instead of snapshotting once.
+    await page.waitForFunction(
+      (baseline) => {
+        const now =
+          (
+            window as unknown as { __tinyTracksScene?: SceneHandle }
+          ).__tinyTracksScene?.ritualAudio()?.audiblePlays ?? 0;
+        return now > baseline;
+      },
+      before.audiblePlays,
+      { timeout: 60_000 },
+    );
   });
 
   await test.step('instant mute: motifs wind but say nothing', async () => {
