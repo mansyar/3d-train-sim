@@ -81,3 +81,14 @@ The primary appends after acceptance:
 - [x] **P5.T1: Six-train evidence spec** — covers: AC-1 (repaint + sticker everything, zero console errors)
 - [x] **P5.T2: Persistence wiring + round-trip + offline** — covers: AC-2, AC-7, NFR-2, NFR-5 (watch/restore livery preferences in `persistence.ts` following the mute/day-phase watcher shape; boot restore in `main.ts` before watchers attach; reload identity; network-disabled prod run; no new precache entries)
 - [x] **P5.T3: Evidence bundle** — covers: AC-1 (screenshots + one cycle capture committed under the track's `evidence/` dir)
+
+## Phase R1: Review Fixes
+
+- **Goal:** Resolve review finding F1 — the parent-gated full reset clears all liveries with the world.
+- **Depends on:** Phase 5
+- **Covers:** F1
+- **Touches:** `src/state/liveries.ts`, `src/state/liveries.test.ts`, `src/main.ts` (reset wiring only), `e2e/liveries-reset.spec.ts` (new integration test)
+- **Verification:** `pnpm exec playwright test e2e/liveries-reset.spec.ts` + `pnpm check`
+- **Status:** pending
+
+- [ ] **R1.T1: Resolve F1** — covers: F1 (notifying `reset()` + `world.onReset` wiring + reset tests; verify consist-scoped restore consistency with a test, fix only if it fails)
