@@ -182,7 +182,9 @@ export function createLiveryStore(): LiveryStore {
     },
 
     reset() {
+      const affected = [...entries.keys()];
       entries.clear();
+      for (const id of affected) notify(id, stockLivery());
     },
 
     subscribe(listener) {

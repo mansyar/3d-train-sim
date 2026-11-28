@@ -187,6 +187,36 @@ describe('livery store', () => {
     expect(store.liveryFor(diesel)).toEqual(stockLivery());
   });
 
+  it('notifies every affected vehicle with the stock livery on reset', () => {
+    const store = createLiveryStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.setPaint(steam, 'cherry');
+    store.stamp(steam, 'star');
+    store.setPaint(leadWagon, 'grape');
+    listener.mockClear();
+
+    store.reset();
+
+    expect(store.liveries()).toEqual({});
+    expect(store.snapshot()).toEqual({});
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledWith(steam, stockLivery());
+    expect(listener).toHaveBeenCalledWith(leadWagon, stockLivery());
+  });
+
+  it('a no-op reset notifies nobody, so the persistence guard never rewrites storage', () => {
+    const store = createLiveryStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+
+    store.reset();
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(store.snapshot()).toEqual({});
+  });
+
   it('stops notifying after unsubscribe', () => {
     const store = createLiveryStore();
     const listener = vi.fn();

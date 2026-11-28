@@ -307,6 +307,9 @@ if (root) {
     // A reset clears every preference, so the parent's dismissal clears too
     // and the hint comes back with the fresh meadow.
     world.onReset(() => installHint.restore(false));
+    // Clear after the world is fresh so the livery watcher persists the empty
+    // snapshot last, instead of the stale one the world save captured above.
+    world.onReset(() => liveryStore.reset());
     if (!snapshot) {
       // The watchers only save on change — persist the seeded starter once.
       // Kept as a plain save so a first boot still reports "No save yet."
