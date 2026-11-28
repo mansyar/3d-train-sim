@@ -52,11 +52,11 @@ The primary appends after acceptance:
 - **Covers:** FR-6, FR-8 (follow behavior), AC-1 (scene half), AC-6
 - **Touches:** `src/scene/train-fleet.ts`, `src/scene/rig-cargo.ts`, `e2e/longer-trains-consist.spec.ts`
 - **Verification:** `pnpm check` + `pnpm exec playwright test e2e/longer-trains-consist.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P3.T1: Spawn/remove/dress wagons 3–4 with path follow** — covers: FR-2, FR-4
-- [ ] **P3.T2: Cargo load/deliver from extra wagons** — covers: FR-6
-- [ ] **P3.T3: Dead-end shuttle + straddled-switch follow, no fail states** — covers: FR-8, NFR-6
+- [x] **P3.T1: Spawn/remove/dress wagons 3–4 with path follow** — covers: FR-2, FR-4
+- [x] **P3.T2: Cargo load/deliver from extra wagons** — covers: FR-6
+- [x] **P3.T3: Dead-end shuttle + straddled-switch follow, no fail states** — covers: FR-8, NFR-6
 
 ## Phase 4: Persistence wiring + reset + shrink-keeps
 
