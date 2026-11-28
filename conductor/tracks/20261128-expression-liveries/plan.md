@@ -63,7 +63,7 @@ The primary appends after acceptance:
 - **Covers:** FR-3, FR-5, NFR-3, NFR-6, AC-3, AC-4, AC-6
 - **Touches:** `src/scene/liveries/stickers.ts`, `src/scene/train-fleet.ts`, `src/ui/train-picker.ts`, `e2e/liveries-stickers.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/liveries-stickers.spec.ts`
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P4.T1: Anchor stamp/evict** — covers: FR-3, NFR-6 (procedural/SVG sprites, capped, no per-frame allocation)
 - [ ] **P4.T2: Restore-default** — covers: FR-5, AC-4
