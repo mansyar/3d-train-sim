@@ -5,7 +5,13 @@ import type { CargoLoad } from '../core/cargo';
 import { cellToWorld } from '../core/meadow-grid';
 import type { Edge } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
-import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
+import {
+  DEFAULT_WAGON_PRESET,
+  WAGON_PRESETS,
+  type WagonPreset,
+  wagonPresetUrls,
+  wagonSlots,
+} from '../core/wagons';
 import {
   locoVehicleId,
   PAINT_SWATCHES,
@@ -145,6 +151,8 @@ export function createTrainFleet({
   let worldReady = false;
   let loadedTrain: TrainKind | null = null;
   let loadedPreset: WagonPreset | null = null;
+  let loadedCount = 0;
+  let loadedOutfits = '';
 
   // ---- Expression: one store, one reward voice, subscription-driven paint ----
   /** Seconds of a livery bounce; reduced motion lands in place instead. */
@@ -162,6 +170,8 @@ export function createTrainFleet({
   }
   /** Wagon sprites follow their mesh's lifetime (wagons are re-dressed). */
   const wagonStickers = new WeakMap<Object3D, StickerBinding>();
+  /** The preset each live wagon was dressed from — DEV witness + boot refill. */
+  const wagonOutfitOf = new WeakMap<Object3D, WagonPreset>();
 
   const bindingForWagon = (wagon: Object3D): StickerBinding => {
     let binding = wagonStickers.get(wagon);
@@ -193,9 +203,10 @@ export function createTrainFleet({
     lastPaint.set(locoId, locoHex);
     const slots = wagonSlots();
     for (const [index, wagon] of rig.wagons.entries()) {
+      // Extras have no drawer slot of their own; like a loco paint tap, they
+      // inherit the engine's paint and stickers instead of staying stock.
       const slot = slots[index];
-      if (!slot) continue;
-      const id = wagonVehicleId(rig.kind, slot);
+      const id = slot ? wagonVehicleId(rig.kind, slot) : locoId;
       // The drawer paints the whole consist through the loco's id; a wagon
       // only keeps its own color when an explicit wagon paint exists.
       const hex = hexFor(id) ?? locoHex;
@@ -288,13 +299,33 @@ export function createTrainFleet({
     return pair;
   };
 
-  /** Clones of one kind's chosen wagon pair, added to the scene in pulling order. */
-  const clonePresetWagons = (kind: TrainKind): Object3D[] => {
+  /**
+   * Which preset dresses one wagon slot. A per-wagon choice wins; slots still
+   * on the classic default follow the pair preset, so the drawer's pair tap
+   * keeps dressing the base consist and extras reuse the same kit assets.
+   */
+  const outfitFor = (kind: TrainKind, index: number): WagonPreset => {
+    const chosen = world.wagonOutfits(kind)[index];
+    return chosen && chosen !== DEFAULT_WAGON_PRESET ? chosen : world.consistFor(kind);
+  };
+
+  /**
+   * Clones one kind's wagons in pulling order, one per requested slot. Extra
+   * slots reuse their preset's already-loaded lead model — no new asset fetch
+   * and no slot-model redesign. A missing template shortens the consist rather
+   * than breaking the ride.
+   */
+  const cloneConsistWagons = (kind: TrainKind): Object3D[] => {
     const clones: Object3D[] = [];
-    for (const template of templatesFor(world.consistFor(kind))) {
+    const count = world.wagonCount(kind);
+    for (let index = 0; index < count; index += 1) {
+      const preset = outfitFor(kind, index);
+      const pair = templatesFor(preset);
+      const template = index < pair.length ? pair[index] : pair[0];
       if (!template) continue;
       const clone = template.clone(true);
       scene.add(clone);
+      wagonOutfitOf.set(clone, preset);
       clones.push(clone);
     }
     return clones;
@@ -344,7 +375,7 @@ export function createTrainFleet({
     if (!template) return null; // assets not ready — ride on without visuals
     const model = template.clone(true);
     scene.add(model);
-    const wagons = clonePresetWagons(kind);
+    const wagons = cloneConsistWagons(kind);
     const puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(puffs.group);
     const headlight = attachHeadlight(model);
@@ -388,24 +419,32 @@ export function createTrainFleet({
     return rig;
   };
 
+  /** Removes one wagon without freeing GPU resources shared with its template.
+   *  Crates are template clones too: detach them so no guest rides a ghost. */
+  const removeWagon = (wagon: Object3D): void => {
+    const binding = wagonStickers.get(wagon);
+    if (binding) {
+      disposeStickerBinding(binding);
+      wagonStickers.delete(wagon);
+    }
+    for (const child of [...wagon.children]) {
+      if (child.name === 'cargo_crate') wagon.remove(child);
+    }
+    scene.remove(wagon);
+    wagonOutfitOf.delete(wagon);
+  };
+
   /**
-   * Re-dresses one rig's wagons from its kind's chosen preset. The engine,
+   * Re-dresses one rig's wagons from their per-slot outfits. The engine,
    * the ride, and the cargo state stay — only the wagon meshes change. The
    * array refills in place so the ride motion (which holds the reference)
    * keeps posing the new wagons with today's spacing; a riding train's
    * wagons re-pose on the next tick, a spare re-parks behind its engine.
    */
   const dressRigWagons = (rig: TrainRig): void => {
-    for (const old of rig.wagons) {
-      const binding = wagonStickers.get(old);
-      if (binding) {
-        disposeStickerBinding(binding);
-        wagonStickers.delete(old);
-      }
-      scene.remove(old);
-    }
+    for (const old of rig.wagons) removeWagon(old);
     rig.wagons.length = 0;
-    for (const wagon of clonePresetWagons(rig.kind)) {
+    for (const wagon of cloneConsistWagons(rig.kind)) {
       cargo.attach(wagon);
       rig.wagons.push(wagon);
     }
@@ -421,14 +460,7 @@ export function createTrainFleet({
     scene.remove(rig.puffs.group);
     disposeStickerBinding(rig.stickers);
     scene.remove(rig.model);
-    for (const wagon of rig.wagons) {
-      const binding = wagonStickers.get(wagon);
-      if (binding) {
-        disposeStickerBinding(binding);
-        wagonStickers.delete(wagon);
-      }
-      scene.remove(wagon);
-    }
+    for (const wagon of rig.wagons) removeWagon(wagon);
     rig.wagons.length = 0;
     const lightIndex = headlights.indexOf(rig.headlight);
     if (lightIndex !== -1) headlights.splice(lightIndex, 1);
@@ -603,12 +635,10 @@ export function createTrainFleet({
             return;
           }
           templatesFor(preset)[index] = wagon; // Slot order — pulling order preserved.
-          // Rigs pulling this preset gain their new wagons now (the parked
-          // opener included); a riding train's wagons re-pose on the next tick.
-          for (const rig of [...rigs.values(), ...spares]) {
-            if (world.consistFor(rig.kind) !== preset) continue;
-            dressRigWagons(rig);
-          }
+          // One consist can mix presets across slots, so any new template may
+          // complete it. Re-dress all rigs (boot is a handful of fills, never
+          // a per-frame path); riding wagons re-pose on the next tick.
+          for (const rig of [...rigs.values(), ...spares]) dressRigWagons(rig);
           syncRigs(rides.rides());
         })
         .catch(() => {
@@ -627,14 +657,26 @@ export function createTrainFleet({
     }
     const kind = world.train();
     const preset = world.consistFor(kind);
-    if (kind === loadedTrain && preset === loadedPreset) return;
+    const count = world.wagonCount(kind);
+    const outfits = world.wagonOutfits(kind).join(',');
+    if (
+      kind === loadedTrain &&
+      preset === loadedPreset &&
+      count === loadedCount &&
+      outfits === loadedOutfits
+    ) {
+      return; // deliveries and placements need no re-dress
+    }
     const kindChanged = kind !== loadedTrain;
     const presetChanged = preset !== loadedPreset;
+    const consistChanged = count !== loadedCount || outfits !== loadedOutfits;
     loadedTrain = kind;
     loadedPreset = preset;
+    loadedCount = count;
+    loadedOutfits = outfits;
     for (const rig of [...rigs.values(), ...spares]) {
       if (kindChanged) swapRigKind(rig, kind);
-      if (presetChanged) dressRigWagons(rig);
+      if (presetChanged || consistChanged) dressRigWagons(rig);
     }
   });
 
@@ -760,9 +802,50 @@ export function createTrainFleet({
     audio: () => liveryAudio.probe(),
   };
 
+  /** DEV/e2e witness: each rig's live outfits, positions, and crate state.
+   *  Read on demand only — no allocation on any frame. */
+  const consistWitness = {
+    rigs(): Array<{
+      kind: TrainKind;
+      anchor: string;
+      loco: { x: number; y: number; z: number };
+      wagons: Array<{
+        preset: WagonPreset | null;
+        x: number;
+        y: number;
+        z: number;
+        crateAttached: boolean;
+        crateVisible: boolean;
+      }>;
+    }> {
+      return [...rigs.values(), ...spares].map((rig) => ({
+        kind: rig.kind,
+        anchor: rig.anchor,
+        loco: {
+          x: rig.model.position.x,
+          y: rig.model.position.y,
+          z: rig.model.position.z,
+        },
+        wagons: rig.wagons.map((wagon) => {
+          const crate = wagon.getObjectByName('cargo_crate');
+          return {
+            preset: wagonOutfitOf.get(wagon) ?? null,
+            x: wagon.position.x,
+            y: wagon.position.y,
+            z: wagon.position.z,
+            crateAttached: crate !== undefined,
+            crateVisible: crate?.visible === true,
+          };
+        }),
+      }));
+    },
+  };
+
   if (import.meta.env.DEV) {
     (window as unknown as { __tinyTracksLivery?: typeof liveryWitness }).__tinyTracksLivery =
       liveryWitness;
+    (window as unknown as { __tinyTracksConsist?: typeof consistWitness }).__tinyTracksConsist =
+      consistWitness;
   }
 
   return {
@@ -839,6 +922,8 @@ export function createTrainFleet({
       if (import.meta.env.DEV) {
         delete (window as unknown as { __tinyTracksLivery?: typeof liveryWitness })
           .__tinyTracksLivery;
+        delete (window as unknown as { __tinyTracksConsist?: typeof consistWitness })
+          .__tinyTracksConsist;
       }
       for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.dispose();
