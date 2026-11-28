@@ -40,10 +40,10 @@ The primary appends after acceptance:
 - **Covers:** FR-1, FR-3 (drawer half), FR-4 (drawer half), FR-5 (drawer half)
 - **Touches:** `src/ui/train-picker.ts`, `src/style.css` (scoped drawer rules), `e2e/longer-trains-drawer.spec.ts`
 - **Verification:** `pnpm check` + `pnpm exec playwright test e2e/longer-trains-drawer.spec.ts`
-- **Status:** in_progress
+- **Status:** verified
 
-- [ ] **P2.T1: `+` slot with loop-fit dimming** — covers: FR-1, FR-3
-- [ ] **P2.T2: Select-wagon-then-preset + tap-last-to-remove** — covers: FR-4, FR-5
+- [x] **P2.T1: `+` slot with loop-fit dimming** — covers: FR-1, FR-3
+- [x] **P2.T2: Select-wagon-then-preset + tap-last-to-remove** — covers: FR-4, FR-5
 
 ## Phase 3: Scene consist + cargo
 
