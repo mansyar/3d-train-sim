@@ -17,14 +17,14 @@
     "tasks_done": 14,
     "tasks_total": 14
   },
-  "pr_url": null,
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/93",
   "reverted_at": null,
   "revert_commit": null,
   "revert_pr_url": null,
   "review_rounds": 1,
   "review_verdict": "PASS",
   "spec": "spec.md",
-  "status": "in_progress",
+  "status": "complete",
   "title": "B. Expression — paint/sticker liveries",
   "type": "feature",
   "updated_at": "2026-11-28T12:14:35+11:00"
