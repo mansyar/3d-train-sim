@@ -149,7 +149,13 @@ test('greeting motifs stay locked before a gesture and die instantly on mute', a
     const before = await ritualAudio(page);
     expect(before).not.toBeNull();
     if (!before) return;
-    await settleOn(page, 'morning', 'dawn');
+    // Hold noon past the director debounce before the final settle: if the
+    // unlock click already left the clock on morning, a back-to-back
+    // round-trip collapses to no greeting and the stale lastMotif matches
+    // with no new wind.
+    await settleOn(page, 'noon', 'morning');
+    await page.waitForTimeout(1500);
+    await settleOn(page, 'morning', 'noon');
     const witness = await waitForMotif(page, 'morning-butterflies');
     expect(witness.plays).toBeGreaterThan(before.plays);
     // The wind lands on frame time but the backend voices lag behind on a
