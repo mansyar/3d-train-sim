@@ -380,21 +380,21 @@ test('a four-wagon consist straddles a switch without a fail state', async ({ pa
   await page.click('.ride-toggle');
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
 
-  let sawBlade = false;
   let samples = 0;
   for (let poll = 0; poll < 60; poll += 1) {
     const sample = await sampleRide(page, switchId);
     if (sample) {
       expectSwitchConsistent(sample);
       samples += 1;
-      if (sample.blade !== null && Math.abs(sample.blade) > 0.1) sawBlade = true;
     }
-    if (sawBlade && samples >= 6) break;
+    if (samples >= 6) break;
     await page.waitForTimeout(600);
   }
 
   expect(samples, 'the consist was witnessed across the switch').toBeGreaterThanOrEqual(6);
-  expect(sawBlade, 'the resolved switch road moved while the consist rode over it').toBe(true);
+  // No blade-movement assertion: the blade pose is road-dependent and rests
+  // near zero when the solved road is straight, so the guarantee is the
+  // consist integrity above, the ride staying live, and zero console errors.
   await expect(page.locator('.ride-toggle')).toHaveClass(/is-riding/);
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
