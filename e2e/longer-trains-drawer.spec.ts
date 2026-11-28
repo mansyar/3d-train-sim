@@ -127,13 +127,22 @@ test('the + slot dims without a fitting loop and re-enables when the loop grows'
   await add.click();
   expect(await wagonCountOf(page)).toBe(3);
 
+  // A world reset returns to the base pair (FR-7), so clearing here — and
+  // again inside buildLoop — puts the consist back at two wagons before the
+  // dimmed + is tapped as a no-op.
   await clearMeadow(page);
   await expect(add, 'no closed loop yet').toHaveAttribute('aria-disabled', 'true');
   await add.dispatchEvent('click');
-  expect(await wagonCountOf(page)).toBe(3);
+  expect(await wagonCountOf(page)).toBe(2);
 
   await buildLoop(page, 'tiny');
-  await expect(add, 'a four-cell loop holds the pair but not a third wagon').toHaveAttribute(
+  await expect(add, 'a four-cell loop fits the pair with one margin wagon').toHaveAttribute(
+    'aria-disabled',
+    'false',
+  );
+  await add.click();
+  expect(await wagonCountOf(page)).toBe(3);
+  await expect(add, 'a third wagon leaves no margin on the four-cell loop').toHaveAttribute(
     'aria-disabled',
     'true',
   );
@@ -144,6 +153,8 @@ test('the + slot dims without a fitting loop and re-enables when the loop grows'
   await buildLoop(page, 'roomy');
   await expect(add).toHaveAttribute('aria-disabled', 'false');
   await expect(add).not.toHaveClass(/is-dimmed/);
+  await add.click();
+  expect(await wagonCountOf(page)).toBe(3);
   await add.click();
   expect(await wagonCountOf(page)).toBe(4);
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
