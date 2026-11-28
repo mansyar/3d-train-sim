@@ -1,18 +1,21 @@
 import type { Object3D } from 'three';
+import { createLiveryAudio, type LiveryAudioWitness } from '../audio/liveries';
 import type { RideAudioBinding } from '../audio/ride-audio';
 import type { CargoLoad } from '../core/cargo';
 import { cellToWorld } from '../core/meadow-grid';
 import type { Edge } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
+import { locoVehicleId, PAINT_SWATCHES, type VehicleId, wagonVehicleId } from '../state/liveries';
 import type { RideController, RideState } from '../state/ride';
+import { liveryStore } from '../ui/app';
 import { disposeObject } from './dispose-object';
 import { attachHeadlight, type Headlight } from './headlight';
 import { loadLocomotive } from './load-locomotive';
 import { loadCrate, loadWagon } from './load-wagons';
 import { parkPoseFor } from './park-pose';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
-import type { RigCargo } from './rig-cargo';
+import { paintHex, paintVehicle, type RigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 
@@ -43,6 +46,12 @@ export interface TrainRig {
   begunWith: RideState | null;
   /** One-shot: where a reused train sits, so it rolls on from there. */
   startNear: { x: number; z: number } | null;
+  /** Livery reward: seconds left in the scale bounce (0 = settled). */
+  bounceT: number;
+  /** Livery reward: completed bounces, a DEV/e2e witness. */
+  bounceCount: number;
+  /** The model's settled scale, captured from the loaded asset. */
+  baseScale: number;
 }
 
 export interface TrainFleet {
@@ -72,6 +81,12 @@ export interface TrainFleet {
   parkedSpot(): { x: number; z: number } | null;
   /** Whether a rig is inside a tunnel run (the toot trails an echo). */
   inTunnel(rig: TrainRig): boolean;
+  /** DEV/e2e witness: live paint, bounces, and reward plays per vehicle. */
+  liveryWitness(): {
+    bodyHex(id: VehicleId): string | null;
+    bounceCount(id: VehicleId): number;
+    audio(): LiveryAudioWitness;
+  };
   dispose(): void;
 }
 
@@ -109,6 +124,88 @@ export function createTrainFleet({
   let worldReady = false;
   let loadedTrain: TrainKind | null = null;
   let loadedPreset: WagonPreset | null = null;
+
+  // ---- Expression: one store, one reward voice, subscription-driven paint ----
+  /** Seconds of a livery bounce; reduced motion lands in place instead. */
+  const BOUNCE_SECONDS = 0.32;
+  /** The models load at 1.5; the bounce is a small pulse around that size. */
+  const BOUNCE_SCALE = 0.12;
+  const liveryAudio = createLiveryAudio(audio);
+  /** Last applied hex per vehicle. Seeded from the store so boot/stamp updates
+   *  never look like a fresh paint (no phantom reward or bounce). */
+  const lastPaint = new Map<VehicleId, string | null>();
+  for (const [id, livery] of Object.entries(liveryStore.liveries())) {
+    lastPaint.set(id, PAINT_SWATCHES.find((s) => s.id === livery.paint)?.hex ?? null);
+  }
+
+  const hexFor = (id: VehicleId): string | null => {
+    const paint = liveryStore.liveryFor(id).paint;
+    return paint ? (PAINT_SWATCHES.find((s) => s.id === paint)?.hex ?? null) : null;
+  };
+
+  const bounce = (rig: TrainRig): void => {
+    if (context.reducedMotion) return;
+    rig.bounceT = BOUNCE_SECONDS;
+    rig.bounceCount += 1;
+  };
+
+  /** Reapply the current livery to one rig's engine and its wagons — used on
+   *  build, kind swap, and re-dress so newly arriving meshes inherit the paint. */
+  const applyLiveryToRig = (rig: TrainRig): void => {
+    const locoId = locoVehicleId(rig.kind);
+    const locoHex = hexFor(locoId);
+    paintVehicle(rig.model, locoHex);
+    lastPaint.set(locoId, locoHex);
+    const slots = wagonSlots();
+    for (const [index, wagon] of rig.wagons.entries()) {
+      const slot = slots[index];
+      if (!slot) continue;
+      const id = wagonVehicleId(rig.kind, slot);
+      // The drawer paints the whole consist through the loco's id; a wagon
+      // only keeps its own color when an explicit wagon paint exists.
+      const hex = hexFor(id) ?? locoHex;
+      paintVehicle(wagon, hex);
+      lastPaint.set(id, hex);
+    }
+  };
+
+  /** Paint on tap: whole body instantly, one bounce per affected rig, one
+   *  muted-aware pop+ding. Stamps and no-op selections earn nothing. */
+  const onLiveryChange = (id: VehicleId, livery: { paint: string | null }): void => {
+    const hex = livery.paint
+      ? (PAINT_SWATCHES.find((s) => s.id === livery.paint)?.hex ?? null)
+      : null;
+    const previous = lastPaint.get(id) ?? null;
+    lastPaint.set(id, hex);
+    if (previous === hex) return; // a stamp, a restore of stock, or boot state
+    let matched = false;
+    for (const rig of [...rigs.values(), ...spares]) {
+      let hit = false;
+      const locoId = locoVehicleId(rig.kind);
+      if (id === locoId) {
+        // A loco paint covers its whole consist — every wagon, both sides
+        // (FR-2), with the very same hex and one reward for the tap.
+        paintVehicle(rig.model, hex);
+        for (const wagon of rig.wagons) paintVehicle(wagon, hex);
+        hit = true;
+      } else {
+        const slots = wagonSlots();
+        for (const [index, wagon] of rig.wagons.entries()) {
+          const slot = slots[index];
+          if (slot && wagonVehicleId(rig.kind, slot) === id) {
+            paintVehicle(wagon, hex);
+            hit = true;
+          }
+        }
+      }
+      if (hit) {
+        bounce(rig);
+        matched = true;
+      }
+    }
+    if (matched && hex !== null) liveryAudio.reward('paint');
+  };
+  const unsubscribeLivery = liveryStore.subscribe(onLiveryChange);
 
   /** The cached template pair for one preset, created on first use. */
   const templatesFor = (preset: WagonPreset): (Object3D | null)[] => {
@@ -198,8 +295,12 @@ export function createTrainFleet({
       motion: null as unknown as RideMotion,
       begunWith: null,
       startNear: null,
+      bounceT: 0,
+      bounceCount: 0,
+      baseScale: model.scale.x,
     };
     for (const wagon of wagons) cargo.attach(wagon);
+    applyLiveryToRig(rig);
     rig.motion = createRideMotion(
       model,
       world,
@@ -231,6 +332,7 @@ export function createTrainFleet({
     }
     // New meshes arrive with hidden crates — restore whatever was aboard.
     cargo.setLoaded(rig, rig.cargo !== 'empty');
+    applyLiveryToRig(rig); // freshly cloned bodies inherit their current paint
     if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
   };
 
@@ -352,11 +454,14 @@ export function createTrainFleet({
     scene.add(model);
     rig.kind = kind;
     rig.model = model;
+    rig.baseScale = model.scale.x;
+    rig.bounceT = 0; // a swapped-in shell lands settled, never mid-bounce
     rig.headlight = attachHeadlight(model);
     headlights.push(rig.headlight);
     rig.puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(rig.puffs.group);
     rig.puffs.setEmitting(rides.mode() === 'riding');
+    applyLiveryToRig(rig); // the new shell inherits this kind's livery
     // The motion re-poses the new engine (and its wagons) exactly where the
     // old one stood — same path distance, same direction, no restart — and
     // the pace personality follows the new locomotive.
@@ -483,6 +588,57 @@ export function createTrainFleet({
   // not a return value, so no frame system carries a value forward (FR-8).
   let lastSteamPuffCount = 0;
 
+  /** The rigs carrying one vehicle id (the engine, or a given wagon slot). */
+  const rigsFor = (id: VehicleId): TrainRig[] => {
+    const found: TrainRig[] = [];
+    for (const rig of [...rigs.values(), ...spares]) {
+      if (id === locoVehicleId(rig.kind)) {
+        found.push(rig);
+        continue;
+      }
+      const slots = wagonSlots();
+      for (const slot of slots) {
+        if (slot && wagonVehicleId(rig.kind, slot) === id) {
+          found.push(rig);
+          break;
+        }
+      }
+    }
+    return found;
+  };
+
+  const liveryWitness = {
+    /** The actual material color, not just the store's intent. */
+    bodyHex(id: VehicleId): string | null {
+      const matching = rigsFor(id);
+      for (const rig of matching) {
+        if (id === locoVehicleId(rig.kind)) {
+          const hex = paintHex(rig.model);
+          if (hex) return hex;
+        } else {
+          const slots = wagonSlots();
+          for (const [index, wagon] of rig.wagons.entries()) {
+            const slot = slots[index];
+            if (slot && wagonVehicleId(rig.kind, slot) === id) {
+              const hex = paintHex(wagon);
+              if (hex) return hex;
+            }
+          }
+        }
+      }
+      return matching.length > 0 ? (lastPaint.get(id) ?? null) : null;
+    },
+    bounceCount(id: VehicleId): number {
+      return rigsFor(id).reduce((sum, rig) => sum + rig.bounceCount, 0);
+    },
+    audio: () => liveryAudio.probe(),
+  };
+
+  if (import.meta.env.DEV) {
+    (window as unknown as { __tinyTracksLivery?: typeof liveryWitness }).__tinyTracksLivery =
+      liveryWitness;
+  }
+
   return {
     sync: syncRigs,
     parkedSpot,
@@ -519,6 +675,14 @@ export function createTrainFleet({
           rig.puffAcc = 0;
         }
         visibleSteamPuffs += rig.puffs.activeCount();
+        // Livery reward: a short scale pulse on the painted train. The wave
+        // starts and ends at the settled scale; reduced motion never starts
+        // one, so the final state simply lands with no animation.
+        if (rig.bounceT > 0) {
+          rig.bounceT = Math.max(0, rig.bounceT - dt);
+          const phase = 1 - rig.bounceT / BOUNCE_SECONDS;
+          rig.model.scale.setScalar(rig.baseScale + Math.sin(phase * Math.PI) * BOUNCE_SCALE);
+        }
       }
       // A station stop above may have begun a hand-off; advance it on this
       // same frame. One active transfer, one tick — no per-rig arc bookkeeping.
@@ -539,9 +703,16 @@ export function createTrainFleet({
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     nearest: () => nearestRig(rigs.values()) ?? nearestRig(spares),
     inTunnel: (rig) => tunnelRigs.has(rig),
+    liveryWitness: () => liveryWitness,
     dispose(): void {
       disposed = true;
       unsubscribeTrain();
+      unsubscribeLivery();
+      liveryAudio.dispose();
+      if (import.meta.env.DEV) {
+        delete (window as unknown as { __tinyTracksLivery?: typeof liveryWitness })
+          .__tinyTracksLivery;
+      }
       for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.dispose();
         disposeRigVisuals(rig);
