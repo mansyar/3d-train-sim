@@ -1,0 +1,31 @@
+{
+  "archived_at": null,
+  "archive_path": null,
+  "base_branch": "main",
+  "base_sha": "dc2ba44a6f3f62b31341e0227be2534d572067e6",
+  "branch": "feat/20261128-expression-liveries",
+  "created_at": "2026-11-28T10:46:33+11:00",
+  "depends_on": [],
+  "doc_sync": "pending",
+  "id": "20261128-expression-liveries",
+  "last_checkpoint": null,
+  "plan": "plan.md",
+  "priority": "medium",
+  "progress": {
+    "phases_total": 5,
+    "phases_verified": 5,
+    "tasks_done": 14,
+    "tasks_total": 14
+  },
+  "pr_url": "https://github.com/mansyar/3d-train-sim/pull/93",
+  "reverted_at": null,
+  "revert_commit": null,
+  "revert_pr_url": null,
+  "review_rounds": 1,
+  "review_verdict": "PASS",
+  "spec": "spec.md",
+  "status": "complete",
+  "title": "B. Expression — paint/sticker liveries",
+  "type": "feature",
+  "updated_at": "2026-11-28T12:14:35+11:00"
+}

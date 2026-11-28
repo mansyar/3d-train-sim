@@ -988,6 +988,12 @@ button:focus-visible {
 
   .train-drawer {
     bottom: calc(200px + env(safe-area-inset-bottom));
+    /* The livery tray lengthened the train drawer until its top slid under
+       the fixed parent gate on phones, and the gate swallowed taps on the
+       leftmost engine. Cap the drawer below the gate and scroll inside;
+       the engine row stays pinned at the top of the scroll. */
+    max-height: calc(100dvh - 300px);
+    overflow-y: auto;
   }
 
   /* Five 92px tabs cannot fit 360px: share the row evenly so every toy

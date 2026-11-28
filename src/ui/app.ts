@@ -18,6 +18,9 @@ import { nextDayIcon, PIECE_ICONS, SCENERY_ICONS } from './toy-icons';
 import { createTrainPicker } from './train-picker';
 
 export { createInstallHintDismissal } from './parent-gate';
+// The single livery store is owned by the drawer; re-exported here so the
+// scene can observe that same instance without reaching into a UI submodule.
+export { liveryStore } from './train-picker';
 export type { InsightsView, InstallHintView, InstallModeView };
 
 /**

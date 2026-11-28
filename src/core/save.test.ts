@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { DAY_PHASES } from './day-clock';
+import { buildExport } from './portable';
 import { isWater } from './river';
 import {
   deserializePreferences,
   deserializeWorld,
+  type PersistedLiveries,
   parseWorldSnapshot,
   serializeWorld,
+  type WorldSnapshot,
 } from './save';
 import type { PlacedScenery } from './scenery';
 import { MAX_PIECES, type PlacedPiece } from './track-graph';
@@ -1357,5 +1360,121 @@ describe('wagon consist snapshots — per-train presets', () => {
     expect(deserializeWorld({ version: 3, pieces, scenery, consist: 'coal duo' }).consist).toEqual(
       defaultConsist(),
     );
+  });
+});
+
+describe('livery preferences — additive per-vehicle state', () => {
+  const saved: PersistedLiveries = {
+    'steam:loco': { paint: 'sky', stickers: ['star', 'heart'] },
+    'steam:lead': { paint: 'grape' },
+  };
+
+  function withLiveries(liveries: PersistedLiveries): WorldSnapshot {
+    return serializeWorld(
+      pieces,
+      scenery,
+      'steam',
+      false,
+      {},
+      defaultConsist(),
+      undefined,
+      undefined,
+      false,
+      liveries,
+    );
+  }
+
+  it('rides liveries in the preferences block alongside the other settings', () => {
+    const snapshot = withLiveries(saved);
+
+    expect(snapshot.preferences).toEqual({ muted: false, liveries: saved });
+    expect(JSON.parse(JSON.stringify(snapshot))).toEqual(snapshot);
+  });
+
+  it('keeps snapshots minimal when no vehicle has a livery', () => {
+    expect(withLiveries({})).toEqual({ version: 3, pieces, scenery, train: 'steam' });
+    expect(withLiveries({ 'steam:loco': { stickers: [] } }).preferences).toBeUndefined();
+  });
+
+  it('round-trips liveries in both directions', () => {
+    expect(deserializePreferences(withLiveries(saved))).toEqual({ muted: false, liveries: saved });
+
+    const muted = serializeWorld(
+      pieces,
+      scenery,
+      'steam',
+      true,
+      {},
+      defaultConsist(),
+      'dusk',
+      undefined,
+      true,
+      saved,
+    );
+    expect(deserializePreferences(muted)).toEqual({
+      muted: true,
+      dayPhase: 'dusk',
+      installHintDismissed: true,
+      liveries: saved,
+    });
+  });
+
+  it('boots every vehicle stock when the snapshot predates liveries', () => {
+    expect(deserializePreferences({ version: 3, pieces, scenery })).toEqual({ muted: false });
+    expect(
+      deserializePreferences({ version: 3, pieces, scenery, preferences: { muted: true } }),
+    ).toEqual({ muted: true });
+  });
+
+  it('salvages corrupt livery entries without dropping valid ones or the world', () => {
+    const snapshot = {
+      version: 3 as const,
+      pieces: [...pieces, { id: 'bad', type: 'hovercraft', cell: { x: 0, y: 0 }, rotation: 0 }],
+      scenery,
+      preferences: {
+        muted: true,
+        liveries: {
+          __proto__: { paint: 'sky' },
+          'steam:loco': { paint: 3, stickers: ['star', 3, null] },
+          'steam:lead': { paint: 'sky', stickers: ['star'] },
+          junk: 'paint',
+        },
+      },
+    };
+
+    const parsed = parseWorldSnapshot(snapshot);
+
+    expect(parsed.status).toBe('salvaged');
+    expect(parsed.world.pieces).toEqual(pieces);
+    expect(deserializePreferences(snapshot)).toEqual({
+      muted: true,
+      liveries: { 'steam:lead': { paint: 'sky', stickers: ['star'] } },
+    });
+  });
+
+  it('forgives a non-record liveries field', () => {
+    expect(
+      deserializePreferences({
+        version: 3,
+        pieces,
+        scenery,
+        preferences: { muted: true, liveries: 'all the paint' },
+      }),
+    ).toEqual({ muted: true });
+  });
+
+  it('keeps liveries out of the portable world-only export', () => {
+    const polluted = {
+      pieces,
+      scenery,
+      train: 'steam' as const,
+      liveries: saved,
+      preferences: { muted: true, liveries: saved },
+    } as unknown as Parameters<typeof buildExport>[0];
+
+    const exported = JSON.parse(buildExport(polluted));
+
+    expect(exported.preferences).toBeUndefined();
+    expect(JSON.stringify(exported)).not.toContain('liveries');
   });
 });

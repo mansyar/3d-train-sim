@@ -1,18 +1,39 @@
 import type { Object3D } from 'three';
+import { createLiveryAudio, type LiveryAudioWitness } from '../audio/liveries';
 import type { RideAudioBinding } from '../audio/ride-audio';
 import type { CargoLoad } from '../core/cargo';
 import { cellToWorld } from '../core/meadow-grid';
 import type { Edge } from '../core/track-graph';
 import { TRAIN_KINDS, type TrainKind } from '../core/trains';
 import { WAGON_PRESETS, type WagonPreset, wagonPresetUrls, wagonSlots } from '../core/wagons';
+import {
+  locoVehicleId,
+  PAINT_SWATCHES,
+  type StickerId,
+  type VehicleId,
+  type VehicleLivery,
+  wagonVehicleId,
+} from '../state/liveries';
 import type { RideController, RideState } from '../state/ride';
+import { liveryStore } from '../ui/app';
 import { disposeObject } from './dispose-object';
 import { attachHeadlight, type Headlight } from './headlight';
+import {
+  attachStickers,
+  disposeStickerBinding,
+  disposeStickerTextures,
+  popSticker,
+  type StickerBinding,
+  type StickerWitness,
+  stickerWitness,
+  syncStickers,
+  tickStickers,
+} from './liveries/stickers';
 import { loadLocomotive } from './load-locomotive';
 import { loadCrate, loadWagon } from './load-wagons';
 import { parkPoseFor } from './park-pose';
 import { createRideMotion, parkFollowersBehind, type RideMotion } from './ride-motion';
-import type { RigCargo } from './rig-cargo';
+import { paintHex, paintVehicle, type RigCargo } from './rig-cargo';
 import type { SceneContext } from './scene-context';
 import { createSteamPuffEmitter, type SteamPuffEmitter } from './steam-puff-emitter';
 
@@ -43,6 +64,14 @@ export interface TrainRig {
   begunWith: RideState | null;
   /** One-shot: where a reused train sits, so it rolls on from there. */
   startNear: { x: number; z: number } | null;
+  /** Livery reward: seconds left in the scale bounce (0 = settled). */
+  bounceT: number;
+  /** Livery reward: completed bounces, a DEV/e2e witness. */
+  bounceCount: number;
+  /** The model's settled scale, captured from the loaded asset. */
+  baseScale: number;
+  /** Four preallocated sticker sprites, one per side anchor. */
+  stickers: StickerBinding;
 }
 
 export interface TrainFleet {
@@ -72,6 +101,13 @@ export interface TrainFleet {
   parkedSpot(): { x: number; z: number } | null;
   /** Whether a rig is inside a tunnel run (the toot trails an echo). */
   inTunnel(rig: TrainRig): boolean;
+  /** DEV/e2e witness: live paint, bounces, and reward plays per vehicle. */
+  liveryWitness(): {
+    bodyHex(id: VehicleId): string | null;
+    bounceCount(id: VehicleId): number;
+    stickers(id: VehicleId): StickerWitness;
+    audio(): LiveryAudioWitness;
+  };
   dispose(): void;
 }
 
@@ -109,6 +145,138 @@ export function createTrainFleet({
   let worldReady = false;
   let loadedTrain: TrainKind | null = null;
   let loadedPreset: WagonPreset | null = null;
+
+  // ---- Expression: one store, one reward voice, subscription-driven paint ----
+  /** Seconds of a livery bounce; reduced motion lands in place instead. */
+  const BOUNCE_SECONDS = 0.32;
+  /** The models load at 1.5; the bounce is a small pulse around that size. */
+  const BOUNCE_SCALE = 0.12;
+  const liveryAudio = createLiveryAudio(audio);
+  /** Last applied hex per vehicle. Seeded from the store so boot/stamp updates
+   *  never look like a fresh paint (no phantom reward or bounce). */
+  const lastPaint = new Map<VehicleId, string | null>();
+  const lastStickers = new Map<VehicleId, StickerId[]>();
+  for (const [id, livery] of Object.entries(liveryStore.liveries())) {
+    lastPaint.set(id, PAINT_SWATCHES.find((s) => s.id === livery.paint)?.hex ?? null);
+    lastStickers.set(id, [...livery.stickers]);
+  }
+  /** Wagon sprites follow their mesh's lifetime (wagons are re-dressed). */
+  const wagonStickers = new WeakMap<Object3D, StickerBinding>();
+
+  const bindingForWagon = (wagon: Object3D): StickerBinding => {
+    let binding = wagonStickers.get(wagon);
+    if (!binding) {
+      binding = attachStickers(wagon, context.reducedMotion);
+      wagonStickers.set(wagon, binding);
+    }
+    return binding;
+  };
+
+  const hexFor = (id: VehicleId): string | null => {
+    const paint = liveryStore.liveryFor(id).paint;
+    return paint ? (PAINT_SWATCHES.find((s) => s.id === paint)?.hex ?? null) : null;
+  };
+
+  const bounce = (rig: TrainRig): void => {
+    if (context.reducedMotion) return;
+    rig.bounceT = BOUNCE_SECONDS;
+    rig.bounceCount += 1;
+  };
+
+  /** Reapply the current livery to one rig's engine and its wagons — used on
+   *  build, kind swap, and re-dress so newly arriving meshes inherit the paint. */
+  const applyLiveryToRig = (rig: TrainRig): void => {
+    const locoId = locoVehicleId(rig.kind);
+    const locoHex = hexFor(locoId);
+    paintVehicle(rig.model, locoHex);
+    syncStickers(rig.stickers, liveryStore.liveryFor(locoId).stickers, false);
+    lastPaint.set(locoId, locoHex);
+    const slots = wagonSlots();
+    for (const [index, wagon] of rig.wagons.entries()) {
+      const slot = slots[index];
+      if (!slot) continue;
+      const id = wagonVehicleId(rig.kind, slot);
+      // The drawer paints the whole consist through the loco's id; a wagon
+      // only keeps its own color when an explicit wagon paint exists.
+      const hex = hexFor(id) ?? locoHex;
+      paintVehicle(wagon, hex);
+      const own = liveryStore.liveryFor(id).stickers;
+      syncStickers(
+        bindingForWagon(wagon),
+        own.length > 0 ? own : liveryStore.liveryFor(locoId).stickers,
+        false,
+      );
+      lastPaint.set(id, hex);
+    }
+  };
+
+  /** Paint on tap tints the body; a stamp lands on the preallocated decals.
+   *  Each matching rig bounces once for paint, and each affected vehicle pops
+   *  once when the cap pushes its oldest decal off — through the reward voice
+   *  shared with paint, so the child hears one muted-aware ding. */
+  const onLiveryChange = (id: VehicleId, livery: VehicleLivery): void => {
+    const hex = livery.paint
+      ? (PAINT_SWATCHES.find((s) => s.id === livery.paint)?.hex ?? null)
+      : null;
+    const previous = lastPaint.get(id) ?? null;
+    const repaint = previous !== hex;
+    lastPaint.set(id, hex);
+
+    const before = lastStickers.get(id) ?? [];
+    const stamped =
+      livery.stickers.length >= before.length &&
+      (livery.stickers.length !== before.length ||
+        livery.stickers.some((sticker, index) => sticker !== before[index]));
+    const cleared = livery.stickers.length < before.length; // restore-to-stock
+    lastStickers.set(id, [...livery.stickers]);
+    if (!repaint && !stamped && !cleared) return; // boot state or a no-op reselect
+
+    let paintMatched = false;
+    let stampMatched = false;
+    /** Stamp with a wink and a ding; a restore clears silently instead. */
+    const applyStickers = (binding: StickerBinding): void => {
+      if (!stamped) {
+        syncStickers(binding, [], false);
+        return;
+      }
+      stampMatched = true;
+      syncStickers(binding, livery.stickers, true);
+      popSticker(binding); // one small wink per stamp; the cap pop is counted in sync
+    };
+    for (const rig of [...rigs.values(), ...spares]) {
+      let hit = false;
+      const locoId = locoVehicleId(rig.kind);
+      if (id === locoId) {
+        // A loco change covers its whole consist — every wagon, both sides.
+        if (repaint) {
+          paintVehicle(rig.model, hex);
+          for (const wagon of rig.wagons) paintVehicle(wagon, hex);
+        }
+        if (stamped || cleared) {
+          applyStickers(rig.stickers);
+          for (const wagon of rig.wagons) applyStickers(bindingForWagon(wagon));
+        }
+        hit = true;
+      } else {
+        const slots = wagonSlots();
+        for (const [index, wagon] of rig.wagons.entries()) {
+          const slot = slots[index];
+          if (slot && wagonVehicleId(rig.kind, slot) === id) {
+            if (repaint) paintVehicle(wagon, hex);
+            if (stamped || cleared) applyStickers(bindingForWagon(wagon));
+            hit = true;
+          }
+        }
+      }
+      if (hit && repaint) {
+        bounce(rig);
+        paintMatched = true;
+      }
+    }
+    if (paintMatched && hex !== null) liveryAudio.reward('paint');
+    if (stampMatched && livery.stickers.length > 0) liveryAudio.reward('stamp');
+  };
+  const unsubscribeLivery = liveryStore.subscribe(onLiveryChange);
 
   /** The cached template pair for one preset, created on first use. */
   const templatesFor = (preset: WagonPreset): (Object3D | null)[] => {
@@ -198,8 +366,13 @@ export function createTrainFleet({
       motion: null as unknown as RideMotion,
       begunWith: null,
       startNear: null,
+      bounceT: 0,
+      bounceCount: 0,
+      baseScale: model.scale.x,
+      stickers: attachStickers(model, context.reducedMotion),
     };
     for (const wagon of wagons) cargo.attach(wagon);
+    applyLiveryToRig(rig);
     rig.motion = createRideMotion(
       model,
       world,
@@ -223,7 +396,14 @@ export function createTrainFleet({
    * wagons re-pose on the next tick, a spare re-parks behind its engine.
    */
   const dressRigWagons = (rig: TrainRig): void => {
-    for (const old of rig.wagons) scene.remove(old);
+    for (const old of rig.wagons) {
+      const binding = wagonStickers.get(old);
+      if (binding) {
+        disposeStickerBinding(binding);
+        wagonStickers.delete(old);
+      }
+      scene.remove(old);
+    }
     rig.wagons.length = 0;
     for (const wagon of clonePresetWagons(rig.kind)) {
       cargo.attach(wagon);
@@ -231,6 +411,7 @@ export function createTrainFleet({
     }
     // New meshes arrive with hidden crates — restore whatever was aboard.
     cargo.setLoaded(rig, rig.cargo !== 'empty');
+    applyLiveryToRig(rig); // freshly cloned bodies inherit their current paint
     if (!rig.anchor) parkFollowersBehind(rig.model, rig.wagons);
   };
 
@@ -238,8 +419,16 @@ export function createTrainFleet({
   const disposeRigVisuals = (rig: TrainRig): void => {
     rig.puffs.dispose();
     scene.remove(rig.puffs.group);
+    disposeStickerBinding(rig.stickers);
     scene.remove(rig.model);
-    for (const wagon of rig.wagons) scene.remove(wagon);
+    for (const wagon of rig.wagons) {
+      const binding = wagonStickers.get(wagon);
+      if (binding) {
+        disposeStickerBinding(binding);
+        wagonStickers.delete(wagon);
+      }
+      scene.remove(wagon);
+    }
     rig.wagons.length = 0;
     const lightIndex = headlights.indexOf(rig.headlight);
     if (lightIndex !== -1) headlights.splice(lightIndex, 1);
@@ -345,6 +534,7 @@ export function createTrainFleet({
     if (!template) return; // new kind's assets not ready — keep the current model
     rig.puffs.dispose();
     scene.remove(rig.puffs.group);
+    disposeStickerBinding(rig.stickers); // sprites die with the shell they sat on
     scene.remove(rig.model); // The old engine leaves the meadow — no ghosts.
     const lightIndex = headlights.indexOf(rig.headlight);
     if (lightIndex !== -1) headlights.splice(lightIndex, 1);
@@ -352,11 +542,15 @@ export function createTrainFleet({
     scene.add(model);
     rig.kind = kind;
     rig.model = model;
+    rig.baseScale = model.scale.x;
+    rig.stickers = attachStickers(model, context.reducedMotion);
+    rig.bounceT = 0; // a swapped-in shell lands settled, never mid-bounce
     rig.headlight = attachHeadlight(model);
     headlights.push(rig.headlight);
     rig.puffs = createSteamPuffEmitter(model, camera, kind);
     scene.add(rig.puffs.group);
     rig.puffs.setEmitting(rides.mode() === 'riding');
+    applyLiveryToRig(rig); // the new shell inherits this kind's livery
     // The motion re-poses the new engine (and its wagons) exactly where the
     // old one stood — same path distance, same direction, no restart — and
     // the pace personality follows the new locomotive.
@@ -483,6 +677,94 @@ export function createTrainFleet({
   // not a return value, so no frame system carries a value forward (FR-8).
   let lastSteamPuffCount = 0;
 
+  /** The rigs carrying one vehicle id (the engine, or a given wagon slot). */
+  const rigsFor = (id: VehicleId): TrainRig[] => {
+    const found: TrainRig[] = [];
+    for (const rig of [...rigs.values(), ...spares]) {
+      if (id === locoVehicleId(rig.kind)) {
+        found.push(rig);
+        continue;
+      }
+      const slots = wagonSlots();
+      for (const slot of slots) {
+        if (slot && wagonVehicleId(rig.kind, slot) === id) {
+          found.push(rig);
+          break;
+        }
+      }
+    }
+    return found;
+  };
+
+  /** Sticker state for one vehicle: the first matching rig's decal order,
+   *  with the reward/animation witnesses summed across its consist. */
+  const stickersFor = (id: VehicleId): StickerWitness => {
+    let visible: StickerId[] = [];
+    let anchors: StickerWitness['anchors'] = [];
+    let stamps = 0;
+    let pops = 0;
+    let animations = 0;
+    let frames = 0;
+    for (const rig of rigsFor(id)) {
+      let binding: StickerBinding | undefined = rig.stickers;
+      if (id !== locoVehicleId(rig.kind)) {
+        const slots = wagonSlots();
+        binding = undefined;
+        for (const [index, wagon] of rig.wagons.entries()) {
+          const slot = slots[index];
+          if (slot && wagonVehicleId(rig.kind, slot) === id) {
+            binding = wagonStickers.get(wagon);
+            break;
+          }
+        }
+      }
+      if (!binding) continue;
+      const probe = stickerWitness(binding);
+      if (visible.length === 0) {
+        visible = probe.visible;
+        anchors = probe.anchors;
+      }
+      stamps += probe.stamps;
+      pops += probe.pops;
+      animations += probe.animations;
+      frames += probe.frames;
+    }
+    return { visible, anchors, stamps, pops, animations, frames };
+  };
+
+  const liveryWitness = {
+    /** The actual material color, not just the store's intent. */
+    bodyHex(id: VehicleId): string | null {
+      const matching = rigsFor(id);
+      for (const rig of matching) {
+        if (id === locoVehicleId(rig.kind)) {
+          const hex = paintHex(rig.model);
+          if (hex) return hex;
+        } else {
+          const slots = wagonSlots();
+          for (const [index, wagon] of rig.wagons.entries()) {
+            const slot = slots[index];
+            if (slot && wagonVehicleId(rig.kind, slot) === id) {
+              const hex = paintHex(wagon);
+              if (hex) return hex;
+            }
+          }
+        }
+      }
+      return matching.length > 0 ? (lastPaint.get(id) ?? null) : null;
+    },
+    bounceCount(id: VehicleId): number {
+      return rigsFor(id).reduce((sum, rig) => sum + rig.bounceCount, 0);
+    },
+    stickers: stickersFor,
+    audio: () => liveryAudio.probe(),
+  };
+
+  if (import.meta.env.DEV) {
+    (window as unknown as { __tinyTracksLivery?: typeof liveryWitness }).__tinyTracksLivery =
+      liveryWitness;
+  }
+
   return {
     sync: syncRigs,
     parkedSpot,
@@ -490,6 +772,7 @@ export function createTrainFleet({
       for (const rig of rigs.values()) rig.puffs.setEmitting(riding);
     },
     update(dt: number): void {
+      tickStickers(dt); // transform-only; no new objects on any frame
       let visibleSteamPuffs = 0;
       let crossingTrainCount = 0;
       // Every little train ticks — parked spares too, so a pre-ride whistle
@@ -519,6 +802,14 @@ export function createTrainFleet({
           rig.puffAcc = 0;
         }
         visibleSteamPuffs += rig.puffs.activeCount();
+        // Livery reward: a short scale pulse on the painted train. The wave
+        // starts and ends at the settled scale; reduced motion never starts
+        // one, so the final state simply lands with no animation.
+        if (rig.bounceT > 0) {
+          rig.bounceT = Math.max(0, rig.bounceT - dt);
+          const phase = 1 - rig.bounceT / BOUNCE_SECONDS;
+          rig.model.scale.setScalar(rig.baseScale + Math.sin(phase * Math.PI) * BOUNCE_SCALE);
+        }
       }
       // A station stop above may have begun a hand-off; advance it on this
       // same frame. One active transfer, one tick — no per-rig arc bookkeeping.
@@ -539,9 +830,16 @@ export function createTrainFleet({
       [...rigs.values(), ...spares].reduce((count, rig) => count + rig.wagons.length, 0),
     nearest: () => nearestRig(rigs.values()) ?? nearestRig(spares),
     inTunnel: (rig) => tunnelRigs.has(rig),
+    liveryWitness: () => liveryWitness,
     dispose(): void {
       disposed = true;
       unsubscribeTrain();
+      unsubscribeLivery();
+      liveryAudio.dispose();
+      if (import.meta.env.DEV) {
+        delete (window as unknown as { __tinyTracksLivery?: typeof liveryWitness })
+          .__tinyTracksLivery;
+      }
       for (const rig of [...rigs.values(), ...spares]) {
         rig.motion.dispose();
         disposeRigVisuals(rig);
@@ -556,6 +854,7 @@ export function createTrainFleet({
         }
       }
       wagonTemplates.clear();
+      disposeStickerTextures();
     },
   };
 }

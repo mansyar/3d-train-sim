@@ -1,4 +1,4 @@
-import { Box3, type Object3D, Vector3 } from 'three';
+import { Box3, Color, type Material, type Mesh, type Object3D, Vector3 } from 'three';
 import {
   actionAtStop,
   type CargoAction,
@@ -22,6 +22,96 @@ const CARGO_POP_SECONDS = 0.25;
 
 /** Bounded transfer trace history — several whole arcs survive before the ring wraps. */
 const TRACE_CAPACITY = 256;
+
+/**
+ * Whole-vehicle repaint. Clones each colored material on the first paint so
+ * the cached model templates (shared by every clone) keep their factory look;
+ * a stock restore swaps the original material back in. Bindings are cached
+ * per root object and only touched from the livery subscription, never a
+ * frame, so the paint path allocates nothing per tick.
+ */
+type ColoredMaterial = Material & { color: Color };
+
+interface PaintBinding {
+  mesh: Mesh;
+  original: Material | Material[];
+  painted: Material | Material[];
+}
+
+const paintBindings = new WeakMap<Object3D, PaintBinding[]>();
+const paintScratch = new Color();
+
+function isColored(material: Material): material is ColoredMaterial {
+  return 'color' in material && (material as ColoredMaterial).color instanceof Color;
+}
+
+function cloneForPaint(materials: Material | Material[]): Material | Material[] {
+  if (Array.isArray(materials)) return materials.map((m) => (isColored(m) ? m.clone() : m));
+  return isColored(materials) ? materials.clone() : materials;
+}
+
+function setPaintColor(materials: Material | Material[], hex: string): void {
+  paintScratch.set(hex);
+  if (Array.isArray(materials)) {
+    for (const material of materials) {
+      if (isColored(material)) material.color.copy(paintScratch);
+    }
+  } else if (isColored(materials)) {
+    materials.color.copy(paintScratch);
+  }
+}
+
+function collectPaintBindings(root: Object3D): PaintBinding[] {
+  const found: PaintBinding[] = [];
+  const walk = (object: Object3D): void => {
+    // Delivered cargo is a guest aboard the wagon, never part of its body.
+    if (object.name === 'cargo_crate' || object.name === 'cargo_transfer_crate') return;
+    const mesh = object as Mesh;
+    if (mesh.isMesh && mesh.material) {
+      const materials = mesh.material as Material | Material[];
+      const colored = Array.isArray(materials) ? materials.some(isColored) : isColored(materials);
+      if (colored) found.push({ mesh, original: materials, painted: cloneForPaint(materials) });
+    }
+    for (const child of object.children) walk(child);
+  };
+  walk(root);
+  return found;
+}
+
+/** Repaints one vehicle's whole body, or restores its factory colors on null. */
+export function paintVehicle(root: Object3D, hex: string | null): void {
+  let bindings = paintBindings.get(root);
+  if (!bindings) {
+    bindings = collectPaintBindings(root);
+    paintBindings.set(root, bindings);
+  }
+  for (const binding of bindings) {
+    if (hex === null) {
+      binding.mesh.material = binding.original;
+      continue;
+    }
+    binding.mesh.material = binding.painted;
+    setPaintColor(binding.painted, hex);
+  }
+}
+
+/** DEV/e2e read of one vehicle's live body color (`null` if it has none). */
+export function paintHex(root: Object3D): string | null {
+  const bindings = paintBindings.get(root);
+  if (!bindings) return null;
+  for (const binding of bindings) {
+    // A stock restore puts the original material back; that is not a paint.
+    if (binding.mesh.material !== binding.painted) continue;
+    const materials = binding.painted;
+    const colored = Array.isArray(materials)
+      ? materials.find(isColored)
+      : isColored(materials)
+        ? materials
+        : null;
+    if (colored) return `#${colored.color.getHexString()}`;
+  }
+  return null;
+}
 
 /** The cargo slice of a train rig (structurally satisfied by TrainRig). */
 export interface CargoRig {

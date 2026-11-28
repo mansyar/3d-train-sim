@@ -25,6 +25,19 @@ const SNAPSHOT_VERSION = 3;
 /** Snapshot versions this build understands: current, pre-tunnel v2, pre-river v1. */
 const SUPPORTED_VERSIONS: readonly number[] = [1, 2, 3];
 
+/**
+ * One vehicle's persisted paint/stickers. The curated paint and sticker ids
+ * are validated by the livery store on hydrate; persistence keeps only
+ * structurally sound entries so a hand-edited save can never poison the world.
+ */
+export interface PersistedLivery {
+  paint?: string;
+  stickers?: string[];
+}
+
+/** Per-vehicle liveries, keyed by the same ids the livery store uses. */
+export type PersistedLiveries = Record<string, PersistedLivery>;
+
 export interface DevicePreferences {
   muted: boolean;
   /**
@@ -37,6 +50,11 @@ export interface DevicePreferences {
    * parent has not dismissed it, so the hint may still be shown when browsing.
    */
   installHintDismissed?: boolean;
+  /**
+   * Per-vehicle liveries, omitted entirely when every vehicle still wears
+   * factory paint. Older snapshots have no key and boot stock.
+   */
+  liveries?: PersistedLiveries;
 }
 
 export interface WorldSnapshot {
@@ -77,6 +95,7 @@ export function serializeWorld(
   dayPhase?: DayPhase,
   disclosure?: DisclosureState,
   installHintDismissed = false,
+  liveries: PersistedLiveries = {},
 ): WorldSnapshot {
   const snapshot: WorldSnapshot = {
     version: SNAPSHOT_VERSION,
@@ -94,14 +113,17 @@ export function serializeWorld(
     })),
     train,
   };
-  // Sound-on, mid-morning, and an undismissed hint are the defaults, so all
-  // three are omitted to keep snapshots minimal.
+  // Sound-on, mid-morning, an undismissed hint, and stock paint are the
+  // defaults, so all four are omitted to keep snapshots minimal.
   const chosen = dayPhase && dayPhase !== DEFAULT_DAY_PHASE ? dayPhase : undefined;
-  if (muted || chosen || installHintDismissed) {
+  const cleanLiveries = parseLiveries(liveries);
+  const hasLiveries = Object.keys(cleanLiveries).length > 0;
+  if (muted || chosen || installHintDismissed || hasLiveries) {
     snapshot.preferences = {
       muted,
       ...(chosen ? { dayPhase: chosen } : {}),
       ...(installHintDismissed ? { installHintDismissed: true } : {}),
+      ...(hasLiveries ? { liveries: cleanLiveries } : {}),
     };
   }
   // Same for an empty delivery ledger.
@@ -274,11 +296,40 @@ export function deserializePreferences(value: unknown): DevicePreferences {
   // Only an explicit `true` counts as dismissed. Missing or malformed values
   // default to false, so a bad save can never hide the hint for good.
   const installHintDismissed = preferences.installHintDismissed === true;
-  return {
+  const result: DevicePreferences = {
     muted,
     ...(dayPhase ? { dayPhase } : {}),
     ...(installHintDismissed ? { installHintDismissed: true } : {}),
   };
+  // Additive: a snapshot written before liveries existed simply boots stock.
+  const liveries = parseLiveries(preferences.liveries);
+  if (Object.keys(liveries).length > 0) result.liveries = liveries;
+  return result;
+}
+
+/**
+ * Reads livery entries one at a time. This shares one forgiving reader with
+ * serialization so a malformed value cleaned on write is read the same way on
+ * load. Unknown paint/sticker id vocabulary is the store's job to reject.
+ */
+function parseLiveries(value: unknown): PersistedLiveries {
+  const result: PersistedLiveries = {};
+  if (!isRecord(value)) return result;
+  for (const [id, raw] of Object.entries(value)) {
+    if (id === '__proto__' || id === 'constructor' || id === 'prototype') continue;
+    if (!isRecord(raw)) continue;
+    if (raw.paint !== undefined && typeof raw.paint !== 'string') continue;
+    const paint = typeof raw.paint === 'string' ? raw.paint : undefined;
+    const stickers = Array.isArray(raw.stickers)
+      ? raw.stickers.filter((sticker): sticker is string => typeof sticker === 'string')
+      : [];
+    if (paint === undefined && stickers.length === 0) continue;
+    result[id] = {
+      ...(paint !== undefined ? { paint } : {}),
+      ...(stickers.length > 0 ? { stickers } : {}),
+    };
+  }
+  return result;
 }
 
 function parseDayPhase(value: unknown): DayPhase | undefined {
