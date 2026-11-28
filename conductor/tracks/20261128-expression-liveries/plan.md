@@ -50,11 +50,11 @@ The primary appends after acceptance:
 - **Covers:** FR-2, FR-6, AC-5
 - **Touches:** `src/scene/train-fleet.ts`, `src/scene/rig-cargo.ts`, `src/audio/liveries.ts`, `e2e/liveries-paint.spec.ts`
 - **Verification:** `pnpm exec playwright test e2e/liveries-paint.spec.ts`
-- **Status:** in_progress
+- **Status:** done
 
-- [ ] **P3.T1: Body recolor path** — covers: FR-2 (store → loco shell / wagon body materials, all six engines)
-- [ ] **P3.T2: Reward sound + bounce** — covers: FR-6 (soft pop/ding via Howler path, instant mute, persists)
-- [ ] **P3.T3: Paint spec** — covers: AC-5 (repaint every vehicle; muted run changes livery with zero audible plays)
+- [x] **P3.T1: Body recolor path** — covers: FR-2 (store → loco shell / wagon body materials, all six engines)
+- [x] **P3.T2: Reward sound + bounce** — covers: FR-6 (soft pop/ding via Howler path, instant mute, persists)
+- [x] **P3.T3: Paint spec** — covers: AC-5 (repaint every vehicle; muted run changes livery with zero audible plays)
 
 ## Phase 4: Stickers + restore
 
