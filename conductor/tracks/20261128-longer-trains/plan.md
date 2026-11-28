@@ -76,7 +76,7 @@ The primary appends after acceptance:
 - **Depends on:** Phase 4
 - **Covers:** AC-7 and all ACs end-to-end (FR-1 – FR-8, NFR-1 – NFR-6)
 - **Verification:** `pnpm test:coverage` + `pnpm build` + full tablet matrix (`pnpm exec playwright test --project=tablet`)
-- **Status:** pending
+- **Status:** in_progress
 
 - [ ] **P5.T1: Evidence spec (4-wagon ride, mixed outfits, reload, cargo run)** — covers: AC-1 – AC-7
 - [ ] **P5.T2: Full matrix + committed evidence bundle** — covers: NFR-1 – NFR-6
