@@ -285,7 +285,9 @@ test('offline prod build keeps the full livery flow precache-neutral', async ({
   page,
   context,
 }) => {
-  test.setTimeout(180_000);
+  // Full six-consist flow twice over plus reloads on the prod build: same
+  // software-GL headroom as the integrated flow above.
+  test.setTimeout(480_000);
   const errors = watchConsoleErrors(page);
   const requested: string[] = [];
   page.on('request', (request) => requested.push(request.url()));
