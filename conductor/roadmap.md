@@ -24,7 +24,6 @@
 | id | title | type | priority | depends_on | track | origin |
 | --- | --- | --- | --- | --- | --- | --- |
 | RM-004 | C. Shared Play — two-child local co-build | feature | P3 | — |  | conductor/product.md — Phase 3, deferred |
-| RM-005 | Longer trains | feature | P3 | — | 20261128-longer-trains | informal parent feedback |
 | RM-006 | New track piece types | feature | P2 | — |  | conductor/product.md — anti-roadmap |
 | RM-007 | New locomotives | feature | P2 | — |  | conductor/product.md — anti-roadmap |
 | RM-008 | Piece/icon contract for every new or changed piece | chore | P2 | — |  | conductor/product.md — piece/icon contract |
