@@ -124,6 +124,7 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   liverySection.className = 'livery-section';
   liverySection.setAttribute('role', 'group');
   liverySection.setAttribute('aria-label', 'Paint and stickers');
+  liverySection.dataset.armed = '';
   liverySection.style.alignItems = 'center';
   liverySection.style.display = 'flex';
   liverySection.style.flexBasis = '100%';
@@ -204,6 +205,8 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
   root.append(trainDrawer);
 
   const currentVehicleId = () => locoVehicleId(world.train());
+  /** The shape waiting for a vehicle tap — a sticker tap never stamps alone. */
+  let armedSticker: StickerId | null = null;
 
   /** Re-aim the whole tray at the selected locomotive, reading only the store. */
   const refreshLivery = () => {
@@ -212,7 +215,9 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
     liverySection.dataset.stickerCount = String(livery.stickers.length);
     const newest = livery.stickers[livery.stickers.length - 1];
     for (const [paint, button] of paintButtons) markSelected(button, livery.paint === paint);
-    for (const [sticker, button] of stickerButtons) markSelected(button, newest === sticker);
+    for (const [sticker, button] of stickerButtons) {
+      markSelected(button, armedSticker === sticker || newest === sticker);
+    }
     markSelected(restoreButton, livery.paint === null && livery.stickers.length === 0);
     tally.replaceChildren(
       ...livery.stickers.map(() => {
@@ -225,6 +230,12 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
         return dot;
       }),
     );
+  };
+
+  const disarmSticker = (): void => {
+    armedSticker = null;
+    liverySection.dataset.armed = '';
+    refreshLivery();
   };
 
   /** Same-task bounce, so the tap is answered before the next frame. */
@@ -256,17 +267,23 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
     const paint = (event.target as Element).closest<HTMLButtonElement>('[data-paint]');
     if (paint?.dataset.paint) {
       liveryStore.setPaint(currentVehicleId(), paint.dataset.paint as PaintId);
+      if (armedSticker) disarmSticker();
       bounce(paint);
       return;
     }
     const sticker = (event.target as Element).closest<HTMLButtonElement>('[data-sticker]');
     if (sticker?.dataset.sticker) {
-      liveryStore.stamp(currentVehicleId(), sticker.dataset.sticker as StickerId);
+      // Pick up a shape first; it lands only when a drawer vehicle is tapped.
+      armedSticker =
+        armedSticker === sticker.dataset.sticker ? null : (sticker.dataset.sticker as StickerId);
+      liverySection.dataset.armed = armedSticker ?? '';
+      refreshLivery();
       bounce(sticker);
       return;
     }
     if ((event.target as Element).closest('[data-restore]')) {
       liveryStore.restoreDefault(currentVehicleId());
+      if (armedSticker) disarmSticker();
       bounce(restoreButton);
       return;
     }
@@ -274,6 +291,10 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
     // follow the newly selected loco, so switching locos re-aims the row.
     const wagon = (event.target as Element).closest<HTMLButtonElement>('[data-wagon]');
     if (wagon) {
+      if (armedSticker) {
+        liveryStore.stamp(currentVehicleId(), armedSticker);
+        disarmSticker();
+      }
       world.selectConsist(world.train(), wagon.dataset.wagon as WagonPreset);
       refreshWagonChoices();
       // The newly dressed pair pops with the happy ding — still hands get
@@ -288,6 +309,13 @@ export function createTrainPicker(root: HTMLElement, deps: TrainPickerDeps): Tra
     }
     const button = (event.target as Element).closest<HTMLButtonElement>('[data-train]');
     if (!button) return;
+    // The drawer is the whole "sticker book": tapping an engine while holding
+    // a shape stamps that engine, then arms nothing so the next tap is safe.
+    if (armedSticker) {
+      const vehicle = locoVehicleId(button.dataset.train as TrainKind);
+      liveryStore.stamp(vehicle, armedSticker);
+      disarmSticker();
+    }
     world.selectTrain(button.dataset.train as TrainKind);
     refreshTrainChoices();
     refreshWagonChoices();

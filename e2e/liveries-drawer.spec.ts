@@ -86,21 +86,32 @@ test('each paint swatch taps with immediate visible selection and a clean consol
   expect(errors, `console errors: ${errors.join(' | ')}`).toEqual([]);
 });
 
-test('sticker taps show a tally, cap at four, and restore clears everything', async ({ page }) => {
+test('sticker taps arm, engine taps stamp, cap at four, restore clears everything', async ({
+  page,
+}) => {
   const errors = watchConsoleErrors(page);
   await openTrainDrawer(page);
   const section = page.locator('.livery-section');
 
   let expected = 0;
   for (const sticker of STICKER_IDS) {
+    // Arming is instant feedback but stamps nothing yet (FR-3: sticker-then-vehicle).
     const result = await tapAndTime(page, `.livery-section [data-sticker="${sticker}"]`);
-    expect(result.ms, `${sticker} feedback latency`).toBeLessThan(100);
+    expect(result.ms, `${sticker} arming latency`).toBeLessThan(100);
+    await expect(section).toHaveAttribute('data-armed', sticker);
+    await expect(section).toHaveAttribute('data-sticker-count', String(expected));
+    // Tapping the engine stamps the armed shape onto it.
+    await page.click('.train-slot[data-train="steam"]');
     expected += 1;
+    await expect(section).toHaveAttribute('data-armed', '');
     await expect(section).toHaveAttribute('data-sticker-count', String(expected));
     await expect(section.locator('[data-livery-tally] > span')).toHaveCount(expected);
   }
-  // A fifth tap keeps the four-anchor cap visible right there in the drawer.
+  // A fifth stamp evicts the oldest and keeps the four-anchor cap.
   await tapAndTime(page, '.livery-section [data-sticker="star"]');
+  await expect(section).toHaveAttribute('data-armed', 'star');
+  await page.click('.train-slot[data-train="steam"]');
+  await expect(section).toHaveAttribute('data-armed', '');
   await expect(section).toHaveAttribute('data-sticker-count', '4');
   await expect(section.locator('[data-livery-tally] > span')).toHaveCount(4);
 
@@ -129,6 +140,9 @@ test('the tray follows the selected train and keeps each train its own livery', 
 
   await tapAndTime(page, '.livery-section [data-paint="cherry"]');
   await tapAndTime(page, '.livery-section [data-sticker="heart"]');
+  await expect(section).toHaveAttribute('data-armed', 'heart');
+  await page.click('.train-slot[data-train="steam"]');
+  await expect(section).toHaveAttribute('data-armed', '');
   await expect(section).toHaveAttribute('data-sticker-count', '1');
 
   await page.click('.train-slot[data-train="diesel"]');
